@@ -20,19 +20,14 @@
         .fade-in { animation: fadeIn 0.3s ease-in-out; } @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         #printArea { display: none; }
         
-        /* Menghilangkan header/footer browser dan mengatur margin */
+        /* Mengatur PDF agar vertikal (Portrait) dan jarak teks tidak menempel di pinggir di semua halaman */
         @media print {
             body * { visibility: hidden; } 
             #printArea, #printArea * { visibility: visible; } 
-            #printArea { 
-                display: block; 
-                position: absolute; 
-                left: 0; top: 0; width: 100%; 
-                padding: 2cm; /* Jarak ke dalam agar teks tidak menempel pinggir */
-                box-sizing: border-box;
-            } 
+            #printArea { display: block; } 
             @page { 
-                margin: 0; /* Hilangkan header/footer bawaan browser */
+                size: A4 portrait; 
+                margin: 2cm; 
             } 
         }
         
@@ -51,7 +46,6 @@
         .ai-output .soal-number { font-weight: bold; color: #1e3a8a; min-width: 28px; }
         .ai-output .soal-text { font-size: 14px; line-height: 1.7; color: #1e293b; font-weight: 500; flex: 1; }
         
-        /* Layout Pilihan Ganda: A & B di kiri, C & D di kanan */
         .ai-output .soal-opts { display: flex; gap: 24px; margin: 8px 0 8px 34px; }
         .ai-output .opt-col { flex: 1; display: flex; flex-direction: column; gap: 4px; }
         .ai-output .soal-opt { display: flex; align-items: flex-start; font-size: 13px; color: #334155; }
@@ -260,12 +254,12 @@ function printKurikulumDoc(id) {
         const typeLabel = kurikulumTypes.find(t => t.id === doc.type)?.label || doc.type; 
         const htmlContent = marked.parse(doc.content); 
         document.getElementById('printArea').innerHTML = `
-        <div style="font-family: 'Times New Roman', Georgia, serif; color: #000; padding: 0; margin: 0; width: 100%;">
+        <div style="font-family: 'Times New Roman', Georgia, serif; color: #000; width: 100%;">
             <div style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 25px;">
                 <h2 style="margin:0; font-size: 18px;">${typeLabel.toUpperCase()}</h2>
                 <p style="margin: 5px 0 0; font-size: 12px;">${doc.class_name} | ${doc.title}</p>
             </div>
-            <div class="ai-output" style="color: #000; margin: 0; padding: 0;">
+            <div class="ai-output" style="color: #000;">
                 ${htmlContent}
             </div>
         </div>`; 
@@ -359,7 +353,6 @@ function formatSoalHTML(rawText) {
             let qText = sb.question.replace(/^\*+|\*+$/g, '').replace(/_+/g, '').trim();
             qText = qText.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
             
-            // Membuat 2 kolom (Kiri: A & B, Kanan: C & D)
             soalHTML += `<div class="soal-item"><div class="soal-header"><span class="soal-number">${sb.num}.</span><span class="soal-text">${qText}</span></div><div class="soal-opts"><div class="opt-col">`;
             const half = Math.ceil(sb.options.length / 2);
             sb.options.forEach((opt, index) => {
@@ -432,12 +425,12 @@ function printAIResult(includeAnswerKey = false) {
     }
     
     document.getElementById('printArea').innerHTML = `
-    <div style="font-family: 'Times New Roman', Georgia, serif; color: #000; padding: 0; margin: 0; width: 100%;">
+    <div style="font-family: 'Times New Roman', Georgia, serif; color: #000; width: 100%;">
         <div style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 25px;">
             <h2 style="margin:0; font-size: 18px;">SOAL PILIHAN GANDA</h2>
             <p style="margin: 5px 0 0; font-size: 12px;">Dibuat oleh GURU SMART</p>
         </div>
-        <div class="ai-output" style="color: #000; margin: 0; padding: 0;">${cleanHTML}</div>
+        <div class="ai-output" style="color: #000;">${cleanHTML}</div>
     </div>`; 
     window.print(); 
 }
@@ -490,17 +483,19 @@ function exportToWord() {
     
     const header = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Soal - GURU SMART</title>
     <style>
-        @page { size: 21cm 29.7cm; margin: 2cm; }
+        @page { size: 21.0cm 29.7cm; margin: 2cm 2cm 2cm 2cm; mso-page-orientation: portrait; }
+        div.Section1 { page: Section1; }
         body { font-family: 'Times New Roman', Georgia, serif; font-size: 12pt; color: #000; line-height: 1.5; }
         h2 { text-align: center; font-size: 16pt; margin-bottom: 5px; }
         p { text-align: center; font-size: 10pt; margin-top: 0; }
     </style></head><body>
+    <div class="Section1">
     <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
         <h2>SOAL PILIHAN GANDA</h2>
         <p>Dibuat oleh GURU SMART</p>
     </div>`;
     
-    const footer = `</body></html>`;
+    const footer = `</div></body></html>`;
     const sourceHTML = header + cleanHTML + footer;
     
     const blob = new Blob(['\ufeff', sourceHTML], {type: 'application/msword'});
