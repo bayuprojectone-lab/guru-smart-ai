@@ -210,44 +210,161 @@ async function renderContent(page) {
 async function renderDashboard() { const students = await DB.get('students'); const teachers = await DB.get('teachers'); const classes = await DB.get('classes'); const announcements = await DB.get('announcements'); const grades = await DB.get('grades'); const keuangan = await DB.get('keuangan'); const unpaidSpp = keuangan.filter(k => k.status === 'Belum Bayar').length; document.getElementById('content').innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">${dashboardCard('Total Siswa', students.length, 'from-blue-500 to-blue-700', 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z')}${dashboardCard('Total Guru', teachers.length, 'from-emerald-500 to-emerald-700', 'M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-5a4 4 0 11-8 0 4 4 0 018 0zm6 0a4 4 0 11-8 0 4 4 0 018 0z')}${dashboardCard('Total Kelas', classes.length, 'from-amber-500 to-orange-600', 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4')}${dashboardCard('SPP Belum Lunas', unpaidSpp, 'from-rose-500 to-red-700', 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1V6m0 2c-1.11 0-2.08.402-2.599 1')}</div><div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><h3 class="font-semibold text-slate-800 dark:text-white mb-4">Statistik Nilai Siswa</h3><canvas id="chartGrades" height="100"></canvas></div><div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><h3 class="font-semibold text-slate-800 dark:text-white mb-4">Pengumuman Terbaru</h3><div class="space-y-4 max-h-80 overflow-y-auto modal-scroll">${announcements.length ? announcements.map(a => `<div class="p-3 bg-slate-50 dark:bg-slate-700 rounded-lg border-l-4 border-blue-500"><p class="font-medium text-sm text-blue-600 dark:text-blue-400">${a.title}</p><p class="text-xs text-slate-500 dark:text-slate-300 mt-1">${a.content}</p><p class="text-[10px] text-slate-400 mt-1">${a.date}</p></div>`).join('') : '<p class="text-sm text-slate-500 text-center py-4">Belum ada pengumuman.</p>'}</div></div></div>`; const ctx = document.getElementById('chartGrades').getContext('2d'); const types = ['Tugas', 'Ulangan Harian', 'PTS', 'PAS']; const data = types.map(t => { const tGrades = grades.filter(g => g.type === t); return tGrades.length ? (tGrades.reduce((s, g) => s + g.score, 0) / tGrades.length).toFixed(1) : 0; }); new Chart(ctx, { type: 'bar', data: { labels: types, datasets: [{ label: 'Rata-rata Nilai', data: data, backgroundColor: 'rgba(37, 99, 235, 0.5)', borderColor: 'rgba(37, 99, 235, 1)', borderWidth: 1 }] }, options: { responsive: true, scales: { y: { beginAtZero: 0, max: 100 } }, plugins: { legend: { labels: { color: document.documentElement.classList.contains('dark') ? '#fff' : '#000' } } } } }); }
 function dashboardCard(title, count, color, icon) { return `<div class="bg-gradient-to-br ${color} p-6 rounded-xl shadow-sm flex items-center space-x-4 text-white"><div class="p-3 bg-white/20 rounded-lg"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${icon}"></path></svg></div><div><p class="text-white/80 text-sm">${title}</p><h3 class="text-2xl font-bold">${count}</h3></div></div>`; }
 
+<script>
 // PERANGKAT AJAR
 const kurikulumTypes = [ { id: 'cp', label: 'Capaian Pembelajaran (CP)', desc: 'Kompetensi yang harus dicapai peserta didik', color: 'from-blue-500 to-cyan-600', icon: 'M13 10V3L4 14h7v7l9-11h-7z' }, { id: 'tp', label: 'Tujuan Pembelajaran (TP)', desc: 'Tujuan spesifik dari setiap CP', color: 'from-green-500 to-emerald-600', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' }, { id: 'atp', label: 'Alur Tujuan Pembelajaran (ATP)', desc: 'Urutan logis tujuan pembelajaran', color: 'from-purple-500 to-pink-600', icon: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6' }, { id: 'modul', label: 'Modul Ajar', desc: 'Panduan lengkap untuk guru', color: 'from-orange-500 to-red-600', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' }, { id: 'rpp', label: 'RPP (Rencana Pelaksanaan Pembelajaran)', desc: 'Rencana kegiatan pembelajaran', color: 'from-indigo-500 to-blue-700', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' }, { id: 'prota', label: 'Program Tahunan', desc: 'Program pembelajaran satu tahun', color: 'from-teal-500 to-green-600', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' }, { id: 'lkpd', label: 'LKPD (Lembar Kerja Peserta Didik)', desc: 'Lembar kerja untuk siswa', color: 'from-rose-500 to-pink-600', icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' } ];
-async function renderKurikulum() { const subjects = await DB.get('subjects'); const kurikulumData = await DB.get('kurikulum'); document.getElementById('content').innerHTML = `<div class="mb-6 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-6 text-white shadow-lg"><h2 class="text-2xl font-bold mb-2">📚 Perangkat Ajar Kurikulum</h2><p class="text-indigo-100 text-sm">Buat dan kelola dokumen kurikulum: CP, TP, ATP, Modul Ajar, RPP, Program Tahunan, hingga LKPD</p></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">${kurikulumTypes.map(t => `<button onclick="generateKurikulum('${t.id}', '${t.label}')" class="bg-gradient-to-br ${t.color} p-5 rounded-xl text-white text-left shadow-md hover:scale-105 transition-transform"><svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${t.icon}"></path></svg><h3 class="font-bold text-sm">${t.label}</h3><p class="text-xs opacity-90 mt-1">${t.desc}</p></button>`).join('')}</div><div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><h3 class="font-bold text-slate-800 dark:text-white mb-4">Dokumen Tersimpan</h3><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase"><tr><th class="px-4 py-3">Jenis</th><th class="px-4 py-3">Mapel</th><th class="px-4 py-3">Judul</th><th class="px-4 py-3">Kelas</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody class="divide-y dark:divide-slate-700">${kurikulumData.length ? kurikulumData.map(k => { const sub = subjects.find(s => s.id === k.subject_id); const typeLabel = kurikulumTypes.find(t => t.id === k.type)?.label || k.type; return `<tr><td class="px-4 py-3"><span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">${typeLabel}</span></td><td class="px-4 py-3">${sub?.name || '-'}</td><td class="px-4 py-3 font-medium">${k.title}</td><td class="px-4 py-3">${k.class_name || '-'}</td><td class="px-4 py-3 flex gap-2"><button onclick="viewKurikulum(${k.id})" class="text-blue-500">Lihat</button><button onclick="printKurikulumDoc(${k.id})" class="text-green-500">Cetak</button><button onclick="deleteData('kurikulum', ${k.id}, renderKurikulum)" class="text-red-500">Hapus</button></td></tr>`; }).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500">Belum ada dokumen. Gunakan tombol di atas untuk membuat.</td></tr>`}</tbody></table></div></div>`; }
+
+async function renderKurikulum() { 
+    const subjects = await DB.get('subjects'); 
+    const kurikulumData = await DB.get('kurikulum'); 
+    document.getElementById('content').innerHTML = `
+    <div class="mb-6 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
+        <h2 class="text-2xl font-bold mb-2">📚 Perangkat Ajar Kurikulum</h2>
+        <p class="text-indigo-100 text-sm">Buat dan kelola dokumen kurikulum: CP, TP, ATP, Modul Ajar, RPP, Program Tahunan, hingga LKPD</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        ${kurikulumTypes.map(t => `
+            <button onclick="generateKurikulum('${t.id}', '${t.label}')" class="bg-gradient-to-br ${t.color} p-5 rounded-xl text-white text-left shadow-md hover:scale-105 transition-transform">
+                <svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${t.icon}"></path></svg>
+                <h3 class="font-bold text-sm">${t.label}</h3>
+                <p class="text-xs opacity-90 mt-1">${t.desc}</p>
+            </button>
+        `).join('')}
+    </div>
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm">
+        <h3 class="font-bold text-slate-800 dark:text-white mb-4">Dokumen Tersimpan</h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+                <thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase">
+                    <tr><th class="px-4 py-3">Jenis</th><th class="px-4 py-3">Mapel</th><th class="px-4 py-3">Judul</th><th class="px-4 py-3">Kelas</th><th class="px-4 py-3">Aksi</th></tr>
+                </thead>
+                <tbody class="divide-y dark:divide-slate-700">
+                    ${kurikulumData.length ? kurikulumData.map(k => { 
+                        const sub = subjects.find(s => s.id === k.subject_id); 
+                        const typeLabel = kurikulumTypes.find(t => t.id === k.type)?.label || k.type; 
+                        return `<tr>
+                            <td class="px-4 py-3"><span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">${typeLabel}</span></td>
+                            <td class="px-4 py-3">${sub?.name || '-'}</td>
+                            <td class="px-4 py-3 font-medium">${k.title}</td>
+                            <td class="px-4 py-3">${k.class_name || '-'}</td>
+                            <td class="px-4 py-3 flex gap-2">
+                                <button onclick="viewKurikulum('${k.id}')" class="text-blue-500">Lihat</button>
+                                <button onclick="printKurikulumDoc('${k.id}')" class="text-green-500">Cetak</button>
+                                <button onclick="deleteData('kurikulum', '${k.id}', renderKurikulum)" class="text-red-500">Hapus</button>
+                            </td>
+                        </tr>`; 
+                    }).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500">Belum ada dokumen. Gunakan tombol di atas untuk membuat.</td></tr>`}
+                </tbody>
+            </table>
+        </div>
+    </div>`; 
+}
+
 async function generateKurikulum(type, typeLabel) { 
     const subjects = await DB.get('subjects'); 
     const classes = await DB.get('classes'); 
+    
+    if(subjects.length === 0 || classes.length === 0) {
+        showToast('Harap tambahkan Mata Pelajaran & Kelas dahulu di menu sebelah kiri!', 'error');
+        return;
+    }
+
     openModal(`Buat ${typeLabel} dengan AI`, `
     <form id="kurikulumForm" class="space-y-4">
         <div class="bg-blue-50 dark:bg-slate-700 p-3 rounded-lg text-sm text-blue-700 dark:text-blue-300">💡 AI akan membuatkan <strong>${typeLabel}</strong> secara otomatis. Lengkapi detail di bawah ini.</div>
-        <div><label class="block text-sm mb-1">Mata Pelajaran</label><select id="kSubject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
-        <div><label class="block text-sm mb-1">Kelas</label><select id="kClass" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}" data-name="${c.name}">${c.name}</option>`).join('')}</select></div>
-        <div><label class="block text-sm mb-1">Topik / Materi</label><input type="text" id="kTopic" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" placeholder="Contoh: Ekosistem"></div>
-        <div><label class="block text-sm mb-1">Fase</label><select id="kPhase" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option>Fase A</option><option>Fase B</option><option>Fase C</option><option>Fase D</option><option>Fase E</option><option>Fase F</option></select></div>
-        <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 rounded-lg font-semibold">⚡ Generate dengan AI</button>
+        <div>
+            <label class="block text-sm mb-1">Mata Pelajaran</label>
+            <select id="kSubject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required>
+                ${subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm mb-1">Kelas</label>
+            <select id="kClass" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required>
+                ${classes.map(c => `<option value="${c.id}" data-name="${c.name}">${c.name}</option>`).join('')}
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm mb-1">Topik / Materi</label>
+            <input type="text" id="kTopic" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" placeholder="Contoh: Ekosistem, Persamaan Linear, Sejarah Hindu-Buddha" required>
+        </div>
+        <div>
+            <label class="block text-sm mb-1">Fase</label>
+            <select id="kPhase" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">
+                <option>Fase A</option><option>Fase B</option><option>Fase C</option><option>Fase D</option><option>Fase E</option><option>Fase F</option>
+            </select>
+        </div>
+        <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 rounded-lg font-semibold flex items-center justify-center gap-2">
+            <svg class="animate-spin hidden h-5 w-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            <span id="btnText">⚡ Generate dengan AI</span>
+        </button>
     </form>`); 
+
     document.getElementById('kurikulumForm').onsubmit = async (e) => { 
         e.preventDefault(); 
-        const subjectId = parseInt(document.getElementById('kSubject').value); 
+        
+        const btn = document.querySelector('#kurikulumForm button[type="submit"]');
+        const btnText = document.getElementById('btnText');
+        const spinner = btn.querySelector('svg');
+        btn.disabled = true;
+        btnText.innerText = 'AI Sedang Menyusun Dokumen...';
+        spinner.classList.remove('hidden');
+
+        const subjectId = document.getElementById('kSubject').value; 
         const classSelect = document.getElementById('kClass');
         const className = classSelect.options[classSelect.selectedIndex].dataset.name; 
         const topic = document.getElementById('kTopic').value; 
         const phase = document.getElementById('kPhase').value; 
         const subject = subjects.find(s => s.id === subjectId); 
-        closeModal(); 
-        showToast('AI sedang membuat dokumen...', 'info'); 
+
         const prompt = `Buatkan ${typeLabel} lengkap dan profesional untuk mata pelajaran ${subject.name}, kelas ${className}, Fase ${phase}, topik: ${topic}. Gunakan format markdown yang rapi. Sesuaikan dengan Kurikulum Merdeka.`; 
+        
         try { 
             const sys = `Anda adalah ahli kurikulum pendidikan Indonesia. Buatkan ${typeLabel} yang sesuai dengan Kurikulum Merdeka. Gunakan format markdown yang baik dengan heading, bullet points, dan tabel jika perlu. Pastikan isi lengkap, profesional, dan siap digunakan guru.`; 
-            const res = await puter.ai.chat([{role:'system',content:sys},{role:'user',content:prompt}],{model:'gpt-4o-mini'}); 
+            
+            const res = await puter.ai.chat([{role:'system',content:sys},{role:'user',content:prompt}]); 
             const content = typeof res === 'string' ? res : (res.message?.content || ''); 
+            
+            if(!content) throw new Error("AI tidak memberikan respon. Coba lagi.");
+            
             await DB.insert('kurikulum', { type, title: `${typeLabel} - ${topic}`, subject_id: subjectId, class_name: className, content }); 
             showToast('Dokumen berhasil dibuat!', 'success'); 
+            closeModal(); 
             renderKurikulum(); 
-        } catch(err) { showToast('Error: ' + err.message, 'error'); } 
+        } catch(err) { 
+            showToast('Error AI: ' + err.message, 'error'); 
+            btn.disabled = false;
+            btnText.innerText = '⚡ Coba Generate Lagi';
+            spinner.classList.add('hidden');
+        } 
     }; 
 }
-async function viewKurikulum(id) { const doc = (await DB.get('kurikulum')).find(k => k.id === id); if(!doc) return; const typeLabel = kurikulumTypes.find(t => t.id === doc.type)?.label || doc.type; openModal(typeLabel, `<div class="ai-output text-gray-800 dark:text-white">${marked.parse(doc.content)}</div><div class="mt-4 flex gap-2"><button onclick="printKurikulumDoc(${doc.id})" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm flex-1">🖨️ Cetak / PDF</button><button onclick="closeModal()" class="bg-slate-500 text-white px-4 py-2 rounded-lg text-sm">Tutup</button></div>`); }
-function printKurikulumDoc(id) { DB.get('kurikulum').then(docs => { const doc = docs.find(k => k.id === id); if(!doc) return; const typeLabel = kurikulumTypes.find(t => t.id === doc.type)?.label || doc.type; const htmlContent = marked.parse(doc.content); document.getElementById('printArea').innerHTML = `<div style="font-family: 'Times New Roman', Georgia, serif; color: #000; padding: 20px;"><div style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 25px;"><h2 style="margin:0; font-size: 18px;">${typeLabel.toUpperCase()}</h2><p style="margin: 5px 0 0; font-size: 12px;">${doc.class_name} | ${doc.title}</p></div><div>${htmlContent}</div></div>`; window.print(); }); }
+
+async function viewKurikulum(id) { 
+    const doc = (await DB.get('kurikulum')).find(k => k.id === id); 
+    if(!doc) return; 
+    const typeLabel = kurikulumTypes.find(t => t.id === doc.type)?.label || doc.type; 
+    openModal(typeLabel, `<div class="ai-output text-gray-800 dark:text-white">${marked.parse(doc.content)}</div><div class="mt-4 flex gap-2"><button onclick="printKurikulumDoc('${doc.id}')" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm flex-1">🖨️ Cetak / PDF</button><button onclick="closeModal()" class="bg-slate-500 text-white px-4 py-2 rounded-lg text-sm">Tutup</button></div>`); 
+}
+
+function printKurikulumDoc(id) { 
+    DB.get('kurikulum').then(docs => { 
+        const doc = docs.find(k => k.id === id); 
+        if(!doc) return; 
+        const typeLabel = kurikulumTypes.find(t => t.id === doc.type)?.label || doc.type; 
+        const htmlContent = marked.parse(doc.content); 
+        document.getElementById('printArea').innerHTML = `
+        <div style="font-family: 'Times New Roman', Georgia, serif; color: #000; padding: 20px;">
+            <div style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 25px;">
+                <h2 style="margin:0; font-size: 18px;">${typeLabel.toUpperCase()}</h2>
+                <p style="margin: 5px 0 0; font-size: 12px;">${doc.class_name} | ${doc.title}</p>
+            </div>
+            <div>${htmlContent}</div>
+        </div>`; 
+        window.print(); 
+    }); 
+}
+</script>
 
 // TEACHERS, STUDENTS, CLASSES, SUBJECTS
 async function renderTeachers() { const teachers = await DB.get('teachers'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex justify-between mb-4"><input type="text" id="searchTeacher" onkeyup="filterTable('searchTeacher', 'teacherTableBody')" placeholder="Cari guru..." class="px-4 py-2 rounded-lg border dark:bg-slate-700 dark:text-white text-sm outline-none"><button onclick="teacherForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Guru</button></div><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase"><tr><th class="px-4 py-3">NIP</th><th class="px-4 py-3">Nama</th><th class="px-4 py-3">Gender</th><th class="px-4 py-3">Mapel</th><th class="px-4 py-3">No HP</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody id="teacherTableBody" class="divide-y dark:divide-slate-700">${teachers.length ? teachers.map(t => `<tr><td class="px-4 py-3">${t.nip}</td><td class="px-4 py-3 font-medium">${t.name}</td><td class="px-4 py-3">${t.gender}</td><td class="px-4 py-3">${t.subject}</td><td class="px-4 py-3">${t.phone}</td><td class="px-4 py-3 flex gap-2"><button onclick="teacherForm(${t.id})" class="text-blue-500">Edit</button><button onclick="deleteData('teachers', ${t.id}, renderTeachers)" class="text-red-500">Hapus</button></td></tr>`).join('') : `<tr><td colspan="6" class="text-center py-4 text-slate-500">Belum ada data.</td></tr>`}</tbody></table></div></div>`; }
