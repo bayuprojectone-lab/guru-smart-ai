@@ -234,7 +234,29 @@ async function generateKurikulum(type, typeLabel) {
     }; 
 }
 async function viewKurikulum(id) { const doc = (await DB.get('kurikulum')).find(k => k.id === id); if(!doc) return; const typeLabel = kurikulumTypes.find(t => t.id === doc.type)?.label || doc.type; openModal(typeLabel, `<div class="ai-output text-gray-800 dark:text-white">${marked.parse(doc.content)}</div><div class="mt-4 flex gap-2"><button onclick="printKurikulumDoc('${doc.id}')" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm flex-1">🖨️ Cetak / PDF</button><button onclick="closeModal()" class="bg-slate-500 text-white px-4 py-2 rounded-lg text-sm">Tutup</button></div>`); }
-function printKurikulumDoc(id) { DB.get('kurikulum').then(docs => { const doc = docs.find(k => k.id === id); if(!doc) return; const typeLabel = kurikulumTypes.find(t => t.id === doc.type)?.label || doc.type; const htmlContent = marked.parse(doc.content); document.getElementById('printArea').innerHTML = `<div style="font-family: 'Times New Roman', Georgia, serif; color: #000; padding: 20px;"><div style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 25px;"><h2 style="margin:0; font-size: 18px;">${typeLabel.toUpperCase()}</h2><p style="margin: 5px 0 0; font-size: 12px;">${doc.class_name} | ${doc.title}</p></div><div>${htmlContent}</div></div>`; window.print(); }); }
+<script>
+function printKurikulumDoc(id) { 
+    DB.get('kurikulum').then(docs => { 
+        const doc = docs.find(k => k.id === id); 
+        if(!doc) return; 
+        const typeLabel = kurikulumTypes.find(t => t.id === doc.type)?.label || doc.type; 
+        const htmlContent = marked.parse(doc.content); 
+        
+        document.getElementById('printArea').innerHTML = `
+        <div style="font-family: 'Times New Roman', Georgia, serif; color: #000; padding: 0; margin: 0; width: 100%;">
+            <div style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 25px;">
+                <h2 style="margin:0; font-size: 18px;">${typeLabel.toUpperCase()}</h2>
+                <p style="margin: 5px 0 0; font-size: 12px;">${doc.class_name} | ${doc.title}</p>
+            </div>
+            <div class="ai-output" style="color: #000; margin: 0; padding: 0;">
+                ${htmlContent}
+            </div>
+        </div>`; 
+        
+        window.print(); 
+    }); 
+}
+</script>
 
 // TEACHERS, STUDENTS, CLASSES, SUBJECTS
 async function renderTeachers() { const teachers = await DB.get('teachers'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex justify-between mb-4"><input type="text" id="searchTeacher" onkeyup="filterTable('searchTeacher', 'teacherTableBody')" placeholder="Cari guru..." class="px-4 py-2 rounded-lg border dark:bg-slate-700 dark:text-white text-sm outline-none"><button onclick="teacherForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Guru</button></div><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase"><tr><th class="px-4 py-3">NIP</th><th class="px-4 py-3">Nama</th><th class="px-4 py-3">Gender</th><th class="px-4 py-3">Mapel</th><th class="px-4 py-3">No HP</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody id="teacherTableBody" class="divide-y dark:divide-slate-700">${teachers.length ? teachers.map(t => `<tr><td class="px-4 py-3">${t.nip}</td><td class="px-4 py-3 font-medium">${t.name}</td><td class="px-4 py-3">${t.gender}</td><td class="px-4 py-3">${t.subject}</td><td class="px-4 py-3">${t.phone}</td><td class="px-4 py-3 flex gap-2"><button onclick="teacherForm('${t.id}')" class="text-blue-500">Edit</button><button onclick="deleteData('teachers', '${t.id}', renderTeachers)" class="text-red-500">Hapus</button></td></tr>`).join('') : `<tr><td colspan="6" class="text-center py-4 text-slate-500">Belum ada data.</td></tr>`}</tbody></table></div></div>`; }
