@@ -20,19 +20,27 @@
         .fade-in { animation: fadeIn 0.3s ease-in-out; } @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         #printArea { display: none; }
         
-        /* Mengatur margin kertas PDF agar teks tidak menempel di pinggir dan menghilangkan header/footer browser */
+        /* Menghilangkan header/footer browser dan mengatur margin */
         @media print {
             body * { visibility: hidden; } 
             #printArea, #printArea * { visibility: visible; } 
-            #printArea { display: block; position: absolute; left: 0; top: 0; width: 100%; padding: 0; } 
-            @page { margin: 2cm; } /* Margin aman untuk PC */
+            #printArea { 
+                display: block; 
+                position: absolute; 
+                left: 0; top: 0; width: 100%; 
+                padding: 2cm; /* Jarak ke dalam agar teks tidak menempel pinggir */
+                box-sizing: border-box;
+            } 
+            @page { 
+                margin: 0; /* Hilangkan header/footer bawaan browser */
+            } 
         }
         
         .ai-output h1, .ai-output h2, .ai-output h3 { font-weight: bold; margin-top: 12px; margin-bottom: 6px; }
         .ai-output p { margin-bottom: 8px; }
         .ai-output ul, .ai-output ol { margin-left: 20px; margin-bottom: 8px; list-style-position: inside; }
         .ai-output table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
-        .ai-output th, .ai-output td { border: 1px solid #000; padding: 6px; text-align: left; } /* GARIS TABEL HITAM */
+        .ai-output th, .ai-output td { border: 1px solid #000; padding: 6px; text-align: left; }
         
         .ai-output .soal-item {
             font-family: 'Times New Roman', Georgia, serif;
@@ -43,8 +51,9 @@
         .ai-output .soal-number { font-weight: bold; color: #1e3a8a; min-width: 28px; }
         .ai-output .soal-text { font-size: 14px; line-height: 1.7; color: #1e293b; font-weight: 500; flex: 1; }
         
-        /* Struktur 2 kolom: A & B di kiri, C & D di kanan */
-        .ai-output .soal-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 24px; margin: 8px 0 8px 34px; }
+        /* Layout Pilihan Ganda: A & B di kiri, C & D di kanan */
+        .ai-output .soal-opts { display: flex; gap: 24px; margin: 8px 0 8px 34px; }
+        .ai-output .opt-col { flex: 1; display: flex; flex-direction: column; gap: 4px; }
         .ai-output .soal-opt { display: flex; align-items: flex-start; font-size: 13px; color: #334155; }
         .ai-output .soal-opt .opt-label { font-weight: bold; margin-right: 6px; min-width: 20px; color: #475569; }
         .ai-output .soal-opt.correct { background: #fef08a; font-weight: 600; box-shadow: 0 0 0 1px #eab308; padding: 2px 4px; border-radius: 3px; }
@@ -202,7 +211,6 @@ async function renderContent(page) {
         case 'announcements': await renderAnnouncements(); break;
         case 'settings': await renderSettings(); break;
     }
-    // Tambahkan teks mode pengembang di bawah konten
     document.getElementById('content').innerHTML += `<div class="text-center text-[10px] text-slate-400 dark:text-slate-600 py-4 mt-4 border-t border-slate-200 dark:border-slate-700">Dalam Mode Pengembang @BayuProjectone</div>`;
 }
 
@@ -350,12 +358,17 @@ function formatSoalHTML(rawText) {
         soalBlocks.forEach(sb => {
             let qText = sb.question.replace(/^\*+|\*+$/g, '').replace(/_+/g, '').trim();
             qText = qText.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-            soalHTML += `<div class="soal-item"><div class="soal-header"><span class="soal-number">${sb.num}.</span><span class="soal-text">${qText}</span></div><div class="soal-opts">`;
-            sb.options.forEach(opt => {
+            
+            // Membuat 2 kolom (Kiri: A & B, Kanan: C & D)
+            soalHTML += `<div class="soal-item"><div class="soal-header"><span class="soal-number">${sb.num}.</span><span class="soal-text">${qText}</span></div><div class="soal-opts"><div class="opt-col">`;
+            const half = Math.ceil(sb.options.length / 2);
+            sb.options.forEach((opt, index) => {
+                if (index === half) soalHTML += `</div><div class="opt-col">`;
                 const isCorrect = opt.label === sb.correct;
                 soalHTML += `<div class="soal-opt ${isCorrect ? 'correct' : ''}"><span class="opt-label">${opt.label}.</span><span class="opt-text">${opt.text}</span></div>`;
             });
-            soalHTML += `</div>`;
+            soalHTML += `</div></div>`;
+            
             if (sb.correct) { soalHTML += `<div class="soal-answer hide-on-print">Jawaban: <strong>${sb.correct}</strong></div>`; }
             soalHTML += `</div>`;
         });
@@ -462,30 +475,15 @@ function exportToWord() {
         optsDiv.style.marginLeft = '25px';
         optsDiv.style.marginTop = '8px';
         
-        const opts = optsDiv.querySelectorAll('.soal-opt');
-        opts.forEach((opt, index) => {
-            opt.style.display = 'block';
-            opt.style.marginBottom = '6px';
-            
-            const label = opt.querySelector('.opt-label');
-            const text = opt.querySelector('.opt-text');
-            if(label) label.style.fontWeight = 'bold';
-            if(text) text.style.marginLeft = '4px';
-            
-            if(index < 2) {
-                opt.style.float = 'left';
-                opt.style.width = '45%';
-                opt.style.marginRight = '5%';
-            } else {
-                opt.style.float = 'left';
-                opt.style.width = '45%';
-                opt.style.clear = (index === 2) ? 'left' : 'none';
-            }
+        const cols = optsDiv.querySelectorAll('.opt-col');
+        cols.forEach(col => {
+            col.style.display = 'inline-block';
+            col.style.width = '48%';
+            col.style.verticalAlign = 'top';
+            col.style.styleFloat = 'left';
+            col.style.cssFloat = 'left';
+            col.style.marginRight = '2%';
         });
-        
-        const clearDiv = document.createElement('div');
-        clearDiv.style.clear = 'both';
-        optsDiv.appendChild(clearDiv);
     });
     
     let cleanHTML = tempDiv.innerHTML;
