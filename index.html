@@ -130,7 +130,7 @@
     <div id="printArea"></div>
 
 <script>
-// BAGIAN 2 AKAN DITEMPELKAN TEPAT DI BAWAH INI// GANTI DENGAN URL DAN ANON KEY SUPABASE ANDA
+// GANTI DENGAN URL DAN ANON KEY SUPABASE ANDA
 const SUPABASE_URL = 'https://xdwgqgdbfidlsfgyyaeo.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhkd2dxZ2RiZmlkbHNmZ3l5YWVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1MDAxNjQsImV4cCI6MjEwNTA3NjE2NH0.3QRFjepUIK00cmFFMJ7D3eEtWKpX2dMOfUPap-ef8Lo';
 
@@ -356,17 +356,127 @@ async function annForm(id = null) { openModal('Buat Pengumuman', `<form id="annF
 async function renderSettings() { const profile = (await DB.get('school_profile'))[0] || {}; document.getElementById('content').innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div class="bg-white p-6 rounded-xl"><h3 class="font-bold mb-4">Profil Sekolah</h3><form id="profileForm" class="space-y-4"><div><label class="block text-sm mb-1">Nama Sekolah</label><input type="text" id="pName" value="${profile.name || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Alamat</label><input type="text" id="pAddress" value="${profile.address || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Kepala Sekolah</label><input type="text" id="pPrincipal" value="${profile.principal || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Simpan</button></form></div><div class="bg-white p-6 rounded-xl"><h3 class="font-bold mb-4">Pengaturan Akun</h3><div class="flex flex-col items-center space-y-3"><img id="prevAvatar" src="${currentUser.avatar_url || AI_IMG}" class="w-24 h-24 rounded-full object-cover"><input type="file" id="avatarFile" accept="image/*" class="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"><button onclick="uploadAvatar()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm">Upload Foto</button></div></div></div>`; document.getElementById('profileForm').onsubmit = async (e) => { e.preventDefault(); await saveData('school_profile', { id: 1, name: pName.value, address: pAddress.value, principal: pPrincipal.value }, 1); }; }
 async function uploadAvatar() { const file = document.getElementById('avatarFile').files[0]; if(!file) { showToast('Pilih file dulu!', 'error'); return; } showToast('Mengunggah foto...', 'info'); const { data, error } = await sb.storage.from('avatars').upload('user_' + currentUser.id + '_' + Date.now() + '.jpg', file); if (error) { showToast('Gagal upload: ' + error.message, 'error'); return; } const url = sb.storage.from('avatars').getPublicUrl(data.path).data.publicUrl; await DB.update('users', currentUser.id, { avatar_url: url }); currentUser.avatar_url = url; localStorage.setItem('gs_currentUser', JSON.stringify(currentUser)); document.getElementById('userAvatar').src = url; showToast('Foto profil diperbarui!', 'success'); }
 
-// AI ASSISTANT LOGIC (Tanpa Riwayat, Dengan Markdown & Print PDF)
-function renderAI() { document.getElementById('content').innerHTML=`<div class="grid grid-cols-1 xl:grid-cols-3 gap-6"><div class="xl:col-span-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden"><div class="p-5 border-b dark:border-slate-700 flex justify-between items-center"><div class="flex items-center gap-3"><img src="${AI_IMG}" class="w-10 h-10 rounded-full object-cover"><div><h3 class="text-lg font-bold">Asisten AI Guru</h3><p class="text-xs text-slate-500">Gunakan prompt detail untuk hasil yang rapi.</p></div></div></div><div id="aiMessages" class="h-[500px] overflow-y-auto p-5 space-y-4 bg-slate-50 dark:bg-slate-900"></div><div class="p-4 border-t dark:border-slate-700"><textarea id="aiInput" rows="3" placeholder="Tulis perintah..." class="w-full px-4 py-3 rounded-xl border dark:bg-slate-700 dark:text-white"></textarea><div class="flex justify-end mt-3 gap-2"><button id="aiPrintBtn" onclick="printAIResult()" class="hidden bg-slate-600 text-white px-4 py-2.5 rounded-lg font-semibold">Cetak / PDF</button><button id="aiSendBtn" onclick="sendAI()" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-semibold">Kirim</button></div></div></div></div>`; loadAIChat(); }
+// AI ASSISTANT LOGIC (Tanpa Riwayat, Dengan Markdown, Print PDF & Export Word)
+function renderAI() { 
+    document.getElementById('content').innerHTML = `
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div class="xl:col-span-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden">
+            <div class="p-5 border-b dark:border-slate-700 flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <img src="${AI_IMG}" class="w-10 h-10 rounded-full object-cover">
+                    <div>
+                        <h3 class="text-lg font-bold">Asisten AI Guru</h3>
+                        <p class="text-xs text-slate-500">Gunakan prompt detail untuk hasil yang rapi.</p>
+                    </div>
+                </div>
+            </div>
+            <div id="aiMessages" class="h-[500px] overflow-y-auto p-5 space-y-4 bg-slate-50 dark:bg-slate-900"></div>
+            <div class="p-4 border-t dark:border-slate-700">
+                <textarea id="aiInput" rows="3" placeholder="Tulis perintah... (Contoh: Buatkan 5 soal pilihan ganda tentang Pahlawan Nasional)" class="w-full px-4 py-3 rounded-xl border dark:bg-slate-700 dark:text-white"></textarea>
+                <div class="flex justify-end mt-3 gap-2">
+                    <button id="aiWordBtn" onclick="exportToWord()" class="hidden bg-blue-500 text-white px-4 py-2.5 rounded-lg font-semibold flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                        Word
+                    </button>
+                    <button id="aiPrintBtn" onclick="printAIResult()" class="hidden bg-slate-600 text-white px-4 py-2.5 rounded-lg font-semibold flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                        Cetak / PDF
+                    </button>
+                    <button id="aiSendBtn" onclick="sendAI()" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-semibold">Kirim</button>
+                </div>
+            </div>
+        </div>
+    </div>`; 
+    loadAIChat(); 
+}
+
 function aiPrompt(text){document.getElementById('aiInput').value=text;sendAI();}
 async function getSchoolContext(){return {students:await DB.get('students'),teachers:await DB.get('teachers'),subjects:await DB.get('subjects')};}
 function loadAIChat(){const box=document.getElementById('aiMessages');if(!box)return;box.innerHTML=`<div class="flex justify-start"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1">Asisten AI</div><div class="whitespace-pre-wrap">Halo! Saya adalah Asisten AI Guru Anda. Silakan tulis perintah, dan siap membantu anda menjawab pertanyaan, menulis, merencanakan, atau berdiskusi".</div></div></div>`;}
 function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-let lastAIResponse = '';
-async function sendAI(){const input=document.getElementById('aiInput');if(!input.value.trim())return;const prompt=input.value.trim();input.value='';const btn=document.getElementById('aiSendBtn');btn.disabled=true;btn.innerText='Memproses...';document.getElementById('aiPrintBtn').classList.add('hidden');const box=document.getElementById('aiMessages');box.innerHTML=`<div class="flex justify-end"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-blue-600 text-white"><div class="text-xs opacity-70 mb-1">Anda</div><div class="whitespace-pre-wrap">${escapeHTML(prompt)}</div></div></div><div class="flex justify-start"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1">Asisten AI</div><div class="animate-pulse">Sedang mengetik...</div></div></div>`;try{const ctx=await getSchoolContext();const sys=`Anda adalah Asisten AI Guru yang membantu di aplikasi GURU SMART. Berikut adalah data sekolah dalam format JSON: ${JSON.stringify(ctx)}. Gunakan data ini jika diperlukan. Jika membuat soal, buat format yang rapi menggunakan markdown (Judul, Pertanyaan, Opsi A-B-C-D, dan Kunci Jawaban di akhir).`;const res=await puter.ai.chat([{role:'system',content:sys},{role:'user',content:prompt}],{model:'gpt-4o-mini'});let ans=typeof res==='string'?res:(res.message?.content||'');lastAIResponse=ans;const htmlAns=marked.parse(ans);box.innerHTML=`<div class="flex justify-end"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-blue-600 text-white"><div class="text-xs opacity-70 mb-1">Anda</div><div class="whitespace-pre-wrap">${escapeHTML(prompt)}</div></div></div><div class="flex justify-start"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1">Asisten AI</div><div class="ai-output">${htmlAns}</div></div></div>`;document.getElementById('aiPrintBtn').classList.remove('hidden');}catch(e){showToast('Error AI','error');box.innerHTML=`<div class="flex justify-start"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-red-500">Terjadi kesalahan saat memuat AI.</div></div></div>`;}finally{btn.disabled=false;btn.innerText='Kirim';}}
-function printAIResult() { if(!lastAIResponse) return; document.getElementById('printArea').innerHTML = `<div style="font-family: Arial; color: #000; padding: 20px;"><div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;"><h2>HASIL ASISTEN AI GURU</h2></div><div class="ai-output">${marked.parse(lastAIResponse)}</div></div>`; window.print(); }
 
-// CORE UTILS
+let lastAIResponse = '';
+async function sendAI(){
+    const input=document.getElementById('aiInput');
+    if(!input.value.trim())return;
+    const prompt=input.value.trim();
+    input.value='';
+    const btn=document.getElementById('aiSendBtn');
+    btn.disabled=true;
+    btn.innerText='Memproses...';
+    document.getElementById('aiPrintBtn').classList.add('hidden');
+    document.getElementById('aiWordBtn').classList.add('hidden');
+    
+    const box=document.getElementById('aiMessages');
+    box.innerHTML=`<div class="flex justify-end"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-blue-600 text-white"><div class="text-xs opacity-70 mb-1">Anda</div><div class="whitespace-pre-wrap">${escapeHTML(prompt)}</div></div></div><div class="flex justify-start"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1">Asisten AI</div><div class="animate-pulse">Sedang mengetik...</div></div></div>`;
+    
+    try{
+        const ctx=await getSchoolContext();
+        const sys=`Anda adalah Asisten AI Guru yang membantu di aplikasi GURU SMART. Berikut adalah data sekolah dalam format JSON: ${JSON.stringify(ctx)}. Gunakan data ini jika diperlukan. 
+        
+        Jika membuat soal, WAJIB gunakan format markdown yang sangat rapi seperti standar ujian pada umumnya. Contoh:
+        
+        1. Pertanyaan pertama di sini?
+        A. Pilihan A
+        B. Pilihan B
+        C. Pilihan C
+        D. Pilihan D
+        E. Pilihan E
+        
+        2. Pertanyaan kedua di sini?
+        A. Pilihan A
+        B. Pilihan B
+        C. Pilihan C
+        D. Pilihan D
+        
+        Di bagian paling akhir, WAJIB tambahkan baris **Kunci Jawaban:** diikuti nomor dan jawabannya, contoh:
+        **Kunci Jawaban:**
+        1. B
+        2. A`;
+        
+        const res=await puter.ai.chat([{role:'system',content:sys},{role:'user',content:prompt}],{model:'gpt-4o-mini'});
+        let ans=typeof res==='string'?res:(res.message?.content||'');
+        lastAIResponse=ans;
+        const htmlAns=marked.parse(ans);
+        
+        box.innerHTML=`<div class="flex justify-end"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-blue-600 text-white"><div class="text-xs opacity-70 mb-1">Anda</div><div class="whitespace-pre-wrap">${escapeHTML(prompt)}</div></div></div><div class="flex justify-start"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1">Asisten AI</div><div class="ai-output">${htmlAns}</div></div></div>`;
+        
+        document.getElementById('aiPrintBtn').classList.remove('hidden');
+        document.getElementById('aiWordBtn').classList.remove('hidden');
+    }catch(e){
+        showToast('Error AI','error');
+        box.innerHTML=`<div class="flex justify-start"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-red-500">Terjadi kesalahan saat memuat AI.</div></div></div>`;
+    }finally{
+        btn.disabled=false;
+        btn.innerText='Kirim';
+    }
+}
+
+function printAIResult() { 
+    if(!lastAIResponse) return; 
+    const cleanMarkdown = lastAIResponse.split(/Kunci Jawaban/i)[0];
+    const htmlContent = marked.parse(cleanMarkdown);
+    document.getElementById('printArea').innerHTML = `<div style="font-family: Arial; color: #000; padding: 20px;"><div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;"><h2>HASIL ASISTEN AI GURU</h2></div><div class="ai-output">${htmlContent}</div></div>`; 
+    window.print(); 
+}
+
+function exportToWord() {
+    if(!lastAIResponse) { showToast('Tidak ada teks untuk diekspor', 'error'); return; }
+    const html = marked.parse(lastAIResponse);
+    const header = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Soal - GURU SMART</title><style>body{font-family: Arial, sans-serif; font-size: 12pt;} h1,h2,h3{font-weight: bold;} ul, ol{margin-left: 20px;} p{margin-bottom: 10px;}</style></head><body>`;
+    const footer = `</body></html>`;
+    const sourceHTML = header + html + footer;
+    const blob = new Blob(['\ufeff', sourceHTML], {type: 'application/msword'});
+    const url = URL.createObjectURL(blob);
+    const fileDownload = document.createElement("a");
+    fileDownload.href = url;
+    fileDownload.download = 'Soal_Guru_Smart.doc';
+    document.body.appendChild(fileDownload);
+    fileDownload.click();
+    document.body.removeChild(fileDownload);
+    URL.revokeObjectURL(url);
+    showToast('Berhasil diekspor ke Word', 'success');
+}// CORE UTILS
 async function saveData(key, data, id) { if (id) { await DB.update(key, id, data); } else { await DB.insert(key, data); } showToast('Data disimpan!', 'success'); }
 async function deleteData(key, id, callback) { if (confirm('Hapus data?')) { await DB.remove(key, id); if (typeof callback === 'function') callback(); } }
 function filterTable(searchId, tbodyId) { const input = document.getElementById(searchId).value.toLowerCase(); const rows = document.getElementById(tbodyId).getElementsByTagName('tr'); for (let row of rows) { row.style.display = row.innerText.toLowerCase().includes(input) ? '' : 'none'; } }
