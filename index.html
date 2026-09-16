@@ -20,27 +20,19 @@
         .fade-in { animation: fadeIn 0.3s ease-in-out; } @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         #printArea { display: none; }
         
-        /* Menghilangkan header/footer browser dan mengatur margin */
+        /* Mengatur margin kertas PDF agar teks tidak menempel di pinggir dan menghilangkan header/footer browser */
         @media print {
             body * { visibility: hidden; } 
             #printArea, #printArea * { visibility: visible; } 
-            #printArea { 
-                display: block; 
-                position: absolute; 
-                left: 0; top: 0; width: 100%; 
-                padding: 2cm; /* Jarak ke dalam agar teks tidak menempel pinggir */
-                box-sizing: border-box;
-            } 
-            @page { 
-                margin: 0; /* Hilangkan header/footer bawaan browser */
-            } 
+            #printArea { display: block; position: absolute; left: 0; top: 0; width: 100%; padding: 0; } 
+            @page { margin: 2cm; } /* Margin aman untuk PC */
         }
         
         .ai-output h1, .ai-output h2, .ai-output h3 { font-weight: bold; margin-top: 12px; margin-bottom: 6px; }
         .ai-output p { margin-bottom: 8px; }
         .ai-output ul, .ai-output ol { margin-left: 20px; margin-bottom: 8px; list-style-position: inside; }
         .ai-output table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
-        .ai-output th, .ai-output td { border: 1px solid #000; padding: 6px; text-align: left; }
+        .ai-output th, .ai-output td { border: 1px solid #000; padding: 6px; text-align: left; } /* GARIS TABEL HITAM */
         
         .ai-output .soal-item {
             font-family: 'Times New Roman', Georgia, serif;
@@ -51,9 +43,8 @@
         .ai-output .soal-number { font-weight: bold; color: #1e3a8a; min-width: 28px; }
         .ai-output .soal-text { font-size: 14px; line-height: 1.7; color: #1e293b; font-weight: 500; flex: 1; }
         
-        /* Layout Pilihan Ganda: A & B di kiri, C & D di kanan */
-        .ai-output .soal-opts { display: flex; gap: 24px; margin: 8px 0 8px 34px; }
-        .ai-output .opt-col { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+        /* Struktur 2 kolom: A & B di kiri, C & D di kanan */
+        .ai-output .soal-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 24px; margin: 8px 0 8px 34px; }
         .ai-output .soal-opt { display: flex; align-items: flex-start; font-size: 13px; color: #334155; }
         .ai-output .soal-opt .opt-label { font-weight: bold; margin-right: 6px; min-width: 20px; color: #475569; }
         .ai-output .soal-opt.correct { background: #fef08a; font-weight: 600; box-shadow: 0 0 0 1px #eab308; padding: 2px 4px; border-radius: 3px; }
@@ -211,6 +202,7 @@ async function renderContent(page) {
         case 'announcements': await renderAnnouncements(); break;
         case 'settings': await renderSettings(); break;
     }
+    // Tambahkan teks mode pengembang di bawah konten
     document.getElementById('content').innerHTML += `<div class="text-center text-[10px] text-slate-400 dark:text-slate-600 py-4 mt-4 border-t border-slate-200 dark:border-slate-700">Dalam Mode Pengembang @BayuProjectone</div>`;
 }
 
@@ -358,17 +350,12 @@ function formatSoalHTML(rawText) {
         soalBlocks.forEach(sb => {
             let qText = sb.question.replace(/^\*+|\*+$/g, '').replace(/_+/g, '').trim();
             qText = qText.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-            
-            // Membuat 2 kolom (Kiri: A & B, Kanan: C & D)
-            soalHTML += `<div class="soal-item"><div class="soal-header"><span class="soal-number">${sb.num}.</span><span class="soal-text">${qText}</span></div><div class="soal-opts"><div class="opt-col">`;
-            const half = Math.ceil(sb.options.length / 2);
-            sb.options.forEach((opt, index) => {
-                if (index === half) soalHTML += `</div><div class="opt-col">`;
+            soalHTML += `<div class="soal-item"><div class="soal-header"><span class="soal-number">${sb.num}.</span><span class="soal-text">${qText}</span></div><div class="soal-opts">`;
+            sb.options.forEach(opt => {
                 const isCorrect = opt.label === sb.correct;
                 soalHTML += `<div class="soal-opt ${isCorrect ? 'correct' : ''}"><span class="opt-label">${opt.label}.</span><span class="opt-text">${opt.text}</span></div>`;
             });
-            soalHTML += `</div></div>`;
-            
+            soalHTML += `</div>`;
             if (sb.correct) { soalHTML += `<div class="soal-answer hide-on-print">Jawaban: <strong>${sb.correct}</strong></div>`; }
             soalHTML += `</div>`;
         });
@@ -432,12 +419,12 @@ function printAIResult(includeAnswerKey = false) {
     }
     
     document.getElementById('printArea').innerHTML = `
-    <div style="font-family: 'Times New Roman', Georgia, serif; color: #000; width: 100%; padding: 2cm; box-sizing: border-box;">
-        <div style="text-align: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 3px solid #000;">
+    <div style="font-family: 'Times New Roman', Georgia, serif; color: #000; padding: 0; margin: 0; width: 100%;">
+        <div style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 25px;">
             <h2 style="margin:0; font-size: 18px;">SOAL PILIHAN GANDA</h2>
-            <p style="margin: 10px 0 0; font-size: 12px;">Dibuat oleh GURU SMART</p>
+            <p style="margin: 5px 0 0; font-size: 12px;">Dibuat oleh GURU SMART</p>
         </div>
-        <div class="ai-output" style="color: #000; text-align: center;">${cleanHTML}</div>
+        <div class="ai-output" style="color: #000; margin: 0; padding: 0;">${cleanHTML}</div>
     </div>`; 
     window.print(); 
 }
@@ -452,15 +439,13 @@ function exportToWord() {
     tempDiv.querySelectorAll('.soal-opt.correct').forEach(el => el.classList.remove('correct'));
     
     tempDiv.querySelectorAll('.soal-item').forEach(item => {
-        item.style.marginBottom = '35px'; // Jarak antar soal agar tidak mepet
-        item.style.paddingBottom = '0';
-        item.style.borderBottom = 'none';
+        item.style.marginBottom = '18px';
+        item.style.paddingBottom = '15px';
+        item.style.borderBottom = '1px solid #eee';
         item.style.overflow = 'hidden'; 
-        item.style.textAlign = 'center'; // Rata tengah
     });
     tempDiv.querySelectorAll('.soal-header').forEach(header => {
-        header.style.marginBottom = '15px'; // Jarak antara soal dan pilihan
-        header.style.justifyContent = 'center';
+        header.style.marginBottom = '8px';
     });
     tempDiv.querySelectorAll('.soal-number').forEach(num => {
         num.style.fontWeight = 'bold';
@@ -468,24 +453,39 @@ function exportToWord() {
     });
     tempDiv.querySelectorAll('.soal-text').forEach(text => {
         text.style.fontWeight = '600';
-        text.style.lineHeight = '1.8';
-        text.style.display = 'inline'; // Agar teks soal bisa rata tengah menyambung dengan nomor
+        text.style.lineHeight = '1.6';
     });
     
     tempDiv.querySelectorAll('.soal-opts').forEach(optsDiv => {
-        optsDiv.style.display = 'flex'; // Menggunakan flexbox untuk 2 kolom
-        optsDiv.style.justifyContent = 'center'; // Pilihan rata tengah
-        optsDiv.style.gap = '40px';
-        optsDiv.style.marginTop = '15px';
+        optsDiv.style.display = 'block';
+        optsDiv.style.width = '100%';
+        optsDiv.style.marginLeft = '25px';
+        optsDiv.style.marginTop = '8px';
         
-        const cols = optsDiv.querySelectorAll('.opt-col');
-        cols.forEach(col => {
-            col.style.flex = '1';
-            col.style.maxWidth = '45%';
-            col.style.display = 'flex';
-            col.style.flexDirection = 'column';
-            col.style.gap = '10px'; // Jarak antar pilihan (A ke B, C ke D)
+        const opts = optsDiv.querySelectorAll('.soal-opt');
+        opts.forEach((opt, index) => {
+            opt.style.display = 'block';
+            opt.style.marginBottom = '6px';
+            
+            const label = opt.querySelector('.opt-label');
+            const text = opt.querySelector('.opt-text');
+            if(label) label.style.fontWeight = 'bold';
+            if(text) text.style.marginLeft = '4px';
+            
+            if(index < 2) {
+                opt.style.float = 'left';
+                opt.style.width = '45%';
+                opt.style.marginRight = '5%';
+            } else {
+                opt.style.float = 'left';
+                opt.style.width = '45%';
+                opt.style.clear = (index === 2) ? 'left' : 'none';
+            }
         });
+        
+        const clearDiv = document.createElement('div');
+        clearDiv.style.clear = 'both';
+        optsDiv.appendChild(clearDiv);
     });
     
     let cleanHTML = tempDiv.innerHTML;
@@ -497,7 +497,7 @@ function exportToWord() {
         h2 { text-align: center; font-size: 16pt; margin-bottom: 5px; }
         p { text-align: center; font-size: 10pt; margin-top: 0; }
     </style></head><body>
-    <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 40px;">
+    <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
         <h2>SOAL PILIHAN GANDA</h2>
         <p>Dibuat oleh GURU SMART</p>
     </div>`;
