@@ -170,7 +170,7 @@ const menus = [
     { id: 'kurikulum', label: 'Perangkat Ajar', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', roles: ['admin', 'guru'] },
     { id: 'teachers', label: 'Data Guru', icon: 'M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-5a4 4 0 11-8 0 4 4 0 018 0zm6 0a4 4 0 11-8 0 4 4 0 018 0z', roles: ['admin'] },
     { id: 'students', label: 'Data Siswa', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z', roles: ['admin', 'guru'] },
-    { id: 'classes', label: 'Kelas', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4', roles: ['admin'] },
+    { id: 'classes', label: 'Kelas', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4', roles: ['admin', 'guru'] }, // DIBUKA UNTUK GURU
     { id: 'subjects', label: 'Mata Pelajaran', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253', roles: ['admin', 'guru', 'siswa'] },
     { id: 'schedules', label: 'Jadwal', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z', roles: ['admin', 'guru', 'siswa'] },
     { id: 'attendance', label: 'Absensi', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', roles: ['admin', 'guru'] },
@@ -501,53 +501,24 @@ function printAIResult(includeAnswerKey = false) {
     window.print(); 
 }
 
-// EXPORT WORD PERBAIKAN TOTAL (CLONE HTML DARI LAYAR)
+// EXPORT WORD - CLONE HTML PERSIS DARI LAYAR (MENCEGAH LAYOUT TERACAK)
 function exportToWord() {
     if(!lastAIFormattedHTML) { showToast('Tidak ada teks untuk diekspor', 'error'); return; }
     
-    // Clone node dari HTML yang ada di layar
+    // 1. Clone node dari HTML yang ada di layar
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = lastAIFormattedHTML;
     
-    // 1. Hapus Kunci Jawaban & Highlight
+    // 2. Hapus Kunci Jawaban & Highlight
     tempDiv.querySelectorAll('.kunci-jawaban-section, .soal-answer').forEach(el => el.remove());
     tempDiv.querySelectorAll('.soal-opt.correct').forEach(el => el.classList.remove('correct'));
-    
-    // 2. Ubah display layout dari Grid ke Inline-Block agar tidak berantakan di Word
-    tempDiv.querySelectorAll('.soal-opts').forEach(optsDiv => {
-        optsDiv.style.display = 'block';
-        optsDiv.style.width = '100%';
-        optsDiv.style.marginLeft = '25px';
-        optsDiv.style.marginTop = '8px';
-        
-        const opts = optsDiv.querySelectorAll('.soal-opt');
-        opts.forEach((opt, index) => {
-            // Kunci layout 2 kolom dengan float agar Word mendeteksinya sebagai paragraf kiri-kanan
-            if(index < 2) {
-                opt.style.float = 'left';
-                opt.style.width = '45%';
-                opt.style.marginRight = '5%';
-            } else {
-                opt.style.float = 'left';
-                opt.style.width = '45%';
-                opt.style.clear = (index === 2) ? 'left' : 'none'; // Pastikan C & D di bawah
-            }
-            opt.style.display = 'block';
-            opt.style.marginBottom = '6px';
-        });
-        
-        // Tambahkan clear fix
-        const clearDiv = document.createElement('div');
-        clearDiv.style.clear = 'both';
-        optsDiv.appendChild(clearDiv);
-    });
     
     // 3. Tambahkan styling inline ke soal-item
     tempDiv.querySelectorAll('.soal-item').forEach(item => {
         item.style.marginBottom = '18px';
         item.style.paddingBottom = '15px';
         item.style.borderBottom = '1px solid #eee';
-        item.style.overflow = 'hidden';
+        item.style.overflow = 'hidden'; // Penting untuk layout float
     });
     tempDiv.querySelectorAll('.soal-header').forEach(header => {
         header.style.marginBottom = '8px';
@@ -559,6 +530,43 @@ function exportToWord() {
     tempDiv.querySelectorAll('.soal-text').forEach(text => {
         text.style.fontWeight = '600';
         text.style.lineHeight = '1.6';
+    });
+    
+    // 4. Ubah display layout dari Grid ke Float agar Word mendeteksinya sebagai paragraf kiri-kanan
+    tempDiv.querySelectorAll('.soal-opts').forEach(optsDiv => {
+        optsDiv.style.display = 'block';
+        optsDiv.style.width = '100%';
+        optsDiv.style.marginLeft = '25px';
+        optsDiv.style.marginTop = '8px';
+        
+        const opts = optsDiv.querySelectorAll('.soal-opt');
+        opts.forEach((opt, index) => {
+            // Kunci layout 2 kolom dengan float
+            opt.style.display = 'block';
+            opt.style.marginBottom = '6px';
+            
+            const label = opt.querySelector('.opt-label');
+            const text = opt.querySelector('.opt-text');
+            if(label) label.style.fontWeight = 'bold';
+            if(text) text.style.marginLeft = '4px';
+            
+            if(index < 2) {
+                // A dan B di kiri
+                opt.style.float = 'left';
+                opt.style.width = '45%';
+                opt.style.marginRight = '5%';
+            } else {
+                // C dan D di kanan
+                opt.style.float = 'left';
+                opt.style.width = '45%';
+                opt.style.clear = (index === 2) ? 'left' : 'none'; // Pastikan C mulai di bawah A
+            }
+        });
+        
+        // Tambahkan clear fix agar container tidak collapse
+        const clearDiv = document.createElement('div');
+        clearDiv.style.clear = 'both';
+        optsDiv.appendChild(clearDiv);
     });
     
     let cleanHTML = tempDiv.innerHTML;
