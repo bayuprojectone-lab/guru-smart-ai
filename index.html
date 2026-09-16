@@ -20,7 +20,7 @@
         .fade-in { animation: fadeIn 0.3s ease-in-out; } @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         #printArea { display: none; }
         
-        /* Menghilangkan header/footer browser dan mengatur margin */
+        /* Mengatur margin kertas PDF agar teks tidak menempel di pinggir di SEMUA halaman */
         @media print {
             body * { visibility: hidden; } 
             #printArea, #printArea * { visibility: visible; } 
@@ -28,11 +28,9 @@
                 display: block; 
                 position: absolute; 
                 left: 0; top: 0; width: 100%; 
-                padding: 2cm; /* Jarak ke dalam agar teks tidak menempel pinggir */
-                box-sizing: border-box;
             } 
             @page { 
-                margin: 0; /* Hilangkan header/footer bawaan browser */
+                margin: 1.5cm; /* Jarak ke dalam kertas di semua halaman */
             } 
         }
         
