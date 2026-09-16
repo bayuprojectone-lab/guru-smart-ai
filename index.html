@@ -50,7 +50,6 @@
         .ai-output .kunci-jawaban-grid span { background: rgba(255,255,255,0.15); padding: 4px 8px; border-radius: 4px; text-align: center; }
 
         @media print {
-            /* HILANGKAN GARIS VERTIKAL & BACKGROUND SAAT PRINT PDF */
             .ai-output .soal-item { 
                 background: white !important; 
                 border-left: none !important; 
@@ -170,7 +169,7 @@ const menus = [
     { id: 'kurikulum', label: 'Perangkat Ajar', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', roles: ['admin', 'guru'] },
     { id: 'teachers', label: 'Data Guru', icon: 'M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-5a4 4 0 11-8 0 4 4 0 018 0zm6 0a4 4 0 11-8 0 4 4 0 018 0z', roles: ['admin'] },
     { id: 'students', label: 'Data Siswa', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z', roles: ['admin', 'guru'] },
-    { id: 'classes', label: 'Kelas', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4', roles: ['admin', 'guru'] }, // DIBUKA UNTUK GURU
+    { id: 'classes', label: 'Kelas', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4', roles: ['admin', 'guru'] },
     { id: 'subjects', label: 'Mata Pelajaran', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253', roles: ['admin', 'guru', 'siswa'] },
     { id: 'schedules', label: 'Jadwal', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z', roles: ['admin', 'guru', 'siswa'] },
     { id: 'attendance', label: 'Absensi', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', roles: ['admin', 'guru'] },
@@ -214,7 +213,39 @@ function dashboardCard(title, count, color, icon) { return `<div class="bg-gradi
 // PERANGKAT AJAR
 const kurikulumTypes = [ { id: 'cp', label: 'Capaian Pembelajaran (CP)', desc: 'Kompetensi yang harus dicapai peserta didik', color: 'from-blue-500 to-cyan-600', icon: 'M13 10V3L4 14h7v7l9-11h-7z' }, { id: 'tp', label: 'Tujuan Pembelajaran (TP)', desc: 'Tujuan spesifik dari setiap CP', color: 'from-green-500 to-emerald-600', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' }, { id: 'atp', label: 'Alur Tujuan Pembelajaran (ATP)', desc: 'Urutan logis tujuan pembelajaran', color: 'from-purple-500 to-pink-600', icon: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6' }, { id: 'modul', label: 'Modul Ajar', desc: 'Panduan lengkap untuk guru', color: 'from-orange-500 to-red-600', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' }, { id: 'rpp', label: 'RPP (Rencana Pelaksanaan Pembelajaran)', desc: 'Rencana kegiatan pembelajaran', color: 'from-indigo-500 to-blue-700', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' }, { id: 'prota', label: 'Program Tahunan', desc: 'Program pembelajaran satu tahun', color: 'from-teal-500 to-green-600', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' }, { id: 'lkpd', label: 'LKPD (Lembar Kerja Peserta Didik)', desc: 'Lembar kerja untuk siswa', color: 'from-rose-500 to-pink-600', icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' } ];
 async function renderKurikulum() { const subjects = await DB.get('subjects'); const kurikulumData = await DB.get('kurikulum'); document.getElementById('content').innerHTML = `<div class="mb-6 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-6 text-white shadow-lg"><h2 class="text-2xl font-bold mb-2">📚 Perangkat Ajar Kurikulum</h2><p class="text-indigo-100 text-sm">Buat dan kelola dokumen kurikulum: CP, TP, ATP, Modul Ajar, RPP, Program Tahunan, hingga LKPD</p></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">${kurikulumTypes.map(t => `<button onclick="generateKurikulum('${t.id}', '${t.label}')" class="bg-gradient-to-br ${t.color} p-5 rounded-xl text-white text-left shadow-md hover:scale-105 transition-transform"><svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${t.icon}"></path></svg><h3 class="font-bold text-sm">${t.label}</h3><p class="text-xs opacity-90 mt-1">${t.desc}</p></button>`).join('')}</div><div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><h3 class="font-bold text-slate-800 dark:text-white mb-4">Dokumen Tersimpan</h3><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase"><tr><th class="px-4 py-3">Jenis</th><th class="px-4 py-3">Mapel</th><th class="px-4 py-3">Judul</th><th class="px-4 py-3">Kelas</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody class="divide-y dark:divide-slate-700">${kurikulumData.length ? kurikulumData.map(k => { const sub = subjects.find(s => s.id === k.subject_id); const typeLabel = kurikulumTypes.find(t => t.id === k.type)?.label || k.type; return `<tr><td class="px-4 py-3"><span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">${typeLabel}</span></td><td class="px-4 py-3">${sub?.name || '-'}</td><td class="px-4 py-3 font-medium">${k.title}</td><td class="px-4 py-3">${k.class_name || '-'}</td><td class="px-4 py-3 flex gap-2"><button onclick="viewKurikulum(${k.id})" class="text-blue-500">Lihat</button><button onclick="printKurikulumDoc(${k.id})" class="text-green-500">Cetak</button><button onclick="deleteData('kurikulum', ${k.id}, renderKurikulum)" class="text-red-500">Hapus</button></td></tr>`; }).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500">Belum ada dokumen. Gunakan tombol di atas untuk membuat.</td></tr>`}</tbody></table></div></div>`; }
-async function generateKurikulum(type, typeLabel) { const subjects = await DB.get('subjects'); const classes = await DB.get('classes'); openModal(`Buat ${typeLabel} dengan AI`, `<form id="kurikulumForm" class="space-y-4"><div class="bg-blue-50 dark:bg-slate-700 p-3 rounded-lg text-sm text-blue-700 dark:text-blue-300">💡 AI akan membuatkan <strong>${typeLabel}</strong> secara otomatis. Lengkapi detail di bawah ini.</div><div><label class="block text-sm mb-1">Mata Pelajaran</label><select id="kSubject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Kelas</label><select id="kClass" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}" data-name="${c.name}">${c.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Topik / Materi</label><input type="text" id="kTopic" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" placeholder="Contoh: Ekosistem, Persamaan Linear, Sejarah Hindu-Buddha"></div><div><label class="block text-sm mb-1">Fase</label><select id="kPhase" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option>Fase A</option><option>Fase B</option><option>Fase C</option><option>Fase D</option><option>Fase E</option><option>Fase F</option></select></div><button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 rounded-lg font-semibold">⚡ Generate dengan AI</button></form>`); document.getElementById('kurikulumForm').onsubmit = async (e) => { e.preventDefault(); const subjectId = parseInt(document.getElementById('kSubject').value); const classSelect = document.getElementById('kClass'); const className = classSelect.options[classSelect.selectedIndex].dataset.name; const topic = document.getElementById('kTopic').value; const phase = document.getElementById('kPhase').value; const subject = subjects.find(s => s.id === subjectId); closeModal(); showToast('AI sedang membuat dokumen...', 'info'); const prompt = `Buatkan ${typeLabel} lengkap dan profesional untuk mata pelajaran ${subject.name}, kelas ${className}, Fase ${phase}, topik: ${topic}. Gunakan format markdown yang rapi. Sesuaikan dengan Kurikulum Merdeka.`; try { const sys = `Anda adalah ahli kurikulum pendidikan Indonesia. Buatkan ${typeLabel} yang sesuai dengan Kurikulum Merdeka. Gunakan format markdown yang baik dengan heading, bullet points, dan tabel jika perlu. Pastikan isi lengkap, profesional, dan siap digunakan guru.`; const res = await puter.ai.chat([{role:'system',content:sys},{role:'user',content:prompt}],{model:'gpt-4o-mini'}); const content = typeof res === 'string' ? res : (res.message?.content || ''); await DB.insert('kurikulum', { type, title: `${typeLabel} - ${topic}`, subject_id: subjectId, class_name: className, content }); showToast('Dokumen berhasil dibuat!', 'success'); renderKurikulum(); } catch(err) { showToast('Error: ' + err.message, 'error'); } }; }
+async function generateKurikulum(type, typeLabel) { 
+    const subjects = await DB.get('subjects'); 
+    const classes = await DB.get('classes'); 
+    openModal(`Buat ${typeLabel} dengan AI`, `
+    <form id="kurikulumForm" class="space-y-4">
+        <div class="bg-blue-50 dark:bg-slate-700 p-3 rounded-lg text-sm text-blue-700 dark:text-blue-300">💡 AI akan membuatkan <strong>${typeLabel}</strong> secara otomatis. Lengkapi detail di bawah ini.</div>
+        <div><label class="block text-sm mb-1">Mata Pelajaran</label><select id="kSubject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
+        <div><label class="block text-sm mb-1">Kelas</label><select id="kClass" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}" data-name="${c.name}">${c.name}</option>`).join('')}</select></div>
+        <div><label class="block text-sm mb-1">Topik / Materi</label><input type="text" id="kTopic" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" placeholder="Contoh: Ekosistem"></div>
+        <div><label class="block text-sm mb-1">Fase</label><select id="kPhase" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option>Fase A</option><option>Fase B</option><option>Fase C</option><option>Fase D</option><option>Fase E</option><option>Fase F</option></select></div>
+        <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 rounded-lg font-semibold">⚡ Generate dengan AI</button>
+    </form>`); 
+    document.getElementById('kurikulumForm').onsubmit = async (e) => { 
+        e.preventDefault(); 
+        const subjectId = parseInt(document.getElementById('kSubject').value); 
+        const classSelect = document.getElementById('kClass');
+        const className = classSelect.options[classSelect.selectedIndex].dataset.name; 
+        const topic = document.getElementById('kTopic').value; 
+        const phase = document.getElementById('kPhase').value; 
+        const subject = subjects.find(s => s.id === subjectId); 
+        closeModal(); 
+        showToast('AI sedang membuat dokumen...', 'info'); 
+        const prompt = `Buatkan ${typeLabel} lengkap dan profesional untuk mata pelajaran ${subject.name}, kelas ${className}, Fase ${phase}, topik: ${topic}. Gunakan format markdown yang rapi. Sesuaikan dengan Kurikulum Merdeka.`; 
+        try { 
+            const sys = `Anda adalah ahli kurikulum pendidikan Indonesia. Buatkan ${typeLabel} yang sesuai dengan Kurikulum Merdeka. Gunakan format markdown yang baik dengan heading, bullet points, dan tabel jika perlu. Pastikan isi lengkap, profesional, dan siap digunakan guru.`; 
+            const res = await puter.ai.chat([{role:'system',content:sys},{role:'user',content:prompt}],{model:'gpt-4o-mini'}); 
+            const content = typeof res === 'string' ? res : (res.message?.content || ''); 
+            await DB.insert('kurikulum', { type, title: `${typeLabel} - ${topic}`, subject_id: subjectId, class_name: className, content }); 
+            showToast('Dokumen berhasil dibuat!', 'success'); 
+            renderKurikulum(); 
+        } catch(err) { showToast('Error: ' + err.message, 'error'); } 
+    }; 
+}
 async function viewKurikulum(id) { const doc = (await DB.get('kurikulum')).find(k => k.id === id); if(!doc) return; const typeLabel = kurikulumTypes.find(t => t.id === doc.type)?.label || doc.type; openModal(typeLabel, `<div class="ai-output text-gray-800 dark:text-white">${marked.parse(doc.content)}</div><div class="mt-4 flex gap-2"><button onclick="printKurikulumDoc(${doc.id})" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm flex-1">🖨️ Cetak / PDF</button><button onclick="closeModal()" class="bg-slate-500 text-white px-4 py-2 rounded-lg text-sm">Tutup</button></div>`); }
 function printKurikulumDoc(id) { DB.get('kurikulum').then(docs => { const doc = docs.find(k => k.id === id); if(!doc) return; const typeLabel = kurikulumTypes.find(t => t.id === doc.type)?.label || doc.type; const htmlContent = marked.parse(doc.content); document.getElementById('printArea').innerHTML = `<div style="font-family: 'Times New Roman', Georgia, serif; color: #000; padding: 20px;"><div style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 25px;"><h2 style="margin:0; font-size: 18px;">${typeLabel.toUpperCase()}</h2><p style="margin: 5px 0 0; font-size: 12px;">${doc.class_name} | ${doc.title}</p></div><div>${htmlContent}</div></div>`; window.print(); }); }
 
@@ -234,7 +265,7 @@ async function teacherForm(id = null) {
     </form>`); 
     document.getElementById('teacherForm').onsubmit = async (e) => { 
         e.preventDefault(); 
-        const payload = { nip: tch_nip.value, name: tch_name.value, gender: tch_gender.value, phone: tch_phone.value, subject: tch_subject.value };
+        const payload = { nip: document.getElementById('tch_nip').value, name: document.getElementById('tch_name').value, gender: document.getElementById('tch_gender').value, phone: document.getElementById('tch_phone').value, subject: document.getElementById('tch_subject').value };
         await saveData('teachers', payload, id); closeModal(); renderTeachers(); 
     }; 
 }
@@ -253,12 +284,11 @@ async function studentForm(id = null) {
     </form>`); 
     document.getElementById('studentForm').onsubmit = async (e) => { 
         e.preventDefault(); 
-        const payload = { nis: std_nis.value, name: std_name.value, class_id: parseInt(std_class.value) };
+        const payload = { nis: document.getElementById('std_nis').value, name: document.getElementById('std_name').value, class_id: parseInt(document.getElementById('std_class').value) };
         await saveData('students', payload, id); closeModal(); renderStudents(); 
     }; 
 }
 
-// PERBAIKAN PANEL KELAS (TOMBOL DI LUAR KOTAK)
 async function renderClasses() { 
     const classes = await DB.get('classes'); 
     const students = await DB.get('students'); 
@@ -314,37 +344,154 @@ async function subjectForm(id = null) {
     </form>`); 
     document.getElementById('subjectForm').onsubmit = async (e) => { 
         e.preventDefault(); 
-        const payload = { code: sub_code.value, name: sub_name.value, teacher: sub_teacher.value, kkm: parseInt(sub_kkm.value) };
+        const payload = { code: document.getElementById('sub_code').value, name: document.getElementById('sub_name').value, teacher: document.getElementById('sub_teacher').value, kkm: parseInt(document.getElementById('sub_kkm').value) };
         await saveData('subjects', payload, id); closeModal(); renderSubjects(); 
     }; 
 }
 
 // SCHEDULES, ATTENDANCE, GRADES
 async function renderSchedules() { const schedules = await DB.get('schedules'); const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']; document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex justify-between mb-4"><h3 class="font-semibold">Jadwal Pelajaran</h3><button onclick="scheduleForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Jadwal</button></div><div class="overflow-x-auto"><table class="w-full text-sm text-left border-collapse"><thead class="bg-slate-50 dark:bg-slate-700"><tr><th class="px-4 py-3 border">Jam</th>${days.map(d => `<th class="px-4 py-3 border">${d}</th>`).join('')}</tr></thead><tbody>${['07:30-09:00', '09:15-10:45', '11:00-12:30'].map(time => `<tr><td class="px-4 py-3 border font-medium">${time}</td>${days.map(day => { const sch = schedules.find(s => s.day === day && s.start_time === time.split('-')[0]); return `<td class="px-4 py-3 border text-xs">${sch ? `${sch.subject}<br><span class="text-blue-500">${sch.teacher}</span>` : '-'}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div></div>`; }
-async function scheduleForm(id = null) { const classes = await DB.get('classes'); openModal('Tambah Jadwal', `<form id="scheduleForm" class="space-y-4"><div><label class="block text-sm mb-1">Hari</label><select id="sc_day" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option>Senin</option><option>Selasa</option><option>Rabu</option><option>Kamis</option><option>Jumat</option></select></div><div><label class="block text-sm mb-1">Jam Mulai</label><input type="text" id="sc_start" value="07:30" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Jam Selesai</label><input type="text" id="sc_end" value="09:00" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Kelas</label><select id="sc_class" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Mapel</label><input type="text" id="sc_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Guru</label><input type="text" id="sc_teacher" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button></form>`); document.getElementById('scheduleForm').onsubmit = async (e) => { e.preventDefault(); await saveData('schedules', { day: sc_day.value, start_time: sc_start.value, end_time: sc_end.value, class_id: parseInt(sc_class.value), subject: sc_subject.value, teacher: sc_teacher.value }, null); closeModal(); renderSchedules(); }; }
+async function scheduleForm(id = null) { 
+    const classes = await DB.get('classes'); 
+    openModal('Tambah Jadwal', `
+    <form id="scheduleForm" class="space-y-4">
+        <div><label class="block text-sm mb-1">Hari</label><select id="sc_day" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option>Senin</option><option>Selasa</option><option>Rabu</option><option>Kamis</option><option>Jumat</option></select></div>
+        <div><label class="block text-sm mb-1">Jam Mulai</label><input type="text" id="sc_start" value="07:30" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>
+        <div><label class="block text-sm mb-1">Jam Selesai</label><input type="text" id="sc_end" value="09:00" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>
+        <div><label class="block text-sm mb-1">Kelas</label><select id="sc_class" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}</select></div>
+        <div><label class="block text-sm mb-1">Mapel</label><input type="text" id="sc_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>
+        <div><label class="block text-sm mb-1">Guru</label><input type="text" id="sc_teacher" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>
+        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button>
+    </form>`); 
+    document.getElementById('scheduleForm').onsubmit = async (e) => { 
+        e.preventDefault(); 
+        const payload = { day: document.getElementById('sc_day').value, start_time: document.getElementById('sc_start').value, end_time: document.getElementById('sc_end').value, class_id: parseInt(document.getElementById('sc_class').value), subject: document.getElementById('sc_subject').value, teacher: document.getElementById('sc_teacher').value };
+        await saveData('schedules', payload, id); closeModal(); renderSchedules(); 
+    }; 
+}
 
 async function renderAttendance() { const students = await DB.get('students'); const classes = await DB.get('classes'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex justify-between mb-4 items-center"><h3 class="font-semibold">Input Absensi</h3><div class="flex gap-2"><select id="att_class" class="px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white text-sm">${classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}</select><input type="date" id="att_date" class="px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white text-sm"></div></div><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase"><tr><th class="px-4 py-3">Nama Siswa</th><th class="px-4 py-3">Status</th></tr></thead><tbody class="divide-y dark:divide-slate-700">${students.length ? students.map(s => `<tr><td class="px-4 py-3">${s.name}</td><td class="px-4 py-3"><select id="att_${s.id}" class="px-2 py-1 border rounded dark:bg-slate-700 dark:text-white text-xs"><option value="Hadir">Hadir</option><option value="Sakit">Sakit</option><option value="Izin">Izin</option><option value="Alpa">Alpa</option></select></td></tr>`).join('') : `<tr><td colspan="2" class="text-center py-4 text-slate-500">Belum ada data siswa.</td></tr>`}</tbody></table></div><button onclick="saveAttendance()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Simpan Absensi</button></div>`; }
-async function saveAttendance() { const students = await DB.get('students'); const date = document.getElementById('att_date').value; if(!date){ showToast('Pilih tanggal!', 'error'); return; } for(const s of students) { const status = document.getElementById(`att_${s.id}`).value; const existingAtt = await sb.from('attendance').select('*').eq('student_id', s.id).eq('date', date).single(); if(existingAtt.data) { await DB.update('attendance', existingAtt.data.id, { status }); } else { await DB.insert('attendance', { student_id: s.id, date, status, subject: 'Umum' }); } } showToast('Absensi disimpan!', 'success'); }
+async function saveAttendance() { 
+    const students = await DB.get('students'); 
+    const date = document.getElementById('att_date').value; 
+    if(!date){ showToast('Pilih tanggal!', 'error'); return; } 
+    for(const s of students) { 
+        const status = document.getElementById(`att_${s.id}`).value; 
+        const existingAtt = await sb.from('attendance').select('*').eq('student_id', s.id).eq('date', date).single(); 
+        if(existingAtt.data) { await DB.update('attendance', existingAtt.data.id, { status }); } 
+        else { await DB.insert('attendance', { student_id: s.id, date, status, subject: 'Umum' }); } 
+    } 
+    showToast('Absensi disimpan!', 'success'); 
+}
 
 async function renderGrades() { const students = await DB.get('students'); const subjects = await DB.get('subjects'); const grades = await DB.get('grades'); if(currentUser.role === 'siswa') { const myGrades = grades.filter(g => g.student_id === currentUser.id); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><h3 class="font-bold mb-4">Nilai Saya</h3><ul class="divide-y">${myGrades.length ? myGrades.map(g => { const sub = subjects.find(s => s.id === g.subject_id); return `<li class="py-3 flex justify-between"><span>${sub?.name || ''} (${g.type})</span><span class="font-bold text-blue-600">${g.score}</span></li>`; }).join('') : '<li class="py-4 text-center text-slate-500">Belum ada nilai.</li>'}</ul></div>`; return; } document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Input Nilai Massal</h3><button onclick="gradeForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Input Nilai</button></div><table class="w-full text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3">Nama</th><th class="px-4 py-3">Mapel</th><th class="px-4 py-3">Tipe</th><th class="px-4 py-3">Nilai</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody class="divide-y">${grades.length ? grades.map(g => { const std = students.find(s => s.id === g.student_id); const sub = subjects.find(s => s.id === g.subject_id); return `<tr><td class="px-4 py-3">${std?.name || ''}</td><td class="px-4 py-3">${sub?.name || ''}</td><td class="px-4 py-3">${g.type}</td><td class="px-4 py-3 font-bold text-blue-600">${g.score}</td><td class="px-4 py-3 flex gap-2"><button onclick="gradeForm(${g.id})" class="text-xs text-blue-500">Edit</button><button onclick="deleteData('grades', ${g.id}, renderGrades)" class="text-xs text-red-500">Hapus</button></td></tr>`; }).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500">Belum ada nilai.</td></tr>`}</tbody></table></div>`; }
-async function gradeForm(id = null) { const students = await DB.get('students'); const subjects = await DB.get('subjects'); let g = null; if(id) { g = (await DB.get('grades')).find(x => x.id === id); } openModal('Input Nilai', `<form id="gradeForm" class="space-y-4"><div><label class="block text-sm mb-1">Siswa</label><select id="g_student" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${students.map(s => `<option value="${s.id}" ${g?.student_id == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Mapel</label><select id="g_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}" ${g?.subject_id == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Tipe</label><select id="g_type" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option ${g?.type == 'Tugas' ? 'selected' : ''}>Tugas</option><option ${g?.type == 'Ulangan Harian' ? 'selected' : ''}>Ulangan Harian</option><option ${g?.type == 'PTS' ? 'selected' : ''}>PTS</option><option ${g?.type == 'PAS' ? 'selected' : ''}>PAS</option></select></div><div><label class="block text-sm mb-1">Nilai</label><input type="number" id="g_score" value="${g?.score || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('gradeForm').onsubmit = async (e) => { e.preventDefault(); const payload = { student_id: parseInt(g_student.value), subject_id: parseInt(g_subject.value), type: g_type.value, score: parseInt(g_score.value) }; await saveData('grades', payload, id); closeModal(); renderGrades(); }; }
+async function gradeForm(id = null) { 
+    const students = await DB.get('students'); 
+    const subjects = await DB.get('subjects'); 
+    let g = null; 
+    if(id) { g = (await DB.get('grades')).find(x => x.id === id); } 
+    openModal('Input Nilai', `
+    <form id="gradeForm" class="space-y-4">
+        <div><label class="block text-sm mb-1">Siswa</label><select id="g_student" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${students.map(s => `<option value="${s.id}" ${g?.student_id == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div>
+        <div><label class="block text-sm mb-1">Mapel</label><select id="g_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}" ${g?.subject_id == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div>
+        <div><label class="block text-sm mb-1">Tipe</label><select id="g_type" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option ${g?.type == 'Tugas' ? 'selected' : ''}>Tugas</option><option ${g?.type == 'Ulangan Harian' ? 'selected' : ''}>Ulangan Harian</option><option ${g?.type == 'PTS' ? 'selected' : ''}>PTS</option><option ${g?.type == 'PAS' ? 'selected' : ''}>PAS</option></select></div>
+        <div><label class="block text-sm mb-1">Nilai</label><input type="number" id="g_score" value="${g?.score || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div>
+        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button>
+    </form>`); 
+    document.getElementById('gradeForm').onsubmit = async (e) => { 
+        e.preventDefault(); 
+        const payload = { student_id: parseInt(document.getElementById('g_student').value), subject_id: parseInt(document.getElementById('g_subject').value), type: document.getElementById('g_type').value, score: parseInt(document.getElementById('g_score').value) }; 
+        await saveData('grades', payload, id); closeModal(); renderGrades(); 
+    }; 
+}
 
 // ASSIGNMENTS, MATERI, KEUANGAN, RAPOR, ANNOUNCEMENTS, SETTINGS
 async function renderAssignments() { const assignments = await DB.get('assignments'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Daftar Tugas</h3><button onclick="assignmentForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Buat Tugas</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4">${assignments.length ? assignments.map(a => `<div class="p-4 border rounded-lg"><h4 class="font-bold">${a.title}</h4><p class="text-xs text-slate-500 mt-1">Deadline: ${a.deadline}</p><p class="text-sm mt-2">${a.description}</p><div class="mt-3 flex gap-2"><button onclick="assignmentForm(${a.id})" class="text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded">Edit</button><button onclick="deleteData('assignments', ${a.id}, renderAssignments)" class="text-xs bg-red-100 text-red-600 px-3 py-1 rounded">Hapus</button></div></div>`).join('') : '<div class="col-span-3 text-center py-8 text-slate-500">Belum ada tugas.</div>'}</div></div>`; }
-async function assignmentForm(id = null) { const classes = await DB.get('classes'); const subjects = await DB.get('subjects'); let a = null; if(id) { a = (await DB.get('assignments')).find(x => x.id === id); } openModal('Buat Tugas', `<form id="assignmentForm" class="space-y-4"><div><label class="block text-sm mb-1">Judul</label><input type="text" id="a_title" value="${a?.title || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Deskripsi</label><textarea id="a_desc" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${a?.description || ''}</textarea></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm mb-1">Mapel</label><select id="a_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}" ${a?.subject_id == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Kelas</label><select id="a_class" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}" ${a?.class_id == c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select></div></div><div><label class="block text-sm mb-1">Deadline</label><input type="date" id="a_deadline" value="${a?.deadline || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('assignmentForm').onsubmit = async (e) => { e.preventDefault(); const payload = { title: a_title.value, description: a_desc.value, subject_id: parseInt(a_subject.value), class_id: parseInt(a_class.value), deadline: a_deadline.value }; await saveData('assignments', payload, id); closeModal(); renderAssignments(); }; }
+async function assignmentForm(id = null) { 
+    const classes = await DB.get('classes'); 
+    const subjects = await DB.get('subjects'); 
+    let a = null; 
+    if(id) { a = (await DB.get('assignments')).find(x => x.id === id); } 
+    openModal('Buat Tugas', `
+    <form id="assignmentForm" class="space-y-4">
+        <div><label class="block text-sm mb-1">Judul</label><input type="text" id="a_title" value="${a?.title || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div>
+        <div><label class="block text-sm mb-1">Deskripsi</label><textarea id="a_desc" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${a?.description || ''}</textarea></div>
+        <div class="grid grid-cols-2 gap-4">
+            <div><label class="block text-sm mb-1">Mapel</label><select id="a_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}" ${a?.subject_id == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div>
+            <div><label class="block text-sm mb-1">Kelas</label><select id="a_class" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}" ${a?.class_id == c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select></div>
+        </div>
+        <div><label class="block text-sm mb-1">Deadline</label><input type="date" id="a_deadline" value="${a?.deadline || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>
+        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button>
+    </form>`); 
+    document.getElementById('assignmentForm').onsubmit = async (e) => { 
+        e.preventDefault(); 
+        const payload = { title: document.getElementById('a_title').value, description: document.getElementById('a_desc').value, subject_id: parseInt(document.getElementById('a_subject').value), class_id: parseInt(document.getElementById('a_class').value), deadline: document.getElementById('a_deadline').value }; 
+        await saveData('assignments', payload, id); closeModal(); renderAssignments(); 
+    }; 
+}
 
 async function renderMateri() { const materi = await DB.get('materi'); const subjects = await DB.get('subjects'); const classes = await DB.get('classes'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Materi Pembelajaran</h3><button onclick="materiForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Tambah Materi</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4">${materi.length ? materi.map(m => { const sub = subjects.find(s => s.id === m.subject_id); const cls = classes.find(c => c.id === m.class_id); return `<div class="p-4 border rounded-lg"><h4 class="font-bold">${m.title}</h4><p class="text-xs text-slate-500 mt-1">${sub?.name || ''} | ${cls?.name || ''}</p><p class="text-sm mt-2">${m.description}</p><a href="${m.link}" target="_blank" class="mt-3 text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded inline-block">Buka Materi</a><div class="mt-3 flex gap-2"><button onclick="materiForm(${m.id})" class="text-xs text-blue-500">Edit</button><button onclick="deleteData('materi', ${m.id}, renderMateri)" class="text-xs text-red-500">Hapus</button></div></div>`; }).join('') : '<div class="col-span-3 text-center py-8 text-slate-500">Belum ada materi.</div>'}</div></div>`; }
-async function materiForm(id = null) { const classes = await DB.get('classes'); const subjects = await DB.get('subjects'); let m = null; if(id) { m = (await DB.get('materi')).find(x => x.id === id); } openModal('Tambah Materi', `<form id="materiForm" class="space-y-4"><div><label class="block text-sm mb-1">Judul</label><input type="text" id="m_title" value="${m?.title || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Deskripsi</label><textarea id="m_desc" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${m?.description || ''}</textarea></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm mb-1">Mapel</label><select id="m_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}" ${m?.subject_id == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Kelas</label><select id="m_class" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}" ${m?.class_id == c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select></div></div><div><label class="block text-sm mb-1">Link</label><input type="url" id="m_link" value="${m?.link || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('materiForm').onsubmit = async (e) => { e.preventDefault(); const payload = { title: m_title.value, description: m_desc.value, subject_id: parseInt(m_subject.value), class_id: parseInt(m_class.value), link: m_link.value }; await saveData('materi', payload, id); closeModal(); renderMateri(); }; }
+async function materiForm(id = null) { 
+    const classes = await DB.get('classes'); 
+    const subjects = await DB.get('subjects'); 
+    let m = null; 
+    if(id) { m = (await DB.get('materi')).find(x => x.id === id); } 
+    openModal('Tambah Materi', `
+    <form id="materiForm" class="space-y-4">
+        <div><label class="block text-sm mb-1">Judul</label><input type="text" id="m_title" value="${m?.title || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div>
+        <div><label class="block text-sm mb-1">Deskripsi</label><textarea id="m_desc" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${m?.description || ''}</textarea></div>
+        <div class="grid grid-cols-2 gap-4">
+            <div><label class="block text-sm mb-1">Mapel</label><select id="m_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}" ${m?.subject_id == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div>
+            <div><label class="block text-sm mb-1">Kelas</label><select id="m_class" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}" ${m?.class_id == c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select></div>
+        </div>
+        <div><label class="block text-sm mb-1">Link</label><input type="url" id="m_link" value="${m?.link || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>
+        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button>
+    </form>`); 
+    document.getElementById('materiForm').onsubmit = async (e) => { 
+        e.preventDefault(); 
+        const payload = { title: document.getElementById('m_title').value, description: document.getElementById('m_desc').value, subject_id: parseInt(document.getElementById('m_subject').value), class_id: parseInt(document.getElementById('m_class').value), link: document.getElementById('m_link').value }; 
+        await saveData('materi', payload, id); closeModal(); renderMateri(); 
+    }; 
+}
 
 async function renderKeuangan() { const keuangan = await DB.get('keuangan'); const students = await DB.get('students'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Pembayaran SPP</h3><button onclick="keuanganForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Catat Pembayaran</button></div><table class="w-full text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3">Siswa</th><th class="px-4 py-3">Bulan</th><th class="px-4 py-3">Jumlah</th><th class="px-4 py-3">Status</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody class="divide-y">${keuangan.length ? keuangan.map(k => { const std = students.find(s => s.id === k.student_id); return `<tr><td class="px-4 py-3">${std?.name || ''}</td><td class="px-4 py-3">${k.month}</td><td class="px-4 py-3">Rp ${k.amount.toLocaleString('id-ID')}</td><td class="px-4 py-3"><span class="px-2 py-1 text-xs rounded ${k.status==='Lunas'?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}">${k.status}</span></td><td class="px-4 py-3 flex gap-2">${k.status !== 'Lunas' ? `<button onclick="confirmPayment(${k.id})" class="text-xs text-green-600">Lunasi</button>` : ''}<button onclick="deleteData('keuangan', ${k.id}, renderKeuangan)" class="text-xs text-red-500">Hapus</button></td></tr>`; }).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500">Belum ada data.</td></tr>`}</tbody></table></div>`; }
-async function keuanganForm(id = null) { const students = await DB.get('students'); openModal('Catat SPP', `<form id="keuanganForm" class="space-y-4"><div><label class="block text-sm mb-1">Siswa</label><select id="k_student" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${students.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Bulan</label><input type="text" id="k_month" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Jumlah</label><input type="number" id="k_amount" value="150000" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Status</label><select id="k_status" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option>Belum Bayar</option><option>Lunas</option></select></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('keuanganForm').onsubmit = async (e) => { e.preventDefault(); await saveData('keuangan', { student_id: parseInt(k_student.value), month: k_month.value, amount: parseInt(k_amount.value), status: k_status.value }, null); closeModal(); renderKeuangan(); }; }
+async function keuanganForm(id = null) { 
+    const students = await DB.get('students'); 
+    openModal('Catat SPP', `
+    <form id="keuanganForm" class="space-y-4">
+        <div><label class="block text-sm mb-1">Siswa</label><select id="k_student" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${students.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
+        <div><label class="block text-sm mb-1">Bulan</label><input type="text" id="k_month" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>
+        <div><label class="block text-sm mb-1">Jumlah</label><input type="number" id="k_amount" value="150000" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>
+        <div><label class="block text-sm mb-1">Status</label><select id="k_status" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option>Belum Bayar</option><option>Lunas</option></select></div>
+        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button>
+    </form>`); 
+    document.getElementById('keuanganForm').onsubmit = async (e) => { 
+        e.preventDefault(); 
+        const payload = { student_id: parseInt(document.getElementById('k_student').value), month: document.getElementById('k_month').value, amount: parseInt(document.getElementById('k_amount').value), status: document.getElementById('k_status').value }; 
+        await saveData('keuangan', payload, id); closeModal(); renderKeuangan(); 
+    }; 
+}
 async function confirmPayment(id) { await DB.update('keuangan', id, { status: 'Lunas' }); showToast('Pembayaran lunas!', 'success'); renderKeuangan(); }
 
 async function renderRapor() { if(currentUser.role === 'siswa') { printRapor(currentUser.id); return; } const students = await DB.get('students'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><h3 class="font-bold mb-4">Cetak Rapor</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4">${students.length ? students.map(s => `<button onclick="printRapor(${s.id})" class="p-4 border rounded-lg text-left"><p class="font-bold">${s.name}</p><p class="text-xs text-slate-500">NIS: ${s.nis}</p><span class="mt-2 inline-block text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">Cetak</span></button>`).join('') : '<div class="col-span-3 text-center py-8 text-slate-500">Belum ada siswa.</div>'}</div></div>`; }
 async function printRapor(studentId) { const student = (await DB.get('students')).find(s => s.id === studentId); const classes = (await DB.get('classes')).find(c => c.id === student.class_id); const grades = (await DB.get('grades')).filter(g => g.student_id === studentId); const subjects = await DB.get('subjects'); const profile = (await DB.get('school_profile'))[0] || {}; let gradeRows = ''; let totalScore = 0; let totalSubjects = 0; subjects.forEach(sub => { const subGrades = grades.filter(g => g.subject_id === sub.id); if(subGrades.length > 0){ const avgScore = Math.round(subGrades.reduce((s, g) => s + g.score, 0) / subGrades.length); const predikat = avgScore >= 90 ? 'A' : avgScore >= 80 ? 'B' : avgScore >= 70 ? 'C' : 'D'; gradeRows += `<tr><td style="padding: 8px; border: 1px solid #ddd;">${sub.name}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${sub.kkm}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${avgScore}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${predikat}</td></tr>`; totalScore += avgScore; totalSubjects++; } }); const finalAvg = totalSubjects ? (totalScore/totalSubjects).toFixed(1) : 0; document.getElementById('printArea').innerHTML = `<div style="font-family: Arial; color: #000;"><div style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px;"><h2>${profile.name || 'Sekolah'}</h2><p>${profile.address || ''}</p></div><h3 style="text-align: center; margin: 20px 0;">RAPOR SISWA</h3><table style="width: 100%; margin-bottom: 20px;"><tr><td>Nama</td><td>: ${student.name}</td><td>Kelas</td><td>: ${classes?.name || '-'}</td></tr><tr><td>NIS</td><td>: ${student.nis}</td><td>Semester</td><td>: ${profile.semester || '-'}</td></tr></table><table style="width: 100%; border-collapse: collapse;"><thead><tr style="background: #eee;"><th style="padding: 8px; border: 1px solid #ddd;">Mapel</th><th style="padding: 8px; border: 1px solid #ddd;">KKM</th><th style="padding: 8px; border: 1px solid #ddd;">Nilai</th><th style="padding: 8px; border: 1px solid #ddd;">Predikat</th></tr></thead><tbody>${gradeRows || `<tr><td colspan="4" style="text-align:center; padding: 10px; border: 1px solid #ddd;">Belum ada nilai</td></tr>`}</tbody><tfoot><tr><td colspan="2" style="padding: 8px; border: 1px solid #ddd; text-align: right;">Rata-rata:</td><td colspan="2" style="padding: 8px; border: 1px solid #ddd; text-align: center;">${finalAvg}</td></tr></tfoot></table></div>`; window.print(); }
 
 async function renderAnnouncements() { const anns = await DB.get('announcements'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Pengumuman</h3><button onclick="annForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Buat Pengumuman</button></div><div class="space-y-4">${anns.length ? anns.map(a => `<div class="p-4 bg-slate-50 rounded-lg"><div class="flex justify-between"><h4 class="font-bold">${a.title}</h4><div class="flex gap-2"><button onclick="annForm(${a.id})" class="text-xs text-blue-500">Edit</button><button onclick="deleteData('announcements', ${a.id}, renderAnnouncements)" class="text-xs text-red-500">Hapus</button></div></div><p class="text-xs text-slate-400 mt-1">${a.date}</p><p class="text-sm mt-2">${a.content}</p></div>`).join('') : '<p class="text-sm text-slate-500 text-center py-4">Belum ada pengumuman.</p>'}</div></div>`; }
-async function annForm(id = null) { let a = null; if(id) { a = (await DB.get('announcements')).find(x => x.id === id); } openModal('Buat Pengumuman', `<form id="annForm" class="space-y-4"><div><label class="block text-sm mb-1">Judul</label><input type="text" id="an_title" value="${a?.title || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Isi</label><textarea id="an_content" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${a?.content || ''}</textarea></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('annForm').onsubmit = async (e) => { e.preventDefault(); const payload = { title: an_title.value, content: an_content.value, date: new Date().toISOString().split('T')[0] }; await saveData('announcements', payload, id); closeModal(); renderAnnouncements(); }; }
+async function annForm(id = null) { 
+    let a = null; 
+    if(id) { a = (await DB.get('announcements')).find(x => x.id === id); } 
+    openModal('Buat Pengumuman', `
+    <form id="annForm" class="space-y-4">
+        <div><label class="block text-sm mb-1">Judul</label><input type="text" id="an_title" value="${a?.title || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div>
+        <div><label class="block text-sm mb-1">Isi</label><textarea id="an_content" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${a?.content || ''}</textarea></div>
+        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button>
+    </form>`); 
+    document.getElementById('annForm').onsubmit = async (e) => { 
+        e.preventDefault(); 
+        const payload = { title: document.getElementById('an_title').value, content: document.getElementById('an_content').value, date: new Date().toISOString().split('T')[0] }; 
+        await saveData('announcements', payload, id); closeModal(); renderAnnouncements(); 
+    }; 
+}
 
 async function renderSettings() { const profile = (await DB.get('school_profile'))[0] || {}; document.getElementById('content').innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div class="bg-white p-6 rounded-xl"><h3 class="font-bold mb-4">Profil Sekolah</h3><form id="profileForm" class="space-y-4"><div><label class="block text-sm mb-1">Nama Sekolah</label><input type="text" id="p_name" value="${profile.name || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Alamat</label><input type="text" id="p_address" value="${profile.address || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Kepala Sekolah</label><input type="text" id="p_principal" value="${profile.principal || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Simpan</button></form></div><div class="bg-white p-6 rounded-xl"><h3 class="font-bold mb-4">Pengaturan Akun</h3><div class="flex flex-col items-center space-y-3"><img id="prevAvatar" src="${currentUser.avatar_url || AI_IMG}" class="w-24 h-24 rounded-full object-cover"><input type="file" id="avatarFile" accept="image/*" class="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"><button onclick="uploadAvatar()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm">Upload Foto</button></div></div></div>`; document.getElementById('profileForm').onsubmit = async (e) => { e.preventDefault(); await saveData('school_profile', { name: p_name.value, address: p_address.value, principal: p_principal.value }, 1); }; }
 async function uploadAvatar() { const file = document.getElementById('avatarFile').files[0]; if(!file) { showToast('Pilih file dulu!', 'error'); return; } showToast('Mengunggah foto...', 'info'); const { data, error } = await sb.storage.from('avatars').upload('user_' + currentUser.id + '_' + Date.now() + '.jpg', file); if (error) { showToast('Gagal upload: ' + error.message, 'error'); return; } const url = sb.storage.from('avatars').getPublicUrl(data.path).data.publicUrl; await DB.update('users', currentUser.id, { avatar_url: url }); currentUser.avatar_url = url; localStorage.setItem('gs_currentUser', JSON.stringify(currentUser)); document.getElementById('userAvatar').src = url; showToast('Foto profil diperbarui!', 'success'); }
@@ -505,20 +652,17 @@ function printAIResult(includeAnswerKey = false) {
 function exportToWord() {
     if(!lastAIFormattedHTML) { showToast('Tidak ada teks untuk diekspor', 'error'); return; }
     
-    // 1. Clone node dari HTML yang ada di layar
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = lastAIFormattedHTML;
     
-    // 2. Hapus Kunci Jawaban & Highlight
     tempDiv.querySelectorAll('.kunci-jawaban-section, .soal-answer').forEach(el => el.remove());
     tempDiv.querySelectorAll('.soal-opt.correct').forEach(el => el.classList.remove('correct'));
     
-    // 3. Tambahkan styling inline ke soal-item
     tempDiv.querySelectorAll('.soal-item').forEach(item => {
         item.style.marginBottom = '18px';
         item.style.paddingBottom = '15px';
         item.style.borderBottom = '1px solid #eee';
-        item.style.overflow = 'hidden'; // Penting untuk layout float
+        item.style.overflow = 'hidden'; 
     });
     tempDiv.querySelectorAll('.soal-header').forEach(header => {
         header.style.marginBottom = '8px';
@@ -532,7 +676,6 @@ function exportToWord() {
         text.style.lineHeight = '1.6';
     });
     
-    // 4. Ubah display layout dari Grid ke Float agar Word mendeteksinya sebagai paragraf kiri-kanan
     tempDiv.querySelectorAll('.soal-opts').forEach(optsDiv => {
         optsDiv.style.display = 'block';
         optsDiv.style.width = '100%';
@@ -541,7 +684,6 @@ function exportToWord() {
         
         const opts = optsDiv.querySelectorAll('.soal-opt');
         opts.forEach((opt, index) => {
-            // Kunci layout 2 kolom dengan float
             opt.style.display = 'block';
             opt.style.marginBottom = '6px';
             
@@ -551,19 +693,16 @@ function exportToWord() {
             if(text) text.style.marginLeft = '4px';
             
             if(index < 2) {
-                // A dan B di kiri
                 opt.style.float = 'left';
                 opt.style.width = '45%';
                 opt.style.marginRight = '5%';
             } else {
-                // C dan D di kanan
                 opt.style.float = 'left';
                 opt.style.width = '45%';
-                opt.style.clear = (index === 2) ? 'left' : 'none'; // Pastikan C mulai di bawah A
+                opt.style.clear = (index === 2) ? 'left' : 'none';
             }
         });
         
-        // Tambahkan clear fix agar container tidak collapse
         const clearDiv = document.createElement('div');
         clearDiv.style.clear = 'both';
         optsDiv.appendChild(clearDiv);
