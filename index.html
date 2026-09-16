@@ -20,21 +20,8 @@
         .fade-in { animation: fadeIn 0.3s ease-in-out; } @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         #printArea { display: none; }
         @media print { body * { visibility: hidden; } #printArea, #printArea * { visibility: visible; } #printArea { display: block; position: absolute; left: 0; top: 0; width: 100%; padding: 20px; } @page { margin: 1cm; } }
-        .bg-abstract {
-            background-color: #f1f5f9;
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.1) 0%, transparent 20%),
-                radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 20%),
-                radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.05) 0%, transparent 50%);
-            background-attachment: fixed;
-        }
-        .dark .bg-abstract {
-            background-color: #0f172a;
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.15) 0%, transparent 20%),
-                radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 20%);
-        }
-        .card-shadow { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); }
+        
+        /* Styling for AI Markdown Output */
         .ai-output h1, .ai-output h2, .ai-output h3 { font-weight: bold; margin-top: 12px; margin-bottom: 6px; }
         .ai-output h1 { font-size: 1.5rem; } .ai-output h2 { font-size: 1.25rem; } .ai-output h3 { font-size: 1.1rem; }
         .ai-output p { margin-bottom: 8px; }
@@ -45,12 +32,9 @@
         .ai-output strong { font-weight: bold; }
         .ai-output table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
         .ai-output th, .ai-output td { border: 1px solid #cbd5e1; padding: 6px; text-align: left; }
-        /* Fix klik mobile */
-        button, a { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-        .nav-link { cursor: pointer; }
     </style>
 </head>
-<body class="bg-abstract transition-colors duration-300">
+<body class="bg-slate-100 dark:bg-slate-900 transition-colors duration-300">
 
     <!-- Auth Screen -->
     <div id="authScreen" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-600 to-blue-900">
@@ -95,7 +79,7 @@
 
     <!-- Main App -->
     <div id="appScreen" class="hidden h-screen flex overflow-hidden">
-        <aside id="sidebar" class="sidebar fixed lg:relative z-40 w-64 h-full bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out overflow-y-auto card-shadow">
+        <aside id="sidebar" class="sidebar fixed lg:relative z-40 w-64 h-full bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out overflow-y-auto">
             <div class="p-4 flex items-center justify-between border-b border-slate-200 dark:border-slate-700">
                 <div class="flex items-center space-x-2">
                     <img src="https://z-cdn-media.chatglm.cn/files/11f7cfc9-77a0-43c5-b48a-1755197df89e.jpeg?auth_key=1889527541-b3a932f33e4641fd9fe4de6161964cbf-0-02e3dbe4c888ce0fde5a5d6aa32008ca" alt="Logo" class="w-8 h-8 rounded-full object-cover">
@@ -108,7 +92,7 @@
         <div id="sidebarOverlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-black/50 z-30"></div>
 
         <main class="flex-1 flex flex-col overflow-hidden">
-            <header class="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 lg:px-6 card-shadow z-10">
+            <header class="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 lg:px-6">
                 <div class="flex items-center space-x-4">
                     <button onclick="toggleSidebar()" class="lg:hidden text-slate-500"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
                     <h2 id="pageTitle" class="text-xl font-semibold text-slate-800 dark:text-white">Dashboard</h2>
@@ -128,7 +112,7 @@
                     </div>
                 </div>
             </header>
-            <div id="content" class="flex-1 overflow-y-auto p-4 lg:p-6 bg-abstract"></div>
+            <div id="content" class="flex-1 overflow-y-auto p-4 lg:p-6 bg-slate-100 dark:bg-slate-900"></div>
         </main>
     </div>
 
@@ -146,18 +130,13 @@
     <div id="printArea"></div>
 
 <script>
-// ========================================================
-// KONFIGURASI SUPABASE & AI
-// ========================================================
+// BAGIAN 2 AKAN DITEMPELKAN TEPAT DI BAWAH INI// GANTI DENGAN URL DAN ANON KEY SUPABASE ANDA
 const SUPABASE_URL = 'https://xdwgqgdbfidlsfgyyaeo.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhkd2dxZ2RiZmlkbHNmZ3l5YWVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1MDAxNjQsImV4cCI6MjEwNTA3NjE2NH0.3QRFjepUIK00cmFFMJ7D3eEtWKpX2dMOfUPap-ef8Lo';
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const AI_IMG = 'https://z-cdn-media.chatglm.cn/files/11f7cfc9-77a0-43c5-b48a-1755197df89e.jpeg?auth_key=1889527541-b3a932f33e4641fd9fe4de6161964cbf-0-02e3dbe4c888ce0fde5a5d6aa32008ca';
 
-// ========================================================
-// DATABASE HELPER
-// ========================================================
 const DB = {
     get: async (table) => {
         const { data, error } = await sb.from(table).select('*');
@@ -184,9 +163,9 @@ const DB = {
 let currentUser = null;
 let currentPage = 'dashboard';
 
-// ========================================================
-// AUTENTIKASI
-// ========================================================
+// =================================================================
+// AUTHENTICATION
+// =================================================================
 function toggleAuth(form) {
     if(form === 'register') {
         document.getElementById('loginForm').classList.add('hidden');
@@ -240,7 +219,6 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
 });
 
 async function logout() { await sb.auth.signOut(); localStorage.removeItem('gs_currentUser'); currentUser = null; location.reload(); }
-
 async function checkSession() {
     const { data: { session } } = await sb.auth.getSession();
     if (session) {
@@ -253,9 +231,9 @@ async function checkSession() {
     return false;
 }
 
-// ========================================================
-// UI HELPERS
-// ========================================================
+// =================================================================
+// UI HELPERS & NAVIGATION
+// =================================================================
 function showToast(message, type = 'info') {
     const toast = document.getElementById('toast');
     const bg = type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-slate-800';
@@ -273,23 +251,10 @@ function toggleDarkMode() {
     if(currentPage === 'dashboard') renderDashboard();
 }
 if (localStorage.getItem('gs_darkMode') === 'true') { document.documentElement.classList.add('dark'); document.getElementById('iconSun').classList.remove('hidden'); document.getElementById('iconMoon').classList.add('hidden'); }
-
-function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('-translate-x-full');
-    document.getElementById('sidebarOverlay').classList.toggle('hidden');
-}
-
-function openModal(title, contentHtml) {
-    document.getElementById('modalTitle').innerText = title;
-    document.getElementById('modalContent').innerHTML = contentHtml;
-    document.getElementById('modalContainer').classList.remove('hidden');
-}
-
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('sidebarOverlay').classList.toggle('hidden'); }
+function openModal(title, contentHtml) { document.getElementById('modalTitle').innerText = title; document.getElementById('modalContent').innerHTML = contentHtml; document.getElementById('modalContainer').classList.remove('hidden'); }
 function closeModal() { document.getElementById('modalContainer').classList.add('hidden'); }
 
-// ========================================================
-// MENU & NAVIGATION (FIXED - TANPA POPSTATE BUG)
-// ========================================================
 const menus = [
     { id: 'dashboard', label: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', roles: ['admin', 'guru', 'siswa'] },
     { id: 'ai', label: 'Asisten AI Guru', icon: 'M12 2a7 7 0 00-7 7v3a7 7 0 0014 0V9a7 7 0 00-7-7zm-4 18h8M9 22h6', roles: ['admin', 'guru', 'siswa'] },
@@ -309,874 +274,104 @@ const menus = [
 ];
 
 function renderMenu() {
-    const navMenu = document.getElementById('navMenu');
-    navMenu.innerHTML = '';
+    const navMenu = document.getElementById('navMenu'); navMenu.innerHTML = '';
     menus.filter(m => m.roles.includes(currentUser.role)).forEach(menu => {
         const isActive = currentPage === menu.id ? 'bg-blue-50 dark:bg-slate-700 text-blue-600 dark:text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700';
-        navMenu.innerHTML += `<a href="javascript:void(0)" onclick="navigate('${menu.id}')" class="nav-link flex items-center space-x-3 px-3 py-2.5 rounded-lg ${isActive} transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${menu.icon}"></path></svg><span>${menu.label}</span></a>`;
+        navMenu.innerHTML += `<a href="#" onclick="navigate('${menu.id}')" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg ${isActive} transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${menu.icon}"></path></svg><span>${menu.label}</span></a>`;
     });
 }
-
-// ✅ FIX UTAMA: Hapus history.pushState & popstate yang menyebabkan error
-function navigate(page) {
-    currentPage = page;
-    document.getElementById('pageTitle').innerText = menus.find(m => m.id === page)?.label || 'Page';
-    renderMenu();
-    renderContent(page);
-    // Tutup sidebar di mobile setelah klik
-    if (window.innerWidth < 1024) {
-        document.getElementById('sidebar').classList.add('-translate-x-full');
-        document.getElementById('sidebarOverlay').classList.add('hidden');
-    }
-}
-
+function navigate(page) { currentPage = page; document.getElementById('pageTitle').innerText = menus.find(m => m.id === page)?.label || 'Page'; renderMenu(); renderContent(page); if (window.innerWidth < 1024) toggleSidebar(); }
 async function renderContent(page) {
     document.getElementById('content').innerHTML = `<div class="text-center py-10 text-slate-500">Memuat data...</div>`;
-    try {
-        switch(page) {
-            case 'dashboard': await renderDashboard(); break;
-            case 'ai': renderAI(); break;
-            case 'teachers': await renderTeachers(); break;
-            case 'students': await renderStudents(); break;
-            case 'classes': await renderClasses(); break;
-            case 'subjects': await renderSubjects(); break;
-            case 'schedules': await renderSchedules(); break;
-            case 'attendance': await renderAttendance(); break;
-            case 'grades': await renderGrades(); break;
-            case 'assignments': await renderAssignments(); break;
-            case 'materi': await renderMateri(); break;
-            case 'keuangan': await renderKeuangan(); break;
-            case 'rapor': await renderRapor(); break;
-            case 'announcements': await renderAnnouncements(); break;
-            case 'settings': await renderSettings(); break;
-        }
-    } catch(err) {
-        console.error('Error rendering page:', err);
-        document.getElementById('content').innerHTML = `<div class="text-center py-10 text-red-500">Terjadi kesalahan memuat halaman.</div>`;
+    switch(page) {
+        case 'dashboard': await renderDashboard(); break;
+        case 'ai': renderAI(); break;
+        case 'teachers': await renderTeachers(); break;
+        case 'students': await renderStudents(); break;
+        case 'classes': await renderClasses(); break;
+        case 'subjects': await renderSubjects(); break;
+        case 'schedules': await renderSchedules(); break;
+        case 'attendance': await renderAttendance(); break;
+        case 'grades': await renderGrades(); break;
+        case 'assignments': await renderAssignments(); break;
+        case 'materi': await renderMateri(); break;
+        case 'keuangan': await renderKeuangan(); break;
+        case 'rapor': await renderRapor(); break;
+        case 'announcements': await renderAnnouncements(); break;
+        case 'settings': await renderSettings(); break;
     }
 }
 
-// BAGIAN 2 AKAN DITERUSKAN DI BAWAH INI// ========================================================
 // DASHBOARD
-// ========================================================
 async function renderDashboard() {
-    const students = await DB.get('students');
-    const teachers = await DB.get('teachers');
-    const classes = await DB.get('classes');
-    const announcements = await DB.get('announcements');
-    const grades = await DB.get('grades');
-    const keuangan = await DB.get('keuangan');
+    const students = await DB.get('students'); const teachers = await DB.get('teachers'); const classes = await DB.get('classes'); const announcements = await DB.get('announcements'); const grades = await DB.get('grades'); const keuangan = await DB.get('keuangan');
     const unpaidSpp = keuangan.filter(k => k.status === 'Belum Bayar').length;
-    
-    document.getElementById('content').innerHTML = `
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-            ${dashboardCard('Total Siswa', students.length, 'bg-blue-500', 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z')}
-            ${dashboardCard('Total Guru', teachers.length, 'bg-green-500', 'M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-5a4 4 0 11-8 0 4 4 0 018 0zm6 0a4 4 0 11-8 0 4 4 0 018 0z')}
-            ${dashboardCard('Total Kelas', classes.length, 'bg-yellow-500', 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4')}
-            ${dashboardCard('SPP Belum Lunas', unpaidSpp, 'bg-red-500', 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1V6m0 2c-1.11 0-2.08.402-2.599 1')}
-        </div>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-xl card-shadow">
-                <h3 class="font-semibold text-slate-800 dark:text-white mb-4">Statistik Nilai Siswa</h3>
-                <canvas id="chartGrades" height="100"></canvas>
-            </div>
-            <div class="bg-white dark:bg-slate-800 p-6 rounded-xl card-shadow">
-                <h3 class="font-semibold text-slate-800 dark:text-white mb-4">Pengumuman Terbaru</h3>
-                <div class="space-y-4 max-h-80 overflow-y-auto modal-scroll">
-                    ${announcements.length ? announcements.map(a => `
-                        <div class="p-3 bg-slate-50 dark:bg-slate-700 rounded-lg">
-                            <p class="font-medium text-sm text-blue-600 dark:text-blue-400">${a.title}</p>
-                            <p class="text-xs text-slate-500 dark:text-slate-300 mt-1">${a.content}</p>
-                            <p class="text-[10px] text-slate-400 mt-1">${a.date}</p>
-                        </div>
-                    `).join('') : '<p class="text-sm text-slate-500 text-center py-4">Belum ada pengumuman.</p>'}
-                </div>
-            </div>
-        </div>
-    `;
-    
-    const ctx = document.getElementById('chartGrades').getContext('2d');
-    const types = ['Tugas', 'Ulangan Harian', 'PTS', 'PAS'];
-    const data = types.map(t => {
-        const tGrades = grades.filter(g => g.type === t);
-        return tGrades.length ? (tGrades.reduce((s, g) => s + g.score, 0) / tGrades.length).toFixed(1) : 0;
-    });
-    new Chart(ctx, {
-        type: 'bar',
-        data: { labels: types, datasets: [{ label: 'Rata-rata Nilai', data: data, backgroundColor: 'rgba(37, 99, 235, 0.5)', borderColor: 'rgba(37, 99, 235, 1)', borderWidth: 1 }] },
-        options: { responsive: true, scales: { y: { beginAtZero: 0, max: 100 } }, plugins: { legend: { labels: { color: document.documentElement.classList.contains('dark') ? '#fff' : '#000' } } } }
-    });
+    document.getElementById('content').innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">${dashboardCard('Total Siswa', students.length, 'bg-blue-500', 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z')}${dashboardCard('Total Guru', teachers.length, 'bg-green-500', 'M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-5a4 4 0 11-8 0 4 4 0 018 0zm6 0a4 4 0 11-8 0 4 4 0 018 0z')}${dashboardCard('Total Kelas', classes.length, 'bg-yellow-500', 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4')}${dashboardCard('SPP Belum Lunas', unpaidSpp, 'bg-red-500', 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1V6m0 2c-1.11 0-2.08.402-2.599 1')}</div><div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><h3 class="font-semibold text-slate-800 dark:text-white mb-4">Statistik Nilai Siswa</h3><canvas id="chartGrades" height="100"></canvas></div><div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><h3 class="font-semibold text-slate-800 dark:text-white mb-4">Pengumuman Terbaru</h3><div class="space-y-4 max-h-80 overflow-y-auto modal-scroll">${announcements.length ? announcements.map(a => `<div class="p-3 bg-slate-50 dark:bg-slate-700 rounded-lg"><p class="font-medium text-sm text-blue-600 dark:text-blue-400">${a.title}</p><p class="text-xs text-slate-500 dark:text-slate-300 mt-1">${a.content}</p><p class="text-[10px] text-slate-400 mt-1">${a.date}</p></div>`).join('') : '<p class="text-sm text-slate-500 text-center py-4">Belum ada pengumuman.</p>'}</div></div></div>`;
+    const ctx = document.getElementById('chartGrades').getContext('2d'); const types = ['Tugas', 'Ulangan Harian', 'PTS', 'PAS']; const data = types.map(t => { const tGrades = grades.filter(g => g.type === t); return tGrades.length ? (tGrades.reduce((s, g) => s + g.score, 0) / tGrades.length).toFixed(1) : 0; });
+    new Chart(ctx, { type: 'bar', data: { labels: types, datasets: [{ label: 'Rata-rata Nilai', data: data, backgroundColor: 'rgba(37, 99, 235, 0.5)', borderColor: 'rgba(37, 99, 235, 1)', borderWidth: 1 }] }, options: { responsive: true, scales: { y: { beginAtZero: 0, max: 100 } }, plugins: { legend: { labels: { color: document.documentElement.classList.contains('dark') ? '#fff' : '#000' } } } } });
 }
+function dashboardCard(title, count, color, icon) { return `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm flex items-center space-x-4"><div class="p-3 ${color} rounded-lg text-white"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${icon}"></path></svg></div><div><p class="text-slate-500 dark:text-slate-400 text-sm">${title}</p><h3 class="text-2xl font-bold text-slate-800 dark:text-white">${count}</h3></div></div>`; }
 
-function dashboardCard(title, count, color, icon) {
-    return `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl card-shadow flex items-center space-x-4">
-        <div class="p-3 ${color} rounded-lg text-white">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${icon}"></path></svg>
-        </div>
-        <div>
-            <p class="text-slate-500 dark:text-slate-400 text-sm">${title}</p>
-            <h3 class="text-2xl font-bold text-slate-800 dark:text-white">${count}</h3>
-        </div>
-    </div>`;
-}
-
-// ========================================================
 // TEACHERS, STUDENTS, CLASSES, SUBJECTS
-// ========================================================
-async function renderTeachers() {
-    const teachers = await DB.get('teachers');
-    document.getElementById('content').innerHTML = `
-    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl card-shadow">
-        <div class="flex justify-between mb-4">
-            <input type="text" id="searchTeacher" onkeyup="filterTable('searchTeacher', 'teacherTableBody')" placeholder="Cari guru..." class="px-4 py-2 rounded-lg border dark:bg-slate-700 dark:text-white text-sm outline-none">
-            <button onclick="teacherForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Guru</button>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm text-left">
-                <thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase">
-                    <tr><th class="px-4 py-3">NIP</th><th class="px-4 py-3">Nama</th><th class="px-4 py-3">Gender</th><th class="px-4 py-3">Mapel</th><th class="px-4 py-3">No HP</th><th class="px-4 py-3">Aksi</th></tr>
-                </thead>
-                <tbody id="teacherTableBody" class="divide-y dark:divide-slate-700">
-                    ${teachers.length ? teachers.map(t => `<tr><td class="px-4 py-3">${t.nip}</td><td class="px-4 py-3 font-medium">${t.name}</td><td class="px-4 py-3">${t.gender}</td><td class="px-4 py-3">${t.subject}</td><td class="px-4 py-3">${t.phone}</td><td class="px-4 py-3 flex gap-2"><button onclick="teacherForm(${t.id})" class="text-blue-500">Edit</button><button onclick="deleteData('teachers', ${t.id}, renderTeachers)" class="text-red-500">Hapus</button></td></tr>`).join('') : `<tr><td colspan="6" class="text-center py-4 text-slate-500">Belum ada data.</td></tr>`}
-                </tbody>
-            </table>
-        </div>
-    </div>`;
-}
+async function renderTeachers() { const teachers = await DB.get('teachers'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex justify-between mb-4"><input type="text" id="searchTeacher" onkeyup="filterTable('searchTeacher', 'teacherTableBody')" placeholder="Cari guru..." class="px-4 py-2 rounded-lg border dark:bg-slate-700 dark:text-white text-sm outline-none"><button onclick="teacherForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Guru</button></div><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase"><tr><th class="px-4 py-3">NIP</th><th class="px-4 py-3">Nama</th><th class="px-4 py-3">Gender</th><th class="px-4 py-3">Mapel</th><th class="px-4 py-3">No HP</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody id="teacherTableBody" class="divide-y dark:divide-slate-700">${teachers.length ? teachers.map(t => `<tr><td class="px-4 py-3">${t.nip}</td><td class="px-4 py-3 font-medium">${t.name}</td><td class="px-4 py-3">${t.gender}</td><td class="px-4 py-3">${t.subject}</td><td class="px-4 py-3">${t.phone}</td><td class="px-4 py-3 flex gap-2"><button onclick="teacherForm(${t.id})" class="text-blue-500">Edit</button><button onclick="deleteData('teachers', ${t.id}, renderTeachers)" class="text-red-500">Hapus</button></td></tr>`).join('') : `<tr><td colspan="6" class="text-center py-4 text-slate-500">Belum ada data.</td></tr>`}</tbody></table></div></div>`; }
+async function teacherForm(id = null) { openModal(id ? 'Edit Guru' : 'Tambah Guru', `<form id="teacherForm" class="space-y-4"><div><label class="block text-sm mb-1">NIP</label><input type="text" id="tNip" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Nama</label><input type="text" id="tName" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Gender</label><select id="tGender" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option>L</option><option>P</option></select></div><div><label class="block text-sm mb-1">No HP</label><input type="text" id="tPhone" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Mapel</label><input type="text" id="tSubject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button></form>`); if(id) { const t = (await DB.get('teachers')).find(x => x.id === id); if(t) { tNip.value = t.nip; tName.value = t.name; tGender.value = t.gender; tPhone.value = t.phone; tSubject.value = t.subject; } } document.getElementById('teacherForm').onsubmit = async (e) => { e.preventDefault(); await saveData('teachers', { id: id || Date.now(), nip: tNip.value, name: tName.value, gender: tGender.value, phone: tPhone.value, subject: tSubject.value }, id); closeModal(); renderTeachers(); }; }
 
-async function teacherForm(id = null) {
-    openModal(id ? 'Edit Guru' : 'Tambah Guru', `
-        <form id="teacherForm" class="space-y-4">
-            <div><label class="block text-sm mb-1">NIP</label><input type="text" id="tNip" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div>
-            <div><label class="block text-sm mb-1">Nama</label><input type="text" id="tName" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div>
-            <div><label class="block text-sm mb-1">Gender</label><select id="tGender" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option>L</option><option>P</option></select></div>
-            <div><label class="block text-sm mb-1">No HP</label><input type="text" id="tPhone" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>
-            <div><label class="block text-sm mb-1">Mapel</label><input type="text" id="tSubject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>
-            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button>
-        </form>
-    `);
-    if(id) {
-        const t = (await DB.get('teachers')).find(x => x.id === id);
-        if(t) { tNip.value = t.nip; tName.value = t.name; tGender.value = t.gender; tPhone.value = t.phone; tSubject.value = t.subject; }
-    }
-    document.getElementById('teacherForm').onsubmit = async (e) => {
-        e.preventDefault();
-        await saveData('teachers', { id: id || Date.now(), nip: tNip.value, name: tName.value, gender: tGender.value, phone: tPhone.value, subject: tSubject.value }, id);
-        closeModal();
-        renderTeachers();
-    };
-}
+async function renderStudents() { const students = await DB.get('students'); const classes = await DB.get('classes'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex justify-between mb-4"><button onclick="studentForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Siswa</button></div><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase"><tr><th class="px-4 py-3">NIS</th><th class="px-4 py-3">Nama</th><th class="px-4 py-3">Kelas</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody class="divide-y dark:divide-slate-700">${students.length ? students.map(s => { const cls = classes.find(c => c.id === s.class_id); return `<tr><td class="px-4 py-3">${s.nis}</td><td class="px-4 py-3 font-medium">${s.name}</td><td class="px-4 py-3">${cls?.name || 'N/A'}</td><td class="px-4 py-3 flex gap-2"><button onclick="studentForm(${s.id})" class="text-blue-500">Edit</button><button onclick="deleteData('students', ${s.id}, renderStudents)" class="text-red-500">Hapus</button></td></tr>`; }).join('') : `<tr><td colspan="4" class="text-center py-4 text-slate-500">Belum ada data.</td></tr>`}</tbody></table></div></div>`; }
+async function studentForm(id = null) { const classes = await DB.get('classes'); openModal('Tambah Siswa', `<form id="studentForm" class="space-y-4"><div><label class="block text-sm mb-1">NIS</label><input type="text" id="sNis" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Nama</label><input type="text" id="sName" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Kelas</label><select id="sClass" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}</select></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button></form>`); document.getElementById('studentForm').onsubmit = async (e) => { e.preventDefault(); await saveData('students', { id: id || Date.now(), nis: sNis.value, name: sName.value, class_id: parseInt(sClass.value) }, id); closeModal(); renderStudents(); }; }
 
-async function renderStudents() {
-    const students = await DB.get('students');
-    const classes = await DB.get('classes');
-    document.getElementById('content').innerHTML = `
-    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl card-shadow">
-        <div class="flex justify-between mb-4">
-            <button onclick="studentForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Siswa</button>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm text-left">
-                <thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase">
-                    <tr><th class="px-4 py-3">NIS</th><th class="px-4 py-3">Nama</th><th class="px-4 py-3">Kelas</th><th class="px-4 py-3">Aksi</th></tr>
-                </thead>
-                <tbody class="divide-y dark:divide-slate-700">
-                    ${students.length ? students.map(s => {
-                        const cls = classes.find(c => c.id === s.class_id);
-                        return `<tr><td class="px-4 py-3">${s.nis}</td><td class="px-4 py-3 font-medium">${s.name}</td><td class="px-4 py-3">${cls?.name || 'N/A'}</td><td class="px-4 py-3 flex gap-2"><button onclick="studentForm(${s.id})" class="text-blue-500">Edit</button><button onclick="deleteData('students', ${s.id}, renderStudents)" class="text-red-500">Hapus</button></td></tr>`;
-                    }).join('') : `<tr><td colspan="4" class="text-center py-4 text-slate-500">Belum ada data.</td></tr>`}
-                </tbody>
-            </table>
-        </div>
-    </div>`;
-}
+async function renderClasses() { const classes = await DB.get('classes'); const students = await DB.get('students'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex justify-between mb-4"><h3 class="font-semibold">Manajemen Kelas</h3><button onclick="classForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Kelas</button></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">${classes.length ? classes.map(c => { const count = students.filter(s => s.class_id === c.id).length; return `<div class="p-4 border rounded-lg"><h4 class="text-lg font-bold">${c.name}</h4><p class="text-sm">Wali: ${c.homeroom}</p><p class="text-sm">Jumlah Siswa: ${count}</p><div class="mt-4 flex gap-2"><button onclick="classForm(${c.id})" class="text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded">Edit</button><button onclick="deleteData('classes', ${c.id}, renderClasses)" class="text-xs bg-red-100 text-red-600 px-3 py-1 rounded">Hapus</button></div></div>`; }).join('') : '<div class="col-span-3 text-center py-8 text-slate-500">Belum ada data kelas.</div>'}</div></div>`; }
+async function classForm(id = null) { openModal(id ? 'Edit Kelas' : 'Tambah Kelas', `<form id="classForm" class="space-y-4"><div><label class="block text-sm mb-1">Nama Kelas</label><input type="text" id="cName" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Wali Kelas</label><input type="text" id="cHomeroom" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button></form>`); if(id) { const c = (await DB.get('classes')).find(x => x.id === id); if(c) { cName.value = c.name; cHomeroom.value = c.homeroom; } } document.getElementById('classForm').onsubmit = async (e) => { e.preventDefault(); await saveData('classes', { id: id || Date.now(), name: cName.value, homeroom: cHomeroom.value }, id); closeModal(); renderClasses(); }; }
 
-async function studentForm(id = null) {
-    const classes = await DB.get('classes');
-    openModal('Tambah Siswa', `
-        <form id="studentForm" class="space-y-4">
-            <div><label class="block text-sm mb-1">NIS</label><input type="text" id="sNis" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div>
-            <div><label class="block text-sm mb-1">Nama</label><input type="text" id="sName" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div>
-            <div><label class="block text-sm mb-1">Kelas</label><select id="sClass" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}</select></div>
-            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button>
-        </form>
-    `);
-    document.getElementById('studentForm').onsubmit = async (e) => {
-        e.preventDefault();
-        await saveData('students', { id: id || Date.now(), nis: sNis.value, name: sName.value, class_id: parseInt(sClass.value) }, id);
-        closeModal();
-        renderStudents();
-    };
-}
+async function renderSubjects() { const subjects = await DB.get('subjects'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex justify-between mb-4"><h3 class="font-semibold">Mata Pelajaran</h3><button onclick="subjectForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Mapel</button></div><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase"><tr><th class="px-4 py-3">Kode</th><th class="px-4 py-3">Nama Mapel</th><th class="px-4 py-3">Guru</th><th class="px-4 py-3">KKM</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody class="divide-y dark:divide-slate-700">${subjects.length ? subjects.map(s => `<tr><td class="px-4 py-3">${s.code}</td><td class="px-4 py-3 font-medium">${s.name}</td><td class="px-4 py-3">${s.teacher}</td><td class="px-4 py-3">${s.kkm}</td><td class="px-4 py-3 flex gap-2"><button onclick="subjectForm(${s.id})" class="text-blue-500">Edit</button><button onclick="deleteData('subjects', ${s.id}, renderSubjects)" class="text-red-500">Hapus</button></td></tr>`).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500">Belum ada data.</td></tr>`}</tbody></table></div></div>`; }
+async function subjectForm(id = null) { openModal('Tambah Mapel', `<form id="subjectForm" class="space-y-4"><div><label class="block text-sm mb-1">Kode</label><input type="text" id="subCode" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Nama Mapel</label><input type="text" id="subName" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Guru Pengampu</label><input type="text" id="subTeacher" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">KKM</label><input type="number" id="subKkm" value="75" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button></form>`); if(id) { const s = (await DB.get('subjects')).find(x => x.id === id); if(s) { subCode.value = s.code; subName.value = s.name; subTeacher.value = s.teacher; subKkm.value = s.kkm; } } document.getElementById('subjectForm').onsubmit = async (e) => { e.preventDefault(); await saveData('subjects', { id: id || Date.now(), code: subCode.value, name: subName.value, teacher: subTeacher.value, kkm: parseInt(subKkm.value) }, id); closeModal(); renderSubjects(); }; }
 
-async function renderClasses() {
-    const classes = await DB.get('classes');
-    const students = await DB.get('students');
-    document.getElementById('content').innerHTML = `
-    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl card-shadow">
-        <div class="flex justify-between mb-4">
-            <h3 class="font-semibold">Manajemen Kelas</h3>
-            <button onclick="classForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Kelas</button>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            ${classes.length ? classes.map(c => {
-                const count = students.filter(s => s.class_id === c.id).length;
-                return `<div class="p-4 border rounded-lg card-shadow">
-                    <h4 class="text-lg font-bold">${c.name}</h4>
-                    <p class="text-sm">Wali: ${c.homeroom}</p>
-                    <p class="text-sm">Jumlah Siswa: ${count}</p>
-                    <div class="mt-4 flex gap-2">
-                        <button onclick="classForm(${c.id})" class="text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded">Edit</button>
-                        <button onclick="deleteData('classes', ${c.id}, renderClasses)" class="text-xs bg-red-100 text-red-600 px-3 py-1 rounded">Hapus</button>
-                    </div>
-                </div>`;
-            }).join('') : '<div class="col-span-3 text-center py-8 text-slate-500">Belum ada data kelas.</div>'}
-        </div>
-    </div>`;
-}
-
-async function classForm(id = null) {
-    openModal(id ? 'Edit Kelas' : 'Tambah Kelas', `
-        <form id="classForm" class="space-y-4">
-            <div><label class="block text-sm mb-1">Nama Kelas</label><input type="text" id="cName" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div>
-            <div><label class="block text-sm mb-1">Wali Kelas</label><input type="text" id="cHomeroom" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>
-            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button>
-        </form>
-    `);
-    if(id) {
-        const c = (await DB.get('classes')).find(x => x.id === id);
-        if(c) { cName.value = c.name; cHomeroom.value = c.homeroom; }
-    }
-    document.getElementById('classForm').onsubmit = async (e) => {
-        e.preventDefault();
-        await saveData('classes', { id: id || Date.now(), name: cName.value, homeroom: cHomeroom.value }, id);
-        closeModal();
-        renderClasses();
-    };
-}
-
-async function renderSubjects() {
-    const subjects = await DB.get('subjects');
-    document.getElementById('content').innerHTML = `
-    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl card-shadow">
-        <div class="flex justify-between mb-4">
-            <h3 class="font-semibold">Mata Pelajaran</h3>
-            <button onclick="subjectForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Mapel</button>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm text-left">
-                <thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase">
-                    <tr><th class="px-4 py-3">Kode</th><th class="px-4 py-3">Nama Mapel</th><th class="px-4 py-3">Guru</th><th class="px-4 py-3">KKM</th><th class="px-4 py-3">Aksi</th></tr>
-                </thead>
-                <tbody class="divide-y dark:divide-slate-700">
-                    ${subjects.length ? subjects.map(s => `<tr><td class="px-4 py-3">${s.code}</td><td class="px-4 py-3 font-medium">${s.name}</td><td class="px-4 py-3">${s.teacher}</td><td class="px-4 py-3">${s.kkm}</td><td class="px-4 py-3 flex gap-2"><button onclick="subjectForm(${s.id})" class="text-blue-500">Edit</button><button onclick="deleteData('subjects', ${s.id}, renderSubjects)" class="text-red-500">Hapus</button></td></tr>`).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500">Belum ada data.</td></tr>`}
-                </tbody>
-            </table>
-        </div>
-    </div>`;
-}
-
-async function subjectForm(id = null) {
-    openModal('Tambah Mapel', `
-        <form id="subjectForm" class="space-y-4">
-            <div><label class="block text-sm mb-1">Kode</label><input type="text" id="subCode" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div>
-            <div><label class="block text-sm mb-1">Nama Mapel</label><input type="text" id="subName" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div>
-            <div><label class="block text-sm mb-1">Guru Pengampu</label><input type="text" id="subTeacher" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>
-            <div><label class="block text-sm mb-1">KKM</label><input type="number" id="subKkm" value="75" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>
-            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button>
-        </form>
-    `);
-    if(id) {
-        const s = (await DB.get('subjects')).find(x => x.id === id);
-        if(s) { subCode.value = s.code; subName.value = s.name; subTeacher.value = s.teacher; subKkm.value = s.kkm; }
-    }
-    document.getElementById('subjectForm').onsubmit = async (e) => {
-        e.preventDefault();
-        await saveData('subjects', { id: id || Date.now(), code: subCode.value, name: subName.value, teacher: subTeacher.value, kkm: parseInt(subKkm.value) }, id);
-        closeModal();
-        renderSubjects();
-    };
-}
-
-// ========================================================
 // SCHEDULES, ATTENDANCE, GRADES
-// ========================================================
-async function renderSchedules() {
-    const schedules = await DB.get('schedules');
-    const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-    document.getElementById('content').innerHTML = `
-    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl card-shadow">
-        <div class="flex justify-between mb-4">
-            <h3 class="font-semibold">Jadwal Pelajaran</h3>
-            <button onclick="scheduleForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Jadwal</button>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm text-left border-collapse">
-                <thead class="bg-slate-50 dark:bg-slate-700">
-                    <tr><th class="px-4 py-3 border">Jam</th>${days.map(d => `<th class="px-4 py-3 border">${d}</th>`).join('')}</tr>
-                </thead>
-                <tbody>
-                    ${['07:30-09:00', '09:15-10:45', '11:00-12:30'].map(time => `<tr><td class="px-4 py-3 border font-medium">${time}</td>${days.map(day => { const sch = schedules.find(s => s.day === day && s.start_time === time.split('-')[0]); return `<td class="px-4 py-3 border text-xs">${sch ? `${sch.subject}<br><span class="text-blue-500">${sch.teacher}</span>` : '-'}</td>`; }).join('')}</tr>`).join('')}
-                </tbody>
-            </table>
-        </div>
-    </div>`;
-}
+async function renderSchedules() { const schedules = await DB.get('schedules'); const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']; document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex justify-between mb-4"><h3 class="font-semibold">Jadwal Pelajaran</h3><button onclick="scheduleForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Jadwal</button></div><div class="overflow-x-auto"><table class="w-full text-sm text-left border-collapse"><thead class="bg-slate-50 dark:bg-slate-700"><tr><th class="px-4 py-3 border">Jam</th>${days.map(d => `<th class="px-4 py-3 border">${d}</th>`).join('')}</tr></thead><tbody>${['07:30-09:00', '09:15-10:45', '11:00-12:30'].map(time => `<tr><td class="px-4 py-3 border font-medium">${time}</td>${days.map(day => { const sch = schedules.find(s => s.day === day && s.start_time === time.split('-')[0]); return `<td class="px-4 py-3 border text-xs">${sch ? `${sch.subject}<br><span class="text-blue-500">${sch.teacher}</span>` : '-'}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div></div>`; }
+async function scheduleForm(id = null) { const classes = await DB.get('classes'); openModal('Tambah Jadwal', `<form id="scheduleForm" class="space-y-4"><div><label class="block text-sm mb-1">Hari</label><select id="scDay" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option>Senin</option><option>Selasa</option><option>Rabu</option><option>Kamis</option><option>Jumat</option></select></div><div><label class="block text-sm mb-1">Jam Mulai</label><input type="text" id="scStart" value="07:30" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Jam Selesai</label><input type="text" id="scEnd" value="09:00" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Kelas</label><select id="scClass" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Mapel</label><input type="text" id="scSubject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Guru</label><input type="text" id="scTeacher" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button></form>`); document.getElementById('scheduleForm').onsubmit = async (e) => { e.preventDefault(); await saveData('schedules', { id: Date.now(), day: scDay.value, start_time: scStart.value, end_time: scEnd.value, class_id: parseInt(scClass.value), subject: scSubject.value, teacher: scTeacher.value }, null); closeModal(); renderSchedules(); }; }
 
-async function scheduleForm(id = null) {
-    const classes = await DB.get('classes');
-    openModal('Tambah Jadwal', `
-        <form id="scheduleForm" class="space-y-4">
-            <div><label class="block text-sm mb-1">Hari</label><select id="scDay" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option>Senin</option><option>Selasa</option><option>Rabu</option><option>Kamis</option><option>Jumat</option></select></div>
-            <div><label class="block text-sm mb-1">Jam Mulai</label><input type="text" id="scStart" value="07:30" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>
-            <div><label class="block text-sm mb-1">Jam Selesai</label><input type="text" id="scEnd" value="09:00" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>
-            <div><label class="block text-sm mb-1">Kelas</label><select id="scClass" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}</select></div>
-            <div><label class="block text-sm mb-1">Mapel</label><input type="text" id="scSubject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>
-            <div><label class="block text-sm mb-1">Guru</label><input type="text" id="scTeacher" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>
-            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button>
-        </form>
-    `);
-    document.getElementById('scheduleForm').onsubmit = async (e) => {
-        e.preventDefault();
-        await saveData('schedules', { id: Date.now(), day: scDay.value, start_time: scStart.value, end_time: scEnd.value, class_id: parseInt(scClass.value), subject: scSubject.value, teacher: scTeacher.value }, null);
-        closeModal();
-        renderSchedules();
-    };
-}
+async function renderAttendance() { const students = await DB.get('students'); const classes = await DB.get('classes'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex justify-between mb-4 items-center"><h3 class="font-semibold">Input Absensi</h3><div class="flex gap-2"><select id="attClass" class="px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white text-sm">${classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}</select><input type="date" id="attDate" class="px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white text-sm"></div></div><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase"><tr><th class="px-4 py-3">Nama Siswa</th><th class="px-4 py-3">Status</th></tr></thead><tbody class="divide-y dark:divide-slate-700">${students.length ? students.map(s => `<tr><td class="px-4 py-3">${s.name}</td><td class="px-4 py-3"><select id="att_${s.id}" class="px-2 py-1 border rounded dark:bg-slate-700 dark:text-white text-xs"><option value="Hadir">Hadir</option><option value="Sakit">Sakit</option><option value="Izin">Izin</option><option value="Alpa">Alpa</option></select></td></tr>`).join('') : `<tr><td colspan="2" class="text-center py-4 text-slate-500">Belum ada data siswa.</td></tr>`}</tbody></table></div><button onclick="saveAttendance()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Simpan Absensi</button></div>`; }
+async function saveAttendance() { const students = await DB.get('students'); const date = document.getElementById('attDate').value; if(!date){ showToast('Pilih tanggal!', 'error'); return; } for(const s of students) { const status = document.getElementById(`att_${s.id}`).value; const existingAtt = await sb.from('attendance').select('*').eq('student_id', s.id).eq('date', date).single(); if(existingAtt.data) { await DB.update('attendance', existingAtt.data.id, { status }); } else { await DB.insert('attendance', { id: Date.now() + s.id, student_id: s.id, date, status, subject: 'Umum' }); } } showToast('Absensi disimpan!', 'success'); }
 
-async function renderAttendance() {
-    const students = await DB.get('students');
-    const classes = await DB.get('classes');
-    document.getElementById('content').innerHTML = `
-    <div class="bg-white dark:bg-slate-800 p-6 rounded-xl card-shadow">
-        <div class="flex justify-between mb-4 items-center">
-            <h3 class="font-semibold">Input Absensi</h3>
-            <div class="flex gap-2">
-                <select id="attClass" class="px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white text-sm">${classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}</select>
-                <input type="date" id="attDate" class="px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white text-sm">
-            </div>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm text-left">
-                <thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase">
-                    <tr><th class="px-4 py-3">Nama Siswa</th><th class="px-4 py-3">Status</th></tr>
-                </thead>
-                <tbody class="divide-y dark:divide-slate-700">
-                    ${students.length ? students.map(s => `<tr><td class="px-4 py-3">${s.name}</td><td class="px-4 py-3"><select id="att_${s.id}" class="px-2 py-1 border rounded dark:bg-slate-700 dark:text-white text-xs"><option value="Hadir">Hadir</option><option value="Sakit">Sakit</option><option value="Izin">Izin</option><option value="Alpa">Alpa</option></select></td></tr>`).join('') : `<tr><td colspan="2" class="text-center py-4 text-slate-500">Belum ada data siswa.</td></tr>`}
-                </tbody>
-            </table>
-        </div>
-        <button onclick="saveAttendance()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Simpan Absensi</button>
-    </div>`;
-}
+async function renderGrades() { const students = await DB.get('students'); const subjects = await DB.get('subjects'); const grades = await DB.get('grades'); if(currentUser.role === 'siswa') { const myGrades = grades.filter(g => g.student_id === currentUser.id); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><h3 class="font-bold mb-4">Nilai Saya</h3><ul class="divide-y">${myGrades.length ? myGrades.map(g => { const sub = subjects.find(s => s.id === g.subject_id); return `<li class="py-3 flex justify-between"><span>${sub?.name || ''} (${g.type})</span><span class="font-bold text-blue-600">${g.score}</span></li>`; }).join('') : '<li class="py-4 text-center text-slate-500">Belum ada nilai.</li>'}</ul></div>`; return; } document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Input Nilai Massal</h3><button onclick="gradeForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Input Nilai</button></div><table class="w-full text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3">Nama</th><th class="px-4 py-3">Mapel</th><th class="px-4 py-3">Tipe</th><th class="px-4 py-3">Nilai</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody class="divide-y">${grades.length ? grades.map(g => { const std = students.find(s => s.id === g.student_id); const sub = subjects.find(s => s.id === g.subject_id); return `<tr><td class="px-4 py-3">${std?.name || ''}</td><td class="px-4 py-3">${sub?.name || ''}</td><td class="px-4 py-3">${g.type}</td><td class="px-4 py-3 font-bold text-blue-600">${g.score}</td><td class="px-4 py-3 flex gap-2"><button onclick="gradeForm(${g.id})" class="text-xs text-blue-500">Edit</button><button onclick="deleteData('grades', ${g.id}, renderGrades)" class="text-xs text-red-500">Hapus</button></td></tr>`; }).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500">Belum ada nilai.</td></tr>`}</tbody></table></div>`; }
+async function gradeForm(id = null) { const students = await DB.get('students'); const subjects = await DB.get('subjects'); openModal('Input Nilai', `<form id="gradeForm" class="space-y-4"><div><label class="block text-sm mb-1">Siswa</label><select id="gStudent" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${students.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Mapel</label><select id="gSubject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Tipe</label><select id="gType" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option>Tugas</option><option>Ulangan Harian</option><option>PTS</option><option>PAS</option></select></div><div><label class="block text-sm mb-1">Nilai</label><input type="number" id="gScore" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); if(id) { const g = (await DB.get('grades')).find(x => x.id === id); if(g) { gStudent.value = g.student_id; gSubject.value = g.subject_id; gType.value = g.type; gScore.value = g.score; } } document.getElementById('gradeForm').onsubmit = async (e) => { e.preventDefault(); await saveData('grades', { id: id || Date.now(), student_id: parseInt(gStudent.value), subject_id: parseInt(gSubject.value), type: gType.value, score: parseInt(gScore.value) }, id); closeModal(); renderGrades(); }; }
 
-async function saveAttendance() {
-    const students = await DB.get('students');
-    const date = document.getElementById('attDate').value;
-    if(!date){ showToast('Pilih tanggal!', 'error'); return; }
-    for(const s of students) {
-        const status = document.getElementById(`att_${s.id}`).value;
-        const existingAtt = await sb.from('attendance').select('*').eq('student_id', s.id).eq('date', date).single();
-        if(existingAtt.data) { await DB.update('attendance', existingAtt.data.id, { status }); }
-        else { await DB.insert('attendance', { id: Date.now() + s.id, student_id: s.id, date, status, subject: 'Umum' }); }
-    }
-    showToast('Absensi disimpan!', 'success');
-}
-
-async function renderGrades() {
-    const students = await DB.get('students');
-    const subjects = await DB.get('subjects');
-    const grades = await DB.get('grades');
-    if(currentUser.role === 'siswa') {
-        const myGrades = grades.filter(g => g.student_id === currentUser.id);
-        document.getElementById('content').innerHTML = `
-        <div class="bg-white p-6 rounded-xl card-shadow">
-            <h3 class="font-bold mb-4">Nilai Saya</h3>
-            <ul class="divide-y">
-                ${myGrades.length ? myGrades.map(g => { const sub = subjects.find(s => s.id === g.subject_id); return `<li class="py-3 flex justify-between"><span>${sub?.name || ''} (${g.type})</span><span class="font-bold text-blue-600">${g.score}</span></li>`; }).join('') : '<li class="py-4 text-center text-slate-500">Belum ada nilai.</li>'}
-            </ul>
-        </div>`;
-        return;
-    }
-    document.getElementById('content').innerHTML = `
-    <div class="bg-white p-6 rounded-xl card-shadow">
-        <div class="flex justify-between mb-4">
-            <h3 class="font-bold">Input Nilai Massal</h3>
-            <button onclick="gradeForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Input Nilai</button>
-        </div>
-        <table class="w-full text-sm">
-            <thead class="bg-slate-50">
-                <tr><th class="px-4 py-3">Nama</th><th class="px-4 py-3">Mapel</th><th class="px-4 py-3">Tipe</th><th class="px-4 py-3">Nilai</th><th class="px-4 py-3">Aksi</th></tr>
-            </thead>
-            <tbody class="divide-y">
-                ${grades.length ? grades.map(g => { const std = students.find(s => s.id === g.student_id); const sub = subjects.find(s => s.id === g.subject_id); return `<tr><td class="px-4 py-3">${std?.name || ''}</td><td class="px-4 py-3">${sub?.name || ''}</td><td class="px-4 py-3">${g.type}</td><td class="px-4 py-3 font-bold text-blue-600">${g.score}</td><td class="px-4 py-3 flex gap-2"><button onclick="gradeForm(${g.id})" class="text-xs text-blue-500">Edit</button><button onclick="deleteData('grades', ${g.id}, renderGrades)" class="text-xs text-red-500">Hapus</button></td></tr>`; }).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500">Belum ada nilai.</td></tr>`}
-            </tbody>
-        </table>
-    </div>`;
-}
-
-async function gradeForm(id = null) {
-    const students = await DB.get('students');
-    const subjects = await DB.get('subjects');
-    openModal('Input Nilai', `
-        <form id="gradeForm" class="space-y-4">
-            <div><label class="block text-sm mb-1">Siswa</label><select id="gStudent" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${students.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
-            <div><label class="block text-sm mb-1">Mapel</label><select id="gSubject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
-            <div><label class="block text-sm mb-1">Tipe</label><select id="gType" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option>Tugas</option><option>Ulangan Harian</option><option>PTS</option><option>PAS</option></select></div>
-            <div><label class="block text-sm mb-1">Nilai</label><input type="number" id="gScore" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div>
-            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button>
-        </form>
-    `);
-    if(id) {
-        const g = (await DB.get('grades')).find(x => x.id === id);
-        if(g) { gStudent.value = g.student_id; gSubject.value = g.subject_id; gType.value = g.type; gScore.value = g.score; }
-    }
-    document.getElementById('gradeForm').onsubmit = async (e) => {
-        e.preventDefault();
-        await saveData('grades', { id: id || Date.now(), student_id: parseInt(gStudent.value), subject_id: parseInt(gSubject.value), type: gType.value, score: parseInt(gScore.value) }, id);
-        closeModal();
-        renderGrades();
-    };
-}
-
-// ========================================================
 // ASSIGNMENTS, MATERI, KEUANGAN, RAPOR, ANNOUNCEMENTS, SETTINGS
-// ========================================================
-async function renderAssignments() {
-    const assignments = await DB.get('assignments');
-    document.getElementById('content').innerHTML = `
-    <div class="bg-white p-6 rounded-xl card-shadow">
-        <div class="flex justify-between mb-4">
-            <h3 class="font-bold">Daftar Tugas</h3>
-            <button onclick="assignmentForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Buat Tugas</button>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            ${assignments.length ? assignments.map(a => `<div class="p-4 border rounded-lg"><h4 class="font-bold">${a.title}</h4><p class="text-xs text-slate-500 mt-1">Deadline: ${a.deadline}</p><p class="text-sm mt-2">${a.description}</p><div class="mt-3 flex gap-2"><button onclick="assignmentForm(${a.id})" class="text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded">Edit</button><button onclick="deleteData('assignments', ${a.id}, renderAssignments)" class="text-xs bg-red-100 text-red-600 px-3 py-1 rounded">Hapus</button></div></div>`).join('') : '<div class="col-span-3 text-center py-8 text-slate-500">Belum ada tugas.</div>'}
-        </div>
-    </div>`;
-}
+async function renderAssignments() { const assignments = await DB.get('assignments'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Daftar Tugas</h3><button onclick="assignmentForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Buat Tugas</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4">${assignments.length ? assignments.map(a => `<div class="p-4 border rounded-lg"><h4 class="font-bold">${a.title}</h4><p class="text-xs text-slate-500 mt-1">Deadline: ${a.deadline}</p><p class="text-sm mt-2">${a.description}</p><div class="mt-3 flex gap-2"><button onclick="assignmentForm(${a.id})" class="text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded">Edit</button><button onclick="deleteData('assignments', ${a.id}, renderAssignments)" class="text-xs bg-red-100 text-red-600 px-3 py-1 rounded">Hapus</button></div></div>`).join('') : '<div class="col-span-3 text-center py-8 text-slate-500">Belum ada tugas.</div>'}</div></div>`; }
+async function assignmentForm(id = null) { const classes = await DB.get('classes'); const subjects = await DB.get('subjects'); openModal('Buat Tugas', `<form id="assignmentForm" class="space-y-4"><div><label class="block text-sm mb-1">Judul</label><input type="text" id="aTitle" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Deskripsi</label><textarea id="aDesc" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></textarea></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm mb-1">Mapel</label><select id="aSubject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Kelas</label><select id="aClass" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}</select></div></div><div><label class="block text-sm mb-1">Deadline</label><input type="date" id="aDeadline" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); if(id) { const a = (await DB.get('assignments')).find(x => x.id === id); if(a) { aTitle.value = a.title; aDesc.value = a.description; aSubject.value = a.subject_id; aClass.value = a.class_id; aDeadline.value = a.deadline; } } document.getElementById('assignmentForm').onsubmit = async (e) => { e.preventDefault(); await saveData('assignments', { id: id || Date.now(), title: aTitle.value, description: aDesc.value, subject_id: parseInt(aSubject.value), class_id: parseInt(aClass.value), deadline: aDeadline.value }, id); closeModal(); renderAssignments(); }; }
 
-async function assignmentForm(id = null) {
-    const classes = await DB.get('classes');
-    const subjects = await DB.get('subjects');
-    openModal('Buat Tugas', `
-        <form id="assignmentForm" class="space-y-4">
-            <div><label class="block text-sm mb-1">Judul</label><input type="text" id="aTitle" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div>
-            <div><label class="block text-sm mb-1">Deskripsi</label><textarea id="aDesc" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></textarea></div>
-            <div class="grid grid-cols-2 gap-4">
-                <div><label class="block text-sm mb-1">Mapel</label><select id="aSubject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
-                <div><label class="block text-sm mb-1">Kelas</label><select id="aClass" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}</select></div>
-            </div>
-            <div><label class="block text-sm mb-1">Deadline</label><input type="date" id="aDeadline" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>
-            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button>
-        </form>
-    `);
-    if(id) {
-        const a = (await DB.get('assignments')).find(x => x.id === id);
-        if(a) { aTitle.value = a.title; aDesc.value = a.description; aSubject.value = a.subject_id; aClass.value = a.class_id; aDeadline.value = a.deadline; }
-    }
-    document.getElementById('assignmentForm').onsubmit = async (e) => {
-        e.preventDefault();
-        await saveData('assignments', { id: id || Date.now(), title: aTitle.value, description: aDesc.value, subject_id: parseInt(aSubject.value), class_id: parseInt(aClass.value), deadline: aDeadline.value }, id);
-        closeModal();
-        renderAssignments();
-    };
-}
+async function renderMateri() { const materi = await DB.get('materi'); const subjects = await DB.get('subjects'); const classes = await DB.get('classes'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Materi Pembelajaran</h3><button onclick="materiForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Tambah Materi</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4">${materi.length ? materi.map(m => { const sub = subjects.find(s => s.id === m.subject_id); const cls = classes.find(c => c.id === m.class_id); return `<div class="p-4 border rounded-lg"><h4 class="font-bold">${m.title}</h4><p class="text-xs text-slate-500 mt-1">${sub?.name || ''} | ${cls?.name || ''}</p><p class="text-sm mt-2">${m.description}</p><a href="${m.link}" target="_blank" class="mt-3 text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded inline-block">Buka Materi</a><div class="mt-3 flex gap-2"><button onclick="materiForm(${m.id})" class="text-xs text-blue-500">Edit</button><button onclick="deleteData('materi', ${m.id}, renderMateri)" class="text-xs text-red-500">Hapus</button></div></div>`; }).join('') : '<div class="col-span-3 text-center py-8 text-slate-500">Belum ada materi.</div>'}</div></div>`; }
+async function materiForm(id = null) { const classes = await DB.get('classes'); const subjects = await DB.get('subjects'); openModal('Tambah Materi', `<form id="materiForm" class="space-y-4"><div><label class="block text-sm mb-1">Judul</label><input type="text" id="mTitle" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Deskripsi</label><textarea id="mDesc" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></textarea></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm mb-1">Mapel</label><select id="mSubject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Kelas</label><select id="mClass" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}</select></div></div><div><label class="block text-sm mb-1">Link</label><input type="url" id="mLink" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); if(id) { const m = (await DB.get('materi')).find(x => x.id === id); if(m) { mTitle.value = m.title; mDesc.value = m.description; mSubject.value = m.subject_id; mClass.value = m.class_id; mLink.value = m.link; } } document.getElementById('materiForm').onsubmit = async (e) => { e.preventDefault(); await saveData('materi', { id: id || Date.now(), title: mTitle.value, description: mDesc.value, subject_id: parseInt(mSubject.value), class_id: parseInt(mClass.value), link: mLink.value }, id); closeModal(); renderMateri(); }; }
 
-async function renderMateri() {
-    const materi = await DB.get('materi');
-    const subjects = await DB.get('subjects');
-    const classes = await DB.get('classes');
-    document.getElementById('content').innerHTML = `
-    <div class="bg-white p-6 rounded-xl card-shadow">
-        <div class="flex justify-between mb-4">
-            <h3 class="font-bold">Materi Pembelajaran</h3>
-            <button onclick="materiForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Tambah Materi</button>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            ${materi.length ? materi.map(m => { const sub = subjects.find(s => s.id === m.subject_id); const cls = classes.find(c => c.id === m.class_id); return `<div class="p-4 border rounded-lg"><h4 class="font-bold">${m.title}</h4><p class="text-xs text-slate-500 mt-1">${sub?.name || ''} | ${cls?.name || ''}</p><p class="text-sm mt-2">${m.description}</p><a href="${m.link}" target="_blank" class="mt-3 text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded inline-block">Buka Materi</a><div class="mt-3 flex gap-2"><button onclick="materiForm(${m.id})" class="text-xs text-blue-500">Edit</button><button onclick="deleteData('materi', ${m.id}, renderMateri)" class="text-xs text-red-500">Hapus</button></div></div>`; }).join('') : '<div class="col-span-3 text-center py-8 text-slate-500">Belum ada materi.</div>'}
-        </div>
-    </div>`;
-}
+async function renderKeuangan() { const keuangan = await DB.get('keuangan'); const students = await DB.get('students'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Pembayaran SPP</h3><button onclick="keuanganForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Catat Pembayaran</button></div><table class="w-full text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3">Siswa</th><th class="px-4 py-3">Bulan</th><th class="px-4 py-3">Jumlah</th><th class="px-4 py-3">Status</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody class="divide-y">${keuangan.length ? keuangan.map(k => { const std = students.find(s => s.id === k.student_id); return `<tr><td class="px-4 py-3">${std?.name || ''}</td><td class="px-4 py-3">${k.month}</td><td class="px-4 py-3">Rp ${k.amount.toLocaleString('id-ID')}</td><td class="px-4 py-3"><span class="px-2 py-1 text-xs rounded ${k.status==='Lunas'?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}">${k.status}</span></td><td class="px-4 py-3 flex gap-2">${k.status !== 'Lunas' ? `<button onclick="confirmPayment(${k.id})" class="text-xs text-green-600">Lunasi</button>` : ''}<button onclick="deleteData('keuangan', ${k.id}, renderKeuangan)" class="text-xs text-red-500">Hapus</button></td></tr>`; }).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500">Belum ada data.</td></tr>`}</tbody></table></div>`; }
+async function keuanganForm(id = null) { const students = await DB.get('students'); openModal('Catat SPP', `<form id="keuanganForm" class="space-y-4"><div><label class="block text-sm mb-1">Siswa</label><select id="kStudent" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${students.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Bulan</label><input type="text" id="kMonth" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Jumlah</label><input type="number" id="kAmount" value="150000" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Status</label><select id="kStatus" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option>Belum Bayar</option><option>Lunas</option></select></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('keuanganForm').onsubmit = async (e) => { e.preventDefault(); await saveData('keuangan', { id: Date.now(), student_id: parseInt(kStudent.value), month: kMonth.value, amount: parseInt(kAmount.value), status: kStatus.value }, null); closeModal(); renderKeuangan(); }; }
+async function confirmPayment(id) { await DB.update('keuangan', id, { status: 'Lunas' }); showToast('Pembayaran lunas!', 'success'); renderKeuangan(); }
 
-async function materiForm(id = null) {
-    const classes = await DB.get('classes');
-    const subjects = await DB.get('subjects');
-    openModal('Tambah Materi', `
-        <form id="materiForm" class="space-y-4">
-            <div><label class="block text-sm mb-1">Judul</label><input type="text" id="mTitle" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div>
-            <div><label class="block text-sm mb-1">Deskripsi</label><textarea id="mDesc" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></textarea></div>
-            <div class="grid grid-cols-2 gap-4">
-                <div><label class="block text-sm mb-1">Mapel</label><select id="mSubject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
-                <div><label class="block text-sm mb-1">Kelas</label><select id="mClass" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}</select></div>
-            </div>
-            <div><label class="block text-sm mb-1">Link</label><input type="url" id="mLink" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>
-            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button>
-        </form>
-    `);
-    if(id) {
-        const m = (await DB.get('materi')).find(x => x.id === id);
-        if(m) { mTitle.value = m.title; mDesc.value = m.description; mSubject.value = m.subject_id; mClass.value = m.class_id; mLink.value = m.link; }
-    }
-    document.getElementById('materiForm').onsubmit = async (e) => {
-        e.preventDefault();
-        await saveData('materi', { id: id || Date.now(), title: mTitle.value, description: mDesc.value, subject_id: parseInt(mSubject.value), class_id: parseInt(mClass.value), link: mLink.value }, id);
-        closeModal();
-        renderMateri();
-    };
-}
+async function renderRapor() { if(currentUser.role === 'siswa') { printRapor(currentUser.id); return; } const students = await DB.get('students'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><h3 class="font-bold mb-4">Cetak Rapor</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4">${students.length ? students.map(s => `<button onclick="printRapor(${s.id})" class="p-4 border rounded-lg text-left"><p class="font-bold">${s.name}</p><p class="text-xs text-slate-500">NIS: ${s.nis}</p><span class="mt-2 inline-block text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">Cetak</span></button>`).join('') : '<div class="col-span-3 text-center py-8 text-slate-500">Belum ada siswa.</div>'}</div></div>`; }
+async function printRapor(studentId) { const student = (await DB.get('students')).find(s => s.id === studentId); const classes = (await DB.get('classes')).find(c => c.id === student.class_id); const grades = (await DB.get('grades')).filter(g => g.student_id === studentId); const subjects = await DB.get('subjects'); const profile = (await DB.get('school_profile'))[0] || {}; let gradeRows = ''; let totalScore = 0; let totalSubjects = 0; subjects.forEach(sub => { const subGrades = grades.filter(g => g.subject_id === sub.id); if(subGrades.length > 0){ const avgScore = Math.round(subGrades.reduce((s, g) => s + g.score, 0) / subGrades.length); const predikat = avgScore >= 90 ? 'A' : avgScore >= 80 ? 'B' : avgScore >= 70 ? 'C' : 'D'; gradeRows += `<tr><td style="padding: 8px; border: 1px solid #ddd;">${sub.name}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${sub.kkm}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${avgScore}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${predikat}</td></tr>`; totalScore += avgScore; totalSubjects++; } }); const finalAvg = totalSubjects ? (totalScore/totalSubjects).toFixed(1) : 0; document.getElementById('printArea').innerHTML = `<div style="font-family: Arial; color: #000;"><div style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px;"><h2>${profile.name || 'Sekolah'}</h2><p>${profile.address || ''}</p></div><h3 style="text-align: center; margin: 20px 0;">RAPOR SISWA</h3><table style="width: 100%; margin-bottom: 20px;"><tr><td>Nama</td><td>: ${student.name}</td><td>Kelas</td><td>: ${classes?.name || '-'}</td></tr><tr><td>NIS</td><td>: ${student.nis}</td><td>Semester</td><td>: ${profile.semester || '-'}</td></tr></table><table style="width: 100%; border-collapse: collapse;"><thead><tr style="background: #eee;"><th style="padding: 8px; border: 1px solid #ddd;">Mapel</th><th style="padding: 8px; border: 1px solid #ddd;">KKM</th><th style="padding: 8px; border: 1px solid #ddd;">Nilai</th><th style="padding: 8px; border: 1px solid #ddd;">Predikat</th></tr></thead><tbody>${gradeRows || `<tr><td colspan="4" style="text-align:center; padding: 10px; border: 1px solid #ddd;">Belum ada nilai</td></tr>`}</tbody><tfoot><tr><td colspan="2" style="padding: 8px; border: 1px solid #ddd; text-align: right;">Rata-rata:</td><td colspan="2" style="padding: 8px; border: 1px solid #ddd; text-align: center;">${finalAvg}</td></tr></tfoot></table></div>`; window.print(); }
 
-async function renderKeuangan() {
-    const keuangan = await DB.get('keuangan');
-    const students = await DB.get('students');
-    document.getElementById('content').innerHTML = `
-    <div class="bg-white p-6 rounded-xl card-shadow">
-        <div class="flex justify-between mb-4">
-            <h3 class="font-bold">Pembayaran SPP</h3>
-            <button onclick="keuanganForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Catat Pembayaran</button>
-        </div>
-        <table class="w-full text-sm">
-            <thead class="bg-slate-50">
-                <tr><th class="px-4 py-3">Siswa</th><th class="px-4 py-3">Bulan</th><th class="px-4 py-3">Jumlah</th><th class="px-4 py-3">Status</th><th class="px-4 py-3">Aksi</th></tr>
-            </thead>
-            <tbody class="divide-y">
-                ${keuangan.length ? keuangan.map(k => { const std = students.find(s => s.id === k.student_id); return `<tr><td class="px-4 py-3">${std?.name || ''}</td><td class="px-4 py-3">${k.month}</td><td class="px-4 py-3">Rp ${k.amount.toLocaleString('id-ID')}</td><td class="px-4 py-3"><span class="px-2 py-1 text-xs rounded ${k.status==='Lunas'?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}">${k.status}</span></td><td class="px-4 py-3 flex gap-2">${k.status !== 'Lunas' ? `<button onclick="confirmPayment(${k.id})" class="text-xs text-green-600">Lunasi</button>` : ''}<button onclick="deleteData('keuangan', ${k.id}, renderKeuangan)" class="text-xs text-red-500">Hapus</button></td></tr>`; }).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500">Belum ada data.</td></tr>`}
-            </tbody>
-        </table>
-    </div>`;
-}
+async function renderAnnouncements() { const anns = await DB.get('announcements'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Pengumuman</h3><button onclick="annForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Buat Pengumuman</button></div><div class="space-y-4">${anns.length ? anns.map(a => `<div class="p-4 bg-slate-50 rounded-lg"><div class="flex justify-between"><h4 class="font-bold">${a.title}</h4><div class="flex gap-2"><button onclick="annForm(${a.id})" class="text-xs text-blue-500">Edit</button><button onclick="deleteData('announcements', ${a.id}, renderAnnouncements)" class="text-xs text-red-500">Hapus</button></div></div><p class="text-xs text-slate-400 mt-1">${a.date}</p><p class="text-sm mt-2">${a.content}</p></div>`).join('') : '<p class="text-sm text-slate-500 text-center py-4">Belum ada pengumuman.</p>'}</div></div>`; }
+async function annForm(id = null) { openModal('Buat Pengumuman', `<form id="annForm" class="space-y-4"><div><label class="block text-sm mb-1">Judul</label><input type="text" id="anTitle" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Isi</label><textarea id="anContent" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></textarea></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); if(id) { const a = (await DB.get('announcements')).find(x => x.id === id); if(a) { anTitle.value = a.title; anContent.value = a.content; } } document.getElementById('annForm').onsubmit = async (e) => { e.preventDefault(); await saveData('announcements', { id: id || Date.now(), title: anTitle.value, content: anContent.value, date: new Date().toISOString().split('T')[0] }, id); closeModal(); renderAnnouncements(); }; }
 
-async function keuanganForm(id = null) {
-    const students = await DB.get('students');
-    openModal('Catat SPP', `
-        <form id="keuanganForm" class="space-y-4">
-            <div><label class="block text-sm mb-1">Siswa</label><select id="kStudent" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${students.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
-            <div><label class="block text-sm mb-1">Bulan</label><input type="text" id="kMonth" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>
-            <div><label class="block text-sm mb-1">Jumlah</label><input type="number" id="kAmount" value="150000" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>
-            <div><label class="block text-sm mb-1">Status</label><select id="kStatus" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option>Belum Bayar</option><option>Lunas</option></select></div>
-            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button>
-        </form>
-    `);
-    document.getElementById('keuanganForm').onsubmit = async (e) => {
-        e.preventDefault();
-        await saveData('keuangan', { id: Date.now(), student_id: parseInt(kStudent.value), month: kMonth.value, amount: parseInt(kAmount.value), status: kStatus.value }, null);
-        closeModal();
-        renderKeuangan();
-    };
-}
+// SETTINGS (Dengan Upload Foto)
+async function renderSettings() { const profile = (await DB.get('school_profile'))[0] || {}; document.getElementById('content').innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div class="bg-white p-6 rounded-xl"><h3 class="font-bold mb-4">Profil Sekolah</h3><form id="profileForm" class="space-y-4"><div><label class="block text-sm mb-1">Nama Sekolah</label><input type="text" id="pName" value="${profile.name || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Alamat</label><input type="text" id="pAddress" value="${profile.address || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Kepala Sekolah</label><input type="text" id="pPrincipal" value="${profile.principal || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Simpan</button></form></div><div class="bg-white p-6 rounded-xl"><h3 class="font-bold mb-4">Pengaturan Akun</h3><div class="flex flex-col items-center space-y-3"><img id="prevAvatar" src="${currentUser.avatar_url || AI_IMG}" class="w-24 h-24 rounded-full object-cover"><input type="file" id="avatarFile" accept="image/*" class="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"><button onclick="uploadAvatar()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm">Upload Foto</button></div></div></div>`; document.getElementById('profileForm').onsubmit = async (e) => { e.preventDefault(); await saveData('school_profile', { id: 1, name: pName.value, address: pAddress.value, principal: pPrincipal.value }, 1); }; }
+async function uploadAvatar() { const file = document.getElementById('avatarFile').files[0]; if(!file) { showToast('Pilih file dulu!', 'error'); return; } showToast('Mengunggah foto...', 'info'); const { data, error } = await sb.storage.from('avatars').upload('user_' + currentUser.id + '_' + Date.now() + '.jpg', file); if (error) { showToast('Gagal upload: ' + error.message, 'error'); return; } const url = sb.storage.from('avatars').getPublicUrl(data.path).data.publicUrl; await DB.update('users', currentUser.id, { avatar_url: url }); currentUser.avatar_url = url; localStorage.setItem('gs_currentUser', JSON.stringify(currentUser)); document.getElementById('userAvatar').src = url; showToast('Foto profil diperbarui!', 'success'); }
 
-async function confirmPayment(id) {
-    await DB.update('keuangan', id, { status: 'Lunas' });
-    showToast('Pembayaran lunas!', 'success');
-    renderKeuangan();
-}
-
-async function renderRapor() {
-    if(currentUser.role === 'siswa') { printRapor(currentUser.id); return; }
-    const students = await DB.get('students');
-    document.getElementById('content').innerHTML = `
-    <div class="bg-white p-6 rounded-xl card-shadow">
-        <h3 class="font-bold mb-4">Cetak Rapor</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            ${students.length ? students.map(s => `<button onclick="printRapor(${s.id})" class="p-4 border rounded-lg text-left"><p class="font-bold">${s.name}</p><p class="text-xs text-slate-500">NIS: ${s.nis}</p><span class="mt-2 inline-block text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">Cetak</span></button>`).join('') : '<div class="col-span-3 text-center py-8 text-slate-500">Belum ada siswa.</div>'}
-        </div>
-    </div>`;
-}
-
-async function printRapor(studentId) {
-    const student = (await DB.get('students')).find(s => s.id === studentId);
-    const classes = (await DB.get('classes')).find(c => c.id === student.class_id);
-    const grades = (await DB.get('grades')).filter(g => g.student_id === studentId);
-    const subjects = await DB.get('subjects');
-    const profile = (await DB.get('school_profile'))[0] || {};
-    let gradeRows = '';
-    let totalScore = 0;
-    let totalSubjects = 0;
-    subjects.forEach(sub => {
-        const subGrades = grades.filter(g => g.subject_id === sub.id);
-        if(subGrades.length > 0){
-            const avgScore = Math.round(subGrades.reduce((s, g) => s + g.score, 0) / subGrades.length);
-            const predikat = avgScore >= 90 ? 'A' : avgScore >= 80 ? 'B' : avgScore >= 70 ? 'C' : 'D';
-            gradeRows += `<tr><td style="padding: 8px; border: 1px solid #ddd;">${sub.name}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${sub.kkm}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${avgScore}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${predikat}</td></tr>`;
-            totalScore += avgScore;
-            totalSubjects++;
-        }
-    });
-    const finalAvg = totalSubjects ? (totalScore/totalSubjects).toFixed(1) : 0;
-    document.getElementById('printArea').innerHTML = `
-    <div style="font-family: Arial; color: #000;">
-        <div style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px;"><h2>${profile.name || 'Sekolah'}</h2><p>${profile.address || ''}</p></div>
-        <h3 style="text-align: center; margin: 20px 0;">RAPOR SISWA</h3>
-        <table style="width: 100%; margin-bottom: 20px;">
-            <tr><td>Nama</td><td>: ${student.name}</td><td>Kelas</td><td>: ${classes?.name || '-'}</td></tr>
-            <tr><td>NIS</td><td>: ${student.nis}</td><td>Semester</td><td>: ${profile.semester || '-'}</td></tr>
-        </table>
-        <table style="width: 100%; border-collapse: collapse;">
-            <thead><tr style="background: #eee;"><th style="padding: 8px; border: 1px solid #ddd;">Mapel</th><th style="padding: 8px; border: 1px solid #ddd;">KKM</th><th style="padding: 8px; border: 1px solid #ddd;">Nilai</th><th style="padding: 8px; border: 1px solid #ddd;">Predikat</th></tr></thead>
-            <tbody>${gradeRows || `<tr><td colspan="4" style="text-align:center; padding: 10px; border: 1px solid #ddd;">Belum ada nilai</td></tr>`}</tbody>
-            <tfoot><tr><td colspan="2" style="padding: 8px; border: 1px solid #ddd; text-align: right;">Rata-rata:</td><td colspan="2" style="padding: 8px; border: 1px solid #ddd; text-align: center;">${finalAvg}</td></tr></tfoot>
-        </table>
-    </div>`;
-    window.print();
-}
-
-async function renderAnnouncements() {
-    const anns = await DB.get('announcements');
-    document.getElementById('content').innerHTML = `
-    <div class="bg-white p-6 rounded-xl card-shadow">
-        <div class="flex justify-between mb-4">
-            <h3 class="font-bold">Pengumuman</h3>
-            <button onclick="annForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Buat Pengumuman</button>
-        </div>
-        <div class="space-y-4">
-            ${anns.length ? anns.map(a => `<div class="p-4 bg-slate-50 rounded-lg"><div class="flex justify-between"><h4 class="font-bold">${a.title}</h4><div class="flex gap-2"><button onclick="annForm(${a.id})" class="text-xs text-blue-500">Edit</button><button onclick="deleteData('announcements', ${a.id}, renderAnnouncements)" class="text-xs text-red-500">Hapus</button></div></div><p class="text-xs text-slate-400 mt-1">${a.date}</p><p class="text-sm mt-2">${a.content}</p></div>`).join('') : '<p class="text-sm text-slate-500 text-center py-4">Belum ada pengumuman.</p>'}
-        </div>
-    </div>`;
-}
-
-async function annForm(id = null) {
-    openModal('Buat Pengumuman', `
-        <form id="annForm" class="space-y-4">
-            <div><label class="block text-sm mb-1">Judul</label><input type="text" id="anTitle" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div>
-            <div><label class="block text-sm mb-1">Isi</label><textarea id="anContent" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></textarea></div>
-            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button>
-        </form>
-    `);
-    if(id) {
-        const a = (await DB.get('announcements')).find(x => x.id === id);
-        if(a) { anTitle.value = a.title; anContent.value = a.content; }
-    }
-    document.getElementById('annForm').onsubmit = async (e) => {
-        e.preventDefault();
-        await saveData('announcements', { id: id || Date.now(), title: anTitle.value, content: anContent.value, date: new Date().toISOString().split('T')[0] }, id);
-        closeModal();
-        renderAnnouncements();
-    };
-}
-
-async function renderSettings() {
-    const profile = (await DB.get('school_profile'))[0] || {};
-    document.getElementById('content').innerHTML = `
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="bg-white p-6 rounded-xl card-shadow">
-            <h3 class="font-bold mb-4">Profil Sekolah</h3>
-            <form id="profileForm" class="space-y-4">
-                <div><label class="block text-sm mb-1">Nama Sekolah</label><input type="text" id="pName" value="${profile.name || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>
-                <div><label class="block text-sm mb-1">Alamat</label><input type="text" id="pAddress" value="${profile.address || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>
-                <div><label class="block text-sm mb-1">Kepala Sekolah</label><input type="text" id="pPrincipal" value="${profile.principal || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Simpan</button>
-            </form>
-        </div>
-        <div class="bg-white p-6 rounded-xl card-shadow">
-            <h3 class="font-bold mb-4">Pengaturan Akun</h3>
-            <div class="flex flex-col items-center space-y-3">
-                <img id="prevAvatar" src="${currentUser.avatar_url || AI_IMG}" class="w-24 h-24 rounded-full object-cover">
-                <input type="file" id="avatarFile" accept="image/*" class="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                <button onclick="uploadAvatar()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm">Upload Foto</button>
-            </div>
-        </div>
-    </div>`;
-    document.getElementById('profileForm').onsubmit = async (e) => {
-        e.preventDefault();
-        await saveData('school_profile', { id: 1, name: pName.value, address: pAddress.value, principal: pPrincipal.value }, 1);
-    };
-}
-
-async function uploadAvatar() {
-    const file = document.getElementById('avatarFile').files[0];
-    if(!file) { showToast('Pilih file dulu!', 'error'); return; }
-    showToast('Mengunggah foto...', 'info');
-    const { data, error } = await sb.storage.from('avatars').upload('user_' + currentUser.id + '_' + Date.now() + '.jpg', file);
-    if (error) { showToast('Gagal upload: ' + error.message, 'error'); return; }
-    const url = sb.storage.from('avatars').getPublicUrl(data.path).data.publicUrl;
-    await DB.update('users', currentUser.id, { avatar_url: url });
-    currentUser.avatar_url = url;
-    localStorage.setItem('gs_currentUser', JSON.stringify(currentUser));
-    document.getElementById('userAvatar').src = url;
-    showToast('Foto profil diperbarui!', 'success');
-}
-
-// ========================================================
-// AI ASSISTANT LOGIC
-// ========================================================
-function renderAI() {
-    document.getElementById('content').innerHTML = `
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div class="xl:col-span-2 bg-white dark:bg-slate-800 rounded-xl card-shadow overflow-hidden">
-            <div class="p-5 border-b dark:border-slate-700 flex justify-between items-center">
-                <div class="flex items-center gap-3">
-                    <img src="${AI_IMG}" class="w-10 h-10 rounded-full object-cover">
-                    <div>
-                        <h3 class="text-lg font-bold">Asisten AI Guru</h3>
-                        <p class="text-xs text-slate-500">Format soal otomatis rapi. Kunci jawaban dihapus saat di-PDF.</p>
-                    </div>
-                </div>
-            </div>
-            <div id="aiMessages" class="h-[500px] overflow-y-auto p-5 space-y-4 bg-slate-50 dark:bg-slate-900"></div>
-            <div class="p-4 border-t dark:border-slate-700">
-                <textarea id="aiInput" rows="3" placeholder="Tulis perintah..." class="w-full px-4 py-3 rounded-xl border dark:bg-slate-700 dark:text-white"></textarea>
-                <div class="flex justify-end mt-3 gap-2">
-                    <button id="aiPrintBtn" onclick="printAIResult()" class="hidden bg-slate-600 text-white px-4 py-2.5 rounded-lg font-semibold text-sm">Cetak / PDF</button>
-                    <button id="aiWordBtn" onclick="exportAIToWord()" class="hidden bg-blue-500 text-white px-4 py-2.5 rounded-lg font-semibold text-sm">Export Word</button>
-                    <button id="aiSendBtn" onclick="sendAI()" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-semibold">Kirim</button>
-                </div>
-            </div>
-        </div>
-    </div>`;
-    loadAIChat();
-}
-
-function aiPrompt(text) {
-    document.getElementById('aiInput').value = text;
-    sendAI();
-}
-
-async function getSchoolContext() {
-    return {
-        students: await DB.get('students'),
-        teachers: await DB.get('teachers'),
-        subjects: await DB.get('subjects')
-    };
-}
-
-function loadAIChat() {
-    const box = document.getElementById('aiMessages');
-    if(!box) return;
-    box.innerHTML = `
-    <div class="flex justify-start">
-        <div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm">
-            <div class="text-xs opacity-70 mb-1">Asisten AI</div>
-            <div class="whitespace-pre-wrap">Halo! Saya adalah Asisten AI Guru Anda. Silakan tulis perintah, misalnya "Buatkan 10 soal pilihan ganda tentang Pemrograman Web beserta kunci jawaban, format dengan markdown yang rapi".</div>
-        </div>
-    </div>`;
-}
-
-function escapeHTML(s) {
-    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-
+// AI ASSISTANT LOGIC (Tanpa Riwayat, Dengan Markdown & Print PDF)
+function renderAI() { document.getElementById('content').innerHTML=`<div class="grid grid-cols-1 xl:grid-cols-3 gap-6"><div class="xl:col-span-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden"><div class="p-5 border-b dark:border-slate-700 flex justify-between items-center"><div class="flex items-center gap-3"><img src="${AI_IMG}" class="w-10 h-10 rounded-full object-cover"><div><h3 class="text-lg font-bold">Asisten AI Guru</h3><p class="text-xs text-slate-500">Gunakan prompt detail untuk hasil yang rapi.</p></div></div></div><div id="aiMessages" class="h-[500px] overflow-y-auto p-5 space-y-4 bg-slate-50 dark:bg-slate-900"></div><div class="p-4 border-t dark:border-slate-700"><textarea id="aiInput" rows="3" placeholder="Tulis perintah..." class="w-full px-4 py-3 rounded-xl border dark:bg-slate-700 dark:text-white"></textarea><div class="flex justify-end mt-3 gap-2"><button id="aiPrintBtn" onclick="printAIResult()" class="hidden bg-slate-600 text-white px-4 py-2.5 rounded-lg font-semibold">Cetak / PDF</button><button id="aiSendBtn" onclick="sendAI()" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-semibold">Kirim</button></div></div></div></div>`; loadAIChat(); }
+function aiPrompt(text){document.getElementById('aiInput').value=text;sendAI();}
+async function getSchoolContext(){return {students:await DB.get('students'),teachers:await DB.get('teachers'),subjects:await DB.get('subjects')};}
+function loadAIChat(){const box=document.getElementById('aiMessages');if(!box)return;box.innerHTML=`<div class="flex justify-start"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1">Asisten AI</div><div class="whitespace-pre-wrap">Halo! Saya adalah Asisten AI Guru Anda. Silakan tulis perintah, dan siap membantu anda menjawab pertanyaan, menulis, merencanakan, atau berdiskusi".</div></div></div>`;}
+function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 let lastAIResponse = '';
+async function sendAI(){const input=document.getElementById('aiInput');if(!input.value.trim())return;const prompt=input.value.trim();input.value='';const btn=document.getElementById('aiSendBtn');btn.disabled=true;btn.innerText='Memproses...';document.getElementById('aiPrintBtn').classList.add('hidden');const box=document.getElementById('aiMessages');box.innerHTML=`<div class="flex justify-end"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-blue-600 text-white"><div class="text-xs opacity-70 mb-1">Anda</div><div class="whitespace-pre-wrap">${escapeHTML(prompt)}</div></div></div><div class="flex justify-start"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1">Asisten AI</div><div class="animate-pulse">Sedang mengetik...</div></div></div>`;try{const ctx=await getSchoolContext();const sys=`Anda adalah Asisten AI Guru yang membantu di aplikasi GURU SMART. Berikut adalah data sekolah dalam format JSON: ${JSON.stringify(ctx)}. Gunakan data ini jika diperlukan. Jika membuat soal, buat format yang rapi menggunakan markdown (Judul, Pertanyaan, Opsi A-B-C-D, dan Kunci Jawaban di akhir).`;const res=await puter.ai.chat([{role:'system',content:sys},{role:'user',content:prompt}],{model:'gpt-4o-mini'});let ans=typeof res==='string'?res:(res.message?.content||'');lastAIResponse=ans;const htmlAns=marked.parse(ans);box.innerHTML=`<div class="flex justify-end"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-blue-600 text-white"><div class="text-xs opacity-70 mb-1">Anda</div><div class="whitespace-pre-wrap">${escapeHTML(prompt)}</div></div></div><div class="flex justify-start"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1">Asisten AI</div><div class="ai-output">${htmlAns}</div></div></div>`;document.getElementById('aiPrintBtn').classList.remove('hidden');}catch(e){showToast('Error AI','error');box.innerHTML=`<div class="flex justify-start"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-red-500">Terjadi kesalahan saat memuat AI.</div></div></div>`;}finally{btn.disabled=false;btn.innerText='Kirim';}}
+function printAIResult() { if(!lastAIResponse) return; document.getElementById('printArea').innerHTML = `<div style="font-family: Arial; color: #000; padding: 20px;"><div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;"><h2>HASIL ASISTEN AI GURU</h2></div><div class="ai-output">${marked.parse(lastAIResponse)}</div></div>`; window.print(); }
 
-async function sendAI() {
-    const input = document.getElementById('aiInput');
-    if(!input.value.trim()) return;
-    const prompt = input.value.trim();
-    input.value = '';
-    const btn = document.getElementById('aiSendBtn');
-    btn.disabled = true;
-    btn.innerText = 'Memproses...';
-    document.getElementById('aiPrintBtn').classList.add('hidden');
-    document.getElementById('aiWordBtn').classList.add('hidden');
-    const box = document.getElementById('aiMessages');
-    box.innerHTML = `
-    <div class="flex justify-end">
-        <div class="max-w-[90%] rounded-xl px-4 py-3 bg-blue-600 text-white">
-            <div class="text-xs opacity-70 mb-1">Anda</div>
-            <div class="whitespace-pre-wrap">${escapeHTML(prompt)}</div>
-        </div>
-    </div>
-    <div class="flex justify-start">
-        <div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm">
-            <div class="text-xs opacity-70 mb-1">Asisten AI</div>
-            <div class="animate-pulse">Sedang mengetik...</div>
-        </div>
-    </div>`;
-    
-    try {
-        const ctx = await getSchoolContext();
-        const sys = `Anda adalah Asisten AI Guru yang membantu di aplikasi GURU SMART. Berikut adalah data sekolah dalam format JSON: ${JSON.stringify(ctx)}. Gunakan data ini jika diperlukan. Jika membuat soal, buat format yang rapi menggunakan markdown (Judul, Pertanyaan, Opsi A-B-C-D, dan Kunci Jawaban di akhir).`;
-        const res = await puter.ai.chat([
-            {role:'system', content: sys},
-            {role:'user', content: prompt}
-        ], {model:'gpt-4o-mini'});
-        
-        let ans = typeof res === 'string' ? res : (res.message?.content || '');
-        lastAIResponse = ans;
-        const htmlAns = marked.parse(ans);
-        box.innerHTML = `
-        <div class="flex justify-end">
-            <div class="max-w-[90%] rounded-xl px-4 py-3 bg-blue-600 text-white">
-                <div class="text-xs opacity-70 mb-1">Anda</div>
-                <div class="whitespace-pre-wrap">${escapeHTML(prompt)}</div>
-            </div>
-        </div>
-        <div class="flex justify-start">
-            <div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm">
-                <div class="text-xs opacity-70 mb-1">Asisten AI</div>
-                <div class="ai-output">${htmlAns}</div>
-            </div>
-        </div>`;
-        document.getElementById('aiPrintBtn').classList.remove('hidden');
-        document.getElementById('aiWordBtn').classList.remove('hidden');
-    } catch(e) {
-        showToast('Error AI', 'error');
-        box.innerHTML = `
-        <div class="flex justify-start">
-            <div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm">
-                <div class="text-red-500">Terjadi kesalahan saat memuat AI.</div>
-            </div>
-        </div>`;
-    } finally {
-        btn.disabled = false;
-        btn.innerText = 'Kirim';
-    }
-}
-
-function printAIResult() {
-    if(!lastAIResponse) return;
-    let printableText = lastAIResponse.replace(/##?\s*Kunci Jawaban[\s\S]*/gi, '**Kunci Jawaban Dihapus untuk Ujian**');
-    printableText = printableText.replace(/##?\s*Jawaban[\s\S]*/gi, '**Kunci Jawaban Dihapus untuk Ujian**');
-    document.getElementById('printArea').innerHTML = `
-    <div style="font-family: Arial; color: #000; padding: 20px;">
-        <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
-            <h2 style="font-weight:bold; text-transform:uppercase;">Latihan Soal</h2>
-        </div>
-        <div class="ai-output">${marked.parse(printableText)}</div>
-    </div>`;
-    window.print();
-}
-
-function exportAIToWord() {
-    if(!lastAIResponse) return;
-    let html = marked.parse(lastAIResponse);
-    let fullHtml = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Export AI</title></head><body style="font-family: Arial; line-height: 1.5;">${html}</body></html>`;
-    let blob = new Blob(['\ufeff', fullHtml], { type: 'application/msword' });
-    let url = URL.createObjectURL(blob);
-    let a = document.createElement('a');
-    a.href = url;
-    a.download = 'Hasil_AI_Guru.doc';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-}
-
-// ========================================================
 // CORE UTILS
-// ========================================================
-async function saveData(key, data, id) {
-    if (id) { await DB.update(key, id, data); }
-    else { await DB.insert(key, data); }
-    showToast('Data disimpan!', 'success');
-}
+async function saveData(key, data, id) { if (id) { await DB.update(key, id, data); } else { await DB.insert(key, data); } showToast('Data disimpan!', 'success'); }
+async function deleteData(key, id, callback) { if (confirm('Hapus data?')) { await DB.remove(key, id); if (typeof callback === 'function') callback(); } }
+function filterTable(searchId, tbodyId) { const input = document.getElementById(searchId).value.toLowerCase(); const rows = document.getElementById(tbodyId).getElementsByTagName('tr'); for (let row of rows) { row.style.display = row.innerText.toLowerCase().includes(input) ? '' : 'none'; } }
 
-async function deleteData(key, id, callback) {
-    if (confirm('Hapus data?')) {
-        await DB.remove(key, id);
-        if (typeof callback === 'function') callback();
-    }
-}
-
-function filterTable(searchId, tbodyId) {
-    const input = document.getElementById(searchId).value.toLowerCase();
-    const rows = document.getElementById(tbodyId).getElementsByTagName('tr');
-    for (let row of rows) {
-        row.style.display = row.innerText.toLowerCase().includes(input) ? '' : 'none';
-    }
-}
-
-// ========================================================
-// INIT APP
-// ========================================================
+// INIT
 function initApp() {
     document.getElementById('authScreen').classList.add('hidden');
     document.getElementById('appScreen').classList.remove('hidden');
@@ -1185,10 +380,7 @@ function initApp() {
     document.getElementById('userAvatar').src = currentUser.avatar_url || AI_IMG;
     navigate('dashboard');
 }
-
-window.onload = async () => {
-    if (await checkSession()) { initApp(); }
-};
+window.onload = async () => { if (await checkSession()) { initApp(); } };
 </script>
 </body>
 </html>
