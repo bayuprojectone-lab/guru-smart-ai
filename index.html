@@ -134,8 +134,8 @@
     <div id="toast" class="hidden fixed bottom-5 right-5 z-[60] bg-slate-800 text-white px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2"></div>
     <div id="printArea"></div>
     <script>
-        const SUPABASE_URL = 'https://urslwiueyqhoykjhxmqq.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVyc2x3aXVleXFob3lramh4bXFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2NTIxMDgsImV4cCI6MjEwNTIyODEwOH0.cRHI2m9lasLJ6yX2vc1ioxJGm7bLRsCIptmiNtpz5go';
+        const SUPABASE_URL = 'https://xdwgqgdbfidlsfgyyaeo.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhkd2dxZ2RiZmlkbHNmZ3l5YWVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1MDAxNjQsImV4cCI6MjEwNTA3NjE2NH0.3QRFjepUIK00cmFFMJ7D3eEtWKpX2dMOfUPap-ef8Lo';
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
             auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
         });
@@ -151,10 +151,10 @@
         let currentUser = null; let currentPage = 'dashboard';
 
         function toggleAuth(form) { if(form === 'register') { document.getElementById('loginForm').classList.add('hidden'); document.getElementById('registerForm').classList.remove('hidden'); } else { document.getElementById('registerForm').classList.add('hidden'); document.getElementById('loginForm').classList.remove('hidden'); } }
-        document.getElementById('registerForm').addEventListener('submit', async (e) => { e.preventDefault(); const name = document.getElementById('regName').value; const email = document.getElementById('regEmail').value; const password = document.getElementById('regPassword').value; const { data, error } = await sb.auth.signUp({ email, password, options: { data: { name } } }); if (error) { showToast('Gagal daftar: ' + error.message, 'error'); return; } const existingUsers = await sb.from('users').select('*'); const role = existingUsers.data.length === 0 ? 'admin' : 'guru'; if(data.user) { await sb.from('users').insert([{ id: data.user.id, name, username: email, role }]); } if (data.session) { currentUser = { id: data.user.id, email: data.user.email, name, role }; localStorage.setItem('gs_currentUser', JSON.stringify(currentUser)); showToast('Pendaftaran berhasil!', 'success'); initApp(); } else { showToast('Pendaftaran berhasil! Cek email untuk verifikasi.', 'success'); toggleAuth('login'); document.getElementById('loginEmail').value = email; } });
-        document.getElementById('loginForm').addEventListener('submit', async (e) => { e.preventDefault(); const email = document.getElementById('loginEmail').value; const password = document.getElementById('loginPassword').value; const { data, error } = await sb.auth.signInWithPassword({ email, password }); if (error) { showToast('Login gagal: ' + error.message, 'error'); return; } const { data: userData } = await sb.from('users').select('*').eq('id', data.user.id).single(); currentUser = { id: data.user.id, email: data.user.email, name: userData?.name || data.user.email, role: userData?.role || 'guru', avatar_url: userData?.avatar_url || AI_IMG }; localStorage.setItem('gs_currentUser', JSON.stringify(currentUser)); initApp(); });
+        document.getElementById('registerForm').addEventListener('submit', async (e) => { e.preventDefault(); const name = document.getElementById('regName').value; const email = document.getElementById('regEmail').value; const password = document.getElementById('regPassword').value; const { data, error } = await sb.auth.signUp({ email, password, options: { data: { name } } }); if (error) { showToast('Gagal daftar: ' + error.message, 'error'); return; } const existingUsers = await sb.from('users').select('*'); const role = existingUsers.data.length === 0 ? 'admin' : 'guru'; if(data.user) { await sb.from('users').insert([{ id: data.user.id, name, username: email, role, is_premium: false }]); } if (data.session) { currentUser = { id: data.user.id, email: data.user.email, name, role }; localStorage.setItem('gs_currentUser', JSON.stringify(currentUser)); showToast('Pendaftaran berhasil!', 'success'); initApp(); } else { showToast('Pendaftaran berhasil! Cek email untuk verifikasi.', 'success'); toggleAuth('login'); document.getElementById('loginEmail').value = email; } });
+        document.getElementById('loginForm').addEventListener('submit', async (e) => { e.preventDefault(); const email = document.getElementById('loginEmail').value; const password = document.getElementById('loginPassword').value; const { data, error } = await sb.auth.signInWithPassword({ email, password }); if (error) { showToast('Login gagal: ' + error.message, 'error'); return; } const { data: userData } = await sb.from('users').select('*').eq('id', data.user.id).single(); currentUser = { id: data.user.id, email: data.user.email, name: userData?.name || data.user.email, role: userData?.role || 'guru', avatar_url: userData?.avatar_url || AI_IMG, is_premium: userData?.is_premium || false, payment_status: userData?.payment_status || 'Belum Bayar', payment_sender: userData?.payment_sender || '' }; localStorage.setItem('gs_currentUser', JSON.stringify(currentUser)); initApp(); });
         async function logout() { await sb.auth.signOut(); localStorage.removeItem('gs_currentUser'); currentUser = null; location.reload(); }
-        async function checkSession() { const { data, error } = await sb.auth.getSession(); if (data.session) { await sb.auth.refreshSession(); const { data: userData } = await sb.from('users').select('*').eq('id', data.session.user.id).single(); if(userData) { currentUser = { id: data.session.user.id, email: data.session.user.email, name: userData.name || data.session.user.email, role: userData.role || 'guru', avatar_url: userData.avatar_url || AI_IMG }; return true; } } return false; }
+        async function checkSession() { const { data, error } = await sb.auth.getSession(); if (data.session) { await sb.auth.refreshSession(); const { data: userData } = await sb.from('users').select('*').eq('id', data.session.user.id).single(); if(userData) { currentUser = { id: data.session.user.id, email: data.session.user.email, name: userData.name || data.session.user.email, role: userData.role || 'guru', avatar_url: userData.avatar_url || AI_IMG, is_premium: userData.is_premium || false, payment_status: userData.payment_status || 'Belum Bayar', payment_sender: userData.payment_sender || '' }; return true; } } return false; }
 
         function showToast(message, type = 'info') { const toast = document.getElementById('toast'); const bg = type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-slate-800'; toast.className = `fixed bottom-5 right-5 z-[60] ${bg} text-white px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2 fade-in`; toast.innerHTML = `<span>${message}</span>`; toast.classList.remove('hidden'); setTimeout(() => toast.classList.add('hidden'), 3000); }
         function toggleDarkMode() { document.documentElement.classList.toggle('dark'); document.getElementById('iconSun').classList.toggle('hidden'); document.getElementById('iconMoon').classList.toggle('hidden'); localStorage.setItem('gs_darkMode', document.documentElement.classList.contains('dark')); if(currentPage === 'dashboard') renderDashboard(); }
@@ -310,6 +310,14 @@
         // AI ASSISTANT
         async function renderAI() {
             let isSignedIn = false;
+            // Ambil data user terbaru dari Supabase
+            const { data: userData } = await sb.from('users').select('*').eq('id', currentUser.id).single();
+            if(userData) {
+                currentUser.is_premium = userData.is_premium;
+                currentUser.payment_status = userData.payment_status;
+                currentUser.payment_sender = userData.payment_sender;
+            }
+
             let isPremium = currentUser.is_premium || false;
 
             try {
@@ -318,8 +326,18 @@
                 isSignedIn = false;
             }
 
-            // CEK PEMBAYARAN: Jika belum premium, tampilkan halaman pembayaran
             if (!isPremium) {
+                let infoStatus = '';
+                if(currentUser.payment_status === 'Menunggu Verifikasi') {
+                    infoStatus = `
+                    <div class="mt-4 bg-yellow-50 border border-yellow-200 text-yellow-800 p-4 rounded-lg text-sm">
+                        <strong>Status: Menunggu Verifikasi Admin</strong><br>
+                        Pembayaran Rp 25.000 atas nama <strong>${currentUser.payment_sender || '-'}</strong> sedang ditinjau. 
+                        Pastikan Anda sudah transfer ke DANA 081212514747 (BAYU PRATAMA). 
+                        Akses akan otomatis terbuka setelah admin menverifikasi.
+                    </div>`;
+                }
+
                 document.getElementById('content').innerHTML = `
                 <div class="flex items-center justify-center min-h-[80vh] p-4">
                     <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl text-center max-w-md w-full border border-slate-100 dark:border-slate-700">
@@ -336,32 +354,34 @@
                             <div class="border-t border-slate-200 dark:border-slate-600 pt-3 mt-3">
                                 <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">Pembayaran via DANA:</p>
                                 <p class="text-2xl font-mono font-bold text-blue-600 dark:text-blue-400 tracking-wider mt-1">081212514747</p>
-                                <p class="text-xs text-slate-400 mt-1">*(Akses selamanya setelah aktivasi)*</p>
+                                <p class="text-xs font-semibold text-slate-500 mt-1">a.n BAYU PRATAMA</p>
                             </div>
                         </div>
                         
+                        ${currentUser.payment_status !== 'Menunggu Verifikasi' ? `
                         <button onclick="confirmPaymentAI()" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 rounded-lg transition-colors shadow-md flex items-center justify-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                             Saya Sudah Bayar
                         </button>
                         <p class="text-xs text-slate-400 mt-4">Klik tombol di atas setelah melakukan transfer Rp 25.000 ke nomor DANA di atas.</p>
+                        ` : ''}
+                        
+                        ${infoStatus}
                     </div>
                 </div>`;
                 return;
             }
 
-            // Jika sudah premium tapi belum login Puter, langsung signIn otomatis tanpa blokir
             if (!isSignedIn) {
                 try {
                     await puter.auth.signIn();
-                    renderAI(); // Reload setelah signIn
+                    renderAI(); 
                 } catch (e) {
                     showToast('Gagal menghubungkan ke server AI.', 'error');
                 }
                 return;
             }
 
-            // Jika sudah premium & sudah login Puter, tampilkan chat AI
             document.getElementById('content').innerHTML = `<div class="grid grid-cols-1 xl:grid-cols-3 gap-6"><div class="xl:col-span-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden"><div class="p-5 border-b dark:border-slate-700 flex justify-between items-center bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700"><div class="flex items-center gap-3"><img src="${AI_IMG}" class="w-12 h-12 rounded-xl object-cover shadow-sm"><div><h3 class="text-lg font-bold text-slate-800 dark:text-white">Asisten AI Guru</h3><p class="text-xs text-slate-500 dark:text-slate-400">Soal A B C D • Format otomatis rapi</p></div></div></div><div id="aiMessages" class="h-[500px] overflow-y-auto p-5 space-y-4 bg-slate-50 dark:bg-slate-900"></div><div class="p-4 border-t dark:border-slate-700 bg-white dark:bg-slate-800"><textarea id="aiInput" rows="3" placeholder="Tulis perintah... (Contoh: Buatkan 5 soal pilihan ganda A B C D tentang Pahlawan Nasional)" class="w-full px-4 py-3 rounded-xl border dark:bg-slate-700 dark:text-white resize-none focus:ring-2 focus:ring-blue-500 outline-none mb-3"></textarea><div class="flex justify-end gap-2 flex-wrap"><button id="aiWordBtn" onclick="exportToWord()" class="hidden bg-blue-500 text-white px-4 py-2.5 rounded-lg font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>Word (Soal)</button><button id="aiPrintBtn" onclick="printAIResult(false)" class="hidden bg-slate-600 text-white px-4 py-2.5 rounded-lg font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>Cetak Soal (PDF)</button><button id="aiPrintKeyBtn" onclick="printAIResult(true)" class="hidden bg-green-600 text-white px-4 py-2.5 rounded-lg font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>Cetak + Kunci</button><button id="aiSendBtn" onclick="sendAI()" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9 2zm0 0v-8" /></svg>Kirim</button></div></div></div></div>`; 
             loadAIChat(); 
         }
@@ -369,8 +389,9 @@
         async function confirmPaymentAI() {
             openModal('Konfirmasi Aktivasi AI', `
             <form id="paymentConfirmForm" class="space-y-4">
-                <div class="bg-green-50 dark:bg-slate-700 p-3 rounded-lg text-sm text-green-700 dark:text-green-300 text-center">
-                    Terima kasih telah melakukan pembayaran sebesar <strong>Rp 25.000</strong>.<br>Silakan masukkan nama pengirim DANA untuk verifikasi, lalu klik tombol di bawah ini.
+                <div class="bg-yellow-50 dark:bg-slate-700 p-3 rounded-lg text-sm text-yellow-700 dark:text-yellow-300 text-center border border-yellow-200">
+                    <strong>Perhatian:</strong> Silakan transfer Rp 25.000 ke DANA <br><strong>081212514747 (BAYU PRATAMA)</strong>.<br>
+                    Setelah transfer, masukkan nama pengirim di bawah ini. Admin akan memverifikasi pembayaran Anda maksimal 1x24 Jam.
                 </div>
                 <div>
                     <label class="block text-sm mb-1">Nama Pengirim DANA</label>
@@ -378,7 +399,7 @@
                 </div>
                 <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 rounded-lg font-semibold flex items-center justify-center gap-2">
                     <svg class="animate-spin hidden h-5 w-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-                    <span id="btnTextAI">⚡ Aktifkan AI Sekarang</span>
+                    <span id="btnTextAI">Kirim Bukti Transfer</span>
                 </button>
             </form>`);
 
@@ -387,26 +408,26 @@
                 const btn = document.querySelector('#paymentConfirmForm button[type="submit"]'); 
                 const btnText = document.getElementById('btnTextAI'); 
                 const spinner = btn.querySelector('svg');
-                btn.disabled = true; btnText.innerText = 'Memproses Pembayaran...'; spinner.classList.remove('hidden');
+                btn.disabled = true; btnText.innerText = 'Mengirim Data...'; spinner.classList.remove('hidden');
                 
                 try { 
-                    // 1. Update status premium di database Supabase
-                    await sb.from('users').update({ is_premium: true }).eq('id', currentUser.id);
+                    const senderName = document.getElementById('dana_sender').value;
+                    await sb.from('users').update({ 
+                        is_premium: false, 
+                        payment_sender: senderName, 
+                        payment_status: 'Menunggu Verifikasi' 
+                    }).eq('id', currentUser.id);
                     
-                    // 2. Update data di lokal browser
-                    currentUser.is_premium = true;
-                    localStorage.setItem('gs_currentUser', JSON.stringify(currentUser));
+                    currentUser.payment_sender = senderName;
+                    currentUser.payment_status = 'Menunggu Verifikasi';
                     
-                    // 3. Lanjut login ke Puter AI
-                    await puter.auth.signIn(); 
-                    
-                    showToast('AI berhasil diaktifkan! Akses Selamanya.', 'success'); 
+                    showToast('Bukti transfer terkirim! Tunggu verifikasi admin maks 1x24 Jam.', 'success'); 
                     closeModal(); 
                     renderAI(); 
                 } catch (err) { 
-                    showToast('Gagal aktivasi. Coba lagi.', 'error'); 
+                    showToast('Gagal mengirim data. Coba lagi.', 'error'); 
                     btn.disabled = false; 
-                    btnText.innerText = '⚡ Coba Lagi'; 
+                    btnText.innerText = 'Kirim Bukti Transfer'; 
                     spinner.classList.add('hidden'); 
                 } 
             };
