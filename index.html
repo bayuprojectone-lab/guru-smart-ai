@@ -134,8 +134,8 @@
     <div id="toast" class="hidden fixed bottom-5 right-5 z-[60] bg-slate-800 text-white px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2"></div>
     <div id="printArea"></div>
     <script>
-        const SUPABASE_URL = 'https://xdwgqgdbfidlsfgyyaeo.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhkd2dxZ2RiZmlkbHNmZ3l5YWVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1MDAxNjQsImV4cCI6MjEwNTA3NjE2NH0.3QRFjepUIK00cmFFMJ7D3eEtWKpX2dMOfUPap-ef8Lo';
+        const SUPABASE_URL = 'https://urslwiueyqhoykjhxmqq.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVyc2x3aXVleXFob3lramh4bXFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2NTIxMDgsImV4cCI6MjEwNTIyODEwOH0.cRHI2m9lasLJ6yX2vc1ioxJGm7bLRsCIptmiNtpz5go';
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
             auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
         });
@@ -310,13 +310,16 @@
         // AI ASSISTANT
         async function renderAI() {
             let isSignedIn = false;
+            let isPremium = currentUser.is_premium || false;
+
             try {
                 isSignedIn = puter.auth.isSignedIn();
             } catch (e) {
                 isSignedIn = false;
             }
 
-            if (!isSignedIn) {
+            // CEK PEMBAYARAN: Jika belum premium, tampilkan halaman pembayaran
+            if (!isPremium) {
                 document.getElementById('content').innerHTML = `
                 <div class="flex items-center justify-center min-h-[80vh] p-4">
                     <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl text-center max-w-md w-full border border-slate-100 dark:border-slate-700">
@@ -347,6 +350,18 @@
                 return;
             }
 
+            // Jika sudah premium tapi belum login Puter, langsung signIn otomatis tanpa blokir
+            if (!isSignedIn) {
+                try {
+                    await puter.auth.signIn();
+                    renderAI(); // Reload setelah signIn
+                } catch (e) {
+                    showToast('Gagal menghubungkan ke server AI.', 'error');
+                }
+                return;
+            }
+
+            // Jika sudah premium & sudah login Puter, tampilkan chat AI
             document.getElementById('content').innerHTML = `<div class="grid grid-cols-1 xl:grid-cols-3 gap-6"><div class="xl:col-span-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden"><div class="p-5 border-b dark:border-slate-700 flex justify-between items-center bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700"><div class="flex items-center gap-3"><img src="${AI_IMG}" class="w-12 h-12 rounded-xl object-cover shadow-sm"><div><h3 class="text-lg font-bold text-slate-800 dark:text-white">Asisten AI Guru</h3><p class="text-xs text-slate-500 dark:text-slate-400">Soal A B C D • Format otomatis rapi</p></div></div></div><div id="aiMessages" class="h-[500px] overflow-y-auto p-5 space-y-4 bg-slate-50 dark:bg-slate-900"></div><div class="p-4 border-t dark:border-slate-700 bg-white dark:bg-slate-800"><textarea id="aiInput" rows="3" placeholder="Tulis perintah... (Contoh: Buatkan 5 soal pilihan ganda A B C D tentang Pahlawan Nasional)" class="w-full px-4 py-3 rounded-xl border dark:bg-slate-700 dark:text-white resize-none focus:ring-2 focus:ring-blue-500 outline-none mb-3"></textarea><div class="flex justify-end gap-2 flex-wrap"><button id="aiWordBtn" onclick="exportToWord()" class="hidden bg-blue-500 text-white px-4 py-2.5 rounded-lg font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>Word (Soal)</button><button id="aiPrintBtn" onclick="printAIResult(false)" class="hidden bg-slate-600 text-white px-4 py-2.5 rounded-lg font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>Cetak Soal (PDF)</button><button id="aiPrintKeyBtn" onclick="printAIResult(true)" class="hidden bg-green-600 text-white px-4 py-2.5 rounded-lg font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>Cetak + Kunci</button><button id="aiSendBtn" onclick="sendAI()" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9 2zm0 0v-8" /></svg>Kirim</button></div></div></div></div>`; 
             loadAIChat(); 
         }
@@ -372,10 +387,19 @@
                 const btn = document.querySelector('#paymentConfirmForm button[type="submit"]'); 
                 const btnText = document.getElementById('btnTextAI'); 
                 const spinner = btn.querySelector('svg');
-                btn.disabled = true; btnText.innerText = 'Menghubungkan ke Server Puter...'; spinner.classList.remove('hidden');
+                btn.disabled = true; btnText.innerText = 'Memproses Pembayaran...'; spinner.classList.remove('hidden');
                 
                 try { 
+                    // 1. Update status premium di database Supabase
+                    await sb.from('users').update({ is_premium: true }).eq('id', currentUser.id);
+                    
+                    // 2. Update data di lokal browser
+                    currentUser.is_premium = true;
+                    localStorage.setItem('gs_currentUser', JSON.stringify(currentUser));
+                    
+                    // 3. Lanjut login ke Puter AI
                     await puter.auth.signIn(); 
+                    
                     showToast('AI berhasil diaktifkan! Akses Selamanya.', 'success'); 
                     closeModal(); 
                     renderAI(); 
