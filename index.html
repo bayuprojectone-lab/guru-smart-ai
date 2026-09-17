@@ -20,7 +20,6 @@
         .fade-in { animation: fadeIn 0.3s ease-in-out; } @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         #printArea { display: none; }
         
-        /* Mengatur margin kertas PDF agar teks tidak menempel di pinggir di SEMUA halaman */
         @media print {
             body * { visibility: hidden; } 
             #printArea, #printArea * { visibility: visible; } 
@@ -43,7 +42,6 @@
         .ai-output .soal-number { font-weight: bold; color: #1e3a8a; min-width: 28px; }
         .ai-output .soal-text { font-size: 14px; line-height: 1.7; color: #1e293b; font-weight: 500; flex: 1; }
         
-        /* Layout Pilihan Ganda: A & B di kiri, C & D di kanan */
         .ai-output .soal-opts { display: flex; gap: 24px; margin: 8px 0 8px 34px; }
         .ai-output .opt-col { flex: 1; display: flex; flex-direction: column; gap: 4px; }
         .ai-output .soal-opt { display: flex; align-items: flex-start; font-size: 13px; color: #334155; }
@@ -134,308 +132,339 @@
     </div>
 
     <div id="toast" class="hidden fixed bottom-5 right-5 z-[60] bg-slate-800 text-white px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2"></div>
-    <div id="printArea"></div><script>
-const SUPABASE_URL = 'https://xdwgqgdbfidlsfgyyaeo.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhkd2dxZ2RiZmlkbHNmZ3l5YWVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1MDAxNjQsImV4cCI6MjEwNTA3NjE2NH0.3QRFjepUIK00cmFFMJ7D3eEtWKpX2dMOfUPap-ef8Lo';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
-});
-const AI_IMG = 'https://z-cdn-media.chatglm.cn/files/c0012e5b-65ba-49de-82f7-0299446846c6.png?auth_key=1889545451-57dd1e872dbb4149bdea975407d31530-0-fbdde3c3db36637028abfb484d301ec8';
-
-const DB = {
-    get: async (table) => { const { data, error } = await sb.from(table).select('*').eq('user_id', currentUser.id); if (error) { console.error(`Error fetching ${table}:`, error); return []; } return data; },
-    insert: async (table, payload) => { const { data, error } = await sb.from(table).insert([{ ...payload, user_id: currentUser.id }]).select(); if (error) { console.error(`Error inserting ${table}:`, error); showToast('Gagal menyimpan data', 'error'); return null; } return data; },
-    update: async (table, id, payload) => { const { data, error } = await sb.from(table).update(payload).eq('id', id).eq('user_id', currentUser.id).select(); if (error) { console.error(`Error updating ${table}:`, error); showToast('Gagal mengupdate data', 'error'); return null; } return data; },
-    remove: async (table, id) => { const { error } = await sb.from(table).delete().eq('id', id).eq('user_id', currentUser.id); if (error) { console.error(`Error deleting ${table}:`, error); showToast('Gagal menghapus data', 'error'); return false; } return true; }
-};
-
-let currentUser = null; let currentPage = 'dashboard';
-
-function toggleAuth(form) { if(form === 'register') { document.getElementById('loginForm').classList.add('hidden'); document.getElementById('registerForm').classList.remove('hidden'); } else { document.getElementById('registerForm').classList.add('hidden'); document.getElementById('loginForm').classList.remove('hidden'); } }
-document.getElementById('registerForm').addEventListener('submit', async (e) => { e.preventDefault(); const name = document.getElementById('regName').value; const email = document.getElementById('regEmail').value; const password = document.getElementById('regPassword').value; const { data, error } = await sb.auth.signUp({ email, password, options: { data: { name } } }); if (error) { showToast('Gagal daftar: ' + error.message, 'error'); return; } const existingUsers = await sb.from('users').select('*'); const role = existingUsers.data.length === 0 ? 'admin' : 'guru'; if(data.user) { await sb.from('users').insert([{ id: data.user.id, name, username: email, role }]); } if (data.session) { currentUser = { id: data.user.id, email: data.user.email, name, role }; localStorage.setItem('gs_currentUser', JSON.stringify(currentUser)); showToast('Pendaftaran berhasil!', 'success'); initApp(); } else { showToast('Pendaftaran berhasil! Cek email untuk verifikasi.', 'success'); toggleAuth('login'); document.getElementById('loginEmail').value = email; } });
-document.getElementById('loginForm').addEventListener('submit', async (e) => { e.preventDefault(); const email = document.getElementById('loginEmail').value; const password = document.getElementById('loginPassword').value; const { data, error } = await sb.auth.signInWithPassword({ email, password }); if (error) { showToast('Login gagal: ' + error.message, 'error'); return; } const { data: userData } = await sb.from('users').select('*').eq('id', data.user.id).single(); currentUser = { id: data.user.id, email: data.user.email, name: userData?.name || data.user.email, role: userData?.role || 'guru', avatar_url: userData?.avatar_url || AI_IMG }; localStorage.setItem('gs_currentUser', JSON.stringify(currentUser)); initApp(); });
-async function logout() { await sb.auth.signOut(); localStorage.removeItem('gs_currentUser'); currentUser = null; location.reload(); }
-async function checkSession() { const { data, error } = await sb.auth.getSession(); if (data.session) { await sb.auth.refreshSession(); const { data: userData } = await sb.from('users').select('*').eq('id', data.session.user.id).single(); if(userData) { currentUser = { id: data.session.user.id, email: data.session.user.email, name: userData.name || data.session.user.email, role: userData.role || 'guru', avatar_url: userData.avatar_url || AI_IMG }; return true; } } return false; }
-
-function showToast(message, type = 'info') { const toast = document.getElementById('toast'); const bg = type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-slate-800'; toast.className = `fixed bottom-5 right-5 z-[60] ${bg} text-white px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2 fade-in`; toast.innerHTML = `<span>${message}</span>`; toast.classList.remove('hidden'); setTimeout(() => toast.classList.add('hidden'), 3000); }
-function toggleDarkMode() { document.documentElement.classList.toggle('dark'); document.getElementById('iconSun').classList.toggle('hidden'); document.getElementById('iconMoon').classList.toggle('hidden'); localStorage.setItem('gs_darkMode', document.documentElement.classList.contains('dark')); if(currentPage === 'dashboard') renderDashboard(); }
-if (localStorage.getItem('gs_darkMode') === 'true') { document.documentElement.classList.add('dark'); document.getElementById('iconSun').classList.remove('hidden'); document.getElementById('iconMoon').classList.add('hidden'); }
-function toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('sidebarOverlay').classList.toggle('hidden'); }
-function openModal(title, contentHtml) { document.getElementById('modalTitle').innerText = title; document.getElementById('modalContent').innerHTML = contentHtml; document.getElementById('modalContainer').classList.remove('hidden'); }
-function closeModal() { document.getElementById('modalContainer').classList.add('hidden'); }
-
-const menus = [
-    { id: 'dashboard', label: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', roles: ['admin', 'guru', 'siswa'] },
-    { id: 'ai', label: 'Asisten AI Guru', icon: 'M12 2a7 7 0 00-7 7v3a7 7 0 0014 0V9a7 7 0 00-7-7zm-4 18h8M9 22h6', roles: ['admin', 'guru', 'siswa'] },
-    { id: 'kurikulum', label: 'Perangkat Ajar', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', roles: ['admin', 'guru'] },
-    { id: 'teachers', label: 'Data Guru', icon: 'M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-5a4 4 0 11-8 0 4 4 0 018 0zm6 0a4 4 0 11-8 0 4 4 0 018 0z', roles: ['admin'] },
-    { id: 'students', label: 'Data Siswa', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z', roles: ['admin', 'guru'] },
-    { id: 'classes', label: 'Kelas', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4', roles: ['admin', 'guru'] },
-    { id: 'subjects', label: 'Mata Pelajaran', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253', roles: ['admin', 'guru', 'siswa'] },
-    { id: 'schedules', label: 'Jadwal', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z', roles: ['admin', 'guru', 'siswa'] },
-    { id: 'attendance', label: 'Absensi', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', roles: ['admin', 'guru'] },
-    { id: 'grades', label: 'Penilaian', icon: 'M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z', roles: ['admin', 'guru', 'siswa'] },
-    { id: 'assignments', label: 'Tugas', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2', roles: ['admin', 'guru', 'siswa'] },
-    { id: 'materi', label: 'Materi Ajar', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253', roles: ['admin', 'guru', 'siswa'] },
-    { id: 'keuangan', label: 'Keuangan SPP', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1V6m0 2c-1.11 0-2.08.402-2.599 1M3 12h18M12 18v-1m0 1v-1', roles: ['admin'] },
-    { id: 'rapor', label: 'Cetak Rapor', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', roles: ['admin', 'guru', 'siswa'] },
-    { id: 'announcements', label: 'Pengumuman', icon: 'M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z', roles: ['admin', 'guru', 'siswa'] },
-    { id: 'settings', label: 'Pengaturan', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z', roles: ['admin', 'guru', 'siswa'] }
-];
-
-function renderMenu() { const navMenu = document.getElementById('navMenu'); navMenu.innerHTML = ''; menus.filter(m => m.roles.includes(currentUser.role)).forEach(menu => { const isActive = currentPage === menu.id ? 'bg-white/20 text-white font-semibold' : 'text-blue-100 hover:bg-white/10 hover:text-white'; navMenu.innerHTML += `<a href="#" onclick="navigate('${menu.id}')" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg ${isActive} transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${menu.icon}"></path></svg><span>${menu.label}</span></a>`; }); }
-function navigate(page) { currentPage = page; document.getElementById('pageTitle').innerText = menus.find(m => m.id === page)?.label || 'Page'; renderMenu(); renderContent(page); if (window.innerWidth < 1024) toggleSidebar(); }
-async function renderContent(page) {
-    document.getElementById('content').innerHTML = `<div class="text-center py-10 text-slate-500">Memuat data...</div>`;
-    switch(page) {
-        case 'dashboard': await renderDashboard(); break;
-        case 'ai': renderAI(); break;
-        case 'kurikulum': await renderKurikulum(); break;
-        case 'teachers': await renderTeachers(); break;
-        case 'students': await renderStudents(); break;
-        case 'classes': await renderClasses(); break;
-        case 'subjects': await renderSubjects(); break;
-        case 'schedules': await renderSchedules(); break;
-        case 'attendance': await renderAttendance(); break;
-        case 'grades': await renderGrades(); break;
-        case 'assignments': await renderAssignments(); break;
-        case 'materi': await renderMateri(); break;
-        case 'keuangan': await renderKeuangan(); break;
-        case 'rapor': await renderRapor(); break;
-        case 'announcements': await renderAnnouncements(); break;
-        case 'settings': await renderSettings(); break;
-    }
-    document.getElementById('content').innerHTML += `<div class="text-center text-[10px] text-slate-400 dark:text-slate-600 py-4 mt-4 border-t border-slate-200 dark:border-slate-700">Dalam Mode Pengembang @BayuProjectone</div>`;
-}
-
-// DASHBOARD
-async function renderDashboard() { const students = await DB.get('students'); const teachers = await DB.get('teachers'); const classes = await DB.get('classes'); const announcements = await DB.get('announcements'); const grades = await DB.get('grades'); const keuangan = await DB.get('keuangan'); const unpaidSpp = keuangan.filter(k => k.status === 'Belum Bayar').length; document.getElementById('content').innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">${dashboardCard('Total Siswa', students.length, 'from-blue-500 to-blue-700', 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z')}${dashboardCard('Total Guru', teachers.length, 'from-emerald-500 to-emerald-700', 'M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-5a4 4 0 11-8 0 4 4 0 018 0zm6 0a4 4 0 11-8 0 4 4 0 018 0z')}${dashboardCard('Total Kelas', classes.length, 'from-amber-500 to-orange-600', 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4')}${dashboardCard('SPP Belum Lunas', unpaidSpp, 'from-rose-500 to-red-700', 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1V6m0 2c-1.11 0-2.08.402-2.599 1M3 12h18M12 18v-1m0 1v-1')}</div><div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><h3 class="font-semibold text-slate-800 dark:text-white mb-4">Statistik Nilai Siswa</h3><canvas id="chartGrades" height="100"></canvas></div><div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><h3 class="font-semibold text-slate-800 dark:text-white mb-4">Pengumuman Terbaru</h3><div class="space-y-4 max-h-80 overflow-y-auto modal-scroll">${announcements.length ? announcements.map(a => `<div class="p-3 bg-slate-50 dark:bg-slate-700 rounded-lg border-l-4 border-blue-500"><p class="font-medium text-sm text-blue-600 dark:text-blue-400">${a.title}</p><p class="text-xs text-slate-500 dark:text-slate-300 mt-1">${a.content}</p><p class="text-[10px] text-slate-400 mt-1">${a.date}</p></div>`).join('') : '<p class="text-sm text-slate-500 text-center py-4">Belum ada pengumuman.</p>'}</div></div></div>`; const ctx = document.getElementById('chartGrades').getContext('2d'); const types = ['Tugas', 'Ulangan Harian', 'PTS', 'PAS']; const data = types.map(t => { const tGrades = grades.filter(g => g.type === t); return tGrades.length ? (tGrades.reduce((s, g) => s + g.score, 0) / tGrades.length).toFixed(1) : 0; }); new Chart(ctx, { type: 'bar', data: { labels: types, datasets: [{ label: 'Rata-rata Nilai', data: data, backgroundColor: 'rgba(37, 99, 235, 0.5)', borderColor: 'rgba(37, 99, 235, 1)', borderWidth: 1 }] }, options: { responsive: true, scales: { y: { beginAtZero: 0, max: 100 } }, plugins: { legend: { labels: { color: document.documentElement.classList.contains('dark') ? '#fff' : '#000' } } } } }); }
-function dashboardCard(title, count, color, icon) { return `<div class="bg-gradient-to-br ${color} p-6 rounded-xl shadow-sm flex items-center space-x-4 text-white"><div class="p-3 bg-white/20 rounded-lg"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${icon}"></path></svg></div><div><p class="text-white/80 text-sm">${title}</p><h3 class="text-2xl font-bold">${count}</h3></div></div>`; }
-
-// PERANGKAT AJAR
-const kurikulumTypes = [ { id: 'cp', label: 'Capaian Pembelajaran (CP)', desc: 'Kompetensi yang harus dicapai peserta didik', color: 'from-blue-500 to-cyan-600', icon: 'M13 10V3L4 14h7v7l9-11h-7z' }, { id: 'tp', label: 'Tujuan Pembelajaran (TP)', desc: 'Tujuan spesifik dari setiap CP', color: 'from-green-500 to-emerald-600', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' }, { id: 'atp', label: 'Alur Tujuan Pembelajaran (ATP)', desc: 'Urutan logis tujuan pembelajaran', color: 'from-purple-500 to-pink-600', icon: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6' }, { id: 'modul', label: 'Modul Ajar', desc: 'Panduan lengkap untuk guru', color: 'from-orange-500 to-red-600', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' }, { id: 'rpp', label: 'RPP (Rencana Pelaksanaan Pembelajaran)', desc: 'Rencana kegiatan pembelajaran', color: 'from-indigo-500 to-blue-700', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' }, { id: 'prota', label: 'Program Tahunan', desc: 'Program pembelajaran satu tahun', color: 'from-teal-500 to-green-600', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' }, { id: 'lkpd', label: 'LKPD (Lembar Kerja Peserta Didik)', desc: 'Lembar kerja untuk siswa', color: 'from-rose-500 to-pink-600', icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' } ];
-async function renderKurikulum() { const subjects = await DB.get('subjects'); const kurikulumData = await DB.get('kurikulum'); document.getElementById('content').innerHTML = `<div class="mb-6 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-6 text-white shadow-lg"><h2 class="text-2xl font-bold mb-2">📚 Perangkat Ajar Kurikulum</h2><p class="text-indigo-100 text-sm">Buat dan kelola dokumen kurikulum: CP, TP, ATP, Modul Ajar, RPP, Program Tahunan, hingga LKPD</p></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">${kurikulumTypes.map(t => `<button onclick="generateKurikulum('${t.id}', '${t.label}')" class="bg-gradient-to-br ${t.color} p-5 rounded-xl text-white text-left shadow-md hover:scale-105 transition-transform"><svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${t.icon}"></path></svg><h3 class="font-bold text-sm">${t.label}</h3><p class="text-xs opacity-90 mt-1">${t.desc}</p></button>`).join('')}</div><div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><h3 class="font-bold text-slate-800 dark:text-white mb-4">Dokumen Tersimpan</h3><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase"><tr><th class="px-4 py-3">Jenis</th><th class="px-4 py-3">Mapel</th><th class="px-4 py-3">Judul</th><th class="px-4 py-3">Kelas</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody class="divide-y dark:divide-slate-700">${kurikulumData.length ? kurikulumData.map(k => { const sub = subjects.find(s => s.id === k.subject_id); const typeLabel = kurikulumTypes.find(t => t.id === k.type)?.label || k.type; return `<tr><td class="px-4 py-3"><span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">${typeLabel}</span></td><td class="px-4 py-3">${sub?.name || '-'}</td><td class="px-4 py-3 font-medium">${k.title}</td><td class="px-4 py-3">${k.class_name || '-'}</td><td class="px-4 py-3 flex gap-2"><button onclick="viewKurikulum('${k.id}')" class="text-blue-500">Lihat</button><button onclick="printKurikulumDoc('${k.id}')" class="text-green-500">Cetak</button><button onclick="deleteData('kurikulum', '${k.id}', renderKurikulum)" class="text-red-500">Hapus</button></td></tr>`; }).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500">Belum ada dokumen. Gunakan tombol di atas untuk membuat.</td></tr>`}</tbody></table></div></div>`; }
-async function generateKurikulum(type, typeLabel) { 
-    const subjects = await DB.get('subjects'); 
-    const classes = await DB.get('classes'); 
-    if(subjects.length === 0 || classes.length === 0) { showToast('Harap tambahkan Mata Pelajaran & Kelas dahulu!', 'error'); return; }
-    openModal(`Buat ${typeLabel} dengan AI`, `
-    <form id="kurikulumForm" class="space-y-4">
-        <div class="bg-blue-50 dark:bg-slate-700 p-3 rounded-lg text-sm text-blue-700 dark:text-blue-300">💡 AI akan membuatkan <strong>${typeLabel}</strong> secara otomatis. Lengkapi detail di bawah ini.</div>
-        <div><label class="block text-sm mb-1">Mata Pelajaran</label><select id="kSubject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required>${subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
-        <div><label class="block text-sm mb-1">Kelas</label><select id="kClass" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required>${classes.map(c => `<option value="${c.id}" data-name="${c.name}">${c.name}</option>`).join('')}</select></div>
-        <div><label class="block text-sm mb-1">Topik / Materi</label><input type="text" id="kTopic" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" placeholder="Contoh: Ekosistem, Persamaan Linear" required></div>
-        <div><label class="block text-sm mb-1">Fase</label><select id="kPhase" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option>Fase A</option><option>Fase B</option><option>Fase C</option><option>Fase D</option><option>Fase E</option><option>Fase F</option></select></div>
-        <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 rounded-lg font-semibold flex items-center justify-center gap-2">
-            <svg class="animate-spin hidden h-5 w-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-            <span id="btnText">⚡ Generate dengan AI</span>
-        </button>
-    </form>`); 
-    document.getElementById('kurikulumForm').onsubmit = async (e) => { 
-        e.preventDefault(); 
-        const btn = document.querySelector('#kurikulumForm button[type="submit"]'); const btnText = document.getElementById('btnText'); const spinner = btn.querySelector('svg');
-        btn.disabled = true; btnText.innerText = 'AI Sedang Menyusun Dokumen...'; spinner.classList.remove('hidden');
-        const subjectId = document.getElementById('kSubject').value; const classSelect = document.getElementById('kClass'); const className = classSelect.options[classSelect.selectedIndex].dataset.name; const topic = document.getElementById('kTopic').value; const phase = document.getElementById('kPhase').value; const subject = subjects.find(s => s.id === subjectId); 
-        const prompt = `Buatkan ${typeLabel} lengkap dan profesional untuk mata pelajaran ${subject.name}, kelas ${className}, Fase ${phase}, topik: ${topic}. Gunakan format markdown yang rapi. Sesuaikan dengan Kurikulum Merdeka.`; 
-        try { 
-            const sys = `Anda adalah ahli kurikulum pendidikan Indonesia. Buatkan ${typeLabel} yang sesuai dengan Kurikulum Merdeka. Gunakan format markdown yang baik dengan heading, bullet points, dan tabel jika perlu. Pastikan isi lengkap, profesional, dan siap digunakan guru.`; 
-            const res = await puter.ai.chat([{role:'system',content:sys},{role:'user',content:prompt}]); const content = typeof res === 'string' ? res : (res.message?.content || ''); 
-            if(!content) throw new Error("AI tidak memberikan respon. Coba lagi.");
-            await DB.insert('kurikulum', { type, title: `${typeLabel} - ${topic}`, subject_id: subjectId, class_name: className, content }); 
-            showToast('Dokumen berhasil dibuat!', 'success'); closeModal(); renderKurikulum(); 
-        } catch(err) { showToast('Error AI: ' + err.message, 'error'); btn.disabled = false; btnText.innerText = '⚡ Coba Generate Lagi'; spinner.classList.add('hidden'); } 
-    }; 
-}
-async function viewKurikulum(id) { const doc = (await DB.get('kurikulum')).find(k => k.id === id); if(!doc) return; const typeLabel = kurikulumTypes.find(t => t.id === doc.type)?.label || doc.type; openModal(typeLabel, `<div class="ai-output text-gray-800 dark:text-white">${marked.parse(doc.content)}</div><div class="mt-4 flex gap-2"><button onclick="printKurikulumDoc('${doc.id}')" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm flex-1">🖨️ Cetak / PDF</button><button onclick="closeModal()" class="bg-slate-500 text-white px-4 py-2 rounded-lg text-sm">Tutup</button></div>`); }
-function printKurikulumDoc(id) { 
-    DB.get('kurikulum').then(docs => { 
-        const doc = docs.find(k => k.id === id); 
-        if(!doc) return; 
-        const typeLabel = kurikulumTypes.find(t => t.id === doc.type)?.label || doc.type; 
-        const htmlContent = marked.parse(doc.content); 
-        document.getElementById('printArea').innerHTML = `
-        <div style="font-family: 'Times New Roman', Georgia, serif; color: #000; padding: 0; margin: 0; width: 100%;">
-            <div style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 25px;">
-                <h2 style="margin:0; font-size: 18px;">${typeLabel.toUpperCase()}</h2>
-                <p style="margin: 5px 0 0; font-size: 12px;">${doc.class_name} | ${doc.title}</p>
-            </div>
-            <div class="ai-output" style="color: #000; margin: 0; padding: 0;">
-                ${htmlContent}
-            </div>
-        </div>`; 
-        window.print(); 
-    }); 
-}
-
-// TEACHERS, STUDENTS, CLASSES, SUBJECTS
-async function renderTeachers() { const teachers = await DB.get('teachers'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex justify-between mb-4"><input type="text" id="searchTeacher" onkeyup="filterTable('searchTeacher', 'teacherTableBody')" placeholder="Cari guru..." class="px-4 py-2 rounded-lg border dark:bg-slate-700 dark:text-white text-sm outline-none"><button onclick="teacherForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Guru</button></div><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase"><tr><th class="px-4 py-3">NIP</th><th class="px-4 py-3">Nama</th><th class="px-4 py-3">Gender</th><th class="px-4 py-3">Mapel</th><th class="px-4 py-3">No HP</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody id="teacherTableBody" class="divide-y dark:divide-slate-700">${teachers.length ? teachers.map(t => `<tr><td class="px-4 py-3">${t.nip}</td><td class="px-4 py-3 font-medium">${t.name}</td><td class="px-4 py-3">${t.gender}</td><td class="px-4 py-3">${t.subject}</td><td class="px-4 py-3">${t.phone}</td><td class="px-4 py-3 flex gap-2"><button onclick="teacherForm('${t.id}')" class="text-blue-500">Edit</button><button onclick="deleteData('teachers', '${t.id}', renderTeachers)" class="text-red-500">Hapus</button></td></tr>`).join('') : `<tr><td colspan="6" class="text-center py-4 text-slate-500">Belum ada data.</td></tr>`}</tbody></table></div></div>`; }
-async function teacherForm(id = null) { let t = null; if(id) { t = (await DB.get('teachers')).find(x => x.id === id); } openModal(id ? 'Edit Guru' : 'Tambah Guru', `<form id="teacherForm" class="space-y-4"><div><label class="block text-sm mb-1">NIP</label><input type="text" id="tch_nip" value="${t?.nip || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Nama</label><input type="text" id="tch_name" value="${t?.name || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Gender</label><select id="tch_gender" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option value="L" ${t?.gender == 'L' ? 'selected' : ''}>L</option><option value="P" ${t?.gender == 'P' ? 'selected' : ''}>P</option></select></div><div><label class="block text-sm mb-1">No HP</label><input type="text" id="tch_phone" value="${t?.phone || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Mapel</label><input type="text" id="tch_subject" value="${t?.subject || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button></form>`); document.getElementById('teacherForm').onsubmit = async (e) => { e.preventDefault(); const payload = { nip: document.getElementById('tch_nip').value, name: document.getElementById('tch_name').value, gender: document.getElementById('tch_gender').value, phone: document.getElementById('tch_phone').value, subject: document.getElementById('tch_subject').value }; await saveData('teachers', payload, id); closeModal(); renderTeachers(); }; }
-
-async function renderStudents() { const students = await DB.get('students'); const classes = await DB.get('classes'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex justify-between mb-4"><button onclick="studentForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Siswa</button></div><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase"><tr><th class="px-4 py-3">NIS</th><th class="px-4 py-3">Nama</th><th class="px-4 py-3">Kelas</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody class="divide-y dark:divide-slate-700">${students.length ? students.map(s => { const cls = classes.find(c => c.id === s.class_id); return `<tr><td class="px-4 py-3">${s.nis}</td><td class="px-4 py-3 font-medium">${s.name}</td><td class="px-4 py-3">${cls?.name || 'N/A'}</td><td class="px-4 py-3 flex gap-2"><button onclick="studentForm('${s.id}')" class="text-blue-500">Edit</button><button onclick="deleteData('students', '${s.id}', renderStudents)" class="text-red-500">Hapus</button></td></tr>`; }).join('') : `<tr><td colspan="4" class="text-center py-4 text-slate-500">Belum ada data.</td></tr>`}</tbody></table></div></div>`; }
-async function studentForm(id = null) { const classes = await DB.get('classes'); let s = null; if(id) { s = (await DB.get('students')).find(x => x.id === id); } openModal(id ? 'Edit Siswa' : 'Tambah Siswa', `<form id="studentForm" class="space-y-4"><div><label class="block text-sm mb-1">NIS</label><input type="text" id="std_nis" value="${s?.nis || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Nama</label><input type="text" id="std_name" value="${s?.name || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Kelas</label><select id="std_class" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}" ${s?.class_id == c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button></form>`); document.getElementById('studentForm').onsubmit = async (e) => { e.preventDefault(); const payload = { nis: document.getElementById('std_nis').value, name: document.getElementById('std_name').value, class_id: document.getElementById('std_class').value }; await saveData('students', payload, id); closeModal(); renderStudents(); }; }
-
-async function renderClasses() { const classes = await DB.get('classes'); const students = await DB.get('students'); document.getElementById('content').innerHTML = `<div class="flex justify-between items-center mb-6"><h3 class="font-semibold text-lg text-slate-800 dark:text-white">Manajemen Kelas</h3><button onclick="classForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Kelas</button></div><div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">${classes.length ? classes.map(c => { const count = students.filter(s => s.class_id === c.id).length; return `<div class="p-4 border rounded-lg"><h4 class="text-lg font-bold">${c.name}</h4><p class="text-sm">Wali: ${c.homeroom || '-'}</p><p class="text-sm">Jumlah Siswa: ${count}</p><div class="mt-4 flex gap-2"><button onclick="classForm('${c.id}')" class="text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded">Edit</button><button onclick="deleteData('classes', '${c.id}', renderClasses)" class="text-xs bg-red-100 text-red-600 px-3 py-1 rounded">Hapus</button></div></div>`; }).join('') : '<div class="col-span-3 text-center py-8 text-slate-500">Belum ada data kelas. Klik tombol Tambah Kelas di atas.</div>'}</div></div>`; }
-async function classForm(id = null) { let c = null; if(id) { c = (await DB.get('classes')).find(x => x.id === id); } openModal(id ? 'Edit Kelas' : 'Tambah Kelas', `<form id="classForm" class="space-y-4"><div><label class="block text-sm mb-1">Nama Kelas</label><input type="text" id="cls_name" value="${c?.name || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Wali Kelas</label><input type="text" id="cls_homeroom" value="${c?.homeroom || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button></form>`); document.getElementById('classForm').onsubmit = async (e) => { e.preventDefault(); const payload = { name: document.getElementById('cls_name').value, homeroom: document.getElementById('cls_homeroom').value }; await saveData('classes', payload, id); closeModal(); renderClasses(); }; }
-
-async function renderSubjects() { const subjects = await DB.get('subjects'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex justify-between mb-4"><h3 class="font-semibold">Mata Pelajaran</h3><button onclick="subjectForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Mapel</button></div><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase"><tr><th class="px-4 py-3">Kode</th><th class="px-4 py-3">Nama Mapel</th><th class="px-4 py-3">Guru</th><th class="px-4 py-3">KKM</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody class="divide-y dark:divide-slate-700">${subjects.length ? subjects.map(s => `<tr><td class="px-4 py-3">${s.code}</td><td class="px-4 py-3 font-medium">${s.name}</td><td class="px-4 py-3">${s.teacher}</td><td class="px-4 py-3">${s.kkm}</td><td class="px-4 py-3 flex gap-2"><button onclick="subjectForm('${s.id}')" class="text-blue-500">Edit</button><button onclick="deleteData('subjects', '${s.id}', renderSubjects)" class="text-red-500">Hapus</button></td></tr>`).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500">Belum ada data.</td></tr>`}</tbody></table></div></div>`; }
-async function subjectForm(id = null) { let s = null; if(id) { s = (await DB.get('subjects')).find(x => x.id === id); } openModal('Tambah Mapel', `<form id="subjectForm" class="space-y-4"><div><label class="block text-sm mb-1">Kode</label><input type="text" id="sub_code" value="${s?.code || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Nama Mapel</label><input type="text" id="sub_name" value="${s?.name || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Guru Pengampu</label><input type="text" id="sub_teacher" value="${s?.teacher || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">KKM</label><input type="number" id="sub_kkm" value="${s?.kkm || 75}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button></form>`); document.getElementById('subjectForm').onsubmit = async (e) => { e.preventDefault(); const payload = { code: document.getElementById('sub_code').value, name: document.getElementById('sub_name').value, teacher: document.getElementById('sub_teacher').value, kkm: parseInt(document.getElementById('sub_kkm').value) }; await saveData('subjects', payload, id); closeModal(); renderSubjects(); }; }
-
-// SCHEDULES, ATTENDANCE, GRADES
-async function renderSchedules() { const schedules = await DB.get('schedules'); const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']; document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex justify-between mb-4"><h3 class="font-semibold">Jadwal Pelajaran</h3><button onclick="scheduleForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Jadwal</button></div><div class="overflow-x-auto"><table class="w-full text-sm text-left border-collapse"><thead class="bg-slate-50 dark:bg-slate-700"><tr><th class="px-4 py-3 border">Jam</th>${days.map(d => `<th class="px-4 py-3 border">${d}</th>`).join('')}</tr></thead><tbody>${['07:30-09:00', '09:15-10:45', '11:00-12:30'].map(time => `<tr><td class="px-4 py-3 border font-medium">${time}</td>${days.map(day => { const sch = schedules.find(s => s.day === day && s.start_time === time.split('-')[0]); return `<td class="px-4 py-3 border text-xs">${sch ? `${sch.subject}<br><span class="text-blue-500">${sch.teacher}</span>` : '-'}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div></div>`; }
-async function scheduleForm(id = null) { const classes = await DB.get('classes'); openModal('Tambah Jadwal', `<form id="scheduleForm" class="space-y-4"><div><label class="block text-sm mb-1">Hari</label><select id="sc_day" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option>Senin</option><option>Selasa</option><option>Rabu</option><option>Kamis</option><option>Jumat</option></select></div><div><label class="block text-sm mb-1">Jam Mulai</label><input type="text" id="sc_start" value="07:30" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Jam Selesai</label><input type="text" id="sc_end" value="09:00" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Kelas</label><select id="sc_class" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Mapel</label><input type="text" id="sc_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Guru</label><input type="text" id="sc_teacher" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button></form>`); document.getElementById('scheduleForm').onsubmit = async (e) => { e.preventDefault(); const payload = { day: document.getElementById('sc_day').value, start_time: document.getElementById('sc_start').value, end_time: document.getElementById('sc_end').value, class_id: document.getElementById('sc_class').value, subject: document.getElementById('sc_subject').value, teacher: document.getElementById('sc_teacher').value }; await saveData('schedules', payload, id); closeModal(); renderSchedules(); }; }
-
-async function renderAttendance() { const students = await DB.get('students'); const classes = await DB.get('classes'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex justify-between mb-4 items-center"><h3 class="font-semibold">Input Absensi</h3><div class="flex gap-2"><select id="att_class" class="px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white text-sm">${classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}</select><input type="date" id="att_date" class="px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white text-sm"></div></div><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase"><tr><th class="px-4 py-3">Nama Siswa</th><th class="px-4 py-3">Status</th></tr></thead><tbody class="divide-y dark:divide-slate-700">${students.length ? students.map(s => `<tr><td class="px-4 py-3">${s.name}</td><td class="px-4 py-3"><select id="att_${s.id}" class="px-2 py-1 border rounded dark:bg-slate-700 dark:text-white text-xs"><option value="Hadir">Hadir</option><option value="Sakit">Sakit</option><option value="Izin">Izin</option><option value="Alpa">Alpa</option></select></td></tr>`).join('') : `<tr><td colspan="2" class="text-center py-4 text-slate-500">Belum ada data siswa.</td></tr>`}</tbody></table></div><button onclick="saveAttendance()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Simpan Absensi</button></div>`; }
-async function saveAttendance() { const students = await DB.get('students'); const date = document.getElementById('att_date').value; if(!date){ showToast('Pilih tanggal!', 'error'); return; } for(const s of students) { const status = document.getElementById(`att_${s.id}`).value; const existingAtt = await sb.from('attendance').select('*').eq('student_id', s.id).eq('date', date).eq('user_id', currentUser.id).single(); if(existingAtt.data) { await DB.update('attendance', existingAtt.data.id, { status }); } else { await DB.insert('attendance', { student_id: s.id, date, status, subject: 'Umum' }); } } showToast('Absensi disimpan!', 'success'); }
-
-async function renderGrades() { const students = await DB.get('students'); const subjects = await DB.get('subjects'); const grades = await DB.get('grades'); if(currentUser.role === 'siswa') { const myGrades = grades.filter(g => g.student_id === currentUser.id); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><h3 class="font-bold mb-4">Nilai Saya</h3><ul class="divide-y">${myGrades.length ? myGrades.map(g => { const sub = subjects.find(s => s.id === g.subject_id); return `<li class="py-3 flex justify-between"><span>${sub?.name || ''} (${g.type})</span><span class="font-bold text-blue-600">${g.score}</span></li>`; }).join('') : '<li class="py-4 text-center text-slate-500">Belum ada nilai.</li>'}</ul></div>`; return; } document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Input Nilai Massal</h3><button onclick="gradeForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Input Nilai</button></div><table class="w-full text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3">Nama</th><th class="px-4 py-3">Mapel</th><th class="px-4 py-3">Tipe</th><th class="px-4 py-3">Nilai</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody class="divide-y">${grades.length ? grades.map(g => { const std = students.find(s => s.id === g.student_id); const sub = subjects.find(s => s.id === g.subject_id); return `<tr><td class="px-4 py-3">${std?.name || ''}</td><td class="px-4 py-3">${sub?.name || ''}</td><td class="px-4 py-3">${g.type}</td><td class="px-4 py-3 font-bold text-blue-600">${g.score}</td><td class="px-4 py-3 flex gap-2"><button onclick="gradeForm('${g.id}')" class="text-xs text-blue-500">Edit</button><button onclick="deleteData('grades', '${g.id}', renderGrades)" class="text-xs text-red-500">Hapus</button></td></tr>`; }).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500">Belum ada nilai.</td></tr>`}</tbody></table></div>`; }
-async function gradeForm(id = null) { const students = await DB.get('students'); const subjects = await DB.get('subjects'); let g = null; if(id) { g = (await DB.get('grades')).find(x => x.id === id); } openModal('Input Nilai', `<form id="gradeForm" class="space-y-4"><div><label class="block text-sm mb-1">Siswa</label><select id="g_student" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${students.map(s => `<option value="${s.id}" ${g?.student_id == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Mapel</label><select id="g_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}" ${g?.subject_id == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Tipe</label><select id="g_type" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option ${g?.type == 'Tugas' ? 'selected' : ''}>Tugas</option><option ${g?.type == 'Ulangan Harian' ? 'selected' : ''}>Ulangan Harian</option><option ${g?.type == 'PTS' ? 'selected' : ''}>PTS</option><option ${g?.type == 'PAS' ? 'selected' : ''}>PAS</option></select></div><div><label class="block text-sm mb-1">Nilai</label><input type="number" id="g_score" value="${g?.score || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('gradeForm').onsubmit = async (e) => { e.preventDefault(); const payload = { student_id: document.getElementById('g_student').value, subject_id: document.getElementById('g_subject').value, type: document.getElementById('g_type').value, score: parseInt(document.getElementById('g_score').value) }; await saveData('grades', payload, id); closeModal(); renderGrades(); }; }
-
-// ASSIGNMENTS, MATERI, KEUANGAN, RAPOR, ANNOUNCEMENTS, SETTINGS
-async function renderAssignments() { const assignments = await DB.get('assignments'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Daftar Tugas</h3><button onclick="assignmentForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Buat Tugas</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4">${assignments.length ? assignments.map(a => `<div class="p-4 border rounded-lg"><h4 class="font-bold">${a.title}</h4><p class="text-xs text-slate-500 mt-1">Deadline: ${a.deadline}</p><p class="text-sm mt-2">${a.description}</p><div class="mt-3 flex gap-2"><button onclick="assignmentForm('${a.id}')" class="text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded">Edit</button><button onclick="deleteData('assignments', '${a.id}', renderAssignments)" class="text-xs bg-red-100 text-red-600 px-3 py-1 rounded">Hapus</button></div></div>`).join('') : '<div class="col-span-3 text-center py-8 text-slate-500">Belum ada tugas.</div>'}</div></div>`; }
-async function assignmentForm(id = null) { const classes = await DB.get('classes'); const subjects = await DB.get('subjects'); let a = null; if(id) { a = (await DB.get('assignments')).find(x => x.id === id); } openModal('Buat Tugas', `<form id="assignmentForm" class="space-y-4"><div><label class="block text-sm mb-1">Judul</label><input type="text" id="a_title" value="${a?.title || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Deskripsi</label><textarea id="a_desc" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${a?.description || ''}</textarea></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm mb-1">Mapel</label><select id="a_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}" ${a?.subject_id == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Kelas</label><select id="a_class" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}" ${a?.class_id == c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select></div></div><div><label class="block text-sm mb-1">Deadline</label><input type="date" id="a_deadline" value="${a?.deadline || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('assignmentForm').onsubmit = async (e) => { e.preventDefault(); const payload = { title: document.getElementById('a_title').value, description: document.getElementById('a_desc').value, subject_id: document.getElementById('a_subject').value, class_id: document.getElementById('a_class').value, deadline: document.getElementById('a_deadline').value }; await saveData('assignments', payload, id); closeModal(); renderAssignments(); }; }
-
-async function renderMateri() { const materi = await DB.get('materi'); const subjects = await DB.get('subjects'); const classes = await DB.get('classes'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Materi Pembelajaran</h3><button onclick="materiForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Tambah Materi</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4">${materi.length ? materi.map(m => { const sub = subjects.find(s => s.id === m.subject_id); const cls = classes.find(c => c.id === m.class_id); return `<div class="p-4 border rounded-lg"><h4 class="font-bold">${m.title}</h4><p class="text-xs text-slate-500 mt-1">${sub?.name || ''} | ${cls?.name || ''}</p><p class="text-sm mt-2">${m.description}</p><a href="${m.link}" target="_blank" class="mt-3 text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded inline-block">Buka Materi</a><div class="mt-3 flex gap-2"><button onclick="materiForm('${m.id}')" class="text-xs text-blue-500">Edit</button><button onclick="deleteData('materi', '${m.id}', renderMateri)" class="text-xs text-red-500">Hapus</button></div></div>`; }).join('') : '<div class="col-span-3 text-center py-8 text-slate-500">Belum ada materi.</div>'}</div></div>`; }
-async function materiForm(id = null) { const classes = await DB.get('classes'); const subjects = await DB.get('subjects'); let m = null; if(id) { m = (await DB.get('materi')).find(x => x.id === id); } openModal('Tambah Materi', `<form id="materiForm" class="space-y-4"><div><label class="block text-sm mb-1">Judul</label><input type="text" id="m_title" value="${m?.title || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Deskripsi</label><textarea id="m_desc" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${m?.description || ''}</textarea></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm mb-1">Mapel</label><select id="m_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}" ${m?.subject_id == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Kelas</label><select id="m_class" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}" ${m?.class_id == c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select></div></div><div><label class="block text-sm mb-1">Link</label><input type="url" id="m_link" value="${m?.link || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('materiForm').onsubmit = async (e) => { e.preventDefault(); const payload = { title: document.getElementById('m_title').value, description: document.getElementById('m_desc').value, subject_id: document.getElementById('m_subject').value, class_id: document.getElementById('m_class').value, link: document.getElementById('m_link').value }; await saveData('materi', payload, id); closeModal(); renderMateri(); }; }
-
-async function renderKeuangan() { const keuangan = await DB.get('keuangan'); const students = await DB.get('students'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Pembayaran SPP</h3><button onclick="keuanganForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Catat Pembayaran</button></div><table class="w-full text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3">Siswa</th><th class="px-4 py-3">Bulan</th><th class="px-4 py-3">Jumlah</th><th class="px-4 py-3">Status</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody class="divide-y">${keuangan.length ? keuangan.map(k => { const std = students.find(s => s.id === k.student_id); return `<tr><td class="px-4 py-3">${std?.name || ''}</td><td class="px-4 py-3">${k.month}</td><td class="px-4 py-3">Rp ${k.amount.toLocaleString('id-ID')}</td><td class="px-4 py-3"><span class="px-2 py-1 text-xs rounded ${k.status==='Lunas'?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}">${k.status}</span></td><td class="px-4 py-3 flex gap-2">${k.status !== 'Lunas' ? `<button onclick="confirmPayment('${k.id}')" class="text-xs text-green-600">Lunasi</button>` : ''}<button onclick="deleteData('keuangan', '${k.id}', renderKeuangan)" class="text-xs text-red-500">Hapus</button></td></tr>`; }).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500">Belum ada data.</td></tr>`}</tbody></table></div>`; }
-async function keuanganForm(id = null) { const students = await DB.get('students'); openModal('Catat SPP', `<form id="keuanganForm" class="space-y-4"><div><label class="block text-sm mb-1">Siswa</label><select id="k_student" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${students.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Bulan</label><input type="text" id="k_month" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Jumlah</label><input type="number" id="k_amount" value="150000" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Status</label><select id="k_status" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option>Belum Bayar</option><option>Lunas</option></select></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('keuanganForm').onsubmit = async (e) => { e.preventDefault(); const payload = { student_id: document.getElementById('k_student').value, month: document.getElementById('k_month').value, amount: parseInt(document.getElementById('k_amount').value), status: document.getElementById('k_status').value }; await saveData('keuangan', payload, id); closeModal(); renderKeuangan(); }; }
-async function confirmPayment(id) { await DB.update('keuangan', id, { status: 'Lunas' }); showToast('Pembayaran lunas!', 'success'); renderKeuangan(); }
-
-async function renderRapor() { if(currentUser.role === 'siswa') { printRapor(currentUser.id); return; } const students = await DB.get('students'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><h3 class="font-bold mb-4">Cetak Rapor</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4">${students.length ? students.map(s => `<button onclick="printRapor('${s.id}')" class="p-4 border rounded-lg text-left"><p class="font-bold">${s.name}</p><p class="text-xs text-slate-500">NIS: ${s.nis}</p><span class="mt-2 inline-block text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">Cetak</span></button>`).join('') : '<div class="col-span-3 text-center py-8 text-slate-500">Belum ada siswa.</div>'}</div></div>`; }
-async function printRapor(studentId) { const student = (await DB.get('students')).find(s => s.id === studentId); const classes = (await DB.get('classes')).find(c => c.id === student.class_id); const grades = (await DB.get('grades')).filter(g => g.student_id === studentId); const subjects = await DB.get('subjects'); const profile = (await DB.get('school_profile'))[0] || {}; let gradeRows = ''; let totalScore = 0; let totalSubjects = 0; subjects.forEach(sub => { const subGrades = grades.filter(g => g.subject_id === sub.id); if(subGrades.length > 0){ const avgScore = Math.round(subGrades.reduce((s, g) => s + g.score, 0) / subGrades.length); const predikat = avgScore >= 90 ? 'A' : avgScore >= 80 ? 'B' : avgScore >= 70 ? 'C' : 'D'; gradeRows += `<tr><td style="padding: 8px; border: 1px solid #ddd;">${sub.name}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${sub.kkm}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${avgScore}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${predikat}</td></tr>`; totalScore += avgScore; totalSubjects++; } }); const finalAvg = totalSubjects ? (totalScore/totalSubjects).toFixed(1) : 0; document.getElementById('printArea').innerHTML = `<div style="font-family: Arial; color: #000;"><div style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px;"><h2>${profile.name || 'Sekolah'}</h2><p>${profile.address || ''}</p></div><h3 style="text-align: center; margin: 20px 0;">RAPOR SISWA</h3><table style="width: 100%; margin-bottom: 20px;"><tr><td>Nama</td><td>: ${student.name}</td><td>Kelas</td><td>: ${classes?.name || '-'}</td></tr><tr><td>NIS</td><td>: ${student.nis}</td><td>Semester</td><td>: ${profile.semester || '-'}</td></tr></table><table style="width: 100%; border-collapse: collapse;"><thead><tr style="background: #eee;"><th style="padding: 8px; border: 1px solid #ddd;">Mapel</th><th style="padding: 8px; border: 1px solid #ddd;">KKM</th><th style="padding: 8px; border: 1px solid #ddd;">Nilai</th><th style="padding: 8px; border: 1px solid #ddd;">Predikat</th></tr></thead><tbody>${gradeRows || `<tr><td colspan="4" style="text-align:center; padding: 10px; border: 1px solid #ddd;">Belum ada nilai</td></tr>`}</tbody><tfoot><tr><td colspan="2" style="padding: 8px; border: 1px solid #ddd; text-align: right;">Rata-rata:</td><td colspan="2" style="padding: 8px; border: 1px solid #ddd; text-align: center;">${finalAvg}</td></tr></tfoot></table></div>`; window.print(); }
-
-async function renderAnnouncements() { const anns = await DB.get('announcements'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Pengumuman</h3><button onclick="annForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Buat Pengumuman</button></div><div class="space-y-4">${anns.length ? anns.map(a => `<div class="p-4 bg-slate-50 rounded-lg"><div class="flex justify-between"><h4 class="font-bold">${a.title}</h4><div class="flex gap-2"><button onclick="annForm('${a.id}')" class="text-xs text-blue-500">Edit</button><button onclick="deleteData('announcements', '${a.id}', renderAnnouncements)" class="text-xs text-red-500">Hapus</button></div></div><p class="text-xs text-slate-400 mt-1">${a.date}</p><p class="text-sm mt-2">${a.content}</p></div>`).join('') : '<p class="text-sm text-slate-500 text-center py-4">Belum ada pengumuman.</p>'}</div></div>`; }
-async function annForm(id = null) { let a = null; if(id) { a = (await DB.get('announcements')).find(x => x.id === id); } openModal('Buat Pengumuman', `<form id="annForm" class="space-y-4"><div><label class="block text-sm mb-1">Judul</label><input type="text" id="an_title" value="${a?.title || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Isi</label><textarea id="an_content" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${a?.content || ''}</textarea></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('annForm').onsubmit = async (e) => { e.preventDefault(); const payload = { title: document.getElementById('an_title').value, content: document.getElementById('an_content').value, date: new Date().toISOString().split('T')[0] }; await saveData('announcements', payload, id); closeModal(); renderAnnouncements(); }; }
-
-async function renderSettings() { const profile = (await DB.get('school_profile'))[0] || {}; document.getElementById('content').innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div class="bg-white p-6 rounded-xl"><h3 class="font-bold mb-4">Profil Sekolah</h3><form id="profileForm" class="space-y-4"><div><label class="block text-sm mb-1">Nama Sekolah</label><input type="text" id="p_name" value="${profile.name || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Alamat</label><input type="text" id="p_address" value="${profile.address || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Kepala Sekolah</label><input type="text" id="p_principal" value="${profile.principal || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Simpan</button></form></div><div class="bg-white p-6 rounded-xl"><h3 class="font-bold mb-4">Pengaturan Akun</h3><div class="flex flex-col items-center space-y-3"><img id="prevAvatar" src="${currentUser.avatar_url || AI_IMG}" class="w-24 h-24 rounded-full object-cover"><input type="file" id="avatarFile" accept="image/*" class="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"><button onclick="uploadAvatar()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm">Upload Foto</button></div></div></div>`; document.getElementById('profileForm').onsubmit = async (e) => { e.preventDefault(); await saveData('school_profile', { name: document.getElementById('p_name').value, address: document.getElementById('p_address').value, principal: document.getElementById('p_principal').value }, 1); }; }
-async function uploadAvatar() { const file = document.getElementById('avatarFile').files[0]; if(!file) { showToast('Pilih file dulu!', 'error'); return; } showToast('Mengunggah foto...', 'info'); const { data, error } = await sb.storage.from('avatars').upload('user_' + currentUser.id + '_' + Date.now() + '.jpg', file); if (error) { showToast('Gagal upload: ' + error.message, 'error'); return; } const url = sb.storage.from('avatars').getPublicUrl(data.path).data.publicUrl; await DB.update('users', currentUser.id, { avatar_url: url }); currentUser.avatar_url = url; localStorage.setItem('gs_currentUser', JSON.stringify(currentUser)); document.getElementById('userAvatar').src = url; showToast('Foto profil diperbarui!', 'success'); }
-
-// AI ASSISTANT
-async function renderAI() {
-    let isSignedIn = false;
-    try {
-        isSignedIn = puter.auth.isSignedIn();
-    } catch (e) {
-        isSignedIn = false;
-    }
-
-    // Jika belum login Puter, tampilkan halaman aktivasi
-    if (!isSignedIn) {
-        document.getElementById('content').innerHTML = `
-        <div class="flex items-center justify-center min-h-[80vh] p-4">
-            <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl text-center max-w-md w-full border border-slate-100 dark:border-slate-700">
-                <img src="${AI_IMG}" class="w-24 h-24 rounded-2xl mx-auto mb-5 object-cover shadow-md" alt="AI Logo">
-                <h3 class="text-2xl font-bold text-slate-800 dark:text-white mb-3">Aktifkan Asisten AI</h3>
-                <p class="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
-                    Untuk menggunakan fitur AI (Buat Soal, Modul Ajar, RPP, dll) secara <strong>GRATIS</strong>, sistem perlu menghubungkan akun Anda ke server AI Puter.
-                    <br><br>
-                    <span class="text-xs text-slate-400">Klik tombol di bawah untuk aktivasi sekali saja. Setelah itu, AI akan langsung aktif tanpa diminta login lagi.</span>
-                </p>
-                <button onclick="activateAI()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 rounded-lg transition-colors shadow-md flex items-center justify-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                    Aktifkan AI Gratis Sekarang
-                </button>
-            </div>
-        </div>`;
-        return;
-    }
-
-    // Jika sudah login Puter, tampilkan chat AI seperti biasa
-    document.getElementById('content').innerHTML = `<div class="grid grid-cols-1 xl:grid-cols-3 gap-6"><div class="xl:col-span-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden"><div class="p-5 border-b dark:border-slate-700 flex justify-between items-center bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700"><div class="flex items-center gap-3"><img src="${AI_IMG}" class="w-12 h-12 rounded-xl object-cover shadow-sm"><div><h3 class="text-lg font-bold text-slate-800 dark:text-white">Asisten AI Guru</h3><p class="text-xs text-slate-500 dark:text-slate-400">Soal A B C D • Format otomatis rapi</p></div></div></div><div id="aiMessages" class="h-[500px] overflow-y-auto p-5 space-y-4 bg-slate-50 dark:bg-slate-900"></div><div class="p-4 border-t dark:border-slate-700 bg-white dark:bg-slate-800"><textarea id="aiInput" rows="3" placeholder="Tulis perintah... (Contoh: Buatkan 5 soal pilihan ganda A B C D tentang Pahlawan Nasional)" class="w-full px-4 py-3 rounded-xl border dark:bg-slate-700 dark:text-white resize-none focus:ring-2 focus:ring-blue-500 outline-none mb-3"></textarea><div class="flex justify-end gap-2 flex-wrap"><button id="aiWordBtn" onclick="exportToWord()" class="hidden bg-blue-500 text-white px-4 py-2.5 rounded-lg font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>Word (Soal)</button><button id="aiPrintBtn" onclick="printAIResult(false)" class="hidden bg-slate-600 text-white px-4 py-2.5 rounded-lg font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>Cetak Soal (PDF)</button><button id="aiPrintKeyBtn" onclick="printAIResult(true)" class="hidden bg-green-600 text-white px-4 py-2.5 rounded-lg font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>Cetak + Kunci</button><button id="aiSendBtn" onclick="sendAI()" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>Kirim</button></div></div></div></div>`; 
-    loadAIChat(); 
-}
-
-async function activateAI() {
-    showToast('Menghubungkan ke server AI Puter...', 'info');
-    try {
-        await puter.auth.signIn();
-        showToast('AI berhasil diaktifkan!', 'success');
-        renderAI(); // Load ulang halaman AI setelah login sukses
-    } catch (e) {
-        showToast('Gagal aktivasi. Coba lagi.', 'error');
-    }
-}
-
-function aiPrompt(text){document.getElementById('aiInput').value=text;sendAI();}
-async function getSchoolContext(){return {students:await DB.get('students'),teachers:await DB.get('teachers'),subjects:await DB.get('subjects')};}
-function loadAIChat(){const box=document.getElementById('aiMessages');if(!box)return;box.innerHTML=`<div class="flex justify-start"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="whitespace-pre-wrap text-gray-800">Halo! Saya adalah Asisten AI Guru Anda. Silakan tulis perintah untuk membuat soal atau materi lainnya.</div></div></div>`;}
-function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-
-function formatSoalHTML(rawText) {
-    let text = rawText;
-    let kunciSection = '';
-    const kunciMatch = text.match(/\n?\**(?:Kunci Jawaban|Jawaban)[*:]*\s*\n([\s\S]*?)$/i);
-    if (kunciMatch) {
-        const kunciText = kunciMatch[1].trim();
-        const kunciLines = kunciText.split('\n').filter(l => l.trim());
-        let kunciHTML = '<div class="kunci-jawaban-section hide-on-print"><h3>📋 KUNCI JAWABAN</h3><div class="kunci-jawaban-grid">';
-        kunciLines.forEach(line => { const m = line.match(/(\d+)\s*[.):\s]\s*([A-D])/i); if (m) { kunciHTML += `<span>${m[1]}. ${m[2].toUpperCase()}</span>`; } });
-        kunciHTML += '</div></div>';
-        kunciSection = kunciHTML;
-        text = text.replace(kunciMatch[0], '');
-    }
-    const simplePattern = /(?:\*\*)?(\d+)[\.\)]\s*\*?\s*([\s\S]*?)(?=(?:\*\*)?\d+[\.\)]\s*\*?\s|$)/g;
-    let match; const soalBlocks = []; let hasQuestions = false;
-    while ((match = simplePattern.exec(text)) !== null) {
-        const num = match[1]; const block = match[2];
-        const optPattern = /(?:^|\n)\s*([A-D])[\.\)\s]\s*(.+?)(?=(?:\n\s*[A-D][\.\)\s])|(?:\n\s*(?:Jawaban|Kunci)[:\s])|$)/g;
-        const options = []; let optMatch;
-        while ((optMatch = optPattern.exec(block)) !== null) { options.push({ label: optMatch[1].toUpperCase(), text: optMatch[2].trim() }); }
-        if (options.length >= 2) {
-            hasQuestions = true;
-            const questionText = block.substring(0, block.search(new RegExp(`\\s*${options[0].label}[\\.\\)\\s]`))).trim();
-            let correctAnswer = null;
-            const ansPatterns = [/(?:Jawaban|Kunci)[:\s]*\*?\*?\s*([A-D])/i, /\[BENAR[:\s]*([A-D])\]/i, /\(BENAR[:\s]*([A-D])\)/i, /\*([A-D])\s*\(BENAR\)/i, /([A-D])\s*\(BENAR\)/i, /([A-D])\s*\[BENAR\]/i, /✅\s*([A-D])/i, /([A-D])\s*✅/i];
-            for (const ap of ansPatterns) { const am = block.match(ap); if (am) { correctAnswer = am[1].toUpperCase(); break; } }
-            if (!correctAnswer && kunciMatch) { const kunciText = kunciMatch[1]; const kunciLine = kunciText.match(new RegExp(`${num}\\s*[.):\\s]\\s*([A-D])`, 'i')); if (kunciLine) correctAnswer = kunciLine[1].toUpperCase(); }
-            soalBlocks.push({ num, question: questionText, options, correct: correctAnswer, fullMatch: match[0] });
-        }
-    }
-    if (hasQuestions && soalBlocks.length > 0) {
-        let soalHTML = '<div class="soal-container">';
-        soalBlocks.forEach(sb => {
-            let qText = sb.question.replace(/^\*+|\*+$/g, '').replace(/_+/g, '').trim();
-            qText = qText.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-            
-            // Membuat 2 kolom (Kiri: A & B, Kanan: C & D)
-            soalHTML += `<div class="soal-item"><div class="soal-header"><span class="soal-number">${sb.num}.</span><span class="soal-text">${qText}</span></div><div class="soal-opts"><div class="opt-col">`;
-            const half = Math.ceil(sb.options.length / 2);
-            sb.options.forEach((opt, index) => {
-                if (index === half) soalHTML += `</div><div class="opt-col">`;
-                const isCorrect = opt.label === sb.correct;
-                soalHTML += `<div class="soal-opt ${isCorrect ? 'correct' : ''}"><span class="opt-label">${opt.label}.</span><span class="opt-text">${opt.text}</span></div>`;
-            });
-            soalHTML += `</div></div>`;
-            
-            if (sb.correct) { soalHTML += `<div class="soal-answer hide-on-print">Jawaban: <strong>${sb.correct}</strong></div>`; }
-            soalHTML += `</div>`;
+    <div id="printArea"></div>
+    <script>
+        const SUPABASE_URL = 'https://xdwgqgdbfidlsfgyyaeo.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhkd2dxZ2RiZmlkbHNmZ3l5YWVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1MDAxNjQsImV4cCI6MjEwNTA3NjE2NH0.3QRFjepUIK00cmFFMJ7D3eEtWKpX2dMOfUPap-ef8Lo';
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
         });
-        soalHTML += '</div>';
-        let tempText = text;
-        soalBlocks.forEach(sb => { const escaped = sb.fullMatch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); tempText = tempText.replace(new RegExp(escaped, 's'), '|||SOAL_MARKER|||'); });
-        const nonSoalParts = tempText.split('|||SOAL_MARKER|||').filter(p => p.trim());
-        let finalHTML = '';
-        nonSoalParts.forEach(part => { if (part.trim()) { finalHTML += marked.parse(part.trim()); } });
-        finalHTML += soalHTML + kunciSection;
-        return finalHTML;
-    }
-    return marked.parse(text) + kunciSection;
-}
+        const AI_IMG = 'https://z-cdn-media.chatglm.cn/files/c0012e5b-65ba-49de-82f7-0299446846c6.png?auth_key=1889545451-57dd1e872dbb4149bdea975407d31530-0-fbdde3c3db36637028abfb484d301ec8';
 
-let lastAIFormattedHTML = '';
-async function sendAI(){
-    const input=document.getElementById('aiInput');
-    if(!input.value.trim())return;
-    const prompt=input.value.trim();
-    input.value='';
-    const btn=document.getElementById('aiSendBtn');
-    btn.disabled=true; btn.innerText='Memproses...';
-    ['aiPrintBtn', 'aiWordBtn', 'aiPrintKeyBtn'].forEach(id => document.getElementById(id).classList.add('hidden'));
-    const box=document.getElementById('aiMessages');
-    box.innerHTML=`<div class="flex justify-end"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-blue-600 text-white shadow-sm"><div class="text-xs opacity-70 mb-1">Anda</div><div class="whitespace-pre-wrap">${escapeHTML(prompt)}</div></div></div><div class="flex justify-start"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="animate-pulse text-blue-600">Sedang mengetik...</div></div></div>`;
-    try{
-        const ctx=await getSchoolContext();
-        const sys = `Anda adalah Asisten AI Guru. Data sekolah: ${JSON.stringify(ctx)}. Saat membuat soal pilihan ganda, WAJIB gunakan format PLAIN TEXT berikut:
+        const DB = {
+            get: async (table) => { const { data, error } = await sb.from(table).select('*').eq('user_id', currentUser.id); if (error) { console.error(`Error fetching ${table}:`, error); return []; } return data; },
+            insert: async (table, payload) => { const { data, error } = await sb.from(table).insert([{ ...payload, user_id: currentUser.id }]).select(); if (error) { console.error(`Error inserting ${table}:`, error); showToast('Gagal menyimpan data', 'error'); return null; } return data; },
+            update: async (table, id, payload) => { const { data, error } = await sb.from(table).update(payload).eq('id', id).eq('user_id', currentUser.id).select(); if (error) { console.error(`Error updating ${table}:`, error); showToast('Gagal mengupdate data', 'error'); return null; } return data; },
+            remove: async (table, id) => { const { error } = await sb.from(table).delete().eq('id', id).eq('user_id', currentUser.id); if (error) { console.error(`Error deleting ${table}:`, error); showToast('Gagal menghapus data', 'error'); return false; } return true; }
+        };
+
+        let currentUser = null; let currentPage = 'dashboard';
+
+        function toggleAuth(form) { if(form === 'register') { document.getElementById('loginForm').classList.add('hidden'); document.getElementById('registerForm').classList.remove('hidden'); } else { document.getElementById('registerForm').classList.add('hidden'); document.getElementById('loginForm').classList.remove('hidden'); } }
+        document.getElementById('registerForm').addEventListener('submit', async (e) => { e.preventDefault(); const name = document.getElementById('regName').value; const email = document.getElementById('regEmail').value; const password = document.getElementById('regPassword').value; const { data, error } = await sb.auth.signUp({ email, password, options: { data: { name } } }); if (error) { showToast('Gagal daftar: ' + error.message, 'error'); return; } const existingUsers = await sb.from('users').select('*'); const role = existingUsers.data.length === 0 ? 'admin' : 'guru'; if(data.user) { await sb.from('users').insert([{ id: data.user.id, name, username: email, role }]); } if (data.session) { currentUser = { id: data.user.id, email: data.user.email, name, role }; localStorage.setItem('gs_currentUser', JSON.stringify(currentUser)); showToast('Pendaftaran berhasil!', 'success'); initApp(); } else { showToast('Pendaftaran berhasil! Cek email untuk verifikasi.', 'success'); toggleAuth('login'); document.getElementById('loginEmail').value = email; } });
+        document.getElementById('loginForm').addEventListener('submit', async (e) => { e.preventDefault(); const email = document.getElementById('loginEmail').value; const password = document.getElementById('loginPassword').value; const { data, error } = await sb.auth.signInWithPassword({ email, password }); if (error) { showToast('Login gagal: ' + error.message, 'error'); return; } const { data: userData } = await sb.from('users').select('*').eq('id', data.user.id).single(); currentUser = { id: data.user.id, email: data.user.email, name: userData?.name || data.user.email, role: userData?.role || 'guru', avatar_url: userData?.avatar_url || AI_IMG }; localStorage.setItem('gs_currentUser', JSON.stringify(currentUser)); initApp(); });
+        async function logout() { await sb.auth.signOut(); localStorage.removeItem('gs_currentUser'); currentUser = null; location.reload(); }
+        async function checkSession() { const { data, error } = await sb.auth.getSession(); if (data.session) { await sb.auth.refreshSession(); const { data: userData } = await sb.from('users').select('*').eq('id', data.session.user.id).single(); if(userData) { currentUser = { id: data.session.user.id, email: data.session.user.email, name: userData.name || data.session.user.email, role: userData.role || 'guru', avatar_url: userData.avatar_url || AI_IMG }; return true; } } return false; }
+
+        function showToast(message, type = 'info') { const toast = document.getElementById('toast'); const bg = type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-slate-800'; toast.className = `fixed bottom-5 right-5 z-[60] ${bg} text-white px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2 fade-in`; toast.innerHTML = `<span>${message}</span>`; toast.classList.remove('hidden'); setTimeout(() => toast.classList.add('hidden'), 3000); }
+        function toggleDarkMode() { document.documentElement.classList.toggle('dark'); document.getElementById('iconSun').classList.toggle('hidden'); document.getElementById('iconMoon').classList.toggle('hidden'); localStorage.setItem('gs_darkMode', document.documentElement.classList.contains('dark')); if(currentPage === 'dashboard') renderDashboard(); }
+        if (localStorage.getItem('gs_darkMode') === 'true') { document.documentElement.classList.add('dark'); document.getElementById('iconSun').classList.remove('hidden'); document.getElementById('iconMoon').classList.add('hidden'); }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('sidebarOverlay').classList.toggle('hidden'); }
+        function openModal(title, contentHtml) { document.getElementById('modalTitle').innerText = title; document.getElementById('modalContent').innerHTML = contentHtml; document.getElementById('modalContainer').classList.remove('hidden'); }
+        function closeModal() { document.getElementById('modalContainer').classList.add('hidden'); }
+
+        const menus = [
+            { id: 'dashboard', label: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', roles: ['admin', 'guru', 'siswa'] },
+            { id: 'ai', label: 'Asisten AI Guru', icon: 'M12 2a7 7 0 00-7 7v3a7 7 0 0014 0V9a7 7 0 00-7-7zm-4 18h8M9 22h6', roles: ['admin', 'guru', 'siswa'] },
+            { id: 'kurikulum', label: 'Perangkat Ajar', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', roles: ['admin', 'guru'] },
+            { id: 'teachers', label: 'Data Guru', icon: 'M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-5a4 4 0 11-8 0 4 4 0 018 0zm6 0a4 4 0 11-8 0 4 4 0 018 0z', roles: ['admin'] },
+            { id: 'students', label: 'Data Siswa', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z', roles: ['admin', 'guru'] },
+            { id: 'classes', label: 'Kelas', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4', roles: ['admin', 'guru'] },
+            { id: 'subjects', label: 'Mata Pelajaran', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253', roles: ['admin', 'guru', 'siswa'] },
+            { id: 'schedules', label: 'Jadwal', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z', roles: ['admin', 'guru', 'siswa'] },
+            { id: 'attendance', label: 'Absensi', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', roles: ['admin', 'guru'] },
+            { id: 'grades', label: 'Penilaian', icon: 'M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z', roles: ['admin', 'guru', 'siswa'] },
+            { id: 'assignments', label: 'Tugas', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2', roles: ['admin', 'guru', 'siswa'] },
+            { id: 'materi', label: 'Materi Ajar', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253', roles: ['admin', 'guru', 'siswa'] },
+            { id: 'keuangan', label: 'Keuangan SPP', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1V6m0 2c-1.11 0-2.08.402-2.599 1M3 12h18M12 18v-1m0 1v-1', roles: ['admin'] },
+            { id: 'rapor', label: 'Cetak Rapor', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', roles: ['admin', 'guru', 'siswa'] },
+            { id: 'announcements', label: 'Pengumuman', icon: 'M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z', roles: ['admin', 'guru', 'siswa'] },
+            { id: 'settings', label: 'Pengaturan', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z', roles: ['admin', 'guru', 'siswa'] }
+        ];
+
+        function renderMenu() { const navMenu = document.getElementById('navMenu'); navMenu.innerHTML = ''; menus.filter(m => m.roles.includes(currentUser.role)).forEach(menu => { const isActive = currentPage === menu.id ? 'bg-white/20 text-white font-semibold' : 'text-blue-100 hover:bg-white/10 hover:text-white'; navMenu.innerHTML += `<a href="#" onclick="navigate('${menu.id}')" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg ${isActive} transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${menu.icon}"></path></svg><span>${menu.label}</span></a>`; }); }
+        function navigate(page) { currentPage = page; document.getElementById('pageTitle').innerText = menus.find(m => m.id === page)?.label || 'Page'; renderMenu(); renderContent(page); if (window.innerWidth < 1024) toggleSidebar(); }
+        async function renderContent(page) {
+            document.getElementById('content').innerHTML = `<div class="text-center py-10 text-slate-500">Memuat data...</div>`;
+            switch(page) {
+                case 'dashboard': await renderDashboard(); break;
+                case 'ai': renderAI(); break;
+                case 'kurikulum': await renderKurikulum(); break;
+                case 'teachers': await renderTeachers(); break;
+                case 'students': await renderStudents(); break;
+                case 'classes': await renderClasses(); break;
+                case 'subjects': await renderSubjects(); break;
+                case 'schedules': await renderSchedules(); break;
+                case 'attendance': await renderAttendance(); break;
+                case 'grades': await renderGrades(); break;
+                case 'assignments': await renderAssignments(); break;
+                case 'materi': await renderMateri(); break;
+                case 'keuangan': await renderKeuangan(); break;
+                case 'rapor': await renderRapor(); break;
+                case 'announcements': await renderAnnouncements(); break;
+                case 'settings': await renderSettings(); break;
+            }
+            document.getElementById('content').innerHTML += `<div class="text-center text-[10px] text-slate-400 dark:text-slate-600 py-4 mt-4 border-t border-slate-200 dark:border-slate-700">Dalam Mode Pengembang @BayuProjectone</div>`;
+        }
+
+        // DASHBOARD
+        async function renderDashboard() { const students = await DB.get('students'); const teachers = await DB.get('teachers'); const classes = await DB.get('classes'); const announcements = await DB.get('announcements'); const grades = await DB.get('grades'); const keuangan = await DB.get('keuangan'); const unpaidSpp = keuangan.filter(k => k.status === 'Belum Bayar').length; document.getElementById('content').innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">${dashboardCard('Total Siswa', students.length, 'from-blue-500 to-blue-700', 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z')}${dashboardCard('Total Guru', teachers.length, 'from-emerald-500 to-emerald-700', 'M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-5a4 4 0 11-8 0 4 4 0 018 0zm6 0a4 4 0 11-8 0 4 4 0 018 0z')}${dashboardCard('Total Kelas', classes.length, 'from-amber-500 to-orange-600', 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4')}${dashboardCard('SPP Belum Lunas', unpaidSpp, 'from-rose-500 to-red-700', 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1V6m0 2c-1.11 0-2.08.402-2.599 1M3 12h18M12 18v-1m0 1v-1')}</div><div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><h3 class="font-semibold text-slate-800 dark:text-white mb-4">Statistik Nilai Siswa</h3><canvas id="chartGrades" height="100"></canvas></div><div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><h3 class="font-semibold text-slate-800 dark:text-white mb-4">Pengumuman Terbaru</h3><div class="space-y-4 max-h-80 overflow-y-auto modal-scroll">${announcements.length ? announcements.map(a => `<div class="p-3 bg-slate-50 dark:bg-slate-700 rounded-lg border-l-4 border-blue-500"><p class="font-medium text-sm text-blue-600 dark:text-blue-400">${a.title}</p><p class="text-xs text-slate-500 dark:text-slate-300 mt-1">${a.content}</p><p class="text-[10px] text-slate-400 mt-1">${a.date}</p></div>`).join('') : '<p class="text-sm text-slate-500 text-center py-4">Belum ada pengumuman.</p>'}</div></div></div>`; const ctx = document.getElementById('chartGrades').getContext('2d'); const types = ['Tugas', 'Ulangan Harian', 'PTS', 'PAS']; const data = types.map(t => { const tGrades = grades.filter(g => g.type === t); return tGrades.length ? (tGrades.reduce((s, g) => s + g.score, 0) / tGrades.length).toFixed(1) : 0; }); new Chart(ctx, { type: 'bar', data: { labels: types, datasets: [{ label: 'Rata-rata Nilai', data: data, backgroundColor: 'rgba(37, 99, 235, 0.5)', borderColor: 'rgba(37, 99, 235, 1)', borderWidth: 1 }] }, options: { responsive: true, scales: { y: { beginAtZero: 0, max: 100 } }, plugins: { legend: { labels: { color: document.documentElement.classList.contains('dark') ? '#fff' : '#000' } } } } }); }
+        function dashboardCard(title, count, color, icon) { return `<div class="bg-gradient-to-br ${color} p-6 rounded-xl shadow-sm flex items-center space-x-4 text-white"><div class="p-3 bg-white/20 rounded-lg"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${icon}"></path></svg></div><div><p class="text-white/80 text-sm">${title}</p><h3 class="text-2xl font-bold">${count}</h3></div></div>`; }
+
+        // PERANGKAT AJAR
+        const kurikulumTypes = [ { id: 'cp', label: 'Capaian Pembelajaran (CP)', desc: 'Kompetensi yang harus dicapai peserta didik', color: 'from-blue-500 to-cyan-600', icon: 'M13 10V3L4 14h7v7l9-11h-7z' }, { id: 'tp', label: 'Tujuan Pembelajaran (TP)', desc: 'Tujuan spesifik dari setiap CP', color: 'from-green-500 to-emerald-600', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' }, { id: 'atp', label: 'Alur Tujuan Pembelajaran (ATP)', desc: 'Urutan logis tujuan pembelajaran', color: 'from-purple-500 to-pink-600', icon: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6' }, { id: 'modul', label: 'Modul Ajar', desc: 'Panduan lengkap untuk guru', color: 'from-orange-500 to-red-600', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' }, { id: 'rpp', label: 'RPP (Rencana Pelaksanaan Pembelajaran)', desc: 'Rencana kegiatan pembelajaran', color: 'from-indigo-500 to-blue-700', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' }, { id: 'prota', label: 'Program Tahunan', desc: 'Program pembelajaran satu tahun', color: 'from-teal-500 to-green-600', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' }, { id: 'lkpd', label: 'LKPD (Lembar Kerja Peserta Didik)', desc: 'Lembar kerja untuk siswa', color: 'from-rose-500 to-pink-600', icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' } ];
+        async function renderKurikulum() { const subjects = await DB.get('subjects'); const kurikulumData = await DB.get('kurikulum'); document.getElementById('content').innerHTML = `<div class="mb-6 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-6 text-white shadow-lg"><h2 class="text-2xl font-bold mb-2">📚 Perangkat Ajar Kurikulum</h2><p class="text-indigo-100 text-sm">Buat dan kelola dokumen kurikulum: CP, TP, ATP, Modul Ajar, RPP, Program Tahunan, hingga LKPD</p></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">${kurikulumTypes.map(t => `<button onclick="generateKurikulum('${t.id}', '${t.label}')" class="bg-gradient-to-br ${t.color} p-5 rounded-xl text-white text-left shadow-md hover:scale-105 transition-transform"><svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${t.icon}"></path></svg><h3 class="font-bold text-sm">${t.label}</h3><p class="text-xs opacity-90 mt-1">${t.desc}</p></button>`).join('')}</div><div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><h3 class="font-bold text-slate-800 dark:text-white mb-4">Dokumen Tersimpan</h3><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase"><tr><th class="px-4 py-3">Jenis</th><th class="px-4 py-3">Mapel</th><th class="px-4 py-3">Judul</th><th class="px-4 py-3">Kelas</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody class="divide-y dark:divide-slate-700">${kurikulumData.length ? kurikulumData.map(k => { const sub = subjects.find(s => s.id === k.subject_id); const typeLabel = kurikulumTypes.find(t => t.id === k.type)?.label || k.type; return `<tr><td class="px-4 py-3"><span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">${typeLabel}</span></td><td class="px-4 py-3">${sub?.name || '-'}</td><td class="px-4 py-3 font-medium">${k.title}</td><td class="px-4 py-3">${k.class_name || '-'}</td><td class="px-4 py-3 flex gap-2"><button onclick="viewKurikulum('${k.id}')" class="text-blue-500">Lihat</button><button onclick="printKurikulumDoc('${k.id}')" class="text-green-500">Cetak</button><button onclick="deleteData('kurikulum', '${k.id}', renderKurikulum)" class="text-red-500">Hapus</button></td></tr>`; }).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500">Belum ada dokumen. Gunakan tombol di atas untuk membuat.</td></tr>`}</tbody></table></div></div>`; }
+        async function generateKurikulum(type, typeLabel) { 
+            const subjects = await DB.get('subjects'); 
+            const classes = await DB.get('classes'); 
+            if(subjects.length === 0 || classes.length === 0) { showToast('Harap tambahkan Mata Pelajaran & Kelas dahulu!', 'error'); return; }
+            openModal(`Buat ${typeLabel} dengan AI`, `
+            <form id="kurikulumForm" class="space-y-4">
+                <div class="bg-blue-50 dark:bg-slate-700 p-3 rounded-lg text-sm text-blue-700 dark:text-blue-300">💡 AI akan membuatkan <strong>${typeLabel}</strong> secara otomatis. Lengkapi detail di bawah ini.</div>
+                <div><label class="block text-sm mb-1">Mata Pelajaran</label><select id="kSubject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required>${subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
+                <div><label class="block text-sm mb-1">Kelas</label><select id="kClass" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required>${classes.map(c => `<option value="${c.id}" data-name="${c.name}">${c.name}</option>`).join('')}</select></div>
+                <div><label class="block text-sm mb-1">Topik / Materi</label><input type="text" id="kTopic" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" placeholder="Contoh: Ekosistem, Persamaan Linear" required></div>
+                <div><label class="block text-sm mb-1">Fase</label><select id="kPhase" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option>Fase A</option><option>Fase B</option><option>Fase C</option><option>Fase D</option><option>Fase E</option><option>Fase F</option></select></div>
+                <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 rounded-lg font-semibold flex items-center justify-center gap-2">
+                    <svg class="animate-spin hidden h-5 w-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <span id="btnText">⚡ Generate dengan AI</span>
+                </button>
+            </form>`); 
+            document.getElementById('kurikulumForm').onsubmit = async (e) => { 
+                e.preventDefault(); 
+                const btn = document.querySelector('#kurikulumForm button[type="submit"]'); const btnText = document.getElementById('btnText'); const spinner = btn.querySelector('svg');
+                btn.disabled = true; btnText.innerText = 'AI Sedang Menyusun Dokumen...'; spinner.classList.remove('hidden');
+                const subjectId = document.getElementById('kSubject').value; const classSelect = document.getElementById('kClass'); const className = classSelect.options[classSelect.selectedIndex].dataset.name; const topic = document.getElementById('kTopic').value; const phase = document.getElementById('kPhase').value; const subject = subjects.find(s => s.id === subjectId); 
+                const prompt = `Buatkan ${typeLabel} lengkap dan profesional untuk mata pelajaran ${subject.name}, kelas ${className}, Fase ${phase}, topik: ${topic}. Gunakan format markdown yang rapi. Sesuaikan dengan Kurikulum Merdeka.`; 
+                try { 
+                    const sys = `Anda adalah ahli kurikulum pendidikan Indonesia. Buatkan ${typeLabel} yang sesuai dengan Kurikulum Merdeka. Gunakan format markdown yang baik dengan heading, bullet points, dan tabel jika perlu. Pastikan isi lengkap, profesional, dan siap digunakan guru.`; 
+                    const res = await puter.ai.chat([{role:'system',content:sys},{role:'user',content:prompt}]); const content = typeof res === 'string' ? res : (res.message?.content || ''); 
+                    if(!content) throw new Error("AI tidak memberikan respon. Coba lagi.");
+                    await DB.insert('kurikulum', { type, title: `${typeLabel} - ${topic}`, subject_id: subjectId, class_name: className, content }); 
+                    showToast('Dokumen berhasil dibuat!', 'success'); closeModal(); renderKurikulum(); 
+                } catch(err) { showToast('Error AI: ' + err.message, 'error'); btn.disabled = false; btnText.innerText = '⚡ Coba Generate Lagi'; spinner.classList.add('hidden'); } 
+            }; 
+        }
+        async function viewKurikulum(id) { const doc = (await DB.get('kurikulum')).find(k => k.id === id); if(!doc) return; const typeLabel = kurikulumTypes.find(t => t.id === doc.type)?.label || doc.type; openModal(typeLabel, `<div class="ai-output text-gray-800 dark:text-white">${marked.parse(doc.content)}</div><div class="mt-4 flex gap-2"><button onclick="printKurikulumDoc('${doc.id}')" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm flex-1">🖨️ Cetak / PDF</button><button onclick="closeModal()" class="bg-slate-500 text-white px-4 py-2 rounded-lg text-sm">Tutup</button></div>`); }
+        function printKurikulumDoc(id) { 
+            DB.get('kurikulum').then(docs => { 
+                const doc = docs.find(k => k.id === id); 
+                if(!doc) return; 
+                const typeLabel = kurikulumTypes.find(t => t.id === doc.type)?.label || doc.type; 
+                const htmlContent = marked.parse(doc.content); 
+                document.getElementById('printArea').innerHTML = `
+                <div style="font-family: 'Times New Roman', Georgia, serif; color: #000; padding: 0; margin: 0; width: 100%;">
+                    <div style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 25px;">
+                        <h2 style="margin:0; font-size: 18px;">${typeLabel.toUpperCase()}</h2>
+                        <p style="margin: 5px 0 0; font-size: 12px;">${doc.class_name} | ${doc.title}</p>
+                    </div>
+                    <div class="ai-output" style="color: #000; margin: 0; padding: 0;">
+                        ${htmlContent}
+                    </div>
+                </div>`; 
+                window.print(); 
+            }); 
+        }        // TEACHERS, STUDENTS, CLASSES, SUBJECTS
+        async function renderTeachers() { const teachers = await DB.get('teachers'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex justify-between mb-4"><input type="text" id="searchTeacher" onkeyup="filterTable('searchTeacher', 'teacherTableBody')" placeholder="Cari guru..." class="px-4 py-2 rounded-lg border dark:bg-slate-700 dark:text-white text-sm outline-none"><button onclick="teacherForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Guru</button></div><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase"><tr><th class="px-4 py-3">NIP</th><th class="px-4 py-3">Nama</th><th class="px-4 py-3">Gender</th><th class="px-4 py-3">Mapel</th><th class="px-4 py-3">No HP</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody id="teacherTableBody" class="divide-y dark:divide-slate-700">${teachers.length ? teachers.map(t => `<tr><td class="px-4 py-3">${t.nip}</td><td class="px-4 py-3 font-medium">${t.name}</td><td class="px-4 py-3">${t.gender}</td><td class="px-4 py-3">${t.subject}</td><td class="px-4 py-3">${t.phone}</td><td class="px-4 py-3 flex gap-2"><button onclick="teacherForm('${t.id}')" class="text-blue-500">Edit</button><button onclick="deleteData('teachers', '${t.id}', renderTeachers)" class="text-red-500">Hapus</button></td></tr>`).join('') : `<tr><td colspan="6" class="text-center py-4 text-slate-500">Belum ada data.</td></tr>`}</tbody></table></div></div>`; }
+        async function teacherForm(id = null) { let t = null; if(id) { t = (await DB.get('teachers')).find(x => x.id === id); } openModal(id ? 'Edit Guru' : 'Tambah Guru', `<form id="teacherForm" class="space-y-4"><div><label class="block text-sm mb-1">NIP</label><input type="text" id="tch_nip" value="${t?.nip || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Nama</label><input type="text" id="tch_name" value="${t?.name || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Gender</label><select id="tch_gender" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option value="L" ${t?.gender == 'L' ? 'selected' : ''}>L</option><option value="P" ${t?.gender == 'P' ? 'selected' : ''}>P</option></select></div><div><label class="block text-sm mb-1">No HP</label><input type="text" id="tch_phone" value="${t?.phone || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Mapel</label><input type="text" id="tch_subject" value="${t?.subject || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button></form>`); document.getElementById('teacherForm').onsubmit = async (e) => { e.preventDefault(); const payload = { nip: document.getElementById('tch_nip').value, name: document.getElementById('tch_name').value, gender: document.getElementById('tch_gender').value, phone: document.getElementById('tch_phone').value, subject: document.getElementById('tch_subject').value }; await saveData('teachers', payload, id); closeModal(); renderTeachers(); }; }
+
+        async function renderStudents() { const students = await DB.get('students'); const classes = await DB.get('classes'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex justify-between mb-4"><button onclick="studentForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Siswa</button></div><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase"><tr><th class="px-4 py-3">NIS</th><th class="px-4 py-3">Nama</th><th class="px-4 py-3">Kelas</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody class="divide-y dark:divide-slate-700">${students.length ? students.map(s => { const cls = classes.find(c => c.id === s.class_id); return `<tr><td class="px-4 py-3">${s.nis}</td><td class="px-4 py-3 font-medium">${s.name}</td><td class="px-4 py-3">${cls?.name || 'N/A'}</td><td class="px-4 py-3 flex gap-2"><button onclick="studentForm('${s.id}')" class="text-blue-500">Edit</button><button onclick="deleteData('students', '${s.id}', renderStudents)" class="text-red-500">Hapus</button></td></tr>`; }).join('') : `<tr><td colspan="4" class="text-center py-4 text-slate-500">Belum ada data.</td></tr>`}</tbody></table></div></div>`; }
+        async function studentForm(id = null) { const classes = await DB.get('classes'); let s = null; if(id) { s = (await DB.get('students')).find(x => x.id === id); } openModal(id ? 'Edit Siswa' : 'Tambah Siswa', `<form id="studentForm" class="space-y-4"><div><label class="block text-sm mb-1">NIS</label><input type="text" id="std_nis" value="${s?.nis || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Nama</label><input type="text" id="std_name" value="${s?.name || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Kelas</label><select id="std_class" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}" ${s?.class_id == c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button></form>`); document.getElementById('studentForm').onsubmit = async (e) => { e.preventDefault(); const payload = { nis: document.getElementById('std_nis').value, name: document.getElementById('std_name').value, class_id: document.getElementById('std_class').value }; await saveData('students', payload, id); closeModal(); renderStudents(); }; }
+
+        async function renderClasses() { const classes = await DB.get('classes'); const students = await DB.get('students'); document.getElementById('content').innerHTML = `<div class="flex justify-between items-center mb-6"><h3 class="font-semibold text-lg text-slate-800 dark:text-white">Manajemen Kelas</h3><button onclick="classForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Kelas</button></div><div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">${classes.length ? classes.map(c => { const count = students.filter(s => s.class_id === c.id).length; return `<div class="p-4 border rounded-lg"><h4 class="text-lg font-bold">${c.name}</h4><p class="text-sm">Wali: ${c.homeroom || '-'}</p><p class="text-sm">Jumlah Siswa: ${count}</p><div class="mt-4 flex gap-2"><button onclick="classForm('${c.id}')" class="text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded">Edit</button><button onclick="deleteData('classes', '${c.id}', renderClasses)" class="text-xs bg-red-100 text-red-600 px-3 py-1 rounded">Hapus</button></div></div>`; }).join('') : '<div class="col-span-3 text-center py-8 text-slate-500">Belum ada data kelas. Klik tombol Tambah Kelas di atas.</div>'}</div></div>`; }
+        async function classForm(id = null) { let c = null; if(id) { c = (await DB.get('classes')).find(x => x.id === id); } openModal(id ? 'Edit Kelas' : 'Tambah Kelas', `<form id="classForm" class="space-y-4"><div><label class="block text-sm mb-1">Nama Kelas</label><input type="text" id="cls_name" value="${c?.name || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Wali Kelas</label><input type="text" id="cls_homeroom" value="${c?.homeroom || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button></form>`); document.getElementById('classForm').onsubmit = async (e) => { e.preventDefault(); const payload = { name: document.getElementById('cls_name').value, homeroom: document.getElementById('cls_homeroom').value }; await saveData('classes', payload, id); closeModal(); renderClasses(); }; }
+
+        async function renderSubjects() { const subjects = await DB.get('subjects'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex justify-between mb-4"><h3 class="font-semibold">Mata Pelajaran</h3><button onclick="subjectForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Mapel</button></div><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase"><tr><th class="px-4 py-3">Kode</th><th class="px-4 py-3">Nama Mapel</th><th class="px-4 py-3">Guru</th><th class="px-4 py-3">KKM</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody class="divide-y dark:divide-slate-700">${subjects.length ? subjects.map(s => `<tr><td class="px-4 py-3">${s.code}</td><td class="px-4 py-3 font-medium">${s.name}</td><td class="px-4 py-3">${s.teacher}</td><td class="px-4 py-3">${s.kkm}</td><td class="px-4 py-3 flex gap-2"><button onclick="subjectForm('${s.id}')" class="text-blue-500">Edit</button><button onclick="deleteData('subjects', '${s.id}', renderSubjects)" class="text-red-500">Hapus</button></td></tr>`).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500">Belum ada data.</td></tr>`}</tbody></table></div></div>`; }
+        async function subjectForm(id = null) { let s = null; if(id) { s = (await DB.get('subjects')).find(x => x.id === id); } openModal('Tambah Mapel', `<form id="subjectForm" class="space-y-4"><div><label class="block text-sm mb-1">Kode</label><input type="text" id="sub_code" value="${s?.code || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Nama Mapel</label><input type="text" id="sub_name" value="${s?.name || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Guru Pengampu</label><input type="text" id="sub_teacher" value="${s?.teacher || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">KKM</label><input type="number" id="sub_kkm" value="${s?.kkm || 75}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button></form>`); document.getElementById('subjectForm').onsubmit = async (e) => { e.preventDefault(); const payload = { code: document.getElementById('sub_code').value, name: document.getElementById('sub_name').value, teacher: document.getElementById('sub_teacher').value, kkm: parseInt(document.getElementById('sub_kkm').value) }; await saveData('subjects', payload, id); closeModal(); renderSubjects(); }; }
+
+        // SCHEDULES, ATTENDANCE, GRADES
+        async function renderSchedules() { const schedules = await DB.get('schedules'); const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']; document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex justify-between mb-4"><h3 class="font-semibold">Jadwal Pelajaran</h3><button onclick="scheduleForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Jadwal</button></div><div class="overflow-x-auto"><table class="w-full text-sm text-left border-collapse"><thead class="bg-slate-50 dark:bg-slate-700"><tr><th class="px-4 py-3 border">Jam</th>${days.map(d => `<th class="px-4 py-3 border">${d}</th>`).join('')}</tr></thead><tbody>${['07:30-09:00', '09:15-10:45', '11:00-12:30'].map(time => `<tr><td class="px-4 py-3 border font-medium">${time}</td>${days.map(day => { const sch = schedules.find(s => s.day === day && s.start_time === time.split('-')[0]); return `<td class="px-4 py-3 border text-xs">${sch ? `${sch.subject}<br><span class="text-blue-500">${sch.teacher}</span>` : '-'}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div></div>`; }
+        async function scheduleForm(id = null) { const classes = await DB.get('classes'); openModal('Tambah Jadwal', `<form id="scheduleForm" class="space-y-4"><div><label class="block text-sm mb-1">Hari</label><select id="sc_day" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option>Senin</option><option>Selasa</option><option>Rabu</option><option>Kamis</option><option>Jumat</option></select></div><div><label class="block text-sm mb-1">Jam Mulai</label><input type="text" id="sc_start" value="07:30" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Jam Selesai</label><input type="text" id="sc_end" value="09:00" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Kelas</label><select id="sc_class" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Mapel</label><input type="text" id="sc_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Guru</label><input type="text" id="sc_teacher" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button></form>`); document.getElementById('scheduleForm').onsubmit = async (e) => { e.preventDefault(); const payload = { day: document.getElementById('sc_day').value, start_time: document.getElementById('sc_start').value, end_time: document.getElementById('sc_end').value, class_id: document.getElementById('sc_class').value, subject: document.getElementById('sc_subject').value, teacher: document.getElementById('sc_teacher').value }; await saveData('schedules', payload, id); closeModal(); renderSchedules(); }; }
+
+        async function renderAttendance() { const students = await DB.get('students'); const classes = await DB.get('classes'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex justify-between mb-4 items-center"><h3 class="font-semibold">Input Absensi</h3><div class="flex gap-2"><select id="att_class" class="px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white text-sm">${classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}</select><input type="date" id="att_date" class="px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white text-sm"></div></div><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase"><tr><th class="px-4 py-3">Nama Siswa</th><th class="px-4 py-3">Status</th></tr></thead><tbody class="divide-y dark:divide-slate-700">${students.length ? students.map(s => `<tr><td class="px-4 py-3">${s.name}</td><td class="px-4 py-3"><select id="att_${s.id}" class="px-2 py-1 border rounded dark:bg-slate-700 dark:text-white text-xs"><option value="Hadir">Hadir</option><option value="Sakit">Sakit</option><option value="Izin">Izin</option><option value="Alpa">Alpa</option></select></td></tr>`).join('') : `<tr><td colspan="2" class="text-center py-4 text-slate-500">Belum ada data siswa.</td></tr>`}</tbody></table></div><button onclick="saveAttendance()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Simpan Absensi</button></div>`; }
+        async function saveAttendance() { const students = await DB.get('students'); const date = document.getElementById('att_date').value; if(!date){ showToast('Pilih tanggal!', 'error'); return; } for(const s of students) { const status = document.getElementById(`att_${s.id}`).value; const existingAtt = await sb.from('attendance').select('*').eq('student_id', s.id).eq('date', date).eq('user_id', currentUser.id).single(); if(existingAtt.data) { await DB.update('attendance', existingAtt.data.id, { status }); } else { await DB.insert('attendance', { student_id: s.id, date, status, subject: 'Umum' }); } } showToast('Absensi disimpan!', 'success'); }
+
+        async function renderGrades() { const students = await DB.get('students'); const subjects = await DB.get('subjects'); const grades = await DB.get('grades'); if(currentUser.role === 'siswa') { const myGrades = grades.filter(g => g.student_id === currentUser.id); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><h3 class="font-bold mb-4">Nilai Saya</h3><ul class="divide-y">${myGrades.length ? myGrades.map(g => { const sub = subjects.find(s => s.id === g.subject_id); return `<li class="py-3 flex justify-between"><span>${sub?.name || ''} (${g.type})</span><span class="font-bold text-blue-600">${g.score}</span></li>`; }).join('') : '<li class="py-4 text-center text-slate-500">Belum ada nilai.</li>'}</ul></div>`; return; } document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Input Nilai Massal</h3><button onclick="gradeForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Input Nilai</button></div><table class="w-full text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3">Nama</th><th class="px-4 py-3">Mapel</th><th class="px-4 py-3">Tipe</th><th class="px-4 py-3">Nilai</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody class="divide-y">${grades.length ? grades.map(g => { const std = students.find(s => s.id === g.student_id); const sub = subjects.find(s => s.id === g.subject_id); return `<tr><td class="px-4 py-3">${std?.name || ''}</td><td class="px-4 py-3">${sub?.name || ''}</td><td class="px-4 py-3">${g.type}</td><td class="px-4 py-3 font-bold text-blue-600">${g.score}</td><td class="px-4 py-3 flex gap-2"><button onclick="gradeForm('${g.id}')" class="text-xs text-blue-500">Edit</button><button onclick="deleteData('grades', '${g.id}', renderGrades)" class="text-xs text-red-500">Hapus</button></td></tr>`; }).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500">Belum ada nilai.</td></tr>`}</tbody></table></div>`; }
+        async function gradeForm(id = null) { const students = await DB.get('students'); const subjects = await DB.get('subjects'); let g = null; if(id) { g = (await DB.get('grades')).find(x => x.id === id); } openModal('Input Nilai', `<form id="gradeForm" class="space-y-4"><div><label class="block text-sm mb-1">Siswa</label><select id="g_student" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${students.map(s => `<option value="${s.id}" ${g?.student_id == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Mapel</label><select id="g_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}" ${g?.subject_id == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Tipe</label><select id="g_type" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option ${g?.type == 'Tugas' ? 'selected' : ''}>Tugas</option><option ${g?.type == 'Ulangan Harian' ? 'selected' : ''}>Ulangan Harian</option><option ${g?.type == 'PTS' ? 'selected' : ''}>PTS</option><option ${g?.type == 'PAS' ? 'selected' : ''}>PAS</option></select></div><div><label class="block text-sm mb-1">Nilai</label><input type="number" id="g_score" value="${g?.score || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('gradeForm').onsubmit = async (e) => { e.preventDefault(); const payload = { student_id: document.getElementById('g_student').value, subject_id: document.getElementById('g_subject').value, type: document.getElementById('g_type').value, score: parseInt(document.getElementById('g_score').value) }; await saveData('grades', payload, id); closeModal(); renderGrades(); }; }
+
+        // ASSIGNMENTS, MATERI, KEUANGAN, RAPOR, ANNOUNCEMENTS, SETTINGS
+        async function renderAssignments() { const assignments = await DB.get('assignments'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Daftar Tugas</h3><button onclick="assignmentForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Buat Tugas</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4">${assignments.length ? assignments.map(a => `<div class="p-4 border rounded-lg"><h4 class="font-bold">${a.title}</h4><p class="text-xs text-slate-500 mt-1">Deadline: ${a.deadline}</p><p class="text-sm mt-2">${a.description}</p><div class="mt-3 flex gap-2"><button onclick="assignmentForm('${a.id}')" class="text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded">Edit</button><button onclick="deleteData('assignments', '${a.id}', renderAssignments)" class="text-xs bg-red-100 text-red-600 px-3 py-1 rounded">Hapus</button></div></div>`).join('') : '<div class="col-span-3 text-center py-8 text-slate-500">Belum ada tugas.</div>'}</div></div>`; }
+        async function assignmentForm(id = null) { const classes = await DB.get('classes'); const subjects = await DB.get('subjects'); let a = null; if(id) { a = (await DB.get('assignments')).find(x => x.id === id); } openModal('Buat Tugas', `<form id="assignmentForm" class="space-y-4"><div><label class="block text-sm mb-1">Judul</label><input type="text" id="a_title" value="${a?.title || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Deskripsi</label><textarea id="a_desc" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${a?.description || ''}</textarea></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm mb-1">Mapel</label><select id="a_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}" ${a?.subject_id == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Kelas</label><select id="a_class" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}" ${a?.class_id == c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select></div></div><div><label class="block text-sm mb-1">Deadline</label><input type="date" id="a_deadline" value="${a?.deadline || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('assignmentForm').onsubmit = async (e) => { e.preventDefault(); const payload = { title: document.getElementById('a_title').value, description: document.getElementById('a_desc').value, subject_id: document.getElementById('a_subject').value, class_id: document.getElementById('a_class').value, deadline: document.getElementById('a_deadline').value }; await saveData('assignments', payload, id); closeModal(); renderAssignments(); }; }
+
+        async function renderMateri() { const materi = await DB.get('materi'); const subjects = await DB.get('subjects'); const classes = await DB.get('classes'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Materi Pembelajaran</h3><button onclick="materiForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Tambah Materi</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4">${materi.length ? materi.map(m => { const sub = subjects.find(s => s.id === m.subject_id); const cls = classes.find(c => c.id === m.class_id); return `<div class="p-4 border rounded-lg"><h4 class="font-bold">${m.title}</h4><p class="text-xs text-slate-500 mt-1">${sub?.name || ''} | ${cls?.name || ''}</p><p class="text-sm mt-2">${m.description}</p><a href="${m.link}" target="_blank" class="mt-3 text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded inline-block">Buka Materi</a><div class="mt-3 flex gap-2"><button onclick="materiForm('${m.id}')" class="text-xs text-blue-500">Edit</button><button onclick="deleteData('materi', '${m.id}', renderMateri)" class="text-xs text-red-500">Hapus</button></div></div>`; }).join('') : '<div class="col-span-3 text-center py-8 text-slate-500">Belum ada materi.</div>'}</div></div>`; }
+        async function materiForm(id = null) { const classes = await DB.get('classes'); const subjects = await DB.get('subjects'); let m = null; if(id) { m = (await DB.get('materi')).find(x => x.id === id); } openModal('Tambah Materi', `<form id="materiForm" class="space-y-4"><div><label class="block text-sm mb-1">Judul</label><input type="text" id="m_title" value="${m?.title || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Deskripsi</label><textarea id="m_desc" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${m?.description || ''}</textarea></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm mb-1">Mapel</label><select id="m_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}" ${m?.subject_id == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Kelas</label><select id="m_class" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}" ${m?.class_id == c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select></div></div><div><label class="block text-sm mb-1">Link</label><input type="url" id="m_link" value="${m?.link || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('materiForm').onsubmit = async (e) => { e.preventDefault(); const payload = { title: document.getElementById('m_title').value, description: document.getElementById('m_desc').value, subject_id: document.getElementById('m_subject').value, class_id: document.getElementById('m_class').value, link: document.getElementById('m_link').value }; await saveData('materi', payload, id); closeModal(); renderMateri(); }; }
+
+        async function renderKeuangan() { const keuangan = await DB.get('keuangan'); const students = await DB.get('students'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Pembayaran SPP</h3><button onclick="keuanganForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Catat Pembayaran</button></div><table class="w-full text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3">Siswa</th><th class="px-4 py-3">Bulan</th><th class="px-4 py-3">Jumlah</th><th class="px-4 py-3">Status</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody class="divide-y">${keuangan.length ? keuangan.map(k => { const std = students.find(s => s.id === k.student_id); return `<tr><td class="px-4 py-3">${std?.name || ''}</td><td class="px-4 py-3">${k.month}</td><td class="px-4 py-3">Rp ${k.amount.toLocaleString('id-ID')}</td><td class="px-4 py-3"><span class="px-2 py-1 text-xs rounded ${k.status==='Lunas'?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}">${k.status}</span></td><td class="px-4 py-3 flex gap-2">${k.status !== 'Lunas' ? `<button onclick="confirmPayment('${k.id}')" class="text-xs text-green-600">Lunasi</button>` : ''}<button onclick="deleteData('keuangan', '${k.id}', renderKeuangan)" class="text-xs text-red-500">Hapus</button></td></tr>`; }).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500">Belum ada data.</td></tr>`}</tbody></table></div>`; }
+        async function keuanganForm(id = null) { const students = await DB.get('students'); openModal('Catat SPP', `<form id="keuanganForm" class="space-y-4"><div><label class="block text-sm mb-1">Siswa</label><select id="k_student" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${students.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Bulan</label><input type="text" id="k_month" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Jumlah</label><input type="number" id="k_amount" value="150000" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Status</label><select id="k_status" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option>Belum Bayar</option><option>Lunas</option></select></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('keuanganForm').onsubmit = async (e) => { e.preventDefault(); const payload = { student_id: document.getElementById('k_student').value, month: document.getElementById('k_month').value, amount: parseInt(document.getElementById('k_amount').value), status: document.getElementById('k_status').value }; await saveData('keuangan', payload, id); closeModal(); renderKeuangan(); }; }
+        async function confirmPayment(id) { await DB.update('keuangan', id, { status: 'Lunas' }); showToast('Pembayaran lunas!', 'success'); renderKeuangan(); }
+
+        async function renderRapor() { if(currentUser.role === 'siswa') { printRapor(currentUser.id); return; } const students = await DB.get('students'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><h3 class="font-bold mb-4">Cetak Rapor</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4">${students.length ? students.map(s => `<button onclick="printRapor('${s.id}')" class="p-4 border rounded-lg text-left"><p class="font-bold">${s.name}</p><p class="text-xs text-slate-500">NIS: ${s.nis}</p><span class="mt-2 inline-block text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">Cetak</span></button>`).join('') : '<div class="col-span-3 text-center py-8 text-slate-500">Belum ada siswa.</div>'}</div></div>`; }
+        async function printRapor(studentId) { const student = (await DB.get('students')).find(s => s.id === studentId); const classes = (await DB.get('classes')).find(c => c.id === student.class_id); const grades = (await DB.get('grades')).filter(g => g.student_id === studentId); const subjects = await DB.get('subjects'); const profile = (await DB.get('school_profile'))[0] || {}; let gradeRows = ''; let totalScore = 0; let totalSubjects = 0; subjects.forEach(sub => { const subGrades = grades.filter(g => g.subject_id === sub.id); if(subGrades.length > 0){ const avgScore = Math.round(subGrades.reduce((s, g) => s + g.score, 0) / subGrades.length); const predikat = avgScore >= 90 ? 'A' : avgScore >= 80 ? 'B' : avgScore >= 70 ? 'C' : 'D'; gradeRows += `<tr><td style="padding: 8px; border: 1px solid #ddd;">${sub.name}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${sub.kkm}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${avgScore}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${predikat}</td></tr>`; totalScore += avgScore; totalSubjects++; } }); const finalAvg = totalSubjects ? (totalScore/totalSubjects).toFixed(1) : 0; document.getElementById('printArea').innerHTML = `<div style="font-family: Arial; color: #000;"><div style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px;"><h2>${profile.name || 'Sekolah'}</h2><p>${profile.address || ''}</p></div><h3 style="text-align: center; margin: 20px 0;">RAPOR SISWA</h3><table style="width: 100%; margin-bottom: 20px;"><tr><td>Nama</td><td>: ${student.name}</td><td>Kelas</td><td>: ${classes?.name || '-'}</td></tr><tr><td>NIS</td><td>: ${student.nis}</td><td>Semester</td><td>: ${profile.semester || '-'}</td></tr></table><table style="width: 100%; border-collapse: collapse;"><thead><tr style="background: #eee;"><th style="padding: 8px; border: 1px solid #ddd;">Mapel</th><th style="padding: 8px; border: 1px solid #ddd;">KKM</th><th style="padding: 8px; border: 1px solid #ddd;">Nilai</th><th style="padding: 8px; border: 1px solid #ddd;">Predikat</th></tr></thead><tbody>${gradeRows || `<tr><td colspan="4" style="text-align:center; padding: 10px; border: 1px solid #ddd;">Belum ada nilai</td></tr>`}</tbody><tfoot><tr><td colspan="2" style="padding: 8px; border: 1px solid #ddd; text-align: right;">Rata-rata:</td><td colspan="2" style="padding: 8px; border: 1px solid #ddd; text-align: center;">${finalAvg}</td></tr></tfoot></table></div>`; window.print(); }
+
+        async function renderAnnouncements() { const anns = await DB.get('announcements'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Pengumuman</h3><button onclick="annForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Buat Pengumuman</button></div><div class="space-y-4">${anns.length ? anns.map(a => `<div class="p-4 bg-slate-50 rounded-lg"><div class="flex justify-between"><h4 class="font-bold">${a.title}</h4><div class="flex gap-2"><button onclick="annForm('${a.id}')" class="text-xs text-blue-500">Edit</button><button onclick="deleteData('announcements', '${a.id}', renderAnnouncements)" class="text-xs text-red-500">Hapus</button></div></div><p class="text-xs text-slate-400 mt-1">${a.date}</p><p class="text-sm mt-2">${a.content}</p></div>`).join('') : '<p class="text-sm text-slate-500 text-center py-4">Belum ada pengumuman.</p>'}</div></div>`; }
+        async function annForm(id = null) { let a = null; if(id) { a = (await DB.get('announcements')).find(x => x.id === id); } openModal('Buat Pengumuman', `<form id="annForm" class="space-y-4"><div><label class="block text-sm mb-1">Judul</label><input type="text" id="an_title" value="${a?.title || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Isi</label><textarea id="an_content" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${a?.content || ''}</textarea></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('annForm').onsubmit = async (e) => { e.preventDefault(); const payload = { title: document.getElementById('an_title').value, content: document.getElementById('an_content').value, date: new Date().toISOString().split('T')[0] }; await saveData('announcements', payload, id); closeModal(); renderAnnouncements(); }; }
+
+        async function renderSettings() { const profile = (await DB.get('school_profile'))[0] || {}; document.getElementById('content').innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div class="bg-white p-6 rounded-xl"><h3 class="font-bold mb-4">Profil Sekolah</h3><form id="profileForm" class="space-y-4"><div><label class="block text-sm mb-1">Nama Sekolah</label><input type="text" id="p_name" value="${profile.name || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Alamat</label><input type="text" id="p_address" value="${profile.address || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Kepala Sekolah</label><input type="text" id="p_principal" value="${profile.principal || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Simpan</button></form></div><div class="bg-white p-6 rounded-xl"><h3 class="font-bold mb-4">Pengaturan Akun</h3><div class="flex flex-col items-center space-y-3"><img id="prevAvatar" src="${currentUser.avatar_url || AI_IMG}" class="w-24 h-24 rounded-full object-cover"><input type="file" id="avatarFile" accept="image/*" class="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"><button onclick="uploadAvatar()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm">Upload Foto</button></div></div></div>`; document.getElementById('profileForm').onsubmit = async (e) => { e.preventDefault(); await saveData('school_profile', { name: document.getElementById('p_name').value, address: document.getElementById('p_address').value, principal: document.getElementById('p_principal').value }, 1); }; }
+        async function uploadAvatar() { const file = document.getElementById('avatarFile').files[0]; if(!file) { showToast('Pilih file dulu!', 'error'); return; } showToast('Mengunggah foto...', 'info'); const { data, error } = await sb.storage.from('avatars').upload('user_' + currentUser.id + '_' + Date.now() + '.jpg', file); if (error) { showToast('Gagal upload: ' + error.message, 'error'); return; } const url = sb.storage.from('avatars').getPublicUrl(data.path).data.publicUrl; await DB.update('users', currentUser.id, { avatar_url: url }); currentUser.avatar_url = url; localStorage.setItem('gs_currentUser', JSON.stringify(currentUser)); document.getElementById('userAvatar').src = url; showToast('Foto profil diperbarui!', 'success'); }
+
+        // AI ASSISTANT
+        async function renderAI() {
+            let isSignedIn = false;
+            try {
+                isSignedIn = puter.auth.isSignedIn();
+            } catch (e) {
+                isSignedIn = false;
+            }
+
+            if (!isSignedIn) {
+                document.getElementById('content').innerHTML = `
+                <div class="flex items-center justify-center min-h-[80vh] p-4">
+                    <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl text-center max-w-md w-full border border-slate-100 dark:border-slate-700">
+                        <img src="${AI_IMG}" class="w-24 h-24 rounded-2xl mx-auto mb-5 object-cover shadow-md" alt="AI Logo">
+                        <h3 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Aktifkan Asisten AI</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
+                            Dapatkan akses <strong>SELAMANYA</strong> ke semua fitur AI (Buat Soal, Modul Ajar, RPP, dll).
+                        </p>
+                        
+                        <div class="bg-slate-50 dark:bg-slate-700 p-4 rounded-xl mb-6 border border-slate-100 dark:border-slate-600">
+                            <p class="text-sm text-slate-600 dark:text-slate-300 mb-1">Biaya Aktivasi (Bayar Sekali):</p>
+                            <p class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-emerald-600 mb-4">Rp 25.000</p>
+                            
+                            <div class="border-t border-slate-200 dark:border-slate-600 pt-3 mt-3">
+                                <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">Pembayaran via DANA:</p>
+                                <p class="text-2xl font-mono font-bold text-blue-600 dark:text-blue-400 tracking-wider mt-1">081212514747</p>
+                                <p class="text-xs text-slate-400 mt-1">*(Akses selamanya setelah aktivasi)*</p>
+                            </div>
+                        </div>
+                        
+                        <button onclick="confirmPaymentAI()" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 rounded-lg transition-colors shadow-md flex items-center justify-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            Saya Sudah Bayar
+                        </button>
+                        <p class="text-xs text-slate-400 mt-4">Klik tombol di atas setelah melakukan transfer Rp 25.000 ke nomor DANA di atas.</p>
+                    </div>
+                </div>`;
+                return;
+            }
+
+            document.getElementById('content').innerHTML = `<div class="grid grid-cols-1 xl:grid-cols-3 gap-6"><div class="xl:col-span-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden"><div class="p-5 border-b dark:border-slate-700 flex justify-between items-center bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700"><div class="flex items-center gap-3"><img src="${AI_IMG}" class="w-12 h-12 rounded-xl object-cover shadow-sm"><div><h3 class="text-lg font-bold text-slate-800 dark:text-white">Asisten AI Guru</h3><p class="text-xs text-slate-500 dark:text-slate-400">Soal A B C D • Format otomatis rapi</p></div></div></div><div id="aiMessages" class="h-[500px] overflow-y-auto p-5 space-y-4 bg-slate-50 dark:bg-slate-900"></div><div class="p-4 border-t dark:border-slate-700 bg-white dark:bg-slate-800"><textarea id="aiInput" rows="3" placeholder="Tulis perintah... (Contoh: Buatkan 5 soal pilihan ganda A B C D tentang Pahlawan Nasional)" class="w-full px-4 py-3 rounded-xl border dark:bg-slate-700 dark:text-white resize-none focus:ring-2 focus:ring-blue-500 outline-none mb-3"></textarea><div class="flex justify-end gap-2 flex-wrap"><button id="aiWordBtn" onclick="exportToWord()" class="hidden bg-blue-500 text-white px-4 py-2.5 rounded-lg font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>Word (Soal)</button><button id="aiPrintBtn" onclick="printAIResult(false)" class="hidden bg-slate-600 text-white px-4 py-2.5 rounded-lg font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>Cetak Soal (PDF)</button><button id="aiPrintKeyBtn" onclick="printAIResult(true)" class="hidden bg-green-600 text-white px-4 py-2.5 rounded-lg font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>Cetak + Kunci</button><button id="aiSendBtn" onclick="sendAI()" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9 2zm0 0v-8" /></svg>Kirim</button></div></div></div></div>`; 
+            loadAIChat(); 
+        }
+
+        async function confirmPaymentAI() {
+            openModal('Konfirmasi Aktivasi AI', `
+            <form id="paymentConfirmForm" class="space-y-4">
+                <div class="bg-green-50 dark:bg-slate-700 p-3 rounded-lg text-sm text-green-700 dark:text-green-300 text-center">
+                    Terima kasih telah melakukan pembayaran sebesar <strong>Rp 25.000</strong>.<br>Silakan masukkan nama pengirim DANA untuk verifikasi, lalu klik tombol di bawah ini.
+                </div>
+                <div>
+                    <label class="block text-sm mb-1">Nama Pengirim DANA</label>
+                    <input type="text" id="dana_sender" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" placeholder="Masukkan nama Anda" required>
+                </div>
+                <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 rounded-lg font-semibold flex items-center justify-center gap-2">
+                    <svg class="animate-spin hidden h-5 w-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                    <span id="btnTextAI">⚡ Aktifkan AI Sekarang</span>
+                </button>
+            </form>`);
+
+            document.getElementById('paymentConfirmForm').onsubmit = async (e) => { 
+                e.preventDefault(); 
+                const btn = document.querySelector('#paymentConfirmForm button[type="submit"]'); 
+                const btnText = document.getElementById('btnTextAI'); 
+                const spinner = btn.querySelector('svg');
+                btn.disabled = true; btnText.innerText = 'Menghubungkan ke Server Puter...'; spinner.classList.remove('hidden');
+                
+                try { 
+                    await puter.auth.signIn(); 
+                    showToast('AI berhasil diaktifkan! Akses Selamanya.', 'success'); 
+                    closeModal(); 
+                    renderAI(); 
+                } catch (err) { 
+                    showToast('Gagal aktivasi. Coba lagi.', 'error'); 
+                    btn.disabled = false; 
+                    btnText.innerText = '⚡ Coba Lagi'; 
+                    spinner.classList.add('hidden'); 
+                } 
+            };
+        }
+
+        function aiPrompt(text){document.getElementById('aiInput').value=text;sendAI();}
+        async function getSchoolContext(){return {students:await DB.get('students'),teachers:await DB.get('teachers'),subjects:await DB.get('subjects')};}
+        function loadAIChat(){const box=document.getElementById('aiMessages');if(!box)return;box.innerHTML=`<div class="flex justify-start"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="whitespace-pre-wrap text-gray-800">Halo! Saya adalah Asisten AI Guru Anda. Silakan tulis perintah untuk membuat soal atau materi lainnya.</div></div></div>`;}
+        function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+        function formatSoalHTML(rawText) {
+            let text = rawText;
+            let kunciSection = '';
+            const kunciMatch = text.match(/\n?\**(?:Kunci Jawaban|Jawaban)[*:]*\s*\n([\s\S]*?)$/i);
+            if (kunciMatch) {
+                const kunciText = kunciMatch[1].trim();
+                const kunciLines = kunciText.split('\n').filter(l => l.trim());
+                let kunciHTML = '<div class="kunci-jawaban-section hide-on-print"><h3>📋 KUNCI JAWABAN</h3><div class="kunci-jawaban-grid">';
+                kunciLines.forEach(line => { const m = line.match(/(\d+)\s*[.):\s]\s*([A-D])/i); if (m) { kunciHTML += `<span>${m[1]}. ${m[2].toUpperCase()}</span>`; } });
+                kunciHTML += '</div></div>';
+                kunciSection = kunciHTML;
+                text = text.replace(kunciMatch[0], '');
+            }
+            const simplePattern = /(?:\*\*)?(\d+)[\.\)]\s*\*?\s*([\s\S]*?)(?=(?:\*\*)?\d+[\.\)]\s*\*?\s|$)/g;
+            let match; const soalBlocks = []; let hasQuestions = false;
+            while ((match = simplePattern.exec(text)) !== null) {
+                const num = match[1]; const block = match[2];
+                const optPattern = /(?:^|\n)\s*([A-D])[\.\)\s]\s*(.+?)(?=(?:\n\s*[A-D][\.\)\s])|(?:\n\s*(?:Jawaban|Kunci)[:\s])|$)/g;
+                const options = []; let optMatch;
+                while ((optMatch = optPattern.exec(block)) !== null) { options.push({ label: optMatch[1].toUpperCase(), text: optMatch[2].trim() }); }
+                if (options.length >= 2) {
+                    hasQuestions = true;
+                    const questionText = block.substring(0, block.search(new RegExp(`\\s*${options[0].label}[\\.\\)\\s]`))).trim();
+                    let correctAnswer = null;
+                    const ansPatterns = [/(?:Jawaban|Kunci)[:\s]*\*?\*?\s*([A-D])/i, /\[BENAR[:\s]*([A-D])\]/i, /\(BENAR[:\s]*([A-D])\)/i, /\*([A-D])\s*\(BENAR\)/i, /([A-D])\s*\(BENAR\)/i, /([A-D])\s*\[BENAR\]/i, /✅\s*([A-D])/i, /([A-D])\s*✅/i];
+                    for (const ap of ansPatterns) { const am = block.match(ap); if (am) { correctAnswer = am[1].toUpperCase(); break; } }
+                    if (!correctAnswer && kunciMatch) { const kunciText = kunciMatch[1]; const kunciLine = kunciText.match(new RegExp(`${num}\\s*[.):\\s]\\s*([A-D])`, 'i')); if (kunciLine) correctAnswer = kunciLine[1].toUpperCase(); }
+                    soalBlocks.push({ num, question: questionText, options, correct: correctAnswer, fullMatch: match[0] });
+                }
+            }
+            if (hasQuestions && soalBlocks.length > 0) {
+                let soalHTML = '<div class="soal-container">';
+                soalBlocks.forEach(sb => {
+                    let qText = sb.question.replace(/^\*+|\*+$/g, '').replace(/_+/g, '').trim();
+                    qText = qText.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+                    soalHTML += `<div class="soal-item"><div class="soal-header"><span class="soal-number">${sb.num}.</span><span class="soal-text">${qText}</span></div><div class="soal-opts"><div class="opt-col">`;
+                    const half = Math.ceil(sb.options.length / 2);
+                    sb.options.forEach((opt, index) => {
+                        if (index === half) soalHTML += `</div><div class="opt-col">`;
+                        const isCorrect = opt.label === sb.correct;
+                        soalHTML += `<div class="soal-opt ${isCorrect ? 'correct' : ''}"><span class="opt-label">${opt.label}.</span><span class="opt-text">${opt.text}</span></div>`;
+                    });
+                    soalHTML += `</div></div>`;
+                    if (sb.correct) { soalHTML += `<div class="soal-answer hide-on-print">Jawaban: <strong>${sb.correct}</strong></div>`; }
+                    soalHTML += `</div>`;
+                });
+                soalHTML += '</div>';
+                let tempText = text;
+                soalBlocks.forEach(sb => { const escaped = sb.fullMatch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); tempText = tempText.replace(new RegExp(escaped, 's'), '|||SOAL_MARKER|||'); });
+                const nonSoalParts = tempText.split('|||SOAL_MARKER|||').filter(p => p.trim());
+                let finalHTML = '';
+                nonSoalParts.forEach(part => { if (part.trim()) { finalHTML += marked.parse(part.trim()); } });
+                finalHTML += soalHTML + kunciSection;
+                return finalHTML;
+            }
+            return marked.parse(text) + kunciSection;
+        }
+
+        let lastAIFormattedHTML = '';
+        async function sendAI(){
+            const input=document.getElementById('aiInput');
+            if(!input.value.trim())return;
+            const prompt=input.value.trim();
+            input.value='';
+            const btn=document.getElementById('aiSendBtn');
+            btn.disabled=true; btn.innerText='Memproses...';
+            ['aiPrintBtn', 'aiWordBtn', 'aiPrintKeyBtn'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            const box=document.getElementById('aiMessages');
+            box.innerHTML=`<div class="flex justify-end"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-blue-600 text-white shadow-sm"><div class="text-xs opacity-70 mb-1">Anda</div><div class="whitespace-pre-wrap">${escapeHTML(prompt)}</div></div></div><div class="flex justify-start"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="animate-pulse text-blue-600">Sedang mengetik...</div></div></div>`;
+            try{
+                const ctx=await getSchoolContext();
+                const sys = `Anda adalah Asisten AI Guru. Data sekolah: ${JSON.stringify(ctx)}. Saat membuat soal pilihan ganda, WAJIB gunakan format PLAIN TEXT berikut:
 1. Pertanyaan lengkap di sini?
 A. Pilihan A
 B. Pilihan B
@@ -444,128 +473,128 @@ D. Pilihan D
 Jawaban: B
 
 ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap soal. Di bagian paling akhir, buat ringkasan "Kunci Jawaban:".`;
-        const res=await puter.ai.chat([{role:'system',content:sys},{role:'user',content:prompt}]);
-        let ans=typeof res==='string'?res:(res.message?.content||'');
-        const formattedHTML = formatSoalHTML(ans);
-        lastAIFormattedHTML = formattedHTML;
-        box.innerHTML=`<div class="flex justify-end"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-blue-600 text-white shadow-sm"><div class="text-xs opacity-70 mb-1">Anda</div><div class="whitespace-pre-wrap">${escapeHTML(prompt)}</div></div></div><div class="flex justify-start"><div class="max-w-[95%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="ai-output text-gray-800">${formattedHTML}</div></div></div>`;
-        ['aiPrintBtn', 'aiWordBtn', 'aiPrintKeyBtn'].forEach(id => document.getElementById(id).classList.remove('hidden'));
-    }catch(e){
-        showToast('Error AI: ' + e.message,'error');
-    }finally{
-        btn.disabled=false; btn.innerText='Kirim';
-    }
-}
+                const res=await puter.ai.chat([{role:'system',content:sys},{role:'user',content:prompt}]);
+                let ans=typeof res==='string'?res:(res.message?.content||'');
+                const formattedHTML = formatSoalHTML(ans);
+                lastAIFormattedHTML = formattedHTML;
+                box.innerHTML=`<div class="flex justify-end"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-blue-600 text-white shadow-sm"><div class="text-xs opacity-70 mb-1">Anda</div><div class="whitespace-pre-wrap">${escapeHTML(prompt)}</div></div></div><div class="flex justify-start"><div class="max-w-[95%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="ai-output text-gray-800">${formattedHTML}</div></div></div>`;
+                ['aiPrintBtn', 'aiWordBtn', 'aiPrintKeyBtn'].forEach(id => document.getElementById(id).classList.remove('hidden'));
+            }catch(e){
+                showToast('Error AI: ' + e.message,'error');
+            }finally{
+                btn.disabled=false; btn.innerText='Kirim';
+            }
+        }
 
-function printAIResult(includeAnswerKey = false) { 
-    if(!lastAIFormattedHTML) return; 
-    let cleanHTML = lastAIFormattedHTML;
-    
-    if(!includeAnswerKey) {
-        cleanHTML = cleanHTML.replace(/<div class="kunci-jawaban-section[^"]*"[^>]*>[\s\S]*?<\/div><\/div>/g, '');
-        cleanHTML = cleanHTML.replace(/<div class="soal-answer[^"]*"[^>]*>[\s\S]*?<\/div>/g, '');
-        cleanHTML = cleanHTML.replace(/class="soal-opt[^"]*correct[^"]*"/g, 'class="soal-opt"');
-    } else {
-        cleanHTML = cleanHTML.replace(/hide-on-print/g, '');
-    }
-    
-    document.getElementById('printArea').innerHTML = `
-    <div style="font-family: 'Times New Roman', Georgia, serif; color: #000; padding: 0; margin: 0; width: 100%;">
-        <div style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 25px;">
-            <h2 style="margin:0; font-size: 18px;">SOAL PILIHAN GANDA</h2>
-            <p style="margin: 5px 0 0; font-size: 12px;">Dibuat oleh GURU SMART</p>
-        </div>
-        <div class="ai-output" style="color: #000; margin: 0; padding: 0;">${cleanHTML}</div>
-    </div>`; 
-    window.print(); 
-}
+        function printAIResult(includeAnswerKey = false) { 
+            if(!lastAIFormattedHTML) return; 
+            let cleanHTML = lastAIFormattedHTML;
+            
+            if(!includeAnswerKey) {
+                cleanHTML = cleanHTML.replace(/<div class="kunci-jawaban-section[^"]*"[^>]*>[\s\S]*?<\/div><\/div>/g, '');
+                cleanHTML = cleanHTML.replace(/<div class="soal-answer[^"]*"[^>]*>[\s\S]*?<\/div>/g, '');
+                cleanHTML = cleanHTML.replace(/class="soal-opt[^"]*correct[^"]*"/g, 'class="soal-opt"');
+            } else {
+                cleanHTML = cleanHTML.replace(/hide-on-print/g, '');
+            }
+            
+            document.getElementById('printArea').innerHTML = `
+            <div style="font-family: 'Times New Roman', Georgia, serif; color: #000; padding: 0; margin: 0; width: 100%;">
+                <div style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 25px;">
+                    <h2 style="margin:0; font-size: 18px;">SOAL PILIHAN GANDA</h2>
+                    <p style="margin: 5px 0 0; font-size: 12px;">Dibuat oleh GURU SMART</p>
+                </div>
+                <div class="ai-output" style="color: #000; margin: 0; padding: 0;">${cleanHTML}</div>
+            </div>`; 
+            window.print(); 
+        }
 
-function exportToWord() {
-    if(!lastAIFormattedHTML) { showToast('Tidak ada teks untuk diekspor', 'error'); return; }
-    
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = lastAIFormattedHTML;
-    
-    tempDiv.querySelectorAll('.kunci-jawaban-section, .soal-answer').forEach(el => el.remove());
-    tempDiv.querySelectorAll('.soal-opt.correct').forEach(el => el.classList.remove('correct'));
-    
-    tempDiv.querySelectorAll('.soal-item').forEach(item => {
-        item.style.marginBottom = '18px';
-        item.style.paddingBottom = '15px';
-        item.style.borderBottom = '1px solid #eee';
-        item.style.overflow = 'hidden'; 
-    });
-    tempDiv.querySelectorAll('.soal-header').forEach(header => {
-        header.style.marginBottom = '8px';
-    });
-    tempDiv.querySelectorAll('.soal-number').forEach(num => {
-        num.style.fontWeight = 'bold';
-        num.style.marginRight = '8px';
-    });
-    tempDiv.querySelectorAll('.soal-text').forEach(text => {
-        text.style.fontWeight = '600';
-        text.style.lineHeight = '1.6';
-    });
-    
-    tempDiv.querySelectorAll('.soal-opts').forEach(optsDiv => {
-        optsDiv.style.display = 'block';
-        optsDiv.style.width = '100%';
-        optsDiv.style.marginLeft = '25px';
-        optsDiv.style.marginTop = '8px';
-        
-        const cols = optsDiv.querySelectorAll('.opt-col');
-        cols.forEach(col => {
-            col.style.display = 'inline-block';
-            col.style.width = '48%';
-            col.style.verticalAlign = 'top';
-            col.style.styleFloat = 'left';
-            col.style.cssFloat = 'left';
-            col.style.marginRight = '2%';
-        });
-    });
-    
-    let cleanHTML = tempDiv.innerHTML;
-    
-    const header = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Soal - GURU SMART</title>
-    <style>
-        @page { size: 21cm 29.7cm; margin: 2cm; }
-        body { font-family: 'Times New Roman', Georgia, serif; font-size: 12pt; color: #000; line-height: 1.5; }
-        h2 { text-align: center; font-size: 16pt; margin-bottom: 5px; }
-        p { text-align: center; font-size: 10pt; margin-top: 0; }
-    </style></head><body>
-    <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
-        <h2>SOAL PILIHAN GANDA</h2>
-        <p>Dibuat oleh GURU SMART</p>
-    </div>`;
-    
-    const footer = `</body></html>`;
-    const sourceHTML = header + cleanHTML + footer;
-    
-    const blob = new Blob(['\ufeff', sourceHTML], {type: 'application/msword'});
-    const url = URL.createObjectURL(blob);
-    const fileDownload = document.createElement("a");
-    fileDownload.href = url;
-    fileDownload.download = 'Soal_Guru_Smart.doc';
-    document.body.appendChild(fileDownload);
-    fileDownload.click();
-    document.body.removeChild(fileDownload);
-    URL.revokeObjectURL(url);
-    showToast('Berhasil diekspor ke Word', 'success');
-}
+        function exportToWord() {
+            if(!lastAIFormattedHTML) { showToast('Tidak ada teks untuk diekspor', 'error'); return; }
+            
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = lastAIFormattedHTML;
+            
+            tempDiv.querySelectorAll('.kunci-jawaban-section, .soal-answer').forEach(el => el.remove());
+            tempDiv.querySelectorAll('.soal-opt.correct').forEach(el => el.classList.remove('correct'));
+            
+            tempDiv.querySelectorAll('.soal-item').forEach(item => {
+                item.style.marginBottom = '18px';
+                item.style.paddingBottom = '15px';
+                item.style.borderBottom = '1px solid #eee';
+                item.style.overflow = 'hidden'; 
+            });
+            tempDiv.querySelectorAll('.soal-header').forEach(header => {
+                header.style.marginBottom = '8px';
+            });
+            tempDiv.querySelectorAll('.soal-number').forEach(num => {
+                num.style.fontWeight = 'bold';
+                num.style.marginRight = '8px';
+            });
+            tempDiv.querySelectorAll('.soal-text').forEach(text => {
+                text.style.fontWeight = '600';
+                text.style.lineHeight = '1.6';
+            });
+            
+            tempDiv.querySelectorAll('.soal-opts').forEach(optsDiv => {
+                optsDiv.style.display = 'block';
+                optsDiv.style.width = '100%';
+                optsDiv.style.marginLeft = '25px';
+                optsDiv.style.marginTop = '8px';
+                
+                const cols = optsDiv.querySelectorAll('.opt-col');
+                cols.forEach(col => {
+                    col.style.display = 'inline-block';
+                    col.style.width = '48%';
+                    col.style.verticalAlign = 'top';
+                    col.style.styleFloat = 'left';
+                    col.style.cssFloat = 'left';
+                    col.style.marginRight = '2%';
+                });
+            });
+            
+            let cleanHTML = tempDiv.innerHTML;
+            
+            const header = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Soal - GURU SMART</title>
+            <style>
+                @page { size: 21cm 29.7cm; margin: 2cm; }
+                body { font-family: 'Times New Roman', Georgia, serif; font-size: 12pt; color: #000; line-height: 1.5; }
+                h2 { text-align: center; font-size: 16pt; margin-bottom: 5px; }
+                p { text-align: center; font-size: 10pt; margin-top: 0; }
+            </style></head><body>
+            <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
+                <h2>SOAL PILIHAN GANDA</h2>
+                <p>Dibuat oleh GURU SMART</p>
+            </div>`;
+            
+            const footer = `</body></html>`;
+            const sourceHTML = header + cleanHTML + footer;
+            
+            const blob = new Blob(['\ufeff', sourceHTML], {type: 'application/msword'});
+            const url = URL.createObjectURL(blob);
+            const fileDownload = document.createElement("a");
+            fileDownload.href = url;
+            fileDownload.download = 'Soal_Guru_Smart.doc';
+            document.body.appendChild(fileDownload);
+            fileDownload.click();
+            document.body.removeChild(fileDownload);
+            URL.revokeObjectURL(url);
+            showToast('Berhasil diekspor ke Word', 'success');
+        }
 
-async function saveData(key, data, id) { if (id) { await DB.update(key, id, data); } else { await DB.insert(key, data); } showToast('Data disimpan!', 'success'); }
-async function deleteData(key, id, callback) { if (confirm('Hapus data?')) { await DB.remove(key, id); if (typeof callback === 'function') callback(); } }
-function filterTable(searchId, tbodyId) { const input = document.getElementById(searchId).value.toLowerCase(); const rows = document.getElementById(tbodyId).getElementsByTagName('tr'); for (let row of rows) { row.style.display = row.innerText.toLowerCase().includes(input) ? '' : 'none'; } }
+        async function saveData(key, data, id) { if (id) { await DB.update(key, id, data); } else { await DB.insert(key, data); } showToast('Data disimpan!', 'success'); }
+        async function deleteData(key, id, callback) { if (confirm('Hapus data?')) { await DB.remove(key, id); if (typeof callback === 'function') callback(); } }
+        function filterTable(searchId, tbodyId) { const input = document.getElementById(searchId).value.toLowerCase(); const rows = document.getElementById(tbodyId).getElementsByTagName('tr'); for (let row of rows) { row.style.display = row.innerText.toLowerCase().includes(input) ? '' : 'none'; } }
 
-function initApp() {
-    document.getElementById('authScreen').classList.add('hidden');
-    document.getElementById('appScreen').classList.remove('hidden');
-    document.getElementById('userName').innerText = currentUser.name;
-    document.getElementById('userRole').innerText = currentUser.role;
-    document.getElementById('userAvatar').src = currentUser.avatar_url || AI_IMG;
-    navigate('dashboard');
-}
-window.onload = async () => { if (await checkSession()) { initApp(); } };
-</script>
+        function initApp() {
+            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('appScreen').classList.remove('hidden');
+            document.getElementById('userName').innerText = currentUser.name;
+            document.getElementById('userRole').innerText = currentUser.role;
+            document.getElementById('userAvatar').src = currentUser.avatar_url || AI_IMG;
+            navigate('dashboard');
+        }
+        window.onload = async () => { if (await checkSession()) { initApp(); } };
+    </script>
 </body>
 </html>
