@@ -260,7 +260,20 @@ async function generateKurikulum(type, typeLabel) {
         const prompt = `Buatkan ${typeLabel} lengkap dan profesional untuk mata pelajaran ${subject.name}, kelas ${className}, Fase ${phase}, topik: ${topic}. Gunakan format markdown yang rapi. Sesuaikan dengan Kurikulum Merdeka.`; 
         try { 
             const sys = `Anda adalah ahli kurikulum pendidikan Indonesia. Buatkan ${typeLabel} yang sesuai dengan Kurikulum Merdeka. Gunakan format markdown yang baik dengan heading, bullet points, dan tabel jika perlu. Pastikan isi lengkap, profesional, dan siap digunakan guru.`; 
-            const res = await puter.ai.chat([{role:'system',content:sys},{role:'user',content:prompt}]); const content = typeof res === 'string' ? res : (res.message?.content || ''); 
+            
+            // PERUBAHAN KE POLLINATIONS AI (TANPA LOGIN)
+            const res = await fetch('https://text.pollinations.ai/openai', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: 'openai',
+                    messages: [{role: 'system', content: sys}, {role: 'user', content: prompt}],
+                    referrer: 'gurasmart'
+                })
+            });
+            const data = await res.json();
+            const content = data.choices?.[0]?.message?.content || ''; 
+
             if(!content) throw new Error("AI tidak memberikan respon. Coba lagi.");
             await DB.insert('kurikulum', { type, title: `${typeLabel} - ${topic}`, subject_id: subjectId, class_name: className, content }); 
             showToast('Dokumen berhasil dibuat!', 'success'); closeModal(); renderKurikulum(); 
@@ -421,8 +434,20 @@ D. Pilihan D
 Jawaban: B
 
 ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap soal. Di bagian paling akhir, buat ringkasan "Kunci Jawaban:".`;
-        const res=await puter.ai.chat([{role:'system',content:sys},{role:'user',content:prompt}]);
-        let ans=typeof res==='string'?res:(res.message?.content||'');
+        
+        // PERUBAHAN KE POLLINATIONS AI (TANPA LOGIN)
+        const res = await fetch('https://text.pollinations.ai/openai', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: 'openai',
+                messages: [{role: 'system', content: sys}, {role: 'user', content: prompt}],
+                referrer: 'gurasmart'
+            })
+        });
+        const data = await res.json();
+        let ans = data.choices?.[0]?.message?.content || '';
+        
         const formattedHTML = formatSoalHTML(ans);
         lastAIFormattedHTML = formattedHTML;
         box.innerHTML=`<div class="flex justify-end"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-blue-600 text-white shadow-sm"><div class="text-xs opacity-70 mb-1">Anda</div><div class="whitespace-pre-wrap">${escapeHTML(prompt)}</div></div></div><div class="flex justify-start"><div class="max-w-[95%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="ai-output text-gray-800">${formattedHTML}</div></div></div>`;
