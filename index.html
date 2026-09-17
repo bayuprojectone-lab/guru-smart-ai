@@ -135,7 +135,7 @@
     <div id="printArea"></div>
     <script>
         const SUPABASE_URL = 'https://urslwiueyqhoykjhxmqq.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhkd2dxZ2RiZmlkbHNmZ3l5YWVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1MDAxNjQsImV4cCI6MjEwNTA3NjE2NH0.3QRFjepUIK00cmFFMJ7D3eEtWKpX2dMOfUPap-ef8Lo';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVyc2x3aXVleXFob3lramh4bXFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2NTIxMDgsImV4cCI6MjEwNTIyODEwOH0.cRHI2m9lasLJ6yX2vc1ioxJGm7bLRsCIptmiNtpz5go';
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
             auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
         });
@@ -172,13 +172,25 @@
                 document.getElementById('loginEmail').value = email; 
             } 
         });
+        
+        // SISTEM LOGIN ANTI-CRASH (TIDAK AKAN BLANK LAGI)
         document.getElementById('loginForm').addEventListener('submit', async (e) => { 
             e.preventDefault(); 
             const email = document.getElementById('loginEmail').value; 
             const password = document.getElementById('loginPassword').value; 
             const { data, error } = await sb.auth.signInWithPassword({ email, password }); 
             if (error) { showToast('Login gagal: ' + error.message, 'error'); return; } 
-            const { data: userData } = await sb.from('users').select('*').eq('id', data.user.id).single(); 
+            let userData = null;
+            const { data: userDataRes } = await sb.from('users').select('*').eq('id', data.user.id).maybeSingle();
+            if (userDataRes) {
+                userData = userDataRes;
+            } else {
+                const { data: newUserData } = await sb.from('users').upsert({ 
+                    id: data.user.id, name: email.split('@')[0], username: email, role: 'guru', is_premium: false, payment_status: 'Belum Bayar' 
+                }).select().maybeSingle();
+                if (newUserData) userData = newUserData;
+                else userData = { name: email, role: 'guru', is_premium: false, payment_status: 'Belum Bayar' };
+            }
             currentUser = { 
                 id: data.user.id, email: data.user.email, name: userData?.name || data.user.email, 
                 role: userData?.role || 'guru', avatar_url: userData?.avatar_url || AI_IMG,
@@ -186,23 +198,32 @@
                 payment_sender: userData?.payment_sender || ''
             }; 
             localStorage.setItem('gs_currentUser', JSON.stringify(currentUser)); 
+            showToast('Login berhasil!', 'success');
             initApp(); 
         });
+        
         async function logout() { await sb.auth.signOut(); localStorage.removeItem('gs_currentUser'); currentUser = null; location.reload(); }
         async function checkSession() { 
             const { data, error } = await sb.auth.getSession(); 
             if (data.session) { 
                 await sb.auth.refreshSession(); 
-                const { data: userData } = await sb.from('users').select('*').eq('id', data.session.user.id).single(); 
-                if(userData) { 
-                    currentUser = { 
-                        id: data.session.user.id, email: data.session.user.email, name: userData.name || data.session.user.email, 
-                        role: userData.role || 'guru', avatar_url: userData.avatar_url || AI_IMG,
-                        is_premium: userData.is_premium || false, payment_status: userData.payment_status || 'Belum Bayar',
-                        payment_sender: userData.payment_sender || ''
-                    }; 
-                    return true; 
-                } 
+                let userData = null;
+                const { data: userDataRes } = await sb.from('users').select('*').eq('id', data.session.user.id).maybeSingle();
+                if (userDataRes) userData = userDataRes;
+                else {
+                    const { data: newUserData } = await sb.from('users').upsert({ 
+                        id: data.session.user.id, name: data.session.user.email.split('@')[0], username: data.session.user.email, role: 'guru', is_premium: false, payment_status: 'Belum Bayar' 
+                    }).select().maybeSingle();
+                    if (newUserData) userData = newUserData;
+                    else userData = { name: data.session.user.email, role: 'guru', is_premium: false, payment_status: 'Belum Bayar' };
+                }
+                currentUser = { 
+                    id: data.session.user.id, email: data.session.user.email, name: userData.name || data.session.user.email, 
+                    role: userData.role || 'guru', avatar_url: userData.avatar_url || AI_IMG,
+                    is_premium: userData.is_premium || false, payment_status: userData.payment_status || 'Belum Bayar',
+                    payment_sender: userData.payment_sender || ''
+                }; 
+                return true; 
             } 
             return false; 
         }
@@ -343,7 +364,7 @@
         async function assignmentForm(id = null) { const classes = await DB.get('classes'); const subjects = await DB.get('subjects'); let a = null; if(id) { a = (await DB.get('assignments')).find(x => x.id === id); } openModal('Buat Tugas', `<form id="assignmentForm" class="space-y-4"><div><label class="block text-sm mb-1">Judul</label><input type="text" id="a_title" value="${a?.title || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Deskripsi</label><textarea id="a_desc" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${a?.description || ''}</textarea></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm mb-1">Mapel</label><select id="a_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}" ${a?.subject_id == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Kelas</label><select id="a_class" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}" ${a?.class_id == c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select></div></div><div><label class="block text-sm mb-1">Deadline</label><input type="date" id="a_deadline" value="${a?.deadline || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('assignmentForm').onsubmit = async (e) => { e.preventDefault(); const payload = { title: document.getElementById('a_title').value, description: document.getElementById('a_desc').value, subject_id: document.getElementById('a_subject').value, class_id: document.getElementById('a_class').value, deadline: document.getElementById('a_deadline').value }; await saveData('assignments', payload, id); closeModal(); renderAssignments(); }; }
 
         async function renderMateri() { const materi = await DB.get('materi'); const subjects = await DB.get('subjects'); const classes = await DB.get('classes'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Materi Pembelajaran</h3><button onclick="materiForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Tambah Materi</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4">${materi.length ? materi.map(m => { const sub = subjects.find(s => s.id === m.subject_id); const cls = classes.find(c => c.id === m.class_id); return `<div class="p-4 border rounded-lg"><h4 class="font-bold">${m.title}</h4><p class="text-xs text-slate-500 mt-1">${sub?.name || ''} | ${cls?.name || ''}</p><p class="text-sm mt-2">${m.description}</p><a href="${m.link}" target="_blank" class="mt-3 text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded inline-block">Buka Materi</a><div class="mt-3 flex gap-2"><button onclick="materiForm('${m.id}')" class="text-xs text-blue-500">Edit</button><button onclick="deleteData('materi', '${m.id}', renderMateri)" class="text-xs text-red-500">Hapus</button></div></div>`; }).join('') : '<div class="col-span-3 text-center py-8 text-slate-500">Belum ada materi.</div>'}</div></div>`; }
-        async function materiForm(id = null) { const classes = await DB.get('classes'); const subjects = await DB.get('subjects'); let m = null; if(id) { m = (await DB.get('materi')).find(x => x.id === id); } openModal('Tambah Materi', `<form id="materiForm" class="space-y-4"><div><label class="block text-sm mb-1">Judul</label><input type="text" id="m_title" value="${m?.title || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Deskripsi</label><textarea id="m_desc" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${m?.description || ''}</textarea></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm mb-1">Mapel</label><select id="m_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}" ${m?.subject_id == s.id ? 'selected' : ''}>${s.name</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Kelas</label><select id="m_class" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}" ${m?.class_id == c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select></div></div><div><label class="block text-sm mb-1">Link</label><input type="url" id="m_link" value="${m?.link || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('materiForm').onsubmit = async (e) => { e.preventDefault(); const payload = { title: document.getElementById('m_title').value, description: document.getElementById('m_desc').value, subject_id: document.getElementById('m_subject').value, class_id: document.getElementById('m_class').value, link: document.getElementById('m_link').value }; await saveData('materi', payload, id); closeModal(); renderMateri(); }; }
+        async function materiForm(id = null) { const classes = await DB.get('classes'); const subjects = await DB.get('subjects'); let m = null; if(id) { m = (await DB.get('materi')).find(x => x.id === id); } openModal('Tambah Materi', `<form id="materiForm" class="space-y-4"><div><label class="block text-sm mb-1">Judul</label><input type="text" id="m_title" value="${m?.title || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Deskripsi</label><textarea id="m_desc" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${m?.description || ''}</textarea></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm mb-1">Mapel</label><select id="m_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}" ${m?.subject_id == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Kelas</label><select id="m_class" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}" ${m?.class_id == c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select></div></div><div><label class="block text-sm mb-1">Link</label><input type="url" id="m_link" value="${m?.link || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('materiForm').onsubmit = async (e) => { e.preventDefault(); const payload = { title: document.getElementById('m_title').value, description: document.getElementById('m_desc').value, subject_id: document.getElementById('m_subject').value, class_id: document.getElementById('m_class').value, link: document.getElementById('m_link').value }; await saveData('materi', payload, id); closeModal(); renderMateri(); }; }
 
         async function renderKeuangan() { const keuangan = await DB.get('keuangan'); const students = await DB.get('students'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Pembayaran SPP</h3><button onclick="keuanganForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Catat Pembayaran</button></div><table class="w-full text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3">Siswa</th><th class="px-4 py-3">Bulan</th><th class="px-4 py-3">Jumlah</th><th class="px-4 py-3">Status</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody class="divide-y">${keuangan.length ? keuangan.map(k => { const std = students.find(s => s.id === k.student_id); return `<tr><td class="px-4 py-3">${std?.name || ''}</td><td class="px-4 py-3">${k.month}</td><td class="px-4 py-3">Rp ${k.amount.toLocaleString('id-ID')}</td><td class="px-4 py-3"><span class="px-2 py-1 text-xs rounded ${k.status==='Lunas'?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}">${k.status}</span></td><td class="px-4 py-3 flex gap-2">${k.status !== 'Lunas' ? `<button onclick="confirmPayment('${k.id}')" class="text-xs text-green-600">Lunasi</button>` : ''}<button onclick="deleteData('keuangan', '${k.id}', renderKeuangan)" class="text-xs text-red-500">Hapus</button></td></tr>`; }).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500">Belum ada data.</td></tr>`}</tbody></table></div>`; }
         async function keuanganForm(id = null) { const students = await DB.get('students'); openModal('Catat SPP', `<form id="keuanganForm" class="space-y-4"><div><label class="block text-sm mb-1">Siswa</label><select id="k_student" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${students.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Bulan</label><input type="text" id="k_month" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Jumlah</label><input type="number" id="k_amount" value="150000" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Status</label><select id="k_status" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option>Belum Bayar</option><option>Lunas</option></select></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('keuanganForm').onsubmit = async (e) => { e.preventDefault(); const payload = { student_id: document.getElementById('k_student').value, month: document.getElementById('k_month').value, amount: parseInt(document.getElementById('k_amount').value), status: document.getElementById('k_status').value }; await saveData('keuangan', payload, id); closeModal(); renderKeuangan(); }; }
@@ -361,7 +382,7 @@
         // AI ASSISTANT
         async function renderAI() {
             let isSignedIn = false;
-            const { data: userData } = await sb.from('users').select('*').eq('id', currentUser.id).single();
+            const { data: userData } = await sb.from('users').select('*').eq('id', currentUser.id).maybeSingle();
             if(userData) {
                 currentUser.is_premium = userData.is_premium;
                 currentUser.payment_status = userData.payment_status;
