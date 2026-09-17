@@ -135,7 +135,7 @@
     <div id="printArea"></div>
     <script>
         const SUPABASE_URL = 'https://urslwiueyqhoykjhxmqq.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVyc2x3aXVleXFob3lramh4bXFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2NTIxMDgsImV4cCI6MjEwNTIyODEwOH0.cRHI2m9lasLJ6yX2vc1ioxJGm7bLRsCIptmiNtpz5go';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhkd2dxZ2RiZmlkbHNmZ3l5YWVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk1MDAxNjQsImV4cCI6MjEwNTA3NjE2NH0.3QRFjepUIK00cmFFMJ7D3eEtWKpX2dMOfUPap-ef8Lo';
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
             auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
         });
@@ -151,48 +151,18 @@
         let currentUser = null; let currentPage = 'dashboard';
 
         function toggleAuth(form) { if(form === 'register') { document.getElementById('loginForm').classList.add('hidden'); document.getElementById('registerForm').classList.remove('hidden'); } else { document.getElementById('registerForm').classList.add('hidden'); document.getElementById('loginForm').classList.remove('hidden'); } }
-        
-        // SISTEM DAFTAR DIPERBAIKI: Langsung insert ke tabel users agar datanya masuk
         document.getElementById('registerForm').addEventListener('submit', async (e) => { 
             e.preventDefault(); 
             const name = document.getElementById('regName').value; 
             const email = document.getElementById('regEmail').value; 
             const password = document.getElementById('regPassword').value; 
-            
-            const { data, error } = await sb.auth.signUp({ 
-                email, 
-                password, 
-                options: { data: { name } } 
-            }); 
-            
-            if (error) { 
-                showToast('Gagal daftar: ' + error.message, 'error'); 
-                return; 
-            } 
-
+            const { data, error } = await sb.auth.signUp({ email, password, options: { data: { name } } }); 
+            if (error) { showToast('Gagal daftar: ' + error.message, 'error'); return; } 
             let newUserId = data.user?.id;
             let newUserEmail = data.user?.email;
-
             if (newUserId) {
-                // Langsung masukkan ke tabel users menggunakan upsert
-                await sb.from('users').upsert({ 
-                    id: newUserId, 
-                    name: name, 
-                    username: newUserEmail, 
-                    role: 'guru', 
-                    is_premium: false, 
-                    payment_status: 'Belum Bayar' 
-                });
-
-                currentUser = { 
-                    id: newUserId, 
-                    email: newUserEmail, 
-                    name: name, 
-                    role: 'guru',
-                    is_premium: false,
-                    payment_status: 'Belum Bayar'
-                }; 
-                
+                await sb.from('users').upsert({ id: newUserId, name: name, username: newUserEmail, role: 'guru', is_premium: false, payment_status: 'Belum Bayar' });
+                currentUser = { id: newUserId, email: newUserEmail, name: name, role: 'guru', is_premium: false, payment_status: 'Belum Bayar' }; 
                 localStorage.setItem('gs_currentUser', JSON.stringify(currentUser)); 
                 showToast('Pendaftaran berhasil!', 'success'); 
                 initApp(); 
@@ -202,7 +172,6 @@
                 document.getElementById('loginEmail').value = email; 
             } 
         });
-
         document.getElementById('loginForm').addEventListener('submit', async (e) => { 
             e.preventDefault(); 
             const email = document.getElementById('loginEmail').value; 
@@ -211,19 +180,14 @@
             if (error) { showToast('Login gagal: ' + error.message, 'error'); return; } 
             const { data: userData } = await sb.from('users').select('*').eq('id', data.user.id).single(); 
             currentUser = { 
-                id: data.user.id, 
-                email: data.user.email, 
-                name: userData?.name || data.user.email, 
-                role: userData?.role || 'guru', 
-                avatar_url: userData?.avatar_url || AI_IMG,
-                is_premium: userData?.is_premium || false,
-                payment_status: userData?.payment_status || 'Belum Bayar',
+                id: data.user.id, email: data.user.email, name: userData?.name || data.user.email, 
+                role: userData?.role || 'guru', avatar_url: userData?.avatar_url || AI_IMG,
+                is_premium: userData?.is_premium || false, payment_status: userData?.payment_status || 'Belum Bayar',
                 payment_sender: userData?.payment_sender || ''
             }; 
             localStorage.setItem('gs_currentUser', JSON.stringify(currentUser)); 
             initApp(); 
         });
-        
         async function logout() { await sb.auth.signOut(); localStorage.removeItem('gs_currentUser'); currentUser = null; location.reload(); }
         async function checkSession() { 
             const { data, error } = await sb.auth.getSession(); 
@@ -232,13 +196,9 @@
                 const { data: userData } = await sb.from('users').select('*').eq('id', data.session.user.id).single(); 
                 if(userData) { 
                     currentUser = { 
-                        id: data.session.user.id, 
-                        email: data.session.user.email, 
-                        name: userData.name || data.session.user.email, 
-                        role: userData.role || 'guru', 
-                        avatar_url: userData.avatar_url || AI_IMG,
-                        is_premium: userData.is_premium || false,
-                        payment_status: userData.payment_status || 'Belum Bayar',
+                        id: data.session.user.id, email: data.session.user.email, name: userData.name || data.session.user.email, 
+                        role: userData.role || 'guru', avatar_url: userData.avatar_url || AI_IMG,
+                        is_premium: userData.is_premium || false, payment_status: userData.payment_status || 'Belum Bayar',
                         payment_sender: userData.payment_sender || ''
                     }; 
                     return true; 
@@ -383,7 +343,7 @@
         async function assignmentForm(id = null) { const classes = await DB.get('classes'); const subjects = await DB.get('subjects'); let a = null; if(id) { a = (await DB.get('assignments')).find(x => x.id === id); } openModal('Buat Tugas', `<form id="assignmentForm" class="space-y-4"><div><label class="block text-sm mb-1">Judul</label><input type="text" id="a_title" value="${a?.title || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Deskripsi</label><textarea id="a_desc" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${a?.description || ''}</textarea></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm mb-1">Mapel</label><select id="a_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}" ${a?.subject_id == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Kelas</label><select id="a_class" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}" ${a?.class_id == c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select></div></div><div><label class="block text-sm mb-1">Deadline</label><input type="date" id="a_deadline" value="${a?.deadline || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('assignmentForm').onsubmit = async (e) => { e.preventDefault(); const payload = { title: document.getElementById('a_title').value, description: document.getElementById('a_desc').value, subject_id: document.getElementById('a_subject').value, class_id: document.getElementById('a_class').value, deadline: document.getElementById('a_deadline').value }; await saveData('assignments', payload, id); closeModal(); renderAssignments(); }; }
 
         async function renderMateri() { const materi = await DB.get('materi'); const subjects = await DB.get('subjects'); const classes = await DB.get('classes'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Materi Pembelajaran</h3><button onclick="materiForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Tambah Materi</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4">${materi.length ? materi.map(m => { const sub = subjects.find(s => s.id === m.subject_id); const cls = classes.find(c => c.id === m.class_id); return `<div class="p-4 border rounded-lg"><h4 class="font-bold">${m.title}</h4><p class="text-xs text-slate-500 mt-1">${sub?.name || ''} | ${cls?.name || ''}</p><p class="text-sm mt-2">${m.description}</p><a href="${m.link}" target="_blank" class="mt-3 text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded inline-block">Buka Materi</a><div class="mt-3 flex gap-2"><button onclick="materiForm('${m.id}')" class="text-xs text-blue-500">Edit</button><button onclick="deleteData('materi', '${m.id}', renderMateri)" class="text-xs text-red-500">Hapus</button></div></div>`; }).join('') : '<div class="col-span-3 text-center py-8 text-slate-500">Belum ada materi.</div>'}</div></div>`; }
-        async function materiForm(id = null) { const classes = await DB.get('classes'); const subjects = await DB.get('subjects'); let m = null; if(id) { m = (await DB.get('materi')).find(x => x.id === id); } openModal('Tambah Materi', `<form id="materiForm" class="space-y-4"><div><label class="block text-sm mb-1">Judul</label><input type="text" id="m_title" value="${m?.title || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Deskripsi</label><textarea id="m_desc" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${m?.description || ''}</textarea></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm mb-1">Mapel</label><select id="m_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}" ${m?.subject_id == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Kelas</label><select id="m_class" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}" ${m?.class_id == c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select></div></div><div><label class="block text-sm mb-1">Link</label><input type="url" id="m_link" value="${m?.link || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('materiForm').onsubmit = async (e) => { e.preventDefault(); const payload = { title: document.getElementById('m_title').value, description: document.getElementById('m_desc').value, subject_id: document.getElementById('m_subject').value, class_id: document.getElementById('m_class').value, link: document.getElementById('m_link').value }; await saveData('materi', payload, id); closeModal(); renderMateri(); }; }
+        async function materiForm(id = null) { const classes = await DB.get('classes'); const subjects = await DB.get('subjects'); let m = null; if(id) { m = (await DB.get('materi')).find(x => x.id === id); } openModal('Tambah Materi', `<form id="materiForm" class="space-y-4"><div><label class="block text-sm mb-1">Judul</label><input type="text" id="m_title" value="${m?.title || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Deskripsi</label><textarea id="m_desc" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${m?.description || ''}</textarea></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm mb-1">Mapel</label><select id="m_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}" ${m?.subject_id == s.id ? 'selected' : ''}>${s.name</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Kelas</label><select id="m_class" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}" ${m?.class_id == c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select></div></div><div><label class="block text-sm mb-1">Link</label><input type="url" id="m_link" value="${m?.link || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('materiForm').onsubmit = async (e) => { e.preventDefault(); const payload = { title: document.getElementById('m_title').value, description: document.getElementById('m_desc').value, subject_id: document.getElementById('m_subject').value, class_id: document.getElementById('m_class').value, link: document.getElementById('m_link').value }; await saveData('materi', payload, id); closeModal(); renderMateri(); }; }
 
         async function renderKeuangan() { const keuangan = await DB.get('keuangan'); const students = await DB.get('students'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Pembayaran SPP</h3><button onclick="keuanganForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Catat Pembayaran</button></div><table class="w-full text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3">Siswa</th><th class="px-4 py-3">Bulan</th><th class="px-4 py-3">Jumlah</th><th class="px-4 py-3">Status</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody class="divide-y">${keuangan.length ? keuangan.map(k => { const std = students.find(s => s.id === k.student_id); return `<tr><td class="px-4 py-3">${std?.name || ''}</td><td class="px-4 py-3">${k.month}</td><td class="px-4 py-3">Rp ${k.amount.toLocaleString('id-ID')}</td><td class="px-4 py-3"><span class="px-2 py-1 text-xs rounded ${k.status==='Lunas'?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}">${k.status}</span></td><td class="px-4 py-3 flex gap-2">${k.status !== 'Lunas' ? `<button onclick="confirmPayment('${k.id}')" class="text-xs text-green-600">Lunasi</button>` : ''}<button onclick="deleteData('keuangan', '${k.id}', renderKeuangan)" class="text-xs text-red-500">Hapus</button></td></tr>`; }).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500">Belum ada data.</td></tr>`}</tbody></table></div>`; }
         async function keuanganForm(id = null) { const students = await DB.get('students'); openModal('Catat SPP', `<form id="keuanganForm" class="space-y-4"><div><label class="block text-sm mb-1">Siswa</label><select id="k_student" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${students.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Bulan</label><input type="text" id="k_month" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Jumlah</label><input type="number" id="k_amount" value="150000" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Status</label><select id="k_status" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option>Belum Bayar</option><option>Lunas</option></select></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('keuanganForm').onsubmit = async (e) => { e.preventDefault(); const payload = { student_id: document.getElementById('k_student').value, month: document.getElementById('k_month').value, amount: parseInt(document.getElementById('k_amount').value), status: document.getElementById('k_status').value }; await saveData('keuangan', payload, id); closeModal(); renderKeuangan(); }; }
@@ -472,8 +432,55 @@
                 return;
             }
 
-            document.getElementById('content').innerHTML = `<div class="grid grid-cols-1 xl:grid-cols-3 gap-6"><div class="xl:col-span-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden"><div class="p-5 border-b dark:border-slate-700 flex justify-between items-center bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700"><div class="flex items-center gap-3"><img src="${AI_IMG}" class="w-12 h-12 rounded-xl object-cover shadow-sm"><div><h3 class="text-lg font-bold text-slate-800 dark:text-white">Asisten AI Guru</h3><p class="text-xs text-slate-500 dark:text-slate-400">Soal A B C D • Format otomatis rapi</p></div></div></div><div id="aiMessages" class="h-[500px] overflow-y-auto p-5 space-y-4 bg-slate-50 dark:bg-slate-900"></div><div class="p-4 border-t dark:border-slate-700 bg-white dark:bg-slate-800"><textarea id="aiInput" rows="3" placeholder="Tulis perintah... (Contoh: Buatkan 5 soal pilihan ganda A B C D tentang Pahlawan Nasional)" class="w-full px-4 py-3 rounded-xl border dark:bg-slate-700 dark:text-white resize-none focus:ring-2 focus:ring-blue-500 outline-none mb-3"></textarea><div class="flex justify-end gap-2 flex-wrap"><button id="aiWordBtn" onclick="exportToWord()" class="hidden bg-blue-500 text-white px-4 py-2.5 rounded-lg font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>Word (Soal)</button><button id="aiPrintBtn" onclick="printAIResult(false)" class="hidden bg-slate-600 text-white px-4 py-2.5 rounded-lg font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>Cetak Soal (PDF)</button><button id="aiPrintKeyBtn" onclick="printAIResult(true)" class="hidden bg-green-600 text-white px-4 py-2.5 rounded-lg font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>Cetak + Kunci</button><button id="aiSendBtn" onclick="sendAI()" class="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9 2zm0 0v-8" /></svg>Kirim</button></div></div></div></div>`; 
+            document.getElementById('content').innerHTML = `
+            <div class="flex flex-col h-[calc(100vh-120px)] max-w-4xl mx-auto bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden">
+                <div class="p-4 border-b dark:border-slate-700 flex justify-between items-center bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700">
+                    <div class="flex items-center gap-3">
+                        <img src="${AI_IMG}" class="w-10 h-10 rounded-xl object-cover shadow-sm">
+                        <div>
+                            <h3 class="font-bold text-slate-800 dark:text-white">Asisten AI Guru</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Soal A B C D • Format otomatis rapi</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="aiMessages" class="flex-1 overflow-y-auto p-5 space-y-4 bg-slate-50 dark:bg-slate-900"></div>
+                
+                <div class="p-3 border-t dark:border-slate-700 bg-white dark:bg-slate-800">
+                    <div class="flex gap-2 items-end">
+                        <textarea id="aiInput" rows="2" placeholder="Tulis perintah... (Tekan Enter di PC untuk mengirim)" class="flex-1 px-4 py-2 rounded-xl border dark:bg-slate-700 dark:text-white resize-none focus:ring-2 focus:ring-blue-500 outline-none text-sm"></textarea>
+                        <button id="aiSendBtn" onclick="sendAI()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold flex items-center gap-1 text-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9 2zm0 0v-8" /></svg>
+                            Kirim
+                        </button>
+                    </div>
+                    <div class="flex justify-end gap-2 mt-2 flex-wrap">
+                        <button id="aiWordBtn" onclick="exportToWord()" class="hidden bg-blue-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>Word
+                        </button>
+                        <button id="aiPrintBtn" onclick="printAIResult(false)" class="hidden bg-slate-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>Soal
+                        </button>
+                        <button id="aiPrintKeyBtn" onclick="printAIResult(true)" class="hidden bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>Soal + Kunci
+                        </button>
+                    </div>
+                </div>
+            </div>`; 
+            
             loadAIChat(); 
+            setupEnterKey();
+        }
+
+        function setupEnterKey() {
+            const input = document.getElementById('aiInput');
+            if(!input) return;
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault(); 
+                    sendAI();
+                }
+            });
         }
 
         async function confirmPaymentAI() {
@@ -525,7 +532,9 @@
 
         function aiPrompt(text){document.getElementById('aiInput').value=text;sendAI();}
         async function getSchoolContext(){return {students:await DB.get('students'),teachers:await DB.get('teachers'),subjects:await DB.get('subjects')};}
+        
         function loadAIChat(){const box=document.getElementById('aiMessages');if(!box)return;box.innerHTML=`<div class="flex justify-start"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="whitespace-pre-wrap text-gray-800">Halo! Saya adalah Asisten AI Guru Anda. Silakan tulis perintah untuk membuat soal atau materi lainnya.</div></div></div>`;}
+        
         function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
         function formatSoalHTML(rawText) {
@@ -589,7 +598,7 @@
         let lastAIFormattedHTML = '';
         async function sendAI(){
             const input=document.getElementById('aiInput');
-            if(!input.value.trim())return;
+            if(!input || !input.value.trim()) return;
             const prompt=input.value.trim();
             input.value='';
             const btn=document.getElementById('aiSendBtn');
