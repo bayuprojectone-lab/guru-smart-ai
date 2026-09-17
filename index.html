@@ -168,7 +168,6 @@ async function logout() { await sb.auth.signOut(); localStorage.removeItem('gs_c
 async function checkSession() { 
     const { data, error } = await sb.auth.getSession(); 
     if (data.session) { 
-        // Paksa refresh token agar tidak kedaluwarsa
         await sb.auth.refreshSession();
         const { data: userData } = await sb.from('users').select('*').eq('id', data.session.user.id).single(); 
         if(userData) {
