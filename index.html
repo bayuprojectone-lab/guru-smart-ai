@@ -99,12 +99,12 @@
         <main class="flex-1 flex flex-col overflow-hidden bg-slate-100 dark:bg-slate-900">
             <header class="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 lg:px-6 shadow-sm">
                 <div class="flex items-center space-x-4">
-                    <button onclick="toggleSidebar()" class="lg:hidden text-slate-500"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
+                    <button onclick="toggleSidebar()" class="lg:hidden text-slate-500"><svg class="w-6 h-6" fill="none, stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
                     <h2 id="pageTitle" class="text-xl font-semibold text-slate-800 dark:text-white">Dashboard</h2>
                 </div>
                 <div class="flex items-center space-x-4">
                     <button onclick="toggleDarkMode()" class="text-slate-500 hover:text-blue-600">
-                        <svg id="iconSun" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        <svg id="iconSun" class="w-6 h-6 hidden" fill="none, stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                         <svg id="iconMoon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
                     </button>
                     <div class="flex items-center space-x-2">
@@ -632,7 +632,7 @@
             return marked.parse(text) + kunciSection;
         }
 
-              let lastAIFormattedHTML = '';
+        let lastAIFormattedHTML = '';
         async function sendAI(){
             const input=document.getElementById('aiInput');
             if(!input || !input.value.trim()) return;
@@ -657,22 +657,13 @@
                 const lowerPrompt = prompt.toLowerCase();
                 const isImageRequest = lowerPrompt.includes('gambar') || lowerPrompt.includes('ilustrasi') || lowerPrompt.includes('foto');
 
-                               if (isImageRequest) {
+                if (isImageRequest) {
                     // PROSES MEMBUAT GAMBAR MENGGUNAKAN txt2img dengan model spesifik
                     const imgSrc = await puter.ai.txt2img({
                         prompt: prompt,
                         model: 'openai-image-generation', // Wajib ada modelnya agar tidak MISSING MODEL
                         test_mode: false // Set false agar gambar yang dihasilkan benar-benar sesuai teks
                     });
-                    
-                    const htmlRes = `<div class="mb-2 text-sm text-gray-800">Berikut adalah gambar untuk: <strong>${escapeHTML(prompt)}</strong></div><div class="flex flex-col items-center gap-2"><img src="${imgSrc}" class="rounded-lg max-w-full h-auto border border-slate-200 shadow-sm" alt="Gambar"><a href="${imgSrc}" download="Gambar_Edukasi.jpg" class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-blue-700">⬇️ Download Gambar (JPG)</a></div>`;
-                    
-                    aiChatHistory.push({role:'user', content:prompt});
-                    aiChatHistory.push({role:'assistant', content:"[Gambar telah dibuat]"});
-                    
-                    document.getElementById('typingIndicator')?.remove();
-                    box.innerHTML += `<div class="flex justify-start fade-in"><div class="max-w-[80%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="ai-output text-gray-800">${htmlRes}</div></div></div>`;
-                }
                     
                     const htmlRes = `<div class="mb-2 text-sm text-gray-800">Berikut adalah gambar untuk: <strong>${escapeHTML(prompt)}</strong></div><div class="flex flex-col items-center gap-2"><img src="${imgSrc}" class="rounded-lg max-w-full h-auto border border-slate-200 shadow-sm" alt="Gambar"><a href="${imgSrc}" download="Gambar_Edukasi.jpg" class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-blue-700">⬇️ Download Gambar (JPG)</a></div>`;
                     
@@ -717,6 +708,7 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
                 btn.disabled=false; btn.innerText='Kirim';
             }
         }
+
         function printAIResult(includeAnswerKey = false) { 
             if(!lastAIFormattedHTML) return; 
             let cleanHTML = lastAIFormattedHTML;
