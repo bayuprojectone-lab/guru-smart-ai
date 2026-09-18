@@ -459,7 +459,7 @@
                         <img src="${AI_IMG}" class="w-10 h-10 rounded-xl object-cover shadow-sm">
                         <div>
                             <h3 class="font-bold text-slate-800 dark:text-white">Asisten AI Guru</h3>
-                            <p class="text-xs text-slate-500 dark:text-slate-400">Soal A B C D • Format otomatis rapi</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">SIAP Membantu dengan sepenuh HATI</p>
                         </div>
                     </div>
                 </div>
@@ -468,7 +468,7 @@
                 
                 <div class="p-3 border-t dark:border-slate-700 bg-white dark:bg-slate-800">
                     <div class="flex gap-2 items-end">
-                        <textarea id="aiInput" rows="2" placeholder="Tulis perintah... (Tekan Enter di PC untuk mengirim)" class="flex-1 px-4 py-2 rounded-xl border dark:bg-slate-700 dark:text-white resize-none focus:ring-2 focus:ring-blue-500 outline-none text-sm"></textarea>
+                        <textarea id="aiInput" rows="2" placeholder="Tulis perintah..." class="flex-1 px-4 py-2 rounded-xl border dark:bg-slate-700 dark:text-white resize-none focus:ring-2 focus:ring-blue-500 outline-none text-sm"></textarea>
                         <button id="aiSendBtn" onclick="sendAI()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold flex items-center gap-1 text-sm">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9 2zm0 0v-8" /></svg>
                             Kirim
@@ -479,7 +479,7 @@
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>Word
                         </button>
                         <button id="aiPrintBtn" onclick="printAIResult(false)" class="hidden bg-slate-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>Soal
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>PDF
                         </button>
                         <button id="aiPrintKeyBtn" onclick="printAIResult(true)" class="hidden bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>Soal + Kunci
@@ -508,7 +508,7 @@
             <form id="paymentConfirmForm" class="space-y-4">
                 <div class="bg-yellow-50 dark:bg-slate-700 p-3 rounded-lg text-sm text-yellow-700 dark:text-yellow-300 text-center border border-yellow-200">
                     <strong>Perhatian:</strong> Silakan transfer Rp 25.000 ke DANA <br><strong>081212514747 (BAYU PRATAMA)</strong>.<br>
-                    Setelah transfer, masukkan nama pengirim di bawah ini. Admin akan memverifikasi pembayaran Anda maksimal 1x24 Jam.
+                    Setelah transfer, masukkan nama pengirim di bawah ini. Chat WA Ke 0812 1251 4747 Admin akan memverifikasi pembayaran Anda maksimal 1x24 Jam.
                 </div>
                 <div>
                     <label class="block text-sm mb-1">Nama Pengirim DANA</label>
@@ -561,7 +561,7 @@
             if(!box)return;
             // Jangan hapus isi box, tapi pastikan ada pesan sambutan jika kosong
             if(aiChatHistory.length === 0){
-                box.innerHTML = `<div class="flex justify-start"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="whitespace-pre-wrap text-gray-800">Halo! Saya adalah Asisten AI Guru Anda. Silakan tulis perintah untuk membuat soal atau materi lainnya.</div></div></div>`;
+                box.innerHTML = `<div class="flex justify-start"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="whitespace-pre-wrap text-gray-800">Halo! Saya adalah Asisten AI Guru Anda. Silakan tulis perintah atau materi lainnya.</div></div></div>`;
             }
         }
 
