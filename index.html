@@ -625,6 +625,7 @@
             document.getElementById('imgPrompt').value = text;
         }
 
+        // ===== FUNGSI GENERATE GAMBAR DENGAN SISTEM AUTO-RETRY MODEL =====
         async function generateImage() {
             const promptEl = document.getElementById('imgPrompt');
             const prompt = promptEl.value.trim();
@@ -650,61 +651,25 @@
             loading.classList.remove('hidden');
             result.classList.add('hidden');
 
-            try {
-                // PERBAIKAN ERROR MISSING MODEL: Menambahkan parameter model 'dall-e-3'
-                const imgElement = await puter.ai.txt2img(fullPrompt, false, { model: 'dall-e-3' });
-                
-                const imgUrl = typeof imgElement === 'string' ? imgElement : (imgElement.src || imgElement.toString());
-                
-                loading.classList.add('hidden');
-                
-                result.classList.remove('hidden');
-                result.innerHTML = `
-                <div class="img-card bg-slate-50 dark:bg-slate-700 rounded-xl p-4">
-                    <div class="flex justify-between items-center mb-3">
-                        <div class="flex-1 min-w-0">
-                            <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Prompt:</p>
-                            <p class="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">${escapeHTML(prompt)}</p>
-                        </div>
-                        <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full ml-2">✓ Selesai</span>
-                    </div>
-                    <div class="relative group cursor-pointer" onclick="openLightbox('${imgUrl}')">
-                        <img src="${imgUrl}" class="w-full rounded-lg shadow-md max-h-[500px] object-contain bg-white" alt="${escapeHTML(prompt)}">
-                        <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                            <span class="text-white text-sm font-semibold">🔍 Klik untuk perbesar</span>
-                        </div>
-                    </div>
-                    <div class="flex gap-2 mt-3">
-                        <a href="${imgUrl}" download="gambar-ai-${Date.now()}.png" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm py-2 rounded-lg font-semibold flex items-center justify-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                            Download
-                        </a>
-                        <button onclick="saveImgToDB('${imgUrl}', '${escapeHTML(prompt).replace(/'/g, "\\'")}')" class="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm py-2 rounded-lg font-semibold flex items-center justify-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
-                            Simpan
-                        </button>
-                        <button onclick="document.getElementById('imgPrompt').value='${escapeHTML(prompt).replace(/'/g, "\\'")}'; generateImage();" class="bg-purple-600 hover:bg-purple-700 text-white text-sm py-2 px-3 rounded-lg font-semibold flex items-center justify-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                        </button>
-                    </div>
-                </div>`;
+            // Daftar model gambar Puter AI yang akan dicoba secara berurutan
+            const models = ['flux', 'stable-diffusion-xl', 'dall-e-3'];
+            let imgGenerated = false;
 
-                generatedImages.unshift({ url: imgUrl, prompt: prompt, time: new Date().toLocaleString('id-ID') });
-                if(generatedImages.length > 20) generatedImages = generatedImages.slice(0, 20);
-                renderImgHistory();
-
-                showToast('Gambar berhasil dibuat!', 'success');
-            } catch(err) {
-                loading.classList.add('hidden');
-                
-                // Fallback: Jika DALL-E 3 error, coba gunakan Stable Diffusion XL
+            for (let i = 0; i < models.length; i++) {
                 try {
-                    showToast('Mencoba model alternatif...', 'info');
-                    const imgElementFallback = await puter.ai.txt2img(fullPrompt, false, { model: 'stable-diffusion-xl' });
-                    const imgUrlFallback = typeof imgElementFallback === 'string' ? imgElementFallback : (imgElementFallback.src || imgElementFallback.toString());
+                    const currentModel = models[i];
+                    btnText.innerText = `Mencoba model ${i + 1}...`;
                     
+                    // Panggil Puter AI dengan model saat ini
+                    const imgElement = await puter.ai.txt2img(fullPrompt, false, { model: currentModel });
+                    const imgUrl = typeof imgElement === 'string' ? imgElement : (imgElement.src || imgElement.toString());
+                    
+                    if(!imgUrl) throw new Error("URL gambar kosong");
+
                     loading.classList.add('hidden');
                     result.classList.remove('hidden');
+                    
+                    // Tampilkan hasil gambar
                     result.innerHTML = `
                     <div class="img-card bg-slate-50 dark:bg-slate-700 rounded-xl p-4">
                         <div class="flex justify-between items-center mb-3">
@@ -714,37 +679,49 @@
                             </div>
                             <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full ml-2">✓ Selesai</span>
                         </div>
-                        <div class="relative group cursor-pointer" onclick="openLightbox('${imgUrlFallback}')">
-                            <img src="${imgUrlFallback}" class="w-full rounded-lg shadow-md max-h-[500px] object-contain bg-white" alt="${escapeHTML(prompt)}">
+                        <div class="relative group cursor-pointer" onclick="openLightbox('${imgUrl}')">
+                            <img src="${imgUrl}" class="w-full rounded-lg shadow-md max-h-[500px] object-contain bg-white" alt="${escapeHTML(prompt)}">
                             <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
                                 <span class="text-white text-sm font-semibold">🔍 Klik untuk perbesar</span>
                             </div>
                         </div>
                         <div class="flex gap-2 mt-3">
-                            <a href="${imgUrlFallback}" download="gambar-ai-${Date.now()}.png" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm py-2 rounded-lg font-semibold flex items-center justify-center gap-1">
+                            <a href="${imgUrl}" download="gambar-ai-${Date.now()}.png" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm py-2 rounded-lg font-semibold flex items-center justify-center gap-1">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                                 Download
                             </a>
-                            <button onclick="saveImgToDB('${imgUrlFallback}', '${escapeHTML(prompt).replace(/'/g, "\\'")}')" class="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm py-2 rounded-lg font-semibold flex items-center justify-center gap-1">
+                            <button onclick="saveImgToDB('${imgUrl}', '${escapeHTML(prompt).replace(/'/g, "\\'")}')" class="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm py-2 rounded-lg font-semibold flex items-center justify-center gap-1">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
                                 Simpan
                             </button>
+                            <button onclick="document.getElementById('imgPrompt').value='${escapeHTML(prompt).replace(/'/g, "\\'")}'; generateImage();" class="bg-purple-600 hover:bg-purple-700 text-white text-sm py-2 px-3 rounded-lg font-semibold flex items-center justify-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                            </button>
                         </div>
                     </div>`;
-                    
-                    generatedImages.unshift({ url: imgUrlFallback, prompt: prompt, time: new Date().toLocaleString('id-ID') });
+
+                    // Simpan ke history
+                    generatedImages.unshift({ url: imgUrl, prompt: prompt, time: new Date().toLocaleString('id-ID') });
                     if(generatedImages.length > 20) generatedImages = generatedImages.slice(0, 20);
                     renderImgHistory();
+
                     showToast('Gambar berhasil dibuat!', 'success');
+                    imgGenerated = true;
+                    break; // Berhenti loop karena sudah berhasil
                     
-                } catch (err2) {
-                    loading.classList.add('hidden');
-                    showToast('Gagal membuat gambar: Server AI sedang sibuk. Coba lagi nanti.', 'error');
-                    console.error('Image gen error:', err2);
+                } catch (err) {
+                    console.error(`Model ${models[i]} gagal:`, err);
+                    // Jika model pertama gagal, loop akan otomatis mencoba model berikutnya
                 }
-            } finally {
-                btn.disabled = false; btnText.innerText = 'Generate Gambar'; spinner.classList.add('hidden');
             }
+
+            // Jika semua model gagal
+            if (!imgGenerated) {
+                loading.classList.add('hidden');
+                showToast('Server AI sedang sangat sibuk. Coba lagi dalam beberapa saat.', 'error');
+            }
+
+            btn.disabled = false; btnText.innerText = 'Generate Gambar'; spinner.classList.add('hidden');
         }
 
         function renderImgHistory() {
