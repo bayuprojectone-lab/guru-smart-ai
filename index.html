@@ -382,7 +382,7 @@
         async function renderMateri() { const materi = await DB.get('materi'); const subjects = await DB.get('subjects'); const classes = await DB.get('classes'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Materi Pembelajaran</h3><button onclick="materiForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Tambah Materi</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4">${materi.length ? materi.map(m => { const sub = subjects.find(s => s.id === m.subject_id); const cls = classes.find(c => c.id === m.class_id); return `<div class="p-4 border rounded-lg"><h4 class="font-bold">${m.title}</h4><p class="text-xs text-slate-500 mt-1">${sub?.name || ''} | ${cls?.name || ''}</p><p class="text-sm mt-2">${m.description}</p><a href="${m.link}" target="_blank" class="mt-3 text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded inline-block">Buka Materi</a><div class="mt-3 flex gap-2"><button onclick="materiForm('${m.id}')" class="text-xs text-blue-500">Edit</button><button onclick="deleteData('materi', '${m.id}', renderMateri)" class="text-xs text-red-500">Hapus</button></div></div>`; }).join('') : '<div class="col-span-3 text-center py-8 text-slate-500">Belum ada materi.</div>'}</div></div>`; }
         async function materiForm(id = null) { const classes = await DB.get('classes'); const subjects = await DB.get('subjects'); let m = null; if(id) { m = (await DB.get('materi')).find(x => x.id === id); } openModal('Tambah Materi', `<form id="materiForm" class="space-y-4"><div><label class="block text-sm mb-1">Judul</label><input type="text" id="m_title" value="${m?.title || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Deskripsi</label><textarea id="m_desc" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${m?.description || ''}</textarea></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm mb-1">Mapel</label><select id="m_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}" ${m?.subject_id == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Kelas</label><select id="m_class" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}" ${m?.class_id == c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select></div></div><div><label class="block text-sm mb-1">Link</label><input type="url" id="m_link" value="${m?.link || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('materiForm').onsubmit = async (e) => { e.preventDefault(); const payload = { title: document.getElementById('m_title').value, description: document.getElementById('m_desc').value, subject_id: document.getElementById('m_subject').value, class_id: document.getElementById('m_class').value, link: document.getElementById('m_link').value }; await saveData('materi', payload, id); closeModal(); renderMateri(); }; }
 
-        async function renderKeuangan() { const keuangan = await DB.get('keuangan'); const students = await DB.get('students'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Pembayaran SPP</h3><button onclick="keuanganForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Catat Pembayaran</button></div><table class="w-full text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3">Siswa</th><th class="px-4 py-3">Bulan</th><th class="px-4 py-3">Jumlah</th><th class="px-4 py-3">Status</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody class="divide-y">${keuangan.length ? keuangan.map(k => { const std = students.find(s => s.id === k.student_id); return `<tr><td class="px-4 py-3">${std?.name || ''}</td><td class="px-4 py-3">${k.month}</td><td class="px-4 py-3">Rp ${k.amount.toLocaleString('id-ID')}</td><td class="px-4 py-3"><span class="px-2 py-1 text-xs rounded ${k.status==='Lunas'?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}">${k.status}</span></td><td class="px-4 py-3 flex gap-2">${k.status !== 'Lunas' ? `<button onclick="confirmPayment('${k.id}')" class="text-xs text-green-600">Lunasi</button>` : ''}<button onclick="deleteData('keuangan', '${k.id}', renderKeuangan)" class="text-xs text-red-500">Hapus</button></td></tr>`; }).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500">Belum ada data.</td></tr>`}</tbody></table></div>`; }
+        async function renderKeuangan() { const keuangan = await DB.get('keuangan'); const students = await DB.get('students'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Pembayaran SPP</h3><button onclick="keuanganForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Catat Pembayaran</button></div><table class="w-full text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3">Siswa</th><th class="px-4 py-3">Bulan</th><th class="px-4 py-3">Jumlah</th><th class="px-4 py-3">Status</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody class="divide-y">${keuangan.length ? keuangan.map(k => { const std = students.find(s => s.id === k.student_id); return `<tr><td class="px-4 py-3">${std?.name || ''}</td><td class="px-4 py-3">${k.month}</td><td class="px-4 py-3">Rp ${k.amount.toLocaleString('id-ID')}</td><td class="px-4 py-3"><span class="px-2 py-1 text-xs rounded ${k.status==='Lunas'?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}">${k.status}</span></td><td class="px-4 py-3 flex gap-2">${k.status !== 'Lunas' ? `<button onclick="confirmPayment('${k.id}')" class="text-xs text-green-600">Lunasi</button>` : ''}<button onclick="deleteData('keuangan', '${k.id}', renderKeuangan')" class="text-xs text-red-500">Hapus</button></td></tr>`; }).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500">Belum ada data.</td></tr>`}</tbody></table></div>`; }
         async function keuanganForm(id = null) { const students = await DB.get('students'); openModal('Catat SPP', `<form id="keuanganForm" class="space-y-4"><div><label class="block text-sm mb-1">Siswa</label><select id="k_student" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${students.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Bulan</label><input type="text" id="k_month" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Jumlah</label><input type="number" id="k_amount" value="150000" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Status</label><select id="k_status" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option>Belum Bayar</option><option>Lunas</option></select></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('keuanganForm').onsubmit = async (e) => { e.preventDefault(); const payload = { student_id: document.getElementById('k_student').value, month: document.getElementById('k_month').value, amount: parseInt(document.getElementById('k_amount').value), status: document.getElementById('k_status').value }; await saveData('keuangan', payload, id); closeModal(); renderKeuangan(); }; }
         async function confirmPayment(id) { await DB.update('keuangan', id, { status: 'Lunas' }); showToast('Pembayaran lunas!', 'success'); renderKeuangan(); }
 
@@ -625,7 +625,7 @@
             document.getElementById('imgPrompt').value = text;
         }
 
-        // ===== FUNGSI GENERATE GAMBAR DENGAN SISTEM AUTO-RETRY MODEL =====
+        // ===== FUNGSI GENERATE GAMBAR DENGAN 3 TIER FALLBACK (Puter & Alternatif) =====
         async function generateImage() {
             const promptEl = document.getElementById('imgPrompt');
             const prompt = promptEl.value.trim();
@@ -651,74 +651,101 @@
             loading.classList.remove('hidden');
             result.classList.add('hidden');
 
-            // Daftar model gambar Puter AI yang akan dicoba secara berurutan
-            const models = ['flux', 'stable-diffusion-xl', 'dall-e-3'];
+            // Daftar model gambar Puter AI yang akan dicoba
+            const models = ['dall-e-3', 'flux', 'stable-diffusion-xl'];
             let imgGenerated = false;
+            let imgUrl = null;
 
+            // TIER 1 & 2: Mencoba Puter AI
             for (let i = 0; i < models.length; i++) {
                 try {
                     const currentModel = models[i];
-                    btnText.innerText = `Mencoba model ${i + 1}...`;
+                    btnText.innerText = `Mencoba server ${i + 1}...`;
                     
-                    // Panggil Puter AI dengan model saat ini
                     const imgElement = await puter.ai.txt2img(fullPrompt, false, { model: currentModel });
-                    const imgUrl = typeof imgElement === 'string' ? imgElement : (imgElement.src || imgElement.toString());
+                    imgUrl = typeof imgElement === 'string' ? imgElement : (imgElement.src || imgElement.toString());
                     
                     if(!imgUrl) throw new Error("URL gambar kosong");
-
-                    loading.classList.add('hidden');
-                    result.classList.remove('hidden');
                     
-                    // Tampilkan hasil gambar
-                    result.innerHTML = `
-                    <div class="img-card bg-slate-50 dark:bg-slate-700 rounded-xl p-4">
-                        <div class="flex justify-between items-center mb-3">
-                            <div class="flex-1 min-w-0">
-                                <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Prompt:</p>
-                                <p class="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">${escapeHTML(prompt)}</p>
-                            </div>
-                            <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full ml-2">✓ Selesai</span>
-                        </div>
-                        <div class="relative group cursor-pointer" onclick="openLightbox('${imgUrl}')">
-                            <img src="${imgUrl}" class="w-full rounded-lg shadow-md max-h-[500px] object-contain bg-white" alt="${escapeHTML(prompt)}">
-                            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                                <span class="text-white text-sm font-semibold">🔍 Klik untuk perbesar</span>
-                            </div>
-                        </div>
-                        <div class="flex gap-2 mt-3">
-                            <a href="${imgUrl}" download="gambar-ai-${Date.now()}.png" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm py-2 rounded-lg font-semibold flex items-center justify-center gap-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                                Download
-                            </a>
-                            <button onclick="saveImgToDB('${imgUrl}', '${escapeHTML(prompt).replace(/'/g, "\\'")}')" class="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm py-2 rounded-lg font-semibold flex items-center justify-center gap-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
-                                Simpan
-                            </button>
-                            <button onclick="document.getElementById('imgPrompt').value='${escapeHTML(prompt).replace(/'/g, "\\'")}'; generateImage();" class="bg-purple-600 hover:bg-purple-700 text-white text-sm py-2 px-3 rounded-lg font-semibold flex items-center justify-center gap-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                            </button>
-                        </div>
-                    </div>`;
-
-                    // Simpan ke history
-                    generatedImages.unshift({ url: imgUrl, prompt: prompt, time: new Date().toLocaleString('id-ID') });
-                    if(generatedImages.length > 20) generatedImages = generatedImages.slice(0, 20);
-                    renderImgHistory();
-
-                    showToast('Gambar berhasil dibuat!', 'success');
                     imgGenerated = true;
-                    break; // Berhenti loop karena sudah berhasil
+                    break; 
                     
                 } catch (err) {
-                    console.error(`Model ${models[i]} gagal:`, err);
-                    // Jika model pertama gagal, loop akan otomatis mencoba model berikutnya
+                    console.error(`Model Puter ${models[i]} gagal:`, err);
                 }
             }
 
-            // Jika semua model gagal
+            // TIER 3: ALTERNATIF FALLBACK (POLLINATIONS.AI) - Jika semua Puter AI gagal
             if (!imgGenerated) {
+                try {
+                    btnText.innerText = 'Beralih ke server cadangan...';
+                    const dimensions = resolution.split('x');
+                    const width = dimensions[0];
+                    const height = dimensions[1];
+                    const encodedPrompt = encodeURIComponent(fullPrompt);
+                    const seed = Math.floor(Math.random() * 1000000);
+                    
+                    // Membuat URL Pollinations.ai (Gratis tanpa API Key)
+                    const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&seed=${seed}&nologo=true`;
+                    
+                    // Preload gambar untuk memastikan server merespons
+                    await new Promise((resolve, reject) => {
+                        const img = new Image();
+                        img.onload = resolve;
+                        img.onerror = reject;
+                        img.src = pollinationsUrl;
+                    });
+                    
+                    imgUrl = pollinationsUrl;
+                    imgGenerated = true;
+                } catch (err) {
+                    console.error("Pollinations fallback gagal:", err);
+                }
+            }
+
+            // Jika berhasil mendapat URL dari server mana pun
+            if (imgGenerated && imgUrl) {
                 loading.classList.add('hidden');
-                showToast('Server AI sedang sangat sibuk. Coba lagi dalam beberapa saat.', 'error');
+                result.classList.remove('hidden');
+                
+                result.innerHTML = `
+                <div class="img-card bg-slate-50 dark:bg-slate-700 rounded-xl p-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Prompt:</p>
+                            <p class="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">${escapeHTML(prompt)}</p>
+                        </div>
+                        <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full ml-2">✓ Selesai</span>
+                    </div>
+                    <div class="relative group cursor-pointer" onclick="openLightbox('${imgUrl}')">
+                        <img src="${imgUrl}" class="w-full rounded-lg shadow-md max-h-[500px] object-contain bg-white" alt="${escapeHTML(prompt)}">
+                        <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                            <span class="text-white text-sm font-semibold">🔍 Klik untuk perbesar</span>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 mt-3">
+                        <a href="${imgUrl}" download="gambar-ai-${Date.now()}.png" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm py-2 rounded-lg font-semibold flex items-center justify-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                            Download
+                        </a>
+                        <button onclick="saveImgToDB('${imgUrl}', '${escapeHTML(prompt).replace(/'/g, "\\'")}')" class="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm py-2 rounded-lg font-semibold flex items-center justify-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
+                            Simpan
+                        </button>
+                        <button onclick="document.getElementById('imgPrompt').value='${escapeHTML(prompt).replace(/'/g, "\\'")}'; generateImage();" class="bg-purple-600 hover:bg-purple-700 text-white text-sm py-2 px-3 rounded-lg font-semibold flex items-center justify-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                        </button>
+                    </div>
+                </div>`;
+
+                generatedImages.unshift({ url: imgUrl, prompt: prompt, time: new Date().toLocaleString('id-ID') });
+                if(generatedImages.length > 20) generatedImages = generatedImages.slice(0, 20);
+                renderImgHistory();
+
+                showToast('Gambar berhasil dibuat!', 'success');
+            } else {
+                loading.classList.add('hidden');
+                showToast('Gagal membuat gambar dari semua server. Coba lagi nanti.', 'error');
             }
 
             btn.disabled = false; btnText.innerText = 'Generate Gambar'; spinner.classList.add('hidden');
