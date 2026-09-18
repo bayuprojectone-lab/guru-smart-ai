@@ -657,13 +657,40 @@
                 const lowerPrompt = prompt.toLowerCase();
                 const isImageRequest = lowerPrompt.includes('gambar') || lowerPrompt.includes('ilustrasi') || lowerPrompt.includes('foto');
 
-                if (isImageRequest) {
-                    // PROSES MEMBUAT GAMBAR MENGGUNAKAN txt2img dengan model spesifik
-                    const imgSrc = await puter.ai.txt2img({
-                        prompt: prompt,
-                        model: 'openai-image-generation', // Wajib ada modelnya agar tidak MISSING MODEL
-                        test_mode: false // Set false agar gambar yang dihasilkan benar-benar sesuai teks
-                    });
+                                if (isImageRequest) {
+                    let imgSrc = null;
+                    try {
+                        // Coba buat gambar menggunakan API dasar Puter AI
+                        imgSrc = await puter.ai.txt2img(prompt);
+                    } catch (imgErr) {
+                        console.warn("Image generation failed:", imgErr);
+                    }
+                    
+                    if (imgSrc) {
+                        // JIKA GAMBAR BERHASIL DIBUAT
+                        const htmlRes = `<div class="mb-2 text-sm text-gray-800">Berikut adalah gambar untuk: <strong>${escapeHTML(prompt)}</strong></div><div class="flex flex-col items-center gap-2"><img src="${imgSrc}" class="rounded-lg max-w-full h-auto border border-slate-200 shadow-sm" alt="Gambar"><a href="${imgSrc}" download="Gambar_Edukasi.jpg" class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-blue-700">⬇️ Download Gambar (JPG)</a></div>`;
+                        aiChatHistory.push({role:'user', content:prompt});
+                        aiChatHistory.push({role:'assistant', content:"[Gambar telah dibuat]"});
+                        document.getElementById('typingIndicator')?.remove();
+                        box.innerHTML += `<div class="flex justify-start fade-in"><div class="max-w-[80%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="ai-output text-gray-800">${htmlRes}</div></div></div>`;
+                    } else {
+                        // JIKA GAMBAR GAGAL, OTOMATIS BERALIH KE TEKS DESKRIPSI
+                        const ctx=await getSchoolContext();
+                        const sys = `Anda adalah Asisten AI Guru. ${ctx ? `Data sekolah: ${JSON.stringify(ctx)}. ` : ''}Saat membuat soal pilihan ganda, WAJIB gunakan format PLAIN TEXT.`;
+                        const modifiedPrompt = `Guru meminta dibuatkan: "${prompt}". Karena server gambar sedang sibuk, tolong jelaskan deskripsi visual/gambar tersebut secara detail dan rapi.`;
+                        
+                        aiChatHistory.push({role:'user', content:modifiedPrompt});
+                        const res = await puter.ai.chat([{role:'system',content:sys}, ...aiChatHistory]);
+                        let ans = typeof res==='string' ? res : (res?.message?.content || 'Maaf, saya tidak bisa merespon saat ini.');
+                        aiChatHistory.push({role:'assistant', content:ans});
+
+                        document.getElementById('typingIndicator')?.remove();
+                        const formattedHTML = formatSoalHTML(ans);
+                        lastAIFormattedHTML = formattedHTML;
+                        box.innerHTML += `<div class="flex justify-start fade-in"><div class="max-w-[80%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="ai-output text-gray-800">${formattedHTML}</div></div></div>`;
+                        ['aiPrintBtn', 'aiWordBtn', 'aiPrintKeyBtn'].forEach(id => document.getElementById(id).classList.remove('hidden'));
+                    }
+                }
                     
                     const htmlRes = `<div class="mb-2 text-sm text-gray-800">Berikut adalah gambar untuk: <strong>${escapeHTML(prompt)}</strong></div><div class="flex flex-col items-center gap-2"><img src="${imgSrc}" class="rounded-lg max-w-full h-auto border border-slate-200 shadow-sm" alt="Gambar"><a href="${imgSrc}" download="Gambar_Edukasi.jpg" class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-blue-700">⬇️ Download Gambar (JPG)</a></div>`;
                     
