@@ -382,7 +382,7 @@
         async function renderMateri() { const materi = await DB.get('materi'); const subjects = await DB.get('subjects'); const classes = await DB.get('classes'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Materi Pembelajaran</h3><button onclick="materiForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Tambah Materi</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4">${materi.length ? materi.map(m => { const sub = subjects.find(s => s.id === m.subject_id); const cls = classes.find(c => c.id === m.class_id); return `<div class="p-4 border rounded-lg"><h4 class="font-bold">${m.title}</h4><p class="text-xs text-slate-500 mt-1">${sub?.name || ''} | ${cls?.name || ''}</p><p class="text-sm mt-2">${m.description}</p><a href="${m.link}" target="_blank" class="mt-3 text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded inline-block">Buka Materi</a><div class="mt-3 flex gap-2"><button onclick="materiForm('${m.id}')" class="text-xs text-blue-500">Edit</button><button onclick="deleteData('materi', '${m.id}', renderMateri)" class="text-xs text-red-500">Hapus</button></div></div>`; }).join('') : '<div class="col-span-3 text-center py-8 text-slate-500">Belum ada materi.</div>'}</div></div>`; }
         async function materiForm(id = null) { const classes = await DB.get('classes'); const subjects = await DB.get('subjects'); let m = null; if(id) { m = (await DB.get('materi')).find(x => x.id === id); } openModal('Tambah Materi', `<form id="materiForm" class="space-y-4"><div><label class="block text-sm mb-1">Judul</label><input type="text" id="m_title" value="${m?.title || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Deskripsi</label><textarea id="m_desc" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${m?.description || ''}</textarea></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm mb-1">Mapel</label><select id="m_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}" ${m?.subject_id == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Kelas</label><select id="m_class" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}" ${m?.class_id == c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select></div></div><div><label class="block text-sm mb-1">Link</label><input type="url" id="m_link" value="${m?.link || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('materiForm').onsubmit = async (e) => { e.preventDefault(); const payload = { title: document.getElementById('m_title').value, description: document.getElementById('m_desc').value, subject_id: document.getElementById('m_subject').value, class_id: document.getElementById('m_class').value, link: document.getElementById('m_link').value }; await saveData('materi', payload, id); closeModal(); renderMateri(); }; }
 
-        async function renderKeuangan() { const keuangan = await DB.get('keuangan'); const students = await DB.get('students'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Pembayaran SPP</h3><button onclick="keuanganForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Catat Pembayaran</button></div><table class="w-full text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3">Siswa</th><th class="px-4 py-3">Bulan</th><th class="px-4 py-3">Jumlah</th><th class="px-4 py-3">Status</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody class="divide-y">${keuangan.length ? keuangan.map(k => { const std = students.find(s => s.id === k.student_id); return `<tr><td class="px-4 py-3">${std?.name || ''}</td><td class="px-4 py-3">${k.month}</td><td class="px-4 py-3">Rp ${k.amount.toLocaleString('id-ID')}</td><td class="px-4 py-3"><span class="px-2 py-1 text-xs rounded ${k.status==='Lunas'?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}">${k.status}</span></td><td class="px-4 py-3 flex gap-2">${k.status !== 'Lunas' ? `<button onclick="confirmPayment('${k.id}')" class="text-xs text-green-600">Lunasi</button>` : ''}<button onclick="deleteData('keuangan', '${k.id}', renderKeuangan')" class="text-xs text-red-500">Hapus</button></td></tr>`; }).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500">Belum ada data.</td></tr>`}</tbody></table></div>`; }
+        async function renderKeuangan() { const keuangan = await DB.get('keuangan'); const students = await DB.get('students'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Pembayaran SPP</h3><button onclick="keuanganForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Catat Pembayaran</button></div><table class="w-full text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3">Siswa</th><th class="px-4 py-3">Bulan</th><th class="px-4 py-3">Jumlah</th><th class="px-4 py-3">Status</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody class="divide-y">${keuangan.length ? keuangan.map(k => { const std = students.find(s => s.id === k.student_id); return `<tr><td class="px-4 py-3">${std?.name || ''}</td><td class="px-4 py-3">${k.month}</td><td class="px-4 py-3">Rp ${k.amount.toLocaleString('id-ID')}</td><td class="px-4 py-3"><span class="px-2 py-1 text-xs rounded ${k.status==='Lunas'?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}">${k.status}</span></td><td class="px-4 py-3 flex gap-2">${k.status !== 'Lunas' ? `<button onclick="confirmPayment('${k.id}')" class="text-xs text-green-600">Lunasi</button>` : ''}<button onclick="deleteData('keuangan', '${k.id}', renderKeuangan)" class="text-xs text-red-500">Hapus</button></td></tr>`; }).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500">Belum ada data.</td></tr>`}</tbody></table></div>`; }
         async function keuanganForm(id = null) { const students = await DB.get('students'); openModal('Catat SPP', `<form id="keuanganForm" class="space-y-4"><div><label class="block text-sm mb-1">Siswa</label><select id="k_student" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${students.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Bulan</label><input type="text" id="k_month" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Jumlah</label><input type="number" id="k_amount" value="150000" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Status</label><select id="k_status" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option>Belum Bayar</option><option>Lunas</option></select></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('keuanganForm').onsubmit = async (e) => { e.preventDefault(); const payload = { student_id: document.getElementById('k_student').value, month: document.getElementById('k_month').value, amount: parseInt(document.getElementById('k_amount').value), status: document.getElementById('k_status').value }; await saveData('keuangan', payload, id); closeModal(); renderKeuangan(); }; }
         async function confirmPayment(id) { await DB.update('keuangan', id, { status: 'Lunas' }); showToast('Pembayaran lunas!', 'success'); renderKeuangan(); }
 
@@ -396,7 +396,7 @@
         async function uploadAvatar() { const file = document.getElementById('avatarFile').files[0]; if(!file) { showToast('Pilih file dulu!', 'error'); return; } showToast('Mengunggah foto...', 'info'); const { data, error } = await sb.storage.from('avatars').upload('user_' + currentUser.id + '_' + Date.now() + '.jpg', file); if (error) { showToast('Gagal upload: ' + error.message, 'error'); return; } const url = sb.storage.from('avatars').getPublicUrl(data.path).data.publicUrl; await DB.update('users', currentUser.id, { avatar_url: url }); currentUser.avatar_url = url; localStorage.setItem('gs_currentUser', JSON.stringify(currentUser)); document.getElementById('userAvatar').src = url; document.getElementById('prevAvatar').src = url; showToast('Foto profil diperbarui!', 'success'); }
 
         // ============================================
-        // AI ASSISTANT - DENGAN MODE CHAT & GAMBAR
+        // AI ASSISTANT - DENGAN MODE CHAT, GAMBAR & VIDEO
         // ============================================
         async function renderAI() {
             let isSignedIn = false;
@@ -433,7 +433,7 @@
                         <img src="${AI_IMG}" class="w-24 h-24 rounded-2xl mx-auto mb-5 object-cover shadow-md" alt="AI Logo">
                         <h3 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Aktifkan Asisten AI</h3>
                         <p class="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
-                            Dapatkan akses <strong>SELAMANYA</strong> ke semua fitur AI (Buat Soal, Modul Ajar, RPP, Generator Gambar, dll).
+                            Dapatkan akses <strong>SELAMANYA</strong> ke semua fitur AI (Buat Soal, Modul Ajar, RPP, Generator Gambar, Generator Video, dll).
                         </p>
                         
                         <div class="bg-slate-50 dark:bg-slate-700 p-4 rounded-xl mb-6 border border-slate-100 dark:border-slate-600">
@@ -481,6 +481,10 @@
                     <button id="tabImage" onclick="switchAIMode('image')" class="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-semibold text-sm transition-all ${aiMode === 'image' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                         Generator Gambar
+                    </button>
+                    <button id="tabVideo" onclick="switchAIMode('video')" class="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-semibold text-sm transition-all ${aiMode === 'video' ? 'bg-gradient-to-r from-red-600 to-orange-600 text-white shadow-md' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                        Generator Video
                     </button>
                 </div>
 
@@ -606,12 +610,87 @@
                         </div>
                     </div>
                 </div>
+
+                <div id="aiVideoContainer" class="${aiMode === 'video' ? '' : 'hidden'}">
+                    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden">
+                        <div class="p-4 border-b dark:border-slate-700 bg-gradient-to-r from-red-50 to-orange-50 dark:from-slate-800 dark:to-slate-700">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center shadow-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-slate-800 dark:text-white">Generator Video AI</h3>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400">Buat video pendek edukatif dari teks</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-5">
+                            <div class="space-y-3 mb-5">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Deskripsi Video (Prompt)</label>
+                                    <textarea id="vidPrompt" rows="3" placeholder="Contoh: Astronot berjalan di permukaan bulan, latar belakang bumi, sinematik" class="w-full px-4 py-2.5 rounded-lg border dark:bg-slate-700 dark:text-white resize-none focus:ring-2 focus:ring-red-500 outline-none text-sm"></textarea>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Durasi (Detik)</label>
+                                        <select id="vidSeconds" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white text-sm">
+                                            <option value="4">4 Detik</option>
+                                            <option value="6" selected>6 Detik</option>
+                                            <option value="8">8 Detik</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Aspek Rasio</label>
+                                        <select id="vidSize" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white text-sm">
+                                            <option value="1280x720">Lanskap (16:9)</option>
+                                            <option value="720x1280">Potret (9:16)</option>
+                                            <option value="1024x1024">Persegi (1:1)</option>
+                                        </select>
+                                    </div>
+                                    <div class="flex items-end">
+                                        <button id="vidGenerateBtn" onclick="generateVideo()" class="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-semibold py-2 rounded-lg transition-colors shadow-md flex items-center justify-center gap-2 text-sm">
+                                            <svg id="vidSpinner" class="animate-spin hidden h-5 w-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                            <span id="vidBtnText">Generate Video</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Negative Prompt (Hal yang dihindari)</label>
+                                    <input type="text" id="vidNegativePrompt" value="blurry, text, watermark, people" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white text-sm">
+                                </div>
+
+                                <div class="flex flex-wrap gap-2 pt-2">
+                                    <span class="text-xs text-slate-500 self-center">Quick Prompt:</span>
+                                    <button onclick="setVidPrompt('A hummingbird hovering over a red flower, macro lens, soft morning light')" class="text-xs bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 px-2 py-1 rounded-full hover:bg-red-200">Burung Kolibri</button>
+                                    <button onclick="setVidPrompt('A spaceship launching into space, cinematic, smoke and fire')" class="text-xs bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 px-2 py-1 rounded-full hover:bg-red-200">Roket Meluncur</button>
+                                    <button onclick="setVidPrompt('Water flowing over rocks in a serene forest, 4k, nature')" class="text-xs bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 px-2 py-1 rounded-full hover:bg-red-200">Air Terjun</button>
+                                </div>
+                            </div>
+
+                            <div id="vidLoading" class="hidden mb-5">
+                                <div class="img-skeleton rounded-xl h-64 w-full flex items-center justify-center">
+                                    <div class="text-center">
+                                        <svg class="animate-spin h-10 w-10 text-red-600 mx-auto mb-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                        <p class="text-sm text-slate-600 font-medium">AI sedang merender video...</p>
+                                        <p class="text-xs text-slate-400 mt-1">Mohon tunggu, proses ini bisa memakan waktu 1-3 menit</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="vidResult" class="hidden mb-5"></div>
+                        </div>
+                    </div>
+                </div>
             </div>`; 
             
             if(aiMode === 'chat') {
                 loadAIChat(); 
                 setupEnterKey();
-            } else {
+            } else if (aiMode === 'image') {
                 renderImgHistory();
             }
         }
@@ -624,8 +703,12 @@
         function setQuickPrompt(text) {
             document.getElementById('imgPrompt').value = text;
         }
+        
+        function setVidPrompt(text) {
+            document.getElementById('vidPrompt').value = text;
+        }
 
-        // ===== FUNGSI GENERATE GAMBAR DENGAN 3 TIER FALLBACK (Puter & Alternatif) =====
+        // ===== FUNGSI GENERATE GAMBAR =====
         async function generateImage() {
             const promptEl = document.getElementById('imgPrompt');
             const prompt = promptEl.value.trim();
@@ -651,101 +734,68 @@
             loading.classList.remove('hidden');
             result.classList.add('hidden');
 
-            // Daftar model gambar Puter AI yang akan dicoba
-            const models = ['dall-e-3', 'flux', 'stable-diffusion-xl'];
+            const models = ['flux', 'stable-diffusion-xl', 'dall-e-3'];
             let imgGenerated = false;
-            let imgUrl = null;
 
-            // TIER 1 & 2: Mencoba Puter AI
             for (let i = 0; i < models.length; i++) {
                 try {
                     const currentModel = models[i];
-                    btnText.innerText = `Mencoba server ${i + 1}...`;
+                    btnText.innerText = `Mencoba model ${i + 1}...`;
                     
                     const imgElement = await puter.ai.txt2img(fullPrompt, false, { model: currentModel });
-                    imgUrl = typeof imgElement === 'string' ? imgElement : (imgElement.src || imgElement.toString());
+                    const imgUrl = typeof imgElement === 'string' ? imgElement : (imgElement.src || imgElement.toString());
                     
                     if(!imgUrl) throw new Error("URL gambar kosong");
+
+                    loading.classList.add('hidden');
+                    result.classList.remove('hidden');
                     
+                    result.innerHTML = `
+                    <div class="img-card bg-slate-50 dark:bg-slate-700 rounded-xl p-4">
+                        <div class="flex justify-between items-center mb-3">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Prompt:</p>
+                                <p class="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">${escapeHTML(prompt)}</p>
+                            </div>
+                            <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full ml-2">✓ Selesai</span>
+                        </div>
+                        <div class="relative group cursor-pointer" onclick="openLightbox('${imgUrl}')">
+                            <img src="${imgUrl}" class="w-full rounded-lg shadow-md max-h-[500px] object-contain bg-white" alt="${escapeHTML(prompt)}">
+                            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                                <span class="text-white text-sm font-semibold">🔍 Klik untuk perbesar</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 mt-3">
+                            <a href="${imgUrl}" download="gambar-ai-${Date.now()}.png" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm py-2 rounded-lg font-semibold flex items-center justify-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                                Download
+                            </a>
+                            <button onclick="saveImgToDB('${imgUrl}', '${escapeHTML(prompt).replace(/'/g, "\\'")}')" class="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm py-2 rounded-lg font-semibold flex items-center justify-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
+                                Simpan
+                            </button>
+                            <button onclick="document.getElementById('imgPrompt').value='${escapeHTML(prompt).replace(/'/g, "\\'")}'; generateImage();" class="bg-purple-600 hover:bg-purple-700 text-white text-sm py-2 px-3 rounded-lg font-semibold flex items-center justify-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                            </button>
+                        </div>
+                    </div>`;
+
+                    generatedImages.unshift({ url: imgUrl, prompt: prompt, time: new Date().toLocaleString('id-ID') });
+                    if(generatedImages.length > 20) generatedImages = generatedImages.slice(0, 20);
+                    renderImgHistory();
+
+                    showToast('Gambar berhasil dibuat!', 'success');
                     imgGenerated = true;
                     break; 
                     
                 } catch (err) {
-                    console.error(`Model Puter ${models[i]} gagal:`, err);
+                    console.error(`Model ${models[i]} gagal:`, err);
                 }
             }
 
-            // TIER 3: ALTERNATIF FALLBACK (POLLINATIONS.AI) - Jika semua Puter AI gagal
             if (!imgGenerated) {
-                try {
-                    btnText.innerText = 'Beralih ke server cadangan...';
-                    const dimensions = resolution.split('x');
-                    const width = dimensions[0];
-                    const height = dimensions[1];
-                    const encodedPrompt = encodeURIComponent(fullPrompt);
-                    const seed = Math.floor(Math.random() * 1000000);
-                    
-                    // Membuat URL Pollinations.ai (Gratis tanpa API Key)
-                    const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&seed=${seed}&nologo=true`;
-                    
-                    // Preload gambar untuk memastikan server merespons
-                    await new Promise((resolve, reject) => {
-                        const img = new Image();
-                        img.onload = resolve;
-                        img.onerror = reject;
-                        img.src = pollinationsUrl;
-                    });
-                    
-                    imgUrl = pollinationsUrl;
-                    imgGenerated = true;
-                } catch (err) {
-                    console.error("Pollinations fallback gagal:", err);
-                }
-            }
-
-            // Jika berhasil mendapat URL dari server mana pun
-            if (imgGenerated && imgUrl) {
                 loading.classList.add('hidden');
-                result.classList.remove('hidden');
-                
-                result.innerHTML = `
-                <div class="img-card bg-slate-50 dark:bg-slate-700 rounded-xl p-4">
-                    <div class="flex justify-between items-center mb-3">
-                        <div class="flex-1 min-w-0">
-                            <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Prompt:</p>
-                            <p class="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">${escapeHTML(prompt)}</p>
-                        </div>
-                        <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full ml-2">✓ Selesai</span>
-                    </div>
-                    <div class="relative group cursor-pointer" onclick="openLightbox('${imgUrl}')">
-                        <img src="${imgUrl}" class="w-full rounded-lg shadow-md max-h-[500px] object-contain bg-white" alt="${escapeHTML(prompt)}">
-                        <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                            <span class="text-white text-sm font-semibold">🔍 Klik untuk perbesar</span>
-                        </div>
-                    </div>
-                    <div class="flex gap-2 mt-3">
-                        <a href="${imgUrl}" download="gambar-ai-${Date.now()}.png" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm py-2 rounded-lg font-semibold flex items-center justify-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                            Download
-                        </a>
-                        <button onclick="saveImgToDB('${imgUrl}', '${escapeHTML(prompt).replace(/'/g, "\\'")}')" class="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm py-2 rounded-lg font-semibold flex items-center justify-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
-                            Simpan
-                        </button>
-                        <button onclick="document.getElementById('imgPrompt').value='${escapeHTML(prompt).replace(/'/g, "\\'")}'; generateImage();" class="bg-purple-600 hover:bg-purple-700 text-white text-sm py-2 px-3 rounded-lg font-semibold flex items-center justify-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                        </button>
-                    </div>
-                </div>`;
-
-                generatedImages.unshift({ url: imgUrl, prompt: prompt, time: new Date().toLocaleString('id-ID') });
-                if(generatedImages.length > 20) generatedImages = generatedImages.slice(0, 20);
-                renderImgHistory();
-
-                showToast('Gambar berhasil dibuat!', 'success');
-            } else {
-                loading.classList.add('hidden');
-                showToast('Gagal membuat gambar dari semua server. Coba lagi nanti.', 'error');
+                showToast('Server AI sedang sangat sibuk. Coba lagi dalam beberapa saat.', 'error');
             }
 
             btn.disabled = false; btnText.innerText = 'Generate Gambar'; spinner.classList.add('hidden');
@@ -783,6 +833,96 @@
                 link: url 
             });
             if(result) showToast('Gambar disimpan ke Materi Ajar!', 'success');
+        }
+
+        // ===== FUNGSI GENERATE VIDEO MENGGUNAKAN PUTER AI TXT2VID =====
+        async function generateVideo() {
+            const promptEl = document.getElementById('vidPrompt');
+            const prompt = promptEl.value.trim();
+            if(!prompt) { showToast('Masukkan deskripsi video dulu!', 'error'); return; }
+
+            const seconds = parseInt(document.getElementById('vidSeconds').value);
+            const size = document.getElementById('vidSize').value;
+            const negative_prompt = document.getElementById('vidNegativePrompt').value;
+
+            const btn = document.getElementById('vidGenerateBtn');
+            const btnText = document.getElementById('vidBtnText');
+            const spinner = document.getElementById('vidSpinner');
+            const loading = document.getElementById('vidLoading');
+            const result = document.getElementById('vidResult');
+
+            btn.disabled = true; btnText.innerText = 'Merender...'; spinner.classList.remove('hidden');
+            loading.classList.remove('hidden');
+            result.classList.add('hidden');
+
+            try {
+                // Memanggil Puter AI untuk Text-to-Video
+                const videoElement = await puter.ai.txt2vid(prompt, {
+                    model: "veo-3.1-fast",
+                    seconds: seconds,
+                    size: size,
+                    negative_prompt: negative_prompt
+                });
+
+                loading.classList.add('hidden');
+                result.classList.remove('hidden');
+                
+                // Pastikan elemen video yang dikembalikan memiliki controls
+                if (videoElement instanceof HTMLElement) {
+                    videoElement.controls = true;
+                    videoElement.className = "w-full rounded-lg shadow-md max-h-[500px] bg-black";
+                }
+                
+                // Ekstrak URL video untuk tombol download
+                const videoSrc = (videoElement?.src || videoElement?.currentSrc || '');
+                
+                result.innerHTML = `
+                <div class="img-card bg-slate-50 dark:bg-slate-700 rounded-xl p-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Prompt:</p>
+                            <p class="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">${escapeHTML(prompt)}</p>
+                        </div>
+                        <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full ml-2">✓ Selesai</span>
+                    </div>
+                    <div id="videoPlayerContainer" class="w-full rounded-lg overflow-hidden bg-black flex justify-center"></div>
+                    <div class="flex gap-2 mt-3">
+                        ${videoSrc ? `<a href="${videoSrc}" download="video-ai-${Date.now()}.mp4" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm py-2 rounded-lg font-semibold flex items-center justify-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                            Download
+                        </a>` : ''}
+                        <button onclick="saveVidToDB('${videoSrc}', '${escapeHTML(prompt).replace(/'/g, "\\'")}')" class="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm py-2 rounded-lg font-semibold flex items-center justify-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
+                            Simpan
+                        </button>
+                    </div>
+                </div>`;
+
+                // Masukkan elemen video asli yang dikembalikan oleh API
+                const playerContainer = document.getElementById('videoPlayerContainer');
+                if(playerContainer && videoElement instanceof HTMLElement) {
+                    playerContainer.appendChild(videoElement);
+                }
+                
+                showToast('Video berhasil dirender!', 'success');
+            } catch(err) {
+                loading.classList.add('hidden');
+                showToast('Gagal membuat video: ' + (err.message || 'Server AI sibuk'), 'error');
+                console.error('Video gen error:', err);
+            } finally {
+                btn.disabled = false; btnText.innerText = 'Generate Video'; spinner.classList.add('hidden');
+            }
+        }
+
+        async function saveVidToDB(url, prompt) {
+            const result = await DB.insert('materi', { 
+                title: 'Video AI: ' + prompt.substring(0, 30), 
+                description: prompt, 
+                subject_id: null, 
+                class_id: null, 
+                link: url 
+            });
+            if(result) showToast('Video disimpan ke Materi Ajar!', 'success');
         }
 
         function setupEnterKey() {
