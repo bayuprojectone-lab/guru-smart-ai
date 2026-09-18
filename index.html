@@ -57,6 +57,12 @@
             .ai-output .soal-opt.correct { background: transparent !important; font-weight: normal !important; box-shadow: none !important; }
             .hide-on-print { display: none !important; }
         }
+
+        /* Style untuk image generator */
+        .img-card { transition: all 0.3s ease; }
+        .img-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .img-skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
     </style>
 </head>
 <body class="bg-slate-100 dark:bg-slate-900 transition-colors duration-300">
@@ -99,12 +105,12 @@
         <main class="flex-1 flex flex-col overflow-hidden bg-slate-100 dark:bg-slate-900">
             <header class="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 lg:px-6 shadow-sm">
                 <div class="flex items-center space-x-4">
-                    <button onclick="toggleSidebar()" class="lg:hidden text-slate-500"><svg class="w-6 h-6" fill="none, stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
+                    <button onclick="toggleSidebar()" class="lg:hidden text-slate-500"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
                     <h2 id="pageTitle" class="text-xl font-semibold text-slate-800 dark:text-white">Dashboard</h2>
                 </div>
                 <div class="flex items-center space-x-4">
                     <button onclick="toggleDarkMode()" class="text-slate-500 hover:text-blue-600">
-                        <svg id="iconSun" class="w-6 h-6 hidden" fill="none, stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        <svg id="iconSun" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                         <svg id="iconMoon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
                     </button>
                     <div class="flex items-center space-x-2">
@@ -133,6 +139,13 @@
 
     <div id="toast" class="hidden fixed bottom-5 right-5 z-[60] bg-slate-800 text-white px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2"></div>
     <div id="printArea"></div>
+    
+    <!-- Lightbox untuk preview gambar -->
+    <div id="imgLightbox" class="hidden fixed inset-0 bg-black/90 z-[70] flex items-center justify-center p-4" onclick="closeLightbox()">
+        <button class="absolute top-4 right-4 text-white text-4xl">&times;</button>
+        <img id="lightboxImg" class="max-w-full max-h-full rounded-lg shadow-2xl">
+    </div>
+    
     <script>
         const SUPABASE_URL = 'https://urslwiueyqhoykjhxmqq.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVyc2x3aXVleXFob3lramh4bXFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2NTIxMDgsImV4cCI6MjEwNTIyODEwOH0.cRHI2m9lasLJ6yX2vc1ioxJGm7bLRsCIptmiNtpz5go';
@@ -149,6 +162,8 @@
         };
 
         let currentUser = null; let currentPage = 'dashboard';
+        let aiMode = 'chat'; // 'chat' atau 'image'
+        let generatedImages = []; // History gambar yang dibuat
 
         function toggleAuth(form) { if(form === 'register') { document.getElementById('loginForm').classList.add('hidden'); document.getElementById('registerForm').classList.remove('hidden'); } else { document.getElementById('registerForm').classList.add('hidden'); document.getElementById('loginForm').classList.remove('hidden'); } }
         document.getElementById('registerForm').addEventListener('submit', async (e) => { 
@@ -233,6 +248,8 @@
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('sidebarOverlay').classList.toggle('hidden'); }
         function openModal(title, contentHtml) { document.getElementById('modalTitle').innerText = title; document.getElementById('modalContent').innerHTML = contentHtml; document.getElementById('modalContainer').classList.remove('hidden'); }
         function closeModal() { document.getElementById('modalContainer').classList.add('hidden'); }
+        function closeLightbox() { document.getElementById('imgLightbox').classList.add('hidden'); }
+        function openLightbox(src) { document.getElementById('lightboxImg').src = src; document.getElementById('imgLightbox').classList.remove('hidden'); }
 
         const menus = [
             { id: 'dashboard', label: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', roles: ['admin', 'guru', 'siswa'] },
@@ -335,7 +352,9 @@
                 </div>`; 
                 window.print(); 
             }); 
-        }        // TEACHERS, STUDENTS, CLASSES, SUBJECTS
+        }
+        
+        // TEACHERS, STUDENTS, CLASSES, SUBJECTS
         async function renderTeachers() { const teachers = await DB.get('teachers'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex justify-between mb-4"><input type="text" id="searchTeacher" onkeyup="filterTable('searchTeacher', 'teacherTableBody')" placeholder="Cari guru..." class="px-4 py-2 rounded-lg border dark:bg-slate-700 dark:text-white text-sm outline-none"><button onclick="teacherForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Guru</button></div><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase"><tr><th class="px-4 py-3">NIP</th><th class="px-4 py-3">Nama</th><th class="px-4 py-3">Gender</th><th class="px-4 py-3">Mapel</th><th class="px-4 py-3">No HP</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody id="teacherTableBody" class="divide-y dark:divide-slate-700">${teachers.length ? teachers.map(t => `<tr><td class="px-4 py-3">${t.nip}</td><td class="px-4 py-3 font-medium">${t.name}</td><td class="px-4 py-3">${t.gender}</td><td class="px-4 py-3">${t.subject}</td><td class="px-4 py-3">${t.phone}</td><td class="px-4 py-3 flex gap-2"><button onclick="teacherForm('${t.id}')" class="text-blue-500">Edit</button><button onclick="deleteData('teachers', '${t.id}', renderTeachers)" class="text-red-500">Hapus</button></td></tr>`).join('') : `<tr><td colspan="6" class="text-center py-4 text-slate-500">Belum ada data.</td></tr>`}</tbody></table></div></div>`; }
         async function teacherForm(id = null) { let t = null; if(id) { t = (await DB.get('teachers')).find(x => x.id === id); } openModal(id ? 'Edit Guru' : 'Tambah Guru', `<form id="teacherForm" class="space-y-4"><div><label class="block text-sm mb-1">NIP</label><input type="text" id="tch_nip" value="${t?.nip || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Nama</label><input type="text" id="tch_name" value="${t?.name || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Gender</label><select id="tch_gender" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option value="L" ${t?.gender == 'L' ? 'selected' : ''}>L</option><option value="P" ${t?.gender == 'P' ? 'selected' : ''}>P</option></select></div><div><label class="block text-sm mb-1">No HP</label><input type="text" id="tch_phone" value="${t?.phone || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Mapel</label><input type="text" id="tch_subject" value="${t?.subject || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button></form>`); document.getElementById('teacherForm').onsubmit = async (e) => { e.preventDefault(); const payload = { nip: document.getElementById('tch_nip').value, name: document.getElementById('tch_name').value, gender: document.getElementById('tch_gender').value, phone: document.getElementById('tch_phone').value, subject: document.getElementById('tch_subject').value }; await saveData('teachers', payload, id); closeModal(); renderTeachers(); }; }
 
@@ -356,7 +375,7 @@
         async function saveAttendance() { const students = await DB.get('students'); const date = document.getElementById('att_date').value; if(!date){ showToast('Pilih tanggal!', 'error'); return; } for(const s of students) { const status = document.getElementById(`att_${s.id}`).value; const existingAtt = await sb.from('attendance').select('*').eq('student_id', s.id).eq('date', date).eq('user_id', currentUser.id).single(); if(existingAtt.data) { await DB.update('attendance', existingAtt.data.id, { status }); } else { await DB.insert('attendance', { student_id: s.id, date, status, subject: 'Umum' }); } } showToast('Absensi disimpan!', 'success'); }
 
         async function renderGrades() { const students = await DB.get('students'); const subjects = await DB.get('subjects'); const grades = await DB.get('grades'); if(currentUser.role === 'siswa') { const myGrades = grades.filter(g => g.student_id === currentUser.id); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><h3 class="font-bold mb-4">Nilai Saya</h3><ul class="divide-y">${myGrades.length ? myGrades.map(g => { const sub = subjects.find(s => s.id === g.subject_id); return `<li class="py-3 flex justify-between"><span>${sub?.name || ''} (${g.type})</span><span class="font-bold text-blue-600">${g.score}</span></li>`; }).join('') : '<li class="py-4 text-center text-slate-500">Belum ada nilai.</li>'}</ul></div>`; return; } document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Input Nilai Massal</h3><button onclick="gradeForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Input Nilai</button></div><table class="w-full text-sm"><thead class="bg-slate-50"><tr><th class="px-4 py-3">Nama</th><th class="px-4 py-3">Mapel</th><th class="px-4 py-3">Tipe</th><th class="px-4 py-3">Nilai</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody class="divide-y">${grades.length ? grades.map(g => { const std = students.find(s => s.id === g.student_id); const sub = subjects.find(s => s.id === g.subject_id); return `<tr><td class="px-4 py-3">${std?.name || ''}</td><td class="px-4 py-3">${sub?.name || ''}</td><td class="px-4 py-3">${g.type}</td><td class="px-4 py-3 font-bold text-blue-600">${g.score}</td><td class="px-4 py-3 flex gap-2"><button onclick="gradeForm('${g.id}')" class="text-xs text-blue-500">Edit</button><button onclick="deleteData('grades', '${g.id}', renderGrades)" class="text-xs text-red-500">Hapus</button></td></tr>`; }).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500">Belum ada nilai.</td></tr>`}</tbody></table></div>`; }
-        async function gradeForm(id = null) { const students = await DB.get('students'); const subjects = await DB.get('subjects'); let g = null; if(id) { g = (await DB.get('grades')).find(x => x.id === id); } openModal('Input Nilai', `<form id="gradeForm" class="space-y-4"><div><label class="block text-sm mb-1">Siswa</label><select id="g_student" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${students.map(s => `<option value="${s.id}" ${g?.student_id == s.id ? 'selected' : ''}>${s.name</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Mapel</label><select id="g_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}" ${g?.subject_id == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Tipe</label><select id="g_type" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option ${g?.type == 'Tugas' ? 'selected' : ''}>Tugas</option><option ${g?.type == 'Ulangan Harian' ? 'selected' : ''}>Ulangan Harian</option><option ${g?.type == 'PTS' ? 'selected' : ''}>PTS</option><option ${g?.type == 'PAS' ? 'selected' : ''}>PAS</option></select></div><div><label class="block text-sm mb-1">Nilai</label><input type="number" id="g_score" value="${g?.score || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('gradeForm').onsubmit = async (e) => { e.preventDefault(); const payload = { student_id: document.getElementById('g_student').value, subject_id: document.getElementById('g_subject').value, type: document.getElementById('g_type').value, score: parseInt(document.getElementById('g_score').value) }; await saveData('grades', payload, id); closeModal(); renderGrades(); }; }
+        async function gradeForm(id = null) { const students = await DB.get('students'); const subjects = await DB.get('subjects'); let g = null; if(id) { g = (await DB.get('grades')).find(x => x.id === id); } openModal('Input Nilai', `<form id="gradeForm" class="space-y-4"><div><label class="block text-sm mb-1">Siswa</label><select id="g_student" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${students.map(s => `<option value="${s.id}" ${g?.student_id == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Mapel</label><select id="g_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}" ${g?.subject_id == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1">Tipe</label><select id="g_type" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option ${g?.type == 'Tugas' ? 'selected' : ''}>Tugas</option><option ${g?.type == 'Ulangan Harian' ? 'selected' : ''}>Ulangan Harian</option><option ${g?.type == 'PTS' ? 'selected' : ''}>PTS</option><option ${g?.type == 'PAS' ? 'selected' : ''}>PAS</option></select></div><div><label class="block text-sm mb-1">Nilai</label><input type="number" id="g_score" value="${g?.score || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('gradeForm').onsubmit = async (e) => { e.preventDefault(); const payload = { student_id: document.getElementById('g_student').value, subject_id: document.getElementById('g_subject').value, type: document.getElementById('g_type').value, score: parseInt(document.getElementById('g_score').value) }; await saveData('grades', payload, id); closeModal(); renderGrades(); }; }
 
         // ASSIGNMENTS, MATERI, KEUANGAN, RAPOR, ANNOUNCEMENTS, SETTINGS
         async function renderAssignments() { const assignments = await DB.get('assignments'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Daftar Tugas</h3><button onclick="assignmentForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Buat Tugas</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4">${assignments.length ? assignments.map(a => `<div class="p-4 border rounded-lg"><h4 class="font-bold">${a.title}</h4><p class="text-xs text-slate-500 mt-1">Deadline: ${a.deadline}</p><p class="text-sm mt-2">${a.description}</p><div class="mt-3 flex gap-2"><button onclick="assignmentForm('${a.id}')" class="text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded">Edit</button><button onclick="deleteData('assignments', '${a.id}', renderAssignments)" class="text-xs bg-red-100 text-red-600 px-3 py-1 rounded">Hapus</button></div></div>`).join('') : '<div class="col-span-3 text-center py-8 text-slate-500">Belum ada tugas.</div>'}</div></div>`; }
@@ -378,7 +397,9 @@
         async function renderSettings() { const profile = (await DB.get('school_profile'))[0] || {}; document.getElementById('content').innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div class="bg-white p-6 rounded-xl"><h3 class="font-bold mb-4">Profil Sekolah</h3><form id="profileForm" class="space-y-4"><div><label class="block text-sm mb-1">Nama Sekolah</label><input type="text" id="p_name" value="${profile.name || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Alamat</label><input type="text" id="p_address" value="${profile.address || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Kepala Sekolah</label><input type="text" id="p_principal" value="${profile.principal || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Simpan</button></form></div><div class="bg-white p-6 rounded-xl"><h3 class="font-bold mb-4">Pengaturan Akun</h3><div class="flex flex-col items-center space-y-3"><img id="prevAvatar" src="${currentUser.avatar_url || AI_IMG}" class="w-24 h-24 rounded-full object-cover"><input type="file" id="avatarFile" accept="image/*" class="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"><button onclick="uploadAvatar()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm">Upload Foto</button></div></div></div>`; document.getElementById('profileForm').onsubmit = async (e) => { e.preventDefault(); await saveData('school_profile', { name: document.getElementById('p_name').value, address: document.getElementById('p_address').value, principal: document.getElementById('p_principal').value }, 1); }; }
         async function uploadAvatar() { const file = document.getElementById('avatarFile').files[0]; if(!file) { showToast('Pilih file dulu!', 'error'); return; } showToast('Mengunggah foto...', 'info'); const { data, error } = await sb.storage.from('avatars').upload('user_' + currentUser.id + '_' + Date.now() + '.jpg', file); if (error) { showToast('Gagal upload: ' + error.message, 'error'); return; } const url = sb.storage.from('avatars').getPublicUrl(data.path).data.publicUrl; await DB.update('users', currentUser.id, { avatar_url: url }); currentUser.avatar_url = url; localStorage.setItem('gs_currentUser', JSON.stringify(currentUser)); document.getElementById('userAvatar').src = url; document.getElementById('prevAvatar').src = url; showToast('Foto profil diperbarui!', 'success'); }
 
-        // AI ASSISTANT
+        // ============================================
+        // AI ASSISTANT - DENGAN MODE CHAT & GAMBAR
+        // ============================================
         async function renderAI() {
             let isSignedIn = false;
             const { data: userData } = await sb.from('users').select('*').eq('id', currentUser.id).maybeSingle();
@@ -414,7 +435,7 @@
                         <img src="${AI_IMG}" class="w-24 h-24 rounded-2xl mx-auto mb-5 object-cover shadow-md" alt="AI Logo">
                         <h3 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Aktifkan Asisten AI</h3>
                         <p class="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
-                            Dapatkan akses <strong>SELAMANYA</strong> ke semua fitur AI (Buat Soal, Modul Ajar, Gambar, dll).
+                            Dapatkan akses <strong>SELAMANYA</strong> ke semua fitur AI (Buat Soal, Modul Ajar, RPP, Generator Gambar, dll).
                         </p>
                         
                         <div class="bg-slate-50 dark:bg-slate-700 p-4 rounded-xl mb-6 border border-slate-100 dark:border-slate-600">
@@ -452,44 +473,289 @@
                 return;
             }
 
+            // ===== TAMPILAN UTAMA AI DENGAN TAB MODE =====
             document.getElementById('content').innerHTML = `
-            <div class="flex flex-col h-[calc(100vh-120px)] max-w-4xl mx-auto bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden">
-                <div class="p-4 border-b dark:border-slate-700 flex justify-between items-center bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700">
-                    <div class="flex items-center gap-3">
-                        <img src="${AI_IMG}" class="w-10 h-10 rounded-xl object-cover shadow-sm">
-                        <div>
-                            <h3 class="font-bold text-slate-800 dark:text-white">Asisten AI Guru</h3>
-                            <p class="text-xs text-slate-500 dark:text-slate-400">Soal & Gambar Edukasi • Format Otomatis</p>
+            <div class="max-w-5xl mx-auto">
+                <!-- Tab Mode Selector -->
+                <div class="flex gap-2 mb-4 bg-white dark:bg-slate-800 p-2 rounded-xl shadow-sm">
+                    <button id="tabChat" onclick="switchAIMode('chat')" class="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-semibold text-sm transition-all ${aiMode === 'chat' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h8M8 16h8M8 8h8m-9 8H6a2 2 0 01-2-2V6a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2h-1m-4 4l-3 3m0 0l-3-3m3 3v-7" /></svg>
+                        Chat AI
+                    </button>
+                    <button id="tabImage" onclick="switchAIMode('image')" class="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg font-semibold text-sm transition-all ${aiMode === 'image' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        Generator Gambar
+                    </button>
+                </div>
+
+                <!-- Container konten mode -->
+                <div id="aiChatContainer" class="${aiMode === 'chat' ? '' : 'hidden'}">
+                    <div class="flex flex-col h-[calc(100vh-220px)] bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden">
+                        <div class="p-4 border-b dark:border-slate-700 flex justify-between items-center bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700">
+                            <div class="flex items-center gap-3">
+                                <img src="${AI_IMG}" class="w-10 h-10 rounded-xl object-cover shadow-sm">
+                                <div>
+                                    <h3 class="font-bold text-slate-800 dark:text-white">Asisten AI Guru</h3>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400">SIAP Membantu dengan sepenuh HATI</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="aiMessages" class="flex-1 overflow-y-auto p-5 space-y-4 bg-slate-50 dark:bg-slate-900"></div>
+                        
+                        <div class="p-3 border-t dark:border-slate-700 bg-white dark:bg-slate-800">
+                            <div class="flex gap-2 items-end">
+                                <textarea id="aiInput" rows="2" placeholder="Tulis perintah..." class="flex-1 px-4 py-2 rounded-xl border dark:bg-slate-700 dark:text-white resize-none focus:ring-2 focus:ring-blue-500 outline-none text-sm"></textarea>
+                                <button id="aiSendBtn" onclick="sendAI()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold flex items-center gap-1 text-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9 2zm0 0v-8" /></svg>
+                                    Kirim
+                                </button>
+                            </div>
+                            <div class="flex justify-end gap-2 mt-2 flex-wrap">
+                                <button id="aiWordBtn" onclick="exportToWord()" class="hidden bg-blue-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>Word
+                                </button>
+                                <button id="aiPrintBtn" onclick="printAIResult(false)" class="hidden bg-slate-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>PDF
+                                </button>
+                                <button id="aiPrintKeyBtn" onclick="printAIResult(true)" class="hidden bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>Soal + Kunci
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-                
-                <div id="aiMessages" class="flex-1 overflow-y-auto p-5 space-y-4 bg-slate-50 dark:bg-slate-900"></div>
-                
-                <div class="p-3 border-t dark:border-slate-700 bg-white dark:bg-slate-800">
-                    <div class="flex gap-2 items-end">
-                        <textarea id="aiInput" rows="2" placeholder="Tulis perintah... (Tekan Enter di PC untuk mengirim, Shift+Enter untuk baris baru)" class="flex-1 px-4 py-2 rounded-xl border dark:bg-slate-700 dark:text-white resize-none focus:ring-2 focus:ring-blue-500 outline-none text-sm"></textarea>
-                        <button id="aiSendBtn" onclick="sendAI()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold flex items-center gap-1 text-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9 2zm0 0v-8" /></svg>
-                            Kirim
-                        </button>
-                    </div>
-                    <div class="flex justify-end gap-2 mt-2 flex-wrap">
-                        <button id="aiWordBtn" onclick="exportToWord()" class="hidden bg-blue-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>Word
-                        </button>
-                        <button id="aiPrintBtn" onclick="printAIResult(false)" class="hidden bg-slate-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>Soal
-                        </button>
-                        <button id="aiPrintKeyBtn" onclick="printAIResult(true)" class="hidden bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>Soal + Kunci
-                        </button>
+
+                <!-- Container Image Generator -->
+                <div id="aiImageContainer" class="${aiMode === 'image' ? '' : 'hidden'}">
+                    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden">
+                        <div class="p-4 border-b dark:border-slate-700 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-slate-800 dark:to-slate-700">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-slate-800 dark:text-white">Generator Gambar AI</h3>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400">Buat gambar untuk media pembelajaran</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-5">
+                            <!-- Form Input -->
+                            <div class="space-y-3 mb-5">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Deskripsi Gambar (Prompt)</label>
+                                    <textarea id="imgPrompt" rows="3" placeholder="Contoh: Ilustrasi ekosistem hutan tropis dengan berbagai hewan seperti harimau, burung, dan kupu-kupu, gaya kartun edukatif untuk anak SD" class="w-full px-4 py-2.5 rounded-lg border dark:bg-slate-700 dark:text-white resize-none focus:ring-2 focus:ring-purple-500 outline-none text-sm"></textarea>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Gaya Gambar</label>
+                                        <select id="imgStyle" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white text-sm">
+                                            <option value="">Default</option>
+                                            <option value="cartoon style, colorful">Kartun (Anak)</option>
+                                            <option value="realistic photo">Realistik</option>
+                                            <option value="watercolor painting">Cat Air</option>
+                                            <option value="anime style">Anime</option>
+                                            <option value="3D render">3D Render</option>
+                                            <option value="vector illustration">Vektor</option>
+                                            <option value="sketch drawing">Sketsa</option>
+                                            <option value="oil painting">Lukisan Cat Minyak</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Aspek Rasio</label>
+                                        <select id="imgRatio" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white text-sm">
+                                            <option value="square">Persegi (1:1)</option>
+                                            <option value="landscape">Lanskap (16:9)</option>
+                                            <option value="portrait">Potret (9:16)</option>
+                                        </select>
+                                    </div>
+                                    <div class="flex items-end">
+                                        <button id="imgGenerateBtn" onclick="generateImage()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-2 rounded-lg transition-colors shadow-md flex items-center justify-center gap-2 text-sm">
+                                            <svg id="imgSpinner" class="animate-spin hidden h-5 w-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                                            <span id="imgBtnText">Generate Gambar</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <!-- Quick Prompts -->
+                                <div class="flex flex-wrap gap-2 pt-2">
+                                    <span class="text-xs text-slate-500 self-center">Quick Prompt:</span>
+                                    <button onclick="setQuickPrompt('Ilustrasi tata surya dengan matahari dan 8 planet lengkap dengan nama')" class="text-xs bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 px-2 py-1 rounded-full hover:bg-purple-200">Tata Surya</button>
+                                    <button onclick="setQuickPrompt('Diagram penjumlahan dan pengurangan dengan apel sebagai visual')" class="text-xs bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 px-2 py-1 rounded-full hover:bg-purple-200">Matematika</button>
+                                    <button onclick="setQuickPrompt('Peta Indonesia dengan pulau-pulau utama berwarna-warni')" class="text-xs bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 px-2 py-1 rounded-full hover:bg-purple-200">Peta Indonesia</button>
+                                    <button onclick="setQuickPrompt('Bagian-bagian tubuh manusia dengan label nama organ')" class="text-xs bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 px-2 py-1 rounded-full hover:bg-purple-200">Anatomi</button>
+                                    <button onclick="setQuickPrompt('Siklus air: evaporasi, kondensasi, presipitasi dalam bentuk diagram')" class="textxs bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 px-2 py-1 rounded-full hover:bg-purple-200">Siklus Air</button>
+                                </div>
+                            </div>
+
+                            <!-- Loading Skeleton -->
+                            <div id="imgLoading" class="hidden mb-5">
+                                <div class="img-skeleton rounded-xl h-64 w-full flex items-center justify-center">
+                                    <div class="text-center">
+                                        <svg class="animate-spin h-10 w-10 text-purple-600 mx-auto mb-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                        <p class="text-sm text-slate-600 font-medium">AI sedang membuat gambar...</p>
+                                        <p class="text-xs text-slate-400 mt-1">Mohon tunggu 10-30 detik</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Result Image -->
+                            <div id="imgResult" class="hidden mb-5"></div>
+
+                            <!-- History -->
+                            <div id="imgHistory" class="mt-6">
+                                <h4 class="font-semibold text-sm text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    Riwayat Gambar
+                                </h4>
+                                <div id="imgHistoryList" class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    ${generatedImages.length === 0 ? '<p class="col-span-full text-center text-sm text-slate-400 py-4">Belum ada gambar dibuat.</p>' : ''}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>`; 
             
-            loadAIChat(); 
-            setupEnterKey();
+            if(aiMode === 'chat') {
+                loadAIChat(); 
+                setupEnterKey();
+            } else {
+                renderImgHistory();
+            }
+        }
+
+        // ===== FUNGSI SWITCH MODE =====
+        function switchAIMode(mode) {
+            aiMode = mode;
+            renderAI();
+        }
+
+        // ===== FUNGSI QUICK PROMPT =====
+        function setQuickPrompt(text) {
+            document.getElementById('imgPrompt').value = text;
+        }
+
+        // ===== FUNGSI GENERATE GAMBAR MENGGUNAKAN PUTER AI =====
+        async function generateImage() {
+            const promptEl = document.getElementById('imgPrompt');
+            const prompt = promptEl.value.trim();
+            if(!prompt) { showToast('Masukkan deskripsi gambar dulu!', 'error'); return; }
+
+            const style = document.getElementById('imgStyle').value;
+            const ratio = document.getElementById('imgRatio').value;
+            
+            // Gabungkan prompt dengan style
+            let fullPrompt = prompt;
+            if(style) fullPrompt += `, ${style}`;
+            
+            // Tambahkan aspek rasio
+            const ratioMap = { 'square': '1024x1024', 'landscape': '1280x720', 'portrait': '720x1280' };
+            const resolution = ratioMap[ratio] || '1024x1024';
+            fullPrompt += `, high quality, detailed, ${resolution}`;
+
+            const btn = document.getElementById('imgGenerateBtn');
+            const btnText = document.getElementById('imgBtnText');
+            const spinner = document.getElementById('imgSpinner');
+            const loading = document.getElementById('imgLoading');
+            const result = document.getElementById('imgResult');
+
+            btn.disabled = true; btnText.innerText = 'Membuat...'; spinner.classList.remove('hidden');
+            loading.classList.remove('hidden');
+            result.classList.add('hidden');
+
+            try {
+                // Panggil Puter AI untuk generate gambar
+                const imgElement = await puter.ai.txt2img(fullPrompt);
+                
+                // Ambil URL dari elemen gambar yang dikembalikan
+                const imgUrl = typeof imgElement === 'string' ? imgElement : (imgElement.src || imgElement.toString());
+                
+                loading.classList.add('hidden');
+                
+                // Tampilkan hasil
+                result.classList.remove('hidden');
+                result.innerHTML = `
+                <div class="img-card bg-slate-50 dark:bg-slate-700 rounded-xl p-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Prompt:</p>
+                            <p class="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">${escapeHTML(prompt)}</p>
+                        </div>
+                        <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full ml-2">✓ Selesai</span>
+                    </div>
+                    <div class="relative group cursor-pointer" onclick="openLightbox('${imgUrl}')">
+                        <img src="${imgUrl}" class="w-full rounded-lg shadow-md max-h-[500px] object-contain bg-white" alt="${escapeHTML(prompt)}">
+                        <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                            <span class="text-white text-sm font-semibold">🔍 Klik untuk perbesar</span>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 mt-3">
+                        <a href="${imgUrl}" download="gambar-ai-${Date.now()}.png" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm py-2 rounded-lg font-semibold flex items-center justify-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                            Download
+                        </a>
+                        <button onclick="saveImgToDB('${imgUrl}', '${escapeHTML(prompt).replace(/'/g, "\\'")}')" class="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm py-2 rounded-lg font-semibold flex items-center justify-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
+                            Simpan
+                        </button>
+                        <button onclick="document.getElementById('imgPrompt').value='${escapeHTML(prompt).replace(/'/g, "\\'")}'; generateImage();" class="bg-purple-600 hover:bg-purple-700 text-white text-sm py-2 px-3 rounded-lg font-semibold flex items-center justify-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                        </button>
+                    </div>
+                </div>`;
+
+                // Simpan ke history
+                generatedImages.unshift({ url: imgUrl, prompt: prompt, time: new Date().toLocaleString('id-ID') });
+                if(generatedImages.length > 20) generatedImages = generatedImages.slice(0, 20);
+                renderImgHistory();
+
+                showToast('Gambar berhasil dibuat!', 'success');
+            } catch(err) {
+                loading.classList.add('hidden');
+                showToast('Gagal membuat gambar: ' + err.message, 'error');
+                console.error('Image gen error:', err);
+            } finally {
+                btn.disabled = false; btnText.innerText = 'Generate Gambar'; spinner.classList.add('hidden');
+            }
+        }
+
+        // ===== RENDER HISTORY GAMBAR =====
+        function renderImgHistory() {
+            const list = document.getElementById('imgHistoryList');
+            if(!list) return;
+            if(generatedImages.length === 0) {
+                list.innerHTML = '<p class="col-span-full text-center text-sm text-slate-400 py-4">Belum ada gambar dibuat.</p>';
+                return;
+            }
+            list.innerHTML = generatedImages.map((img, idx) => `
+                <div class="img-card bg-white dark:bg-slate-700 rounded-lg overflow-hidden shadow-sm cursor-pointer relative group" onclick="openLightbox('${img.url}')">
+                    <img src="${img.url}" class="w-full h-32 object-cover" alt="${escapeHTML(img.prompt)}">
+                    <div class="p-2">
+                        <p class="text-xs text-slate-600 dark:text-slate-300 truncate">${escapeHTML(img.prompt)}</p>
+                        <p class="text-[10px] text-slate-400 mt-1">${img.time}</p>
+                    </div>
+                    <div class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                        <a href="${img.url}" download="gambar-ai-${idx}.png" onclick="event.stopPropagation()" class="bg-blue-600 text-white p-1.5 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                        </a>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ===== SIMPAN GAMBAR KE DATABASE =====
+        async function saveImgToDB(url, prompt) {
+            const result = await DB.insert('materi', { 
+                title: 'Gambar AI: ' + prompt.substring(0, 30), 
+                description: prompt, 
+                subject_id: null, 
+                class_id: null, 
+                link: url 
+            });
+            if(result) showToast('Gambar disimpan ke Materi Ajar!', 'success');
         }
 
         function setupEnterKey() {
@@ -508,7 +774,7 @@
             <form id="paymentConfirmForm" class="space-y-4">
                 <div class="bg-yellow-50 dark:bg-slate-700 p-3 rounded-lg text-sm text-yellow-700 dark:text-yellow-300 text-center border border-yellow-200">
                     <strong>Perhatian:</strong> Silakan transfer Rp 25.000 ke DANA <br><strong>081212514747 (BAYU PRATAMA)</strong>.<br>
-                    Setelah transfer, masukkan nama pengirim di bawah ini. Admin akan memverifikasi pembayaran Anda maksimal 1x24 Jam.
+                    Setelah transfer, masukkan nama pengirim di bawah ini. Chat WA Ke 0812 1251 4747 Admin akan memverifikasi pembayaran Anda maksimal 1x24 Jam.
                 </div>
                 <div>
                     <label class="block text-sm mb-1">Nama Pengirim DANA</label>
@@ -551,24 +817,15 @@
         }
 
         function aiPrompt(text){document.getElementById('aiInput').value=text;sendAI();}
+        async function getSchoolContext(){return {students:await DB.get('students'),teachers:await DB.get('teachers'),subjects:await DB.get('subjects')};}
         
-        async function getSchoolContext(){
-            if(!currentUser) return null;
-            try {
-                return {students:await DB.get('students'),teachers:await DB.get('teachers'),subjects:await DB.get('subjects')};
-            } catch(e) {
-                return null;
-            }
-        }
-        
-        // Variabel untuk menyimpan riwayat chat
         let aiChatHistory = [];
         
         function loadAIChat(){
             const box=document.getElementById('aiMessages');
             if(!box)return;
             if(aiChatHistory.length === 0){
-                box.innerHTML = `<div class="flex justify-start"><div class="max-w-[80%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="whitespace-pre-wrap text-gray-800">Halo! Saya adalah Asisten AI Guru Anda. <br><br>Saya bisa membuat:<br>1. Soal Pilihan Ganda & RPP<br>2. <strong>Gambar/Ilustrasi Edukasi (JPG)</strong><br><br>Coba ketik: <i>"Buatkan gambar ekosistem"</i></div></div></div>`;
+                box.innerHTML = `<div class="flex justify-start"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="whitespace-pre-wrap text-gray-800">Halo! Saya adalah Asisten AI Guru Anda. Silakan tulis perintah atau materi lainnya.</div></div></div>`;
             }
         }
 
@@ -646,54 +903,16 @@
             
             const box=document.getElementById('aiMessages');
             
-            box.innerHTML += `<div class="flex justify-end fade-in"><div class="max-w-[80%] rounded-xl px-4 py-3 bg-blue-600 text-white shadow-sm"><div class="text-xs opacity-70 mb-1">Anda</div><div class="whitespace-pre-wrap">${escapeHTML(prompt)}</div></div></div>`;
+            box.innerHTML += `<div class="flex justify-end fade-in"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-blue-600 text-white shadow-sm"><div class="text-xs opacity-70 mb-1">Anda</div><div class="whitespace-pre-wrap">${escapeHTML(prompt)}</div></div></div>`;
             
-            box.innerHTML += `<div id="typingIndicator" class="flex justify-start fade-in"><div class="max-w-[80%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="animate-pulse text-blue-600">Sedang mengetik / membuat gambar...</div></div></div>`;
+            box.innerHTML += `<div id="typingIndicator" class="flex justify-start fade-in"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="animate-pulse text-blue-600">Sedang mengetik...</div></div></div>`;
             
             box.scrollTop = box.scrollHeight;
 
             try{
-                // Deteksi apakah guru meminta membuat gambar
-                const lowerPrompt = prompt.toLowerCase();
-                const isImageRequest = lowerPrompt.includes('gambar') || lowerPrompt.includes('ilustrasi') || lowerPrompt.includes('foto');
-
-                if (isImageRequest) {
-                    let imgSrc = null;
-                    try {
-                        // Coba buat gambar menggunakan API dasar Puter AI
-                        imgSrc = await puter.ai.txt2img(prompt);
-                    } catch (imgErr) {
-                        console.warn("Image generation failed:", imgErr);
-                    }
-                    
-                    if (imgSrc) {
-                        // JIKA GAMBAR BERHASIL DIBUAT
-                        const htmlRes = `<div class="mb-2 text-sm text-gray-800">Berikut adalah gambar untuk: <strong>${escapeHTML(prompt)}</strong></div><div class="flex flex-col items-center gap-2"><img src="${imgSrc}" class="rounded-lg max-w-full h-auto border border-slate-200 shadow-sm" alt="Gambar"><a href="${imgSrc}" download="Gambar_Edukasi.jpg" class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-blue-700">⬇️ Download Gambar (JPG)</a></div>`;
-                        aiChatHistory.push({role:'user', content:prompt});
-                        aiChatHistory.push({role:'assistant', content:"[Gambar telah dibuat]"});
-                        document.getElementById('typingIndicator')?.remove();
-                        box.innerHTML += `<div class="flex justify-start fade-in"><div class="max-w-[80%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="ai-output text-gray-800">${htmlRes}</div></div></div>`;
-                    } else {
-                        // JIKA GAMBAR GAGAL, OTOMATIS BERALIH KE TEKS DESKRIPSI
-                        const ctx=await getSchoolContext();
-                        const sys = `Anda adalah Asisten AI Guru. ${ctx ? `Data sekolah: ${JSON.stringify(ctx)}. ` : ''}Saat membuat soal pilihan ganda, WAJIB gunakan format PLAIN TEXT.`;
-                        const modifiedPrompt = `Guru meminta dibuatkan: "${prompt}". Karena server gambar sedang sibuk, tolong jelaskan deskripsi visual/gambar tersebut secara detail dan rapi.`;
-                        
-                        aiChatHistory.push({role:'user', content:modifiedPrompt});
-                        const res = await puter.ai.chat([{role:'system',content:sys}, ...aiChatHistory]);
-                        let ans = typeof res==='string' ? res : (res?.message?.content || 'Maaf, saya tidak bisa merespon saat ini.');
-                        aiChatHistory.push({role:'assistant', content:ans});
-
-                        document.getElementById('typingIndicator')?.remove();
-                        const formattedHTML = formatSoalHTML(ans);
-                        lastAIFormattedHTML = formattedHTML;
-                        box.innerHTML += `<div class="flex justify-start fade-in"><div class="max-w-[80%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="ai-output text-gray-800">${formattedHTML}</div></div></div>`;
-                        ['aiPrintBtn', 'aiWordBtn', 'aiPrintKeyBtn'].forEach(id => document.getElementById(id).classList.remove('hidden'));
-                    }
-                } else {
-                    // PROSES CHAT TEKS BIASA (SOAL/RPP)
-                    const ctx=await getSchoolContext();
-                    const sys = `Anda adalah Asisten AI Guru. ${ctx ? `Data sekolah: ${JSON.stringify(ctx)}. ` : ''}Saat membuat soal pilihan ganda, WAJIB gunakan format PLAIN TEXT berikut:
+                const ctx=await getSchoolContext();
+                
+                const sys = `Anda adalah Asisten AI Guru. Data sekolah: ${JSON.stringify(ctx)}. Saat membuat soal pilihan ganda, WAJIB gunakan format PLAIN TEXT berikut:
 1. Pertanyaan lengkap di sini?
 A. Pilihan A
 B. Pilihan B
@@ -702,23 +921,24 @@ D. Pilihan D
 Jawaban: B
 
 ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap soal. Di bagian paling akhir, buat ringkasan "Kunci Jawaban:".`;
-                    
-                    aiChatHistory.push({role:'user', content:prompt});
-                    const res = await puter.ai.chat([{role:'system',content:sys}, ...aiChatHistory]);
-                    let ans = typeof res==='string' ? res : (res?.message?.content || 'Maaf, saya tidak bisa merespon saat ini.');
-                    aiChatHistory.push({role:'assistant', content:ans});
+                
+                aiChatHistory.push({role:'user', content:prompt});
+                
+                const res = await puter.ai.chat([{role:'system',content:sys}, ...aiChatHistory]);
+                let ans = typeof res==='string' ? res : (res.message?.content || '');
+                
+                aiChatHistory.push({role:'assistant', content:ans});
 
-                    document.getElementById('typingIndicator')?.remove();
-                    const formattedHTML = formatSoalHTML(ans);
-                    lastAIFormattedHTML = formattedHTML;
-                    
-                    box.innerHTML += `<div class="flex justify-start fade-in"><div class="max-w-[80%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="ai-output text-gray-800">${formattedHTML}</div></div></div>`;
-                    
-                    ['aiPrintBtn', 'aiWordBtn', 'aiPrintKeyBtn'].forEach(id => document.getElementById(id).classList.remove('hidden'));
-                }
+                document.getElementById('typingIndicator')?.remove();
+
+                const formattedHTML = formatSoalHTML(ans);
+                lastAIFormattedHTML = formattedHTML;
+                
+                box.innerHTML += `<div class="flex justify-start fade-in"><div class="max-w-[95%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="ai-output text-gray-800">${formattedHTML}</div></div></div>`;
                 
                 box.scrollTop = box.scrollHeight;
 
+                ['aiPrintBtn', 'aiWordBtn', 'aiPrintKeyBtn'].forEach(id => document.getElementById(id).classList.remove('hidden'));
             }catch(e){
                 document.getElementById('typingIndicator')?.remove();
                 showToast('Error AI: ' + e.message,'error');
