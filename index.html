@@ -99,12 +99,12 @@
         <main class="flex-1 flex flex-col overflow-hidden bg-slate-100 dark:bg-slate-900">
             <header class="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 lg:px-6 shadow-sm">
                 <div class="flex items-center space-x-4">
-                    <button onclick="toggleSidebar()" class="lg:hidden text-slate-500"><svg class="w-6 h-6" fill="none, stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
+                    <button onclick="toggleSidebar()" class="lg:hidden text-slate-500"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
                     <h2 id="pageTitle" class="text-xl font-semibold text-slate-800 dark:text-white">Dashboard</h2>
                 </div>
                 <div class="flex items-center space-x-4">
                     <button onclick="toggleDarkMode()" class="text-slate-500 hover:text-blue-600">
-                        <svg id="iconSun" class="w-6 h-6 hidden" fill="none, stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        <svg id="iconSun" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                         <svg id="iconMoon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
                     </button>
                     <div class="flex items-center space-x-2">
@@ -345,7 +345,7 @@
         async function renderClasses() { const classes = await DB.get('classes'); const students = await DB.get('students'); document.getElementById('content').innerHTML = `<div class="flex justify-between items-center mb-6"><h3 class="font-semibold text-lg text-slate-800 dark:text-white">Manajemen Kelas</h3><button onclick="classForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Kelas</button></div><div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">${classes.length ? classes.map(c => { const count = students.filter(s => s.class_id === c.id).length; return `<div class="p-4 border rounded-lg"><h4 class="text-lg font-bold">${c.name}</h4><p class="text-sm">Wali: ${c.homeroom || '-'}</p><p class="text-sm">Jumlah Siswa: ${count}</p><div class="mt-4 flex gap-2"><button onclick="classForm('${c.id}')" class="text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded">Edit</button><button onclick="deleteData('classes', '${c.id}', renderClasses)" class="text-xs bg-red-100 text-red-600 px-3 py-1 rounded">Hapus</button></div></div>`; }).join('') : '<div class="col-span-3 text-center py-8 text-slate-500">Belum ada data kelas. Klik tombol Tambah Kelas di atas.</div>'}</div></div>`; }
         async function classForm(id = null) { let c = null; if(id) { c = (await DB.get('classes')).find(x => x.id === id); } openModal(id ? 'Edit Kelas' : 'Tambah Kelas', `<form id="classForm" class="space-y-4"><div><label class="block text-sm mb-1">Nama Kelas</label><input type="text" id="cls_name" value="${c?.name || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Wali Kelas</label><input type="text" id="cls_homeroom" value="${c?.homeroom || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button></form>`); document.getElementById('classForm').onsubmit = async (e) => { e.preventDefault(); const payload = { name: document.getElementById('cls_name').value, homeroom: document.getElementById('cls_homeroom').value }; await saveData('classes', payload, id); closeModal(); renderClasses(); }; }
 
-        async function renderSubjects() { const subjects = await DB.get('subjects'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex justify-between mb-4"><h3 class="font-semibold">Mata Pelajaran</h3><button onclick="subjectForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Mapel</button></div><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase"><tr><th class="px-4 py-3">Kode</th><th class="px-4 py-3">Nama Mapel</th><th class="px-4 py-3">Guru</th><th class="px-4 py-3">KKM</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody class="divide-y dark:divide-slate-700">${subjects.length ? subjects.map(s => `<tr><td class="px-4 py-3">${s.code}</td><td class="px-4 py-3 font-medium">${s.name}</td><td class="px-4 py-3">${s.teacher}</td><td class="px-4 py-3">${s.kkm}</td><td class="px-4 py-3 flex gap-2"><button onclick="subjectForm('${s.id}')" class="text-blue-500">Edit</button><button onclick="deleteData('subjects', '${s.id}', renderSubjects)" class="text-red-500">Hapus</button></td></tr>`).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500">Belum ada data.</td></tr>`}</tbody></table></div></div>`; }
+        async function renderSubjects() { const subjects = await DB.get('subjects'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex justify-between mb-4"><h3 class="font-semibold">Mata Pelajaran</h3><button onclick="subjectForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Mapel</button></div><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase"><tr><th class="px-4 py-3">Kode</th><th class="px-4 py-3">Nama Mapel</th><th class="px-4 py-3">Guru</th><th class="px-4 py-3">KKM</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody class="divide-y dark:divide-slate-700">${subjects.length ? subjects.map(s => `<tr><td class="px-4 py-3">${s.code}</td><td class="px-4 py-3 font-medium">${s.name}</td><td class="px-4 py-3">${s.teacher}</td><td class="px-4 py-3">${s.kkm}</td><td class="px-4 py-3 flex gap-2"><button onclick="subjectForm('${s.id}')" class="text-blue-500">Edit</button><button onclick="deleteData('subjects', '${s.id}', renderSubjects')" class="text-red-500">Hapus</button></td></tr>`).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500">Belum ada data.</td></tr>`}</tbody></table></div></div>`; }
         async function subjectForm(id = null) { let s = null; if(id) { s = (await DB.get('subjects')).find(x => x.id === id); } openModal('Tambah Mapel', `<form id="subjectForm" class="space-y-4"><div><label class="block text-sm mb-1">Kode</label><input type="text" id="sub_code" value="${s?.code || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Nama Mapel</label><input type="text" id="sub_name" value="${s?.name || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Guru Pengampu</label><input type="text" id="sub_teacher" value="${s?.teacher || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">KKM</label><input type="number" id="sub_kkm" value="${s?.kkm || 75}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button></form>`); document.getElementById('subjectForm').onsubmit = async (e) => { e.preventDefault(); const payload = { code: document.getElementById('sub_code').value, name: document.getElementById('sub_name').value, teacher: document.getElementById('sub_teacher').value, kkm: parseInt(document.getElementById('sub_kkm').value) }; await saveData('subjects', payload, id); closeModal(); renderSubjects(); }; }
 
         // SCHEDULES, ATTENDANCE, GRADES
@@ -414,7 +414,7 @@
                         <img src="${AI_IMG}" class="w-24 h-24 rounded-2xl mx-auto mb-5 object-cover shadow-md" alt="AI Logo">
                         <h3 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Aktifkan Asisten AI</h3>
                         <p class="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
-                            Dapatkan akses <strong>SELAMANYA</strong> ke semua fitur AI (Buat Soal, Modul Ajar, RPP, Gambar, dll).
+                            Dapatkan akses <strong>SELAMANYA</strong> ke semua fitur AI (Buat Soal, Modul Ajar, Gambar, dll).
                         </p>
                         
                         <div class="bg-slate-50 dark:bg-slate-700 p-4 rounded-xl mb-6 border border-slate-100 dark:border-slate-600">
@@ -551,7 +551,15 @@
         }
 
         function aiPrompt(text){document.getElementById('aiInput').value=text;sendAI();}
-        async function getSchoolContext(){return {students:await DB.get('students'),teachers:await DB.get('teachers'),subjects:await DB.get('subjects')};}
+        
+        async function getSchoolContext(){
+            if(!currentUser) return null;
+            try {
+                return {students:await DB.get('students'),teachers:await DB.get('teachers'),subjects:await DB.get('subjects')};
+            } catch(e) {
+                return null;
+            }
+        }
         
         // Variabel untuk menyimpan riwayat chat
         let aiChatHistory = [];
@@ -624,7 +632,7 @@
             return marked.parse(text) + kunciSection;
         }
 
-              let lastAIFormattedHTML = '';
+        let lastAIFormattedHTML = '';
         async function sendAI(){
             const input=document.getElementById('aiInput');
             if(!input || !input.value.trim()) return;
@@ -640,30 +648,30 @@
             
             box.innerHTML += `<div class="flex justify-end fade-in"><div class="max-w-[80%] rounded-xl px-4 py-3 bg-blue-600 text-white shadow-sm"><div class="text-xs opacity-70 mb-1">Anda</div><div class="whitespace-pre-wrap">${escapeHTML(prompt)}</div></div></div>`;
             
-            box.innerHTML += `<div id="typingIndicator" class="flex justify-start fade-in"><div class="max-w-[80%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="animate-pulse text-blue-600">Sedang mengetik/membuat gambar...</div></div></div>`;
+            box.innerHTML += `<div id="typingIndicator" class="flex justify-start fade-in"><div class="max-w-[80%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="animate-pulse text-blue-600">Sedang mengetik / membuat gambar...</div></div></div>`;
             
             box.scrollTop = box.scrollHeight;
 
             try{
-                // Deteksi apakah guru meminta membuat gambar
+                // Deteksi sangat santai: ada kata "gambar" saja langsung proses gambar
                 const lowerPrompt = prompt.toLowerCase();
-                const isImageRequest = lowerPrompt.includes('buatkan gambar') || lowerPrompt.includes('buat gambar') || lowerPrompt.includes('gambar ilustrasi') || lowerPrompt.includes('buatkan ilustrasi') || lowerPrompt.includes('buatkan foto');
+                const isImageRequest = lowerPrompt.includes('gambar') || lowerPrompt.includes('ilustrasi') || lowerPrompt.includes('foto');
 
                 if (isImageRequest) {
                     // PROSES MEMBUAT GAMBAR MENGGUNAKAN API TERBARU PUTER AI
                     const imgSrc = await puter.ai.image.prompt(prompt);
                     
-                    const htmlRes = `<div class="mb-2 text-sm text-gray-800">Berikut adalah gambar edukasi untuk: <strong>${escapeHTML(prompt)}</strong></div><div class="flex flex-col items-center gap-2"><img src="${imgSrc}" class="rounded-lg max-w-full h-auto border border-slate-200 shadow-sm" alt="Gambar Edukasi"><a href="${imgSrc}" download="Gambar_Edukasi.jpg" class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-blue-700">⬇️ Download Gambar (JPG)</a></div>`;
+                    const htmlRes = `<div class="mb-2 text-sm text-gray-800">Berikut adalah gambar untuk: <strong>${escapeHTML(prompt)}</strong></div><div class="flex flex-col items-center gap-2"><img src="${imgSrc}" class="rounded-lg max-w-full h-auto border border-slate-200 shadow-sm" alt="Gambar"><a href="${imgSrc}" download="Gambar_Edukasi.jpg" class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-blue-700">⬇️ Download Gambar (JPG)</a></div>`;
                     
                     aiChatHistory.push({role:'user', content:prompt});
-                    aiChatHistory.push({role:'assistant', content:"[Gambar telah dibuat dan ditampilkan]"});
+                    aiChatHistory.push({role:'assistant', content:"[Gambar telah dibuat]"});
                     
                     document.getElementById('typingIndicator')?.remove();
                     box.innerHTML += `<div class="flex justify-start fade-in"><div class="max-w-[80%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="ai-output text-gray-800">${htmlRes}</div></div></div>`;
                 } else {
                     // PROSES CHAT TEKS BIASA (SOAL/RPP)
                     const ctx=await getSchoolContext();
-                    const sys = `Anda adalah Asisten AI Guru. Data sekolah: ${JSON.stringify(ctx)}. Saat membuat soal pilihan ganda, WAJIB gunakan format PLAIN TEXT berikut:
+                    const sys = `Anda adalah Asisten AI Guru. ${ctx ? `Data sekolah: ${JSON.stringify(ctx)}. ` : ''}Saat membuat soal pilihan ganda, WAJIB gunakan format PLAIN TEXT berikut:
 1. Pertanyaan lengkap di sini?
 A. Pilihan A
 B. Pilihan B
@@ -675,7 +683,7 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
                     
                     aiChatHistory.push({role:'user', content:prompt});
                     const res = await puter.ai.chat([{role:'system',content:sys}, ...aiChatHistory]);
-                    let ans = typeof res==='string' ? res : (res.message?.content || '');
+                    let ans = typeof res==='string' ? res : (res?.message?.content || 'Maaf, saya tidak bisa merespon saat ini.');
                     aiChatHistory.push({role:'assistant', content:ans});
 
                     document.getElementById('typingIndicator')?.remove();
