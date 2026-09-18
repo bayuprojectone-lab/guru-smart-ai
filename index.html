@@ -362,7 +362,7 @@
         async function renderClasses() { const classes = await DB.get('classes'); const students = await DB.get('students'); document.getElementById('content').innerHTML = `<div class="flex justify-between items-center mb-6"><h3 class="font-semibold text-lg text-slate-800 dark:text-white">Manajemen Kelas</h3><button onclick="classForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Kelas</button></div><div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">${classes.length ? classes.map(c => { const count = students.filter(s => s.class_id === c.id).length; return `<div class="p-4 border rounded-lg"><h4 class="text-lg font-bold">${c.name}</h4><p class="text-sm">Wali: ${c.homeroom || '-'}</p><p class="text-sm">Jumlah Siswa: ${count}</p><div class="mt-4 flex gap-2"><button onclick="classForm('${c.id}')" class="text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded">Edit</button><button onclick="deleteData('classes', '${c.id}', renderClasses)" class="text-xs bg-red-100 text-red-600 px-3 py-1 rounded">Hapus</button></div></div>`; }).join('') : '<div class="col-span-3 text-center py-8 text-slate-500">Belum ada data kelas. Klik tombol Tambah Kelas di atas.</div>'}</div></div>`; }
         async function classForm(id = null) { let c = null; if(id) { c = (await DB.get('classes')).find(x => x.id === id); } openModal(id ? 'Edit Kelas' : 'Tambah Kelas', `<form id="classForm" class="space-y-4"><div><label class="block text-sm mb-1">Nama Kelas</label><input type="text" id="cls_name" value="${c?.name || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Wali Kelas</label><input type="text" id="cls_homeroom" value="${c?.homeroom || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button></form>`); document.getElementById('classForm').onsubmit = async (e) => { e.preventDefault(); const payload = { name: document.getElementById('cls_name').value, homeroom: document.getElementById('cls_homeroom').value }; await saveData('classes', payload, id); closeModal(); renderClasses(); }; }
 
-        async function renderSubjects() { const subjects = await DB.get('subjects'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex justify-between mb-4"><h3 class="font-semibold">Mata Pelajaran</h3><button onclick="subjectForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Mapel</button></div><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase"><tr><th class="px-4 py-3">Kode</th><th class="px-4 py-3">Nama Mapel</th><th class="px-4 py-3">Guru</th><th class="px-4 py-3">KKM</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody class="divide-y dark:divide-slate-700">${subjects.length ? subjects.map(s => `<tr><td class="px-4 py-3">${s.code}</td><td class="px-4 py-3 font-medium">${s.name}</td><td class="px-4 py-3">${s.teacher}</td><td class="px-4 py-3">${s.kkm}</td><td class="px-4 py-3 flex gap-2"><button onclick="subjectForm('${s.id}')" class="text-blue-500">Edit</button><button onclick="deleteData('subjects', '${s.id}', renderSubjects)" class="text-red-500">Hapus</button></td></tr>`).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500">Belum ada data.</td></tr>`}</tbody></table></div></div>`; }
+        async function renderSubjects() { const subjects = await DB.get('subjects'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex justify-between mb-4"><h3 class="font-semibold">Mata Pelajaran</h3><button onclick="subjectForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Mapel</button></div><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase"><tr><th class="px-4 py-3">Kode</th><th class="px-4 py-3">Nama Mapel</th><th class="px-4 py-3">Guru</th><th class="px-4 py-3">KKM</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody class="divide-y dark:divide-slate-700">${subjects.length ? subjects.map(s => `<tr><td class="px-4 py-3">${s.code}</td><td class="px-4 py-3 font-medium">${s.name}</td><td class="px-4 py-3">${s.teacher}</td><td class="px-4 py-3">${s.kkm}</td><td class="px-4 py-3 flex gap-2"><button onclick="subjectForm('${s.id}')" class="text-blue-500">Edit</button><button onclick="deleteData('subjects', '${s.id}', renderSubjects')" class="text-red-500">Hapus</button></td></tr>`).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500">Belum ada data.</td></tr>`}</tbody></table></div></div>`; }
         async function subjectForm(id = null) { let s = null; if(id) { s = (await DB.get('subjects')).find(x => x.id === id); } openModal('Tambah Mapel', `<form id="subjectForm" class="space-y-4"><div><label class="block text-sm mb-1">Kode</label><input type="text" id="sub_code" value="${s?.code || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Nama Mapel</label><input type="text" id="sub_name" value="${s?.name || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Guru Pengampu</label><input type="text" id="sub_teacher" value="${s?.teacher || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">KKM</label><input type="number" id="sub_kkm" value="${s?.kkm || 75}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button></form>`); document.getElementById('subjectForm').onsubmit = async (e) => { e.preventDefault(); const payload = { code: document.getElementById('sub_code').value, name: document.getElementById('sub_name').value, teacher: document.getElementById('sub_teacher').value, kkm: parseInt(document.getElementById('sub_kkm').value) }; await saveData('subjects', payload, id); closeModal(); renderSubjects(); }; }
 
         // SCHEDULES, ATTENDANCE, GRADES
@@ -708,7 +708,7 @@
             document.getElementById('vidPrompt').value = text;
         }
 
-        // ===== FUNGSI GENERATE GAMBAR =====
+        // ===== FUNGSI GENERATE GAMBAR (DENGAN HANDLER 403) =====
         async function generateImage() {
             const promptEl = document.getElementById('imgPrompt');
             const prompt = promptEl.value.trim();
@@ -790,6 +790,17 @@
                     
                 } catch (err) {
                     console.error(`Model ${models[i]} gagal:`, err);
+                    
+                    // PENANGANAN ERROR 403 UNREGISTERED CALLERS
+                    if (err && (err.code === 403 || (err.message && err.message.includes('unregistered')))) {
+                        loading.classList.add('hidden');
+                        showToast('Sesi Puter AI kedaluwarsa. Silakan login kembali...', 'info');
+                        try {
+                            await puter.auth.signOut();
+                            renderAI(); // Memaksa halaman untuk meminta login ulang
+                        } catch (e) {}
+                        return;
+                    }
                 }
             }
 
@@ -835,7 +846,7 @@
             if(result) showToast('Gambar disimpan ke Materi Ajar!', 'success');
         }
 
-        // ===== FUNGSI GENERATE VIDEO MENGGUNAKAN PUTER AI TXT2VID =====
+        // ===== FUNGSI GENERATE VIDEO (DENGAN HANDLER 403) =====
         async function generateVideo() {
             const promptEl = document.getElementById('vidPrompt');
             const prompt = promptEl.value.trim();
@@ -856,6 +867,11 @@
             result.classList.add('hidden');
 
             try {
+                // Pastikan user terautentikasi sebelum memanggil API
+                if (!puter.auth.isSignedIn()) {
+                    await puter.auth.signIn();
+                }
+
                 // Memanggil Puter AI untuk Text-to-Video
                 const videoElement = await puter.ai.txt2vid(prompt, {
                     model: "veo-3.1-fast",
@@ -907,7 +923,17 @@
                 showToast('Video berhasil dirender!', 'success');
             } catch(err) {
                 loading.classList.add('hidden');
-                showToast('Gagal membuat video: ' + (err.message || 'Server AI sibuk'), 'error');
+                
+                // PENANGANAN ERROR 403 UNREGISTERED CALLERS
+                if (err && (err.code === 403 || (err.message && err.message.includes('unregistered')))) {
+                    showToast('Sesi Puter AI kedaluwarsa. Silakan login kembali...', 'info');
+                    try {
+                        await puter.auth.signOut();
+                        renderAI(); // Memaksa halaman untuk meminta login ulang
+                    } catch (e) {}
+                } else {
+                    showToast('Gagal membuat video: ' + (err.message || 'Server AI sibuk'), 'error');
+                }
                 console.error('Video gen error:', err);
             } finally {
                 btn.disabled = false; btnText.innerText = 'Generate Video'; spinner.classList.add('hidden');
