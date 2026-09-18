@@ -632,7 +632,7 @@
             return marked.parse(text) + kunciSection;
         }
 
-        let lastAIFormattedHTML = '';
+                let lastAIFormattedHTML = '';
         async function sendAI(){
             const input=document.getElementById('aiInput');
             if(!input || !input.value.trim()) return;
@@ -653,21 +653,64 @@
             box.scrollTop = box.scrollHeight;
 
             try{
-                // Deteksi sangat santai: ada kata "gambar" saja langsung proses gambar
                 const lowerPrompt = prompt.toLowerCase();
                 const isImageRequest = lowerPrompt.includes('gambar') || lowerPrompt.includes('ilustrasi') || lowerPrompt.includes('foto');
 
                 if (isImageRequest) {
-                    // PROSES MEMBUAT GAMBAR MENGGUNAKAN API TERBARU PUTER AI
-                    const imgSrc = await puter.ai.image.prompt(prompt);
+                    let imageGenerated = false;
                     
-                    const htmlRes = `<div class="mb-2 text-sm text-gray-800">Berikut adalah gambar untuk: <strong>${escapeHTML(prompt)}</strong></div><div class="flex flex-col items-center gap-2"><img src="${imgSrc}" class="rounded-lg max-w-full h-auto border border-slate-200 shadow-sm" alt="Gambar"><a href="${imgSrc}" download="Gambar_Edukasi.jpg" class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-blue-700">⬇️ Download Gambar (JPG)</a></div>`;
-                    
-                    aiChatHistory.push({role:'user', content:prompt});
-                    aiChatHistory.push({role:'assistant', content:"[Gambar telah dibuat]"});
-                    
-                    document.getElementById('typingIndicator')?.remove();
-                    box.innerHTML += `<div class="flex justify-start fade-in"><div class="max-w-[80%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="ai-output text-gray-800">${htmlRes}</div></div></div>`;
+                    // 1. Coba buat gambar menggunakan berbagai kemungkinan API Puter AI
+                    try {
+                        let imgSrc = null;
+                        if (typeof puter.ai.txtToImage === 'function') {
+                            imgSrc = await puter.ai.txtToImage(prompt);
+                        } else if (typeof puter.ai.image?.prompt === 'function') {
+                            imgSrc = await puter.ai.image.prompt(prompt);
+                        } else if (typeof puter.txtToImage === 'function') {
+                            imgSrc = await puter.txtToImage(prompt);
+                        }
+
+                        if (imgSrc) {
+                            const htmlRes = `<div class="mb-2 text-sm text-gray-800">Berikut adalah gambar untuk: <strong>${escapeHTML(prompt)}</strong></div><div class="flex flex-col items-center gap-2"><img src="${imgSrc}" class="rounded-lg max-w-full h-auto border border-slate-200 shadow-sm" alt="Gambar"><a href="${imgSrc}" download="Gambar_Edukasi.jpg" class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-blue-700">⬇️ Download Gambar (JPG)</a></div>`;
+                            aiChatHistory.push({role:'user', content:prompt});
+                            aiChatHistory.push({role:'assistant', content:"[Gambar telah dibuat]"});
+                            document.getElementById('typingIndicator')?.remove();
+                            box.innerHTML += `<div class="flex justify-start fade-in"><div class="max-w-[80%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="ai-output text-gray-800">${htmlRes}</div></div></div>`;
+                            imageGenerated = true;
+                        }
+                    } catch (imgErr) {
+                        console.warn("Image generation API not available, falling back to text:", imgErr);
+                    }
+
+                    // 2. Jika gambar gagal dibuat, otomatis lompat ke mode teks deskripsi
+                    if (!imageGenerated) {
+                        const ctx=await getSchoolContext();
+                        const sys = `Anda adalah Asisten AI Guru. ${ctx ? `Data sekolah: ${JSON.stringify(ctx)}. ` : ''}Saat membuat soal pilihan ganda, WAJIB gunakan format PLAIN TEXT berikut:
+1. Pertanyaan lengkap di sini?
+A. Pilihan A
+B. Pilihan B
+C. Pilihan C
+D. Pilihan D
+Jawaban: B
+
+ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap soal. Di bagian paling akhir, buat ringkasan "Kunci Jawaban:".`;
+                        
+                        const modifiedPrompt = `Guru meminta dibuatkan: "${prompt}". Karena Anda tidak bisa menampilkan gambar secara langsung, tolong jelaskan deskripsi visual/gambar tersebut secara detail dan rapi (bisa juga ditambahkan cara menggambar atau menunjukkannya di papan tulis).`;
+                        
+                        aiChatHistory.push({role:'user', content:modifiedPrompt});
+                        const res = await puter.ai.chat([{role:'system',content:sys}, ...aiChatHistory]);
+                        let ans = typeof res==='string' ? res : (res?.message?.content || 'Maaf, saya tidak bisa merespon saat ini.');
+                        aiChatHistory.push({role:'assistant', content:ans});
+
+                        document.getElementById('typingIndicator')?.remove();
+                        const formattedHTML = formatSoalHTML(ans);
+                        lastAIFormattedHTML = formattedHTML;
+                        
+                        box.innerHTML += `<div class="flex justify-start fade-in"><div class="max-w-[80%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="ai-output text-gray-800">${formattedHTML}</div></div></div>`;
+                        
+                        ['aiPrintBtn', 'aiWordBtn', 'aiPrintKeyBtn'].forEach(id => document.getElementById(id).classList.remove('hidden'));
+                    }
+
                 } else {
                     // PROSES CHAT TEKS BIASA (SOAL/RPP)
                     const ctx=await getSchoolContext();
@@ -704,7 +747,6 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
                 btn.disabled=false; btn.innerText='Kirim';
             }
         }
-
         function printAIResult(includeAnswerKey = false) { 
             if(!lastAIFormattedHTML) return; 
             let cleanHTML = lastAIFormattedHTML;
