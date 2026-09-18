@@ -99,7 +99,7 @@
         <main class="flex-1 flex flex-col overflow-hidden bg-slate-100 dark:bg-slate-900">
             <header class="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 lg:px-6 shadow-sm">
                 <div class="flex items-center space-x-4">
-                    <button onclick="toggleSidebar()" class="lg:hidden text-slate-500"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
+                    <button onclick="toggleSidebar()" class="lg:hidden text-slate-500"><svg class="w-6 h-6" fill="none, stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
                     <h2 id="pageTitle" class="text-xl font-semibold text-slate-800 dark:text-white">Dashboard</h2>
                 </div>
                 <div class="flex items-center space-x-4">
@@ -414,7 +414,7 @@
                         <img src="${AI_IMG}" class="w-24 h-24 rounded-2xl mx-auto mb-5 object-cover shadow-md" alt="AI Logo">
                         <h3 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Aktifkan Asisten AI</h3>
                         <p class="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
-                            Dapatkan akses <strong>SELAMANYA</strong> ke semua fitur AI (Buat Soal, Modul Ajar, RPP, dll).
+                            Dapatkan akses <strong>SELAMANYA</strong> ke semua fitur AI (Buat Soal, Modul Ajar, RPP, Gambar, dll).
                         </p>
                         
                         <div class="bg-slate-50 dark:bg-slate-700 p-4 rounded-xl mb-6 border border-slate-100 dark:border-slate-600">
@@ -459,7 +459,7 @@
                         <img src="${AI_IMG}" class="w-10 h-10 rounded-xl object-cover shadow-sm">
                         <div>
                             <h3 class="font-bold text-slate-800 dark:text-white">Asisten AI Guru</h3>
-                            <p class="text-xs text-slate-500 dark:text-slate-400">SIAP Membantu dengan sepenuh HATI</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Soal & Gambar Edukasi • Format Otomatis</p>
                         </div>
                     </div>
                 </div>
@@ -468,7 +468,7 @@
                 
                 <div class="p-3 border-t dark:border-slate-700 bg-white dark:bg-slate-800">
                     <div class="flex gap-2 items-end">
-                        <textarea id="aiInput" rows="2" placeholder="Tulis perintah..." class="flex-1 px-4 py-2 rounded-xl border dark:bg-slate-700 dark:text-white resize-none focus:ring-2 focus:ring-blue-500 outline-none text-sm"></textarea>
+                        <textarea id="aiInput" rows="2" placeholder="Tulis perintah... (Tekan Enter di PC untuk mengirim, Shift+Enter untuk baris baru)" class="flex-1 px-4 py-2 rounded-xl border dark:bg-slate-700 dark:text-white resize-none focus:ring-2 focus:ring-blue-500 outline-none text-sm"></textarea>
                         <button id="aiSendBtn" onclick="sendAI()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold flex items-center gap-1 text-sm">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9 2zm0 0v-8" /></svg>
                             Kirim
@@ -479,7 +479,7 @@
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>Word
                         </button>
                         <button id="aiPrintBtn" onclick="printAIResult(false)" class="hidden bg-slate-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>PDF
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>Soal
                         </button>
                         <button id="aiPrintKeyBtn" onclick="printAIResult(true)" class="hidden bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>Soal + Kunci
@@ -508,7 +508,7 @@
             <form id="paymentConfirmForm" class="space-y-4">
                 <div class="bg-yellow-50 dark:bg-slate-700 p-3 rounded-lg text-sm text-yellow-700 dark:text-yellow-300 text-center border border-yellow-200">
                     <strong>Perhatian:</strong> Silakan transfer Rp 25.000 ke DANA <br><strong>081212514747 (BAYU PRATAMA)</strong>.<br>
-                    Setelah transfer, masukkan nama pengirim di bawah ini. Chat WA Ke 0812 1251 4747 Admin akan memverifikasi pembayaran Anda maksimal 1x24 Jam.
+                    Setelah transfer, masukkan nama pengirim di bawah ini. Admin akan memverifikasi pembayaran Anda maksimal 1x24 Jam.
                 </div>
                 <div>
                     <label class="block text-sm mb-1">Nama Pengirim DANA</label>
@@ -553,15 +553,14 @@
         function aiPrompt(text){document.getElementById('aiInput').value=text;sendAI();}
         async function getSchoolContext(){return {students:await DB.get('students'),teachers:await DB.get('teachers'),subjects:await DB.get('subjects')};}
         
-        // Variabel untuk menyimpan riwayat chat agar bisa melanjutkan tema
+        // Variabel untuk menyimpan riwayat chat
         let aiChatHistory = [];
         
         function loadAIChat(){
             const box=document.getElementById('aiMessages');
             if(!box)return;
-            // Jangan hapus isi box, tapi pastikan ada pesan sambutan jika kosong
             if(aiChatHistory.length === 0){
-                box.innerHTML = `<div class="flex justify-start"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="whitespace-pre-wrap text-gray-800">Halo! Saya adalah Asisten AI Guru Anda. Silakan tulis perintah atau materi lainnya.</div></div></div>`;
+                box.innerHTML = `<div class="flex justify-start"><div class="max-w-[80%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="whitespace-pre-wrap text-gray-800">Halo! Saya adalah Asisten AI Guru Anda. <br><br>Saya bisa membuat:<br>1. Soal Pilihan Ganda & RPP<br>2. <strong>Gambar/Ilustrasi Edukasi (JPG)</strong><br><br>Coba ketik: <i>"Buatkan gambar ekosistem"</i></div></div></div>`;
             }
         }
 
@@ -630,30 +629,39 @@
             const input=document.getElementById('aiInput');
             if(!input || !input.value.trim()) return;
             const prompt=input.value.trim();
-            input.value=''; // Kosongkan input setelah dikirim
+            input.value='';
             
             const btn=document.getElementById('aiSendBtn');
             btn.disabled=true; btn.innerText='Memproses...';
             
-            // Sembunyikan tombol export saat memproses baru
             ['aiPrintBtn', 'aiWordBtn', 'aiPrintKeyBtn'].forEach(id => document.getElementById(id).classList.add('hidden'));
             
             const box=document.getElementById('aiMessages');
             
-            // Tampilkan pesan User di layar (ditumpuk di bawah)
-            box.innerHTML += `<div class="flex justify-end fade-in"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-blue-600 text-white shadow-sm"><div class="text-xs opacity-70 mb-1">Anda</div><div class="whitespace-pre-wrap">${escapeHTML(prompt)}</div></div></div>`;
+            box.innerHTML += `<div class="flex justify-end fade-in"><div class="max-w-[80%] rounded-xl px-4 py-3 bg-blue-600 text-white shadow-sm"><div class="text-xs opacity-70 mb-1">Anda</div><div class="whitespace-pre-wrap">${escapeHTML(prompt)}</div></div></div>`;
             
-            // Tampilkan indikator "Sedang mengetik..."
-            box.innerHTML += `<div id="typingIndicator" class="flex justify-start fade-in"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="animate-pulse text-blue-600">Sedang mengetik...</div></div></div>`;
+            box.innerHTML += `<div id="typingIndicator" class="flex justify-start fade-in"><div class="max-w-[80%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="animate-pulse text-blue-600">Sedang mengetik/membuat gambar...</div></div></div>`;
             
-            // Auto-scroll ke bawah
             box.scrollTop = box.scrollHeight;
 
             try{
-                const ctx=await getSchoolContext();
-                
-                // Siapkan riwayat chat untuk dikirim ke AI
-                const sys = `Anda adalah Asisten AI Guru. Data sekolah: ${JSON.stringify(ctx)}. Saat membuat soal pilihan ganda, WAJIB gunakan format PLAIN TEXT berikut:
+                const lowerPrompt = prompt.toLowerCase();
+                const isImageRequest = lowerPrompt.includes('buatkan gambar') || lowerPrompt.includes('buat gambar') || lowerPrompt.includes('gambar ilustrasi') || lowerPrompt.includes('buatkan ilustrasi');
+
+                if (isImageRequest) {
+                    const res = await puter.ai.txtToImage(prompt, false);
+                    const imgSrc = res?.image?.src || res;
+                    
+                    const htmlRes = `<div class="mb-2 text-sm text-gray-800">Berikut adalah gambar edukasi untuk: <strong>${escapeHTML(prompt)}</strong></div><div class="flex flex-col items-center gap-2"><img src="${imgSrc}" class="rounded-lg max-w-full h-auto border border-slate-200 shadow-sm" alt="Gambar Edukasi"><a href="${imgSrc}" download="Gambar_Edukasi.jpg" class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-blue-700">⬇️ Download Gambar (JPG)</a></div>`;
+                    
+                    aiChatHistory.push({role:'user', content:prompt});
+                    aiChatHistory.push({role:'assistant', content:"[Gambar telah dibuat]"});
+                    
+                    document.getElementById('typingIndicator')?.remove();
+                    box.innerHTML += `<div class="flex justify-start fade-in"><div class="max-w-[80%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="ai-output text-gray-800">${htmlRes}</div></div></div>`;
+                } else {
+                    const ctx=await getSchoolContext();
+                    const sys = `Anda adalah Asisten AI Guru. Data sekolah: ${JSON.stringify(ctx)}. Saat membuat soal pilihan ganda, WAJIB gunakan format PLAIN TEXT berikut:
 1. Pertanyaan lengkap di sini?
 A. Pilihan A
 B. Pilihan B
@@ -662,32 +670,23 @@ D. Pilihan D
 Jawaban: B
 
 ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap soal. Di bagian paling akhir, buat ringkasan "Kunci Jawaban:".`;
-                
-                // Masukkan prompt baru ke riwayat
-                aiChatHistory.push({role:'user', content:prompt});
-                
-                // Kirim pesan beserta riwayat (chat sebelumnya) ke Puter AI
-                const res = await puter.ai.chat([{role:'system',content:sys}, ...aiChatHistory]);
-                let ans = typeof res==='string' ? res : (res.message?.content || '');
-                
-                // Simpan balasan AI ke riwayat agar AI ingat tema sebelumnya
-                aiChatHistory.push({role:'assistant', content:ans});
+                    
+                    aiChatHistory.push({role:'user', content:prompt});
+                    const res = await puter.ai.chat([{role:'system',content:sys}, ...aiChatHistory]);
+                    let ans = typeof res==='string' ? res : (res.message?.content || '');
+                    aiChatHistory.push({role:'assistant', content:ans});
 
-                // Hapus indikator "Sedang mengetik..."
-                document.getElementById('typingIndicator')?.remove();
-
-                // Format HTML untuk soal pilihan ganda
-                const formattedHTML = formatSoalHTML(ans);
-                lastAIFormattedHTML = formattedHTML;
+                    document.getElementById('typingIndicator')?.remove();
+                    const formattedHTML = formatSoalHTML(ans);
+                    lastAIFormattedHTML = formattedHTML;
+                    
+                    box.innerHTML += `<div class="flex justify-start fade-in"><div class="max-w-[80%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="ai-output text-gray-800">${formattedHTML}</div></div></div>`;
+                    
+                    ['aiPrintBtn', 'aiWordBtn', 'aiPrintKeyBtn'].forEach(id => document.getElementById(id).classList.remove('hidden'));
+                }
                 
-                // Tampilkan jawaban AI di layar (ditumpak di bawah)
-                box.innerHTML += `<div class="flex justify-start fade-in"><div class="max-w-[95%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="ai-output text-gray-800">${formattedHTML}</div></div></div>`;
-                
-                // Auto-scroll ke bawah
                 box.scrollTop = box.scrollHeight;
 
-                // Tampilkan kembali tombol export
-                ['aiPrintBtn', 'aiWordBtn', 'aiPrintKeyBtn'].forEach(id => document.getElementById(id).classList.remove('hidden'));
             }catch(e){
                 document.getElementById('typingIndicator')?.remove();
                 showToast('Error AI: ' + e.message,'error');
