@@ -624,7 +624,7 @@
             return marked.parse(text) + kunciSection;
         }
 
-        let lastAIFormattedHTML = '';
+               let lastAIFormattedHTML = '';
         async function sendAI(){
             const input=document.getElementById('aiInput');
             if(!input || !input.value.trim()) return;
@@ -640,28 +640,13 @@
             
             box.innerHTML += `<div class="flex justify-end fade-in"><div class="max-w-[80%] rounded-xl px-4 py-3 bg-blue-600 text-white shadow-sm"><div class="text-xs opacity-70 mb-1">Anda</div><div class="whitespace-pre-wrap">${escapeHTML(prompt)}</div></div></div>`;
             
-            box.innerHTML += `<div id="typingIndicator" class="flex justify-start fade-in"><div class="max-w-[80%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="animate-pulse text-blue-600">Sedang mengetik/membuat gambar...</div></div></div>`;
+            box.innerHTML += `<div id="typingIndicator" class="flex justify-start fade-in"><div class="max-w-[80%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="animate-pulse text-blue-600">Sedang mengetik...</div></div></div>`;
             
             box.scrollTop = box.scrollHeight;
 
             try{
-                const lowerPrompt = prompt.toLowerCase();
-                const isImageRequest = lowerPrompt.includes('buatkan gambar') || lowerPrompt.includes('buat gambar') || lowerPrompt.includes('gambar ilustrasi') || lowerPrompt.includes('buatkan ilustrasi');
-
-                if (isImageRequest) {
-                    const res = await puter.ai.txtToImage(prompt, false);
-                    const imgSrc = res?.image?.src || res;
-                    
-                    const htmlRes = `<div class="mb-2 text-sm text-gray-800">Berikut adalah gambar edukasi untuk: <strong>${escapeHTML(prompt)}</strong></div><div class="flex flex-col items-center gap-2"><img src="${imgSrc}" class="rounded-lg max-w-full h-auto border border-slate-200 shadow-sm" alt="Gambar Edukasi"><a href="${imgSrc}" download="Gambar_Edukasi.jpg" class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-blue-700">⬇️ Download Gambar (JPG)</a></div>`;
-                    
-                    aiChatHistory.push({role:'user', content:prompt});
-                    aiChatHistory.push({role:'assistant', content:"[Gambar telah dibuat]"});
-                    
-                    document.getElementById('typingIndicator')?.remove();
-                    box.innerHTML += `<div class="flex justify-start fade-in"><div class="max-w-[80%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="ai-output text-gray-800">${htmlRes}</div></div></div>`;
-                } else {
-                    const ctx=await getSchoolContext();
-                    const sys = `Anda adalah Asisten AI Guru. Data sekolah: ${JSON.stringify(ctx)}. Saat membuat soal pilihan ganda, WAJIB gunakan format PLAIN TEXT berikut:
+                const ctx=await getSchoolContext();
+                const sys = `Anda adalah Asisten AI Guru. Data sekolah: ${JSON.stringify(ctx)}. Saat membuat soal pilihan ganda, WAJIB gunakan format PLAIN TEXT berikut:
 1. Pertanyaan lengkap di sini?
 A. Pilihan A
 B. Pilihan B
@@ -670,20 +655,28 @@ D. Pilihan D
 Jawaban: B
 
 ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap soal. Di bagian paling akhir, buat ringkasan "Kunci Jawaban:".`;
-                    
-                    aiChatHistory.push({role:'user', content:prompt});
-                    const res = await puter.ai.chat([{role:'system',content:sys}, ...aiChatHistory]);
-                    let ans = typeof res==='string' ? res : (res.message?.content || '');
-                    aiChatHistory.push({role:'assistant', content:ans});
+                
+                aiChatHistory.push({role:'user', content:prompt});
+                const res = await puter.ai.chat([{role:'system',content:sys}, ...aiChatHistory]);
+                let ans = typeof res==='string' ? res : (res.message?.content || '');
+                aiChatHistory.push({role:'assistant', content:ans});
 
-                    document.getElementById('typingIndicator')?.remove();
-                    const formattedHTML = formatSoalHTML(ans);
-                    lastAIFormattedHTML = formattedHTML;
-                    
-                    box.innerHTML += `<div class="flex justify-start fade-in"><div class="max-w-[80%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="ai-output text-gray-800">${formattedHTML}</div></div></div>`;
-                    
-                    ['aiPrintBtn', 'aiWordBtn', 'aiPrintKeyBtn'].forEach(id => document.getElementById(id).classList.remove('hidden'));
+                document.getElementById('typingIndicator')?.remove();
+                
+                // Cek apakah ada gambar dalam respons AI (Puter AI terbaru langsung mengirim array gambar)
+                let imageHTML = '';
+                if (res && res.message && res.message.images && res.message.images.length > 0) {
+                    res.message.images.forEach(imgSrc => {
+                        imageHTML += `<div class="flex flex-col items-center gap-2 mb-4"><img src="${imgSrc}" class="rounded-lg max-w-full h-auto border border-slate-200 shadow-sm" alt="Gambar Edukasi"><a href="${imgSrc}" download="Gambar_Edukasi.jpg" class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-blue-700">⬇️ Download Gambar (JPG)</a></div>`;
+                    });
                 }
+
+                const formattedHTML = formatSoalHTML(ans);
+                lastAIFormattedHTML = formattedHTML;
+                
+                box.innerHTML += `<div class="flex justify-start fade-in"><div class="max-w-[80%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="ai-output text-gray-800">${imageHTML}${formattedHTML}</div></div></div>`;
+                
+                ['aiPrintBtn', 'aiWordBtn', 'aiPrintKeyBtn'].forEach(id => document.getElementById(id).classList.remove('hidden'));
                 
                 box.scrollTop = box.scrollHeight;
 
