@@ -424,7 +424,7 @@
         async function saveSchoolProfile(data, id) {
             let result = null;
             if (id) {
-                const { data: res, error } = await sb.from('school_profile').update(data).eq('id', id).select();
+                const { data: res, error } = await sb.from('school_profile').update(data).eq('id', id).eq('user_id', currentUser.id).select();
                 if (error) { showToast(`Gagal update: ${error.message}`, 'error'); return false; }
                 result = res;
             } else {
