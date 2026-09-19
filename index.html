@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; img-src 'self' https: data: blob:; style-src 'self' 'unsafe-inline' https:; font-src 'self' https: data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.puter.com https://cdn.jsdelivr.net https://cdn.tailwindcss.com; connect-src 'self' https: wss:; frame-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self';">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GURU SMART - Sistem Manajemen Sekolah</title>
@@ -64,7 +65,7 @@
     <div id="authScreen" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700">
         <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 w-full max-w-md fade-in">
             <div class="text-center mb-8">
-                <img src="./assets/logo.png?auth_key=1889545451-57dd1e872dbb4149bdea975407d31530-0-fbdde3c3db36637028abfb484d301ec8" alt="Guru AI" class="w-32 h-32 rounded-xl mx-auto mb-4 object-cover">
+                <img src="./assets/guru-smart-ai-logo.svg" alt="Guru AI" class="w-32 h-32 rounded-xl mx-auto mb-4 object-cover">
                 <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">GURU SMART</h1>
                 <p class="text-slate-500 dark:text-slate-400 mt-2 text-sm">Sistem Manajemen Sekolah Berbasis Cloud</p>
             </div>
@@ -88,7 +89,7 @@
         <aside id="sidebar" class="sidebar fixed lg:relative z-40 w-64 h-full bg-gradient-to-b from-blue-800 to-indigo-900 dark:from-slate-800 dark:to-slate-900 border-r border-blue-700/50 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out overflow-y-auto text-white">
             <div class="p-4 flex items-center justify-between border-b border-blue-700/50 dark:border-slate-700">
                 <div class="flex items-center space-x-2">
-                    <img src="https://z-cdn-media.chatglm.cn/files/c0012e5b-65ba-49de-82f7-0299446846c6.png?auth_key=1889545451-57dd1e872dbb4149bdea975407d31530-0-fbdde3c3db36637028abfb484d301ec8" alt="Logo" class="w-10 h-10 rounded-lg object-cover">
+                    <img src="./assets/guru-smart-ai-logo.svg" alt="Logo" class="w-10 h-10 rounded-lg object-cover">
                     <div><h1 class="font-bold text-white text-lg leading-tight">GURU SMART</h1></div>
                 </div>
                 <button onclick="toggleSidebar()" class="lg:hidden text-slate-300"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
@@ -108,7 +109,7 @@
                         <svg id="iconMoon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
                     </button>
                     <div class="flex items-center space-x-2">
-                        <img id="userAvatar" src="https://z-cdn-media.chatglm.cn/files/c0012e5b-65ba-49de-82f7-0299446846c6.png?auth_key=1889545451-57dd1e872dbb4149bdea975407d31530-0-fbdde3c3db36637028abfb484d301ec8" alt="User" class="w-8 h-8 rounded-full object-cover bg-blue-500 ring-2 ring-blue-500">
+                        <img id="userAvatar" src="./assets/guru-smart-ai-logo.svg" alt="User" class="w-8 h-8 rounded-full object-cover bg-blue-500 ring-2 ring-blue-500">
                         <div class="hidden md:block">
                             <p id="userName" class="text-sm font-medium text-slate-800 dark:text-white">Admin</p>
                             <p id="userRole" class="text-xs text-slate-500 dark:text-slate-400 capitalize">Administrator</p>
@@ -139,7 +140,7 @@
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
             auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
         });
-        const AI_IMG = 'https://z-cdn-media.chatglm.cn/files/c0012e5b-65ba-49de-82f7-0299446846c6.png?auth_key=1889545451-57dd1e872dbb4149bdea975407d31530-0-fbdde3c3db36637028abfb484d301ec8';
+        const AI_IMG = './assets/guru-smart-ai-logo.svg';
 
         const DB = {
             get: async (table) => { const { data, error } = await sb.from(table).select('*').eq('user_id', currentUser.id); if (error) { console.error(`Error fetching ${table}:`, error); return []; } return data; },
