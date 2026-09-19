@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; img-src 'self' https: data: blob:; style-src 'self' 'unsafe-inline' https://; font-src 'self' https: data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.puter.com https://cdn.jsdelivr.net https://cdn.tailwindcss.com; connect-src 'self' https: wss:; frame-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self';">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GURU SMART - Sistem Manajemen Sekolah</title>
@@ -144,9 +143,33 @@
 
         const DB = {
             get: async (table) => { const { data, error } = await sb.from(table).select('*').eq('user_id', currentUser.id); if (error) { console.error(`Error fetching ${table}:`, error); return []; } return data; },
-            insert: async (table, payload) => { const { data, error } = await sb.from(table).insert([{ ...payload, user_id: currentUser.id }]).select(); if (error) { console.error(`Error inserting ${table}:`, error); showToast('Gagal menyimpan data', 'error'); return null; } return data; },
-            update: async (table, id, payload) => { const { data, error } = await sb.from(table).update(payload).eq('id', id).eq('user_id', currentUser.id).select(); if (error) { console.error(`Error updating ${table}:`, error); showToast('Gagal mengupdate data', 'error'); return null; } return data; },
-            remove: async (table, id) => { const { error } = await sb.from(table).delete().eq('id', id).eq('user_id', currentUser.id); if (error) { console.error(`Error deleting ${table}:`, error); showToast('Gagal menghapus data', 'error'); return false; } return true; }
+            insert: async (table, payload) => { 
+                const { data, error } = await sb.from(table).insert([{ ...payload, user_id: currentUser.id }]).select(); 
+                if (error) { 
+                    console.error(`Error inserting ${table}:`, error); 
+                    showToast(`Gagal simpan: ${error.message}`, 'error'); 
+                    return null; 
+                } 
+                return data; 
+            },
+            update: async (table, id, payload) => { 
+                const { data, error } = await sb.from(table).update(payload).eq('id', id).eq('user_id', currentUser.id).select(); 
+                if (error) { 
+                    console.error(`Error updating ${table}:`, error); 
+                    showToast(`Gagal update: ${error.message}`, 'error'); 
+                    return null; 
+                } 
+                return data; 
+            },
+            remove: async (table, id) => { 
+                const { error } = await sb.from(table).delete().eq('id', id).eq('user_id', currentUser.id); 
+                if (error) { 
+                    console.error(`Error deleting ${table}:`, error); 
+                    showToast(`Gagal hapus: ${error.message}`, 'error'); 
+                    return false; 
+                } 
+                return true; 
+            }
         };
 
         let currentUser = null; let currentPage = 'dashboard';
@@ -208,24 +231,22 @@
             const { data, error } = await sb.auth.getSession(); 
             if (data.session) { 
                 await sb.auth.refreshSession(); 
-                let userData = null;
+                let dbUser = null;
                 const { data: userDataRes } = await sb.from('users').select('*').eq('id', data.session.user.id).maybeSingle();
-                if (userDataRes) userData = userDataRes;
-                else {
-                    const { data: newUserData } = await sb.from('users').upsert({ 
-                        id: data.session.user.id, name: data.session.user.email.split('@')[0], username: data.session.user.email, role: 'guru', is_premium: false, payment_status: 'Belum Bayar' 
-                    }).select().maybeSingle();
-                    if (newUserData) userData = newUserData;
-                    else userData = { name: data.session.user.email, role: 'guru', is_premium: false, payment_status: 'Belum Bayar' };
-                }
+                if (userDataRes) dbUser = userDataRes;
                 
-                const latestAvatarUrl = userData.avatar_url || AI_IMG;
+                // Fallback ke localStorage jika database Supabase gagal dibaca
+                let storedUser = JSON.parse(localStorage.getItem('gs_currentUser') || '{}');
                 
                 currentUser = { 
-                    id: data.session.user.id, email: data.session.user.email, name: userData.name || data.session.user.email, 
-                    role: userData.role || 'guru', avatar_url: latestAvatarUrl, 
-                    is_premium: userData.is_premium || false, payment_status: userData.payment_status || 'Belum Bayar',
-                    payment_sender: userData.payment_sender || ''
+                    id: data.session.user.id, 
+                    email: data.session.user.email, 
+                    name: dbUser?.name || storedUser.name || data.session.user.email, 
+                    role: dbUser?.role || storedUser.role || 'guru', 
+                    avatar_url: dbUser?.avatar_url || storedUser.avatar_url || AI_IMG, 
+                    is_premium: dbUser?.is_premium ?? storedUser.is_premium ?? false, 
+                    payment_status: dbUser?.payment_status || storedUser.payment_status || 'Belum Bayar',
+                    payment_sender: dbUser?.payment_sender || storedUser.payment_sender || ''
                 }; 
                 
                 localStorage.setItem('gs_currentUser', JSON.stringify(currentUser)); 
@@ -234,7 +255,7 @@
             return false; 
         }
 
-        function showToast(message, type = 'info') { const toast = document.getElementById('toast'); const bg = type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-slate-800'; toast.className = `fixed bottom-5 right-5 z-[60] ${bg} text-white px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2 fade-in`; toast.innerHTML = `<span>${message}</span>`; toast.classList.remove('hidden'); setTimeout(() => toast.classList.add('hidden'), 3000); }
+        function showToast(message, type = 'info') { const toast = document.getElementById('toast'); const bg = type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-slate-800'; toast.className = `fixed bottom-5 right-5 z-[60] ${bg} text-white px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2 fade-in`; toast.innerHTML = `<span>${message}</span>`; toast.classList.remove('hidden'); setTimeout(() => toast.classList.add('hidden'), 3500); }
         function toggleDarkMode() { document.documentElement.classList.toggle('dark'); document.getElementById('iconSun').classList.toggle('hidden'); document.getElementById('iconMoon').classList.toggle('hidden'); localStorage.setItem('gs_darkMode', document.documentElement.classList.contains('dark')); if(currentPage === 'dashboard') renderDashboard(); }
         if (localStorage.getItem('gs_darkMode') === 'true') { document.documentElement.classList.add('dark'); document.getElementById('iconSun').classList.remove('hidden'); document.getElementById('iconMoon').classList.add('hidden'); }
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('sidebarOverlay').classList.toggle('hidden'); }
@@ -390,12 +411,13 @@
             document.getElementById('profileForm').onsubmit = async (e) => { 
                 e.preventDefault(); 
                 const profileId = profile.id || null; 
-                await saveData('school_profile', { 
+                const success = await saveData('school_profile', { 
                     name: document.getElementById('p_name').value, 
                     address: document.getElementById('p_address').value, 
                     principal: document.getElementById('p_principal').value 
                 }, profileId); 
-                renderSettings(); 
+                
+                if(success) renderSettings(); 
             }; 
         }
         async function uploadAvatar() { const file = document.getElementById('avatarFile').files[0]; if(!file) { showToast('Pilih file dulu!', 'error'); return; } showToast('Mengunggah foto...', 'info'); const { data, error } = await sb.storage.from('avatars').upload('user_' + currentUser.id + '_' + Date.now() + '.jpg', file); if (error) { showToast('Gagal upload: ' + error.message, 'error'); return; } const url = sb.storage.from('avatars').getPublicUrl(data.path).data.publicUrl; await DB.update('users', currentUser.id, { avatar_url: url }); currentUser.avatar_url = url; localStorage.setItem('gs_currentUser', JSON.stringify(currentUser)); document.getElementById('userAvatar').src = url; document.getElementById('prevAvatar').src = url; showToast('Foto profil diperbarui!', 'success'); }
@@ -799,7 +821,17 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
             showToast('Berhasil diekspor ke Word', 'success');
         }
 
-        async function saveData(key, data, id) { if (id) { await DB.update(key, id, data); } else { await DB.insert(key, data); } showToast('Data disimpan!', 'success'); }
+        async function saveData(key, data, id) { 
+            let result = null;
+            if (id) { result = await DB.update(key, id, data); } 
+            else { result = await DB.insert(key, data); } 
+            
+            if(result) {
+                showToast('Data berhasil disimpan!', 'success');
+                return true;
+            }
+            return false;
+        }
         async function deleteData(key, id, callback) { if (confirm('Hapus data?')) { await DB.remove(key, id); if (typeof callback === 'function') callback(); } }
         function filterTable(searchId, tbodyId) { const input = document.getElementById(searchId).value.toLowerCase(); const rows = document.getElementById(tbodyId).getElementsByTagName('tr'); for (let row of rows) { row.style.display = row.innerText.toLowerCase().includes(input) ? '' : 'none'; } }
 
@@ -809,10 +841,8 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
             document.getElementById('userName').innerText = currentUser.name;
             document.getElementById('userRole').innerText = currentUser.role;
             
-            const avatarEl = document.getElementById('userAvatar');
-            avatarEl.src = currentUser.avatar_url || AI_IMG;
-            // Cache buster for avatar
-            avatarEl.src = `${currentUser.avatar_url}?t=${new Date().getTime()}`;
+            const avatarUrl = currentUser.avatar_url || AI_IMG;
+            document.getElementById('userAvatar').src = avatarUrl;
             
             navigate('dashboard');
         }
