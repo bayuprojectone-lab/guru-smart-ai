@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; img-src 'self' https: data: blob:; style-src 'self' 'unsafe-inline' https:; font-src 'self' https: data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.puter.com https://cdn.jsdelivr.net https://cdn.tailwindcss.com; connect-src 'self' https: wss:; frame-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; img-src 'self' https: data: blob:; style-src 'self' 'unsafe-inline' https://; font-src 'self' https: data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.puter.com https://cdn.jsdelivr.net https://cdn.tailwindcss.com; connect-src 'self' https: wss:; frame-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self';">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GURU SMART - Sistem Manajemen Sekolah</title>
@@ -65,7 +65,7 @@
     <div id="authScreen" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700">
         <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 w-full max-w-md fade-in">
             <div class="text-center mb-8">
-                <img src="./assets/logo.png" alt="GURU SMART AI" alt="Guru AI" class="w-32 h-32 rounded-xl mx-auto mb-4 object-cover">
+                <img src="./assets/logo.png" alt="GURU SMART AI" class="w-32 h-32 rounded-xl mx-auto mb-4 object-cover">
                 <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">GURU SMART</h1>
                 <p class="text-slate-500 dark:text-slate-400 mt-2 text-sm">Sistem Manajemen Sekolah Berbasis Cloud</p>
             </div>
@@ -89,7 +89,7 @@
         <aside id="sidebar" class="sidebar fixed lg:relative z-40 w-64 h-full bg-gradient-to-b from-blue-800 to-indigo-900 dark:from-slate-800 dark:to-slate-900 border-r border-blue-700/50 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out overflow-y-auto text-white">
             <div class="p-4 flex items-center justify-between border-b border-blue-700/50 dark:border-slate-700">
                 <div class="flex items-center space-x-2">
-                    <img src="./assets/logo.png" alt="GURU SMART AI" alt="Logo" class="w-10 h-10 rounded-lg object-cover">
+                    <img src="./assets/logo.png" alt="Logo" class="w-10 h-10 rounded-lg object-cover">
                     <div><h1 class="font-bold text-white text-lg leading-tight">GURU SMART</h1></div>
                 </div>
                 <button onclick="toggleSidebar()" class="lg:hidden text-slate-300"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
@@ -105,7 +105,7 @@
                 </div>
                 <div class="flex items-center space-x-4">
                     <button onclick="toggleDarkMode()" class="text-slate-500 hover:text-blue-600">
-                        <svg id="iconSun" class="w-6 h-6 hidden" fill="none, stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        <svg id="iconSun" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                         <svg id="iconMoon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
                     </button>
                     <div class="flex items-center space-x-2">
@@ -203,6 +203,7 @@
         });
         
         async function logout() { await sb.auth.signOut(); localStorage.removeItem('gs_currentUser'); currentUser = null; location.reload(); }
+        
         async function checkSession() { 
             const { data, error } = await sb.auth.getSession(); 
             if (data.session) { 
@@ -217,12 +218,17 @@
                     if (newUserData) userData = newUserData;
                     else userData = { name: data.session.user.email, role: 'guru', is_premium: false, payment_status: 'Belum Bayar' };
                 }
+                
+                const latestAvatarUrl = userData.avatar_url || AI_IMG;
+                
                 currentUser = { 
                     id: data.session.user.id, email: data.session.user.email, name: userData.name || data.session.user.email, 
-                    role: userData.role || 'guru', avatar_url: userData.avatar_url || AI_IMG,
+                    role: userData.role || 'guru', avatar_url: latestAvatarUrl, 
                     is_premium: userData.is_premium || false, payment_status: userData.payment_status || 'Belum Bayar',
                     payment_sender: userData.payment_sender || ''
                 }; 
+                
+                localStorage.setItem('gs_currentUser', JSON.stringify(currentUser)); 
                 return true; 
             } 
             return false; 
@@ -336,7 +342,9 @@
                 </div>`; 
                 window.print(); 
             }); 
-        }        // TEACHERS, STUDENTS, CLASSES, SUBJECTS
+        }
+
+        // TEACHERS, STUDENTS, CLASSES, SUBJECTS
         async function renderTeachers() { const teachers = await DB.get('teachers'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex justify-between mb-4"><input type="text" id="searchTeacher" onkeyup="filterTable('searchTeacher', 'teacherTableBody')" placeholder="Cari guru..." class="px-4 py-2 rounded-lg border dark:bg-slate-700 dark:text-white text-sm outline-none"><button onclick="teacherForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Guru</button></div><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase"><tr><th class="px-4 py-3">NIP</th><th class="px-4 py-3">Nama</th><th class="px-4 py-3">Gender</th><th class="px-4 py-3">Mapel</th><th class="px-4 py-3">No HP</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody id="teacherTableBody" class="divide-y dark:divide-slate-700">${teachers.length ? teachers.map(t => `<tr><td class="px-4 py-3">${t.nip}</td><td class="px-4 py-3 font-medium">${t.name}</td><td class="px-4 py-3">${t.gender}</td><td class="px-4 py-3">${t.subject}</td><td class="px-4 py-3">${t.phone}</td><td class="px-4 py-3 flex gap-2"><button onclick="teacherForm('${t.id}')" class="text-blue-500">Edit</button><button onclick="deleteData('teachers', '${t.id}', renderTeachers)" class="text-red-500">Hapus</button></td></tr>`).join('') : `<tr><td colspan="6" class="text-center py-4 text-slate-500">Belum ada data.</td></tr>`}</tbody></table></div></div>`; }
         async function teacherForm(id = null) { let t = null; if(id) { t = (await DB.get('teachers')).find(x => x.id === id); } openModal(id ? 'Edit Guru' : 'Tambah Guru', `<form id="teacherForm" class="space-y-4"><div><label class="block text-sm mb-1">NIP</label><input type="text" id="tch_nip" value="${t?.nip || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Nama</label><input type="text" id="tch_name" value="${t?.name || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Gender</label><select id="tch_gender" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option value="L" ${t?.gender == 'L' ? 'selected' : ''}>L</option><option value="P" ${t?.gender == 'P' ? 'selected' : ''}>P</option></select></div><div><label class="block text-sm mb-1">No HP</label><input type="text" id="tch_phone" value="${t?.phone || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Mapel</label><input type="text" id="tch_subject" value="${t?.subject || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button></form>`); document.getElementById('teacherForm').onsubmit = async (e) => { e.preventDefault(); const payload = { nip: document.getElementById('tch_nip').value, name: document.getElementById('tch_name').value, gender: document.getElementById('tch_gender').value, phone: document.getElementById('tch_phone').value, subject: document.getElementById('tch_subject').value }; await saveData('teachers', payload, id); closeModal(); renderTeachers(); }; }
 
@@ -376,7 +384,20 @@
         async function renderAnnouncements() { const anns = await DB.get('announcements'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Pengumuman</h3><button onclick="annForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Buat Pengumuman</button></div><div class="space-y-4">${anns.length ? anns.map(a => `<div class="p-4 bg-slate-50 rounded-lg"><div class="flex justify-between"><h4 class="font-bold">${a.title}</h4><div class="flex gap-2"><button onclick="annForm('${a.id}')" class="text-xs text-blue-500">Edit</button><button onclick="deleteData('announcements', '${a.id}', renderAnnouncements)" class="text-xs text-red-500">Hapus</button></div></div><p class="text-xs text-slate-400 mt-1">${a.date}</p><p class="text-sm mt-2">${a.content}</p></div>`).join('') : '<p class="text-sm text-slate-500 text-center py-4">Belum ada pengumuman.</p>'}</div></div>`; }
         async function annForm(id = null) { let a = null; if(id) { a = (await DB.get('announcements')).find(x => x.id === id); } openModal('Buat Pengumuman', `<form id="annForm" class="space-y-4"><div><label class="block text-sm mb-1">Judul</label><input type="text" id="an_title" value="${a?.title || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Isi</label><textarea id="an_content" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${a?.content || ''}</textarea></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('annForm').onsubmit = async (e) => { e.preventDefault(); const payload = { title: document.getElementById('an_title').value, content: document.getElementById('an_content').value, date: new Date().toISOString().split('T')[0] }; await saveData('announcements', payload, id); closeModal(); renderAnnouncements(); }; }
 
-        async function renderSettings() { const profile = (await DB.get('school_profile'))[0] || {}; document.getElementById('content').innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div class="bg-white p-6 rounded-xl"><h3 class="font-bold mb-4">Profil Sekolah</h3><form id="profileForm" class="space-y-4"><div><label class="block text-sm mb-1">Nama Sekolah</label><input type="text" id="p_name" value="${profile.name || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Alamat</label><input type="text" id="p_address" value="${profile.address || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Kepala Sekolah</label><input type="text" id="p_principal" value="${profile.principal || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Simpan</button></form></div><div class="bg-white p-6 rounded-xl"><h3 class="font-bold mb-4">Pengaturan Akun</h3><div class="flex flex-col items-center space-y-3"><img id="prevAvatar" src="${currentUser.avatar_url || AI_IMG}" class="w-24 h-24 rounded-full object-cover"><input type="file" id="avatarFile" accept="image/*" class="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"><button onclick="uploadAvatar()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm">Upload Foto</button></div></div></div>`; document.getElementById('profileForm').onsubmit = async (e) => { e.preventDefault(); await saveData('school_profile', { name: document.getElementById('p_name').value, address: document.getElementById('p_address').value, principal: document.getElementById('p_principal').value }, 1); }; }
+        async function renderSettings() { 
+            const profile = (await DB.get('school_profile'))[0] || {}; 
+            document.getElementById('content').innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div class="bg-white p-6 rounded-xl"><h3 class="font-bold mb-4">Profil Sekolah</h3><form id="profileForm" class="space-y-4"><div><label class="block text-sm mb-1">Nama Sekolah</label><input type="text" id="p_name" value="${profile.name || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Alamat</label><input type="text" id="p_address" value="${profile.address || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Kepala Sekolah</label><input type="text" id="p_principal" value="${profile.principal || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Simpan</button></form></div><div class="bg-white p-6 rounded-xl"><h3 class="font-bold mb-4">Pengaturan Akun</h3><div class="flex flex-col items-center space-y-3"><img id="prevAvatar" src="${currentUser.avatar_url || AI_IMG}" class="w-24 h-24 rounded-full object-cover"><input type="file" id="avatarFile" accept="image/*" class="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"><button onclick="uploadAvatar()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm">Upload Foto</button></div></div></div>`; 
+            document.getElementById('profileForm').onsubmit = async (e) => { 
+                e.preventDefault(); 
+                const profileId = profile.id || null; 
+                await saveData('school_profile', { 
+                    name: document.getElementById('p_name').value, 
+                    address: document.getElementById('p_address').value, 
+                    principal: document.getElementById('p_principal').value 
+                }, profileId); 
+                renderSettings(); 
+            }; 
+        }
         async function uploadAvatar() { const file = document.getElementById('avatarFile').files[0]; if(!file) { showToast('Pilih file dulu!', 'error'); return; } showToast('Mengunggah foto...', 'info'); const { data, error } = await sb.storage.from('avatars').upload('user_' + currentUser.id + '_' + Date.now() + '.jpg', file); if (error) { showToast('Gagal upload: ' + error.message, 'error'); return; } const url = sb.storage.from('avatars').getPublicUrl(data.path).data.publicUrl; await DB.update('users', currentUser.id, { avatar_url: url }); currentUser.avatar_url = url; localStorage.setItem('gs_currentUser', JSON.stringify(currentUser)); document.getElementById('userAvatar').src = url; document.getElementById('prevAvatar').src = url; showToast('Foto profil diperbarui!', 'success'); }
 
         // AI ASSISTANT
@@ -554,13 +575,11 @@
         function aiPrompt(text){document.getElementById('aiInput').value=text;sendAI();}
         async function getSchoolContext(){return {students:await DB.get('students'),teachers:await DB.get('teachers'),subjects:await DB.get('subjects')};}
         
-        // Variabel untuk menyimpan riwayat chat agar bisa melanjutkan tema
         let aiChatHistory = [];
         
         function loadAIChat(){
             const box=document.getElementById('aiMessages');
             if(!box)return;
-            // Jangan hapus isi box, tapi pastikan ada pesan sambutan jika kosong
             if(aiChatHistory.length === 0){
                 box.innerHTML = `<div class="flex justify-start"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="whitespace-pre-wrap text-gray-800">Halo! Saya adalah Asisten AI Guru Anda. Silakan tulis perintah atau materi lainnya.</div></div></div>`;
             }
@@ -631,29 +650,24 @@
             const input=document.getElementById('aiInput');
             if(!input || !input.value.trim()) return;
             const prompt=input.value.trim();
-            input.value=''; // Kosongkan input setelah dikirim
+            input.value='';
             
             const btn=document.getElementById('aiSendBtn');
             btn.disabled=true; btn.innerText='Memproses...';
             
-            // Sembunyikan tombol export saat memproses baru
             ['aiPrintBtn', 'aiWordBtn', 'aiPrintKeyBtn'].forEach(id => document.getElementById(id).classList.add('hidden'));
             
             const box=document.getElementById('aiMessages');
             
-            // Tampilkan pesan User di layar (ditumpuk di bawah)
             box.innerHTML += `<div class="flex justify-end fade-in"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-blue-600 text-white shadow-sm"><div class="text-xs opacity-70 mb-1">Anda</div><div class="whitespace-pre-wrap">${escapeHTML(prompt)}</div></div></div>`;
             
-            // Tampilkan indikator "Sedang mengetik..."
             box.innerHTML += `<div id="typingIndicator" class="flex justify-start fade-in"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="animate-pulse text-blue-600">Sedang mengetik...</div></div></div>`;
             
-            // Auto-scroll ke bawah
             box.scrollTop = box.scrollHeight;
 
             try{
                 const ctx=await getSchoolContext();
                 
-                // Siapkan riwayat chat untuk dikirim ke AI
                 const sys = `Anda adalah Asisten AI Guru. Data sekolah: ${JSON.stringify(ctx)}. Saat membuat soal pilihan ganda, WAJIB gunakan format PLAIN TEXT berikut:
 1. Pertanyaan lengkap di sini?
 A. Pilihan A
@@ -664,30 +678,22 @@ Jawaban: B
 
 ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap soal. Di bagian paling akhir, buat ringkasan "Kunci Jawaban:".`;
                 
-                // Masukkan prompt baru ke riwayat
                 aiChatHistory.push({role:'user', content:prompt});
                 
-                // Kirim pesan beserta riwayat (chat sebelumnya) ke Puter AI
                 const res = await puter.ai.chat([{role:'system',content:sys}, ...aiChatHistory]);
                 let ans = typeof res==='string' ? res : (res.message?.content || '');
                 
-                // Simpan balasan AI ke riwayat agar AI ingat tema sebelumnya
                 aiChatHistory.push({role:'assistant', content:ans});
 
-                // Hapus indikator "Sedang mengetik..."
                 document.getElementById('typingIndicator')?.remove();
 
-                // Format HTML untuk soal pilihan ganda
                 const formattedHTML = formatSoalHTML(ans);
                 lastAIFormattedHTML = formattedHTML;
                 
-                // Tampilkan jawaban AI di layar (ditumpak di bawah)
                 box.innerHTML += `<div class="flex justify-start fade-in"><div class="max-w-[95%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="ai-output text-gray-800">${formattedHTML}</div></div></div>`;
                 
-                // Auto-scroll ke bawah
                 box.scrollTop = box.scrollHeight;
 
-                // Tampilkan kembali tombol export
                 ['aiPrintBtn', 'aiWordBtn', 'aiPrintKeyBtn'].forEach(id => document.getElementById(id).classList.remove('hidden'));
             }catch(e){
                 document.getElementById('typingIndicator')?.remove();
@@ -802,7 +808,12 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
             document.getElementById('appScreen').classList.remove('hidden');
             document.getElementById('userName').innerText = currentUser.name;
             document.getElementById('userRole').innerText = currentUser.role;
-            document.getElementById('userAvatar').src = currentUser.avatar_url || AI_IMG;
+            
+            const avatarEl = document.getElementById('userAvatar');
+            avatarEl.src = currentUser.avatar_url || AI_IMG;
+            // Cache buster for avatar
+            avatarEl.src = `${currentUser.avatar_url}?t=${new Date().getTime()}`;
+            
             navigate('dashboard');
         }
         window.onload = async () => { if (await checkSession()) { initApp(); } };
