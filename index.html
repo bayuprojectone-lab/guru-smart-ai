@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GURU SMART - Sistem Manajemen Sekolah</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -10,13 +10,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://js.puter.com/v2/"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
         tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: ['Inter', 'sans-serif'], colors: { primary: { 50:'#eff6ff', 100:'#dbeafe', 500:'#3b82f6', 600:'#2563eb', 700:'#1d4ed8', 900:'#1e3a8a' } } } } }
     </script>
     <style>
-        body { font-family: 'Inter', sans-serif; overscroll-behavior: none; touch-action: manipulation; }
-        html, body { height: 100%; overflow: hidden; } /* Cegah scroll body utama di HP */
+        body { font-family: 'Inter', sans-serif; }
         .sidebar::-webkit-scrollbar { width: 5px; } .sidebar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 5px; }
         .modal-scroll::-webkit-scrollbar { width: 5px; } .modal-scroll::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 5px; }
         .fade-in { animation: fadeIn 0.3s ease-in-out; } @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
@@ -63,10 +61,10 @@
 </head>
 <body class="bg-slate-100 dark:bg-slate-900 transition-colors duration-300">
 
-    <div id="authScreen" class="min-h-[100dvh] flex items-center justify-center p-4 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700">
+    <div id="authScreen" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700">
         <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 w-full max-w-md fade-in">
             <div class="text-center mb-8">
-                <img src="https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe" onerror="imgFallback(this)" alt="GURU SMART AI" class="w-32 h-32 rounded-xl mx-auto mb-4 object-cover bg-slate-200">
+                <img src="./assets/logo.png" alt="GURU SMART AI" class="w-32 h-32 rounded-xl mx-auto mb-4 object-cover">
                 <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">GURU SMART</h1>
                 <p class="text-slate-500 dark:text-slate-400 mt-2 text-sm">Sistem Manajemen Sekolah Berbasis Cloud</p>
             </div>
@@ -86,11 +84,11 @@
         </div>
     </div>
 
-    <div id="appScreen" class="hidden h-[100dvh] flex flex-col overflow-hidden bg-slate-100 dark:bg-slate-900">
+    <div id="appScreen" class="hidden h-screen flex overflow-hidden bg-slate-100 dark:bg-slate-900">
         <aside id="sidebar" class="sidebar fixed lg:relative z-40 w-64 h-full bg-gradient-to-b from-blue-800 to-indigo-900 dark:from-slate-800 dark:to-slate-900 border-r border-blue-700/50 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out overflow-y-auto text-white">
             <div class="p-4 flex items-center justify-between border-b border-blue-700/50 dark:border-slate-700">
                 <div class="flex items-center space-x-2">
-                    <img src="https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe" onerror="imgFallback(this)" alt="Logo" class="w-10 h-10 rounded-lg object-cover bg-slate-200">
+                    <img src="./assets/logo.png" alt="Logo" class="w-10 h-10 rounded-lg object-cover">
                     <div><h1 class="font-bold text-white text-lg leading-tight">GURU SMART</h1></div>
                 </div>
                 <button onclick="toggleSidebar()" class="lg:hidden text-slate-300"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
@@ -99,7 +97,7 @@
         </aside>
         <div id="sidebarOverlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-black/50 z-30"></div>
         <main class="flex-1 flex flex-col overflow-hidden bg-slate-100 dark:bg-slate-900">
-            <header class="h-16 flex-none bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 lg:px-6 shadow-sm">
+            <header class="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 lg:px-6 shadow-sm">
                 <div class="flex items-center space-x-4">
                     <button onclick="toggleSidebar()" class="lg:hidden text-slate-500"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
                     <h2 id="pageTitle" class="text-xl font-semibold text-slate-800 dark:text-white">Dashboard</h2>
@@ -110,7 +108,7 @@
                         <svg id="iconMoon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
                     </button>
                     <div class="flex items-center space-x-2">
-                        <img id="userAvatar" src="https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe" onerror="imgFallback(this)" alt="User" class="w-8 h-8 rounded-full object-cover bg-blue-500 ring-2 ring-blue-500">
+                        <img id="userAvatar" src="https://raw.githubusercontent.com/githubaccountname/repository/main/default-avatar.png" alt="User" class="w-8 h-8 rounded-full object-cover bg-blue-500 ring-2 ring-blue-500">
                         <div class="hidden md:block">
                             <p id="userName" class="text-sm font-medium text-slate-800 dark:text-white">Admin</p>
                             <p id="userRole" class="text-xs text-slate-500 dark:text-slate-400 capitalize">Administrator</p>
@@ -119,7 +117,7 @@
                     </div>
                 </div>
             </header>
-            <div id="content" class="flex-1 min-h-0 overflow-y-auto p-4 lg:p-6 bg-slate-100 dark:bg-slate-900"></div>
+            <div id="content" class="flex-1 overflow-y-auto p-4 lg:p-6 bg-slate-100 dark:bg-slate-900"></div>
         </main>
     </div>
 
@@ -142,14 +140,8 @@
             auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
         });
         
-        // URL Gambar Logo Baru
-        const AI_IMG = 'https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe';
-
-        // Fungsi cadangan jika logo gagal dimuat di HP
-        function imgFallback(img) {
-            img.onerror = null;
-            img.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="#1e3a8a"/><circle cx="50" cy="45" r="20" fill="white"/><rect x="35" y="40" width="10" height="6" rx="3" fill="#3b82f6"/><rect x="55" y="40" width="10" height="6" rx="3" fill="#3b82f6"/><path d="M30 55 Q50 70 70 55 L70 65 Q50 80 30 65 Z" fill="#3b82f6"/><text x="50" y="95" font-size="15" text-anchor="middle" fill="white" font-family="sans-serif" font-weight="bold">AI</text></svg>';
-        }
+        // Ganti URL ini dengan raw link gambar default dari GitHub Anda
+        const AI_IMG = 'https://raw.githubusercontent.com/githubaccountname/repository/main/default-avatar.png';
 
         const DB = {
             get: async (table) => { const { data, error } = await sb.from(table).select('*').eq('user_id', currentUser.id); if (error) { console.error(`Error fetching ${table}:`, error); return []; } return data; },
@@ -293,18 +285,7 @@
         function renderMenu() { const navMenu = document.getElementById('navMenu'); navMenu.innerHTML = ''; menus.filter(m => m.roles.includes(currentUser.role)).forEach(menu => { const isActive = currentPage === menu.id ? 'bg-white/20 text-white font-semibold' : 'text-blue-100 hover:bg-white/10 hover:text-white'; navMenu.innerHTML += `<a href="#" onclick="navigate('${menu.id}')" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg ${isActive} transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${menu.icon}"></path></svg><span>${menu.label}</span></a>`; }); }
         function navigate(page) { currentPage = page; document.getElementById('pageTitle').innerText = menus.find(m => m.id === page)?.label || 'Page'; renderMenu(); renderContent(page); if (window.innerWidth < 1024) toggleSidebar(); }
         async function renderContent(page) {
-            const contentEl = document.getElementById('content');
-            
-            // Reset kelas ke default (bisa scroll normal)
-            contentEl.className = 'flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 lg:p-6 bg-slate-100 dark:bg-slate-900';
-            
-            // Jika halaman AI, kunci layar utama agar tidak scroll bersamaan
-            if (page === 'ai') {
-                contentEl.className = 'flex-1 min-h-0 flex flex-col overflow-hidden overscroll-contain p-4 bg-slate-100 dark:bg-slate-900';
-            }
-            
-            contentEl.innerHTML = `<div class="text-center py-10 text-slate-500">Memuat data...</div>`;
-            
+            document.getElementById('content').innerHTML = `<div class="text-center py-10 text-slate-500">Memuat data...</div>`;
             switch(page) {
                 case 'dashboard': await renderDashboard(); break;
                 case 'ai': renderAI(); break;
@@ -323,10 +304,7 @@
                 case 'announcements': await renderAnnouncements(); break;
                 case 'settings': await renderSettings(); break;
             }
-            
-            if (page !== 'ai') {
-                contentEl.innerHTML += `<div class="text-center text-[10px] text-slate-400 dark:text-slate-600 py-4 mt-4 border-t border-slate-200 dark:border-slate-700">Dalam Mode Pengembang @BayuProjectone</div>`;
-            }
+            document.getElementById('content').innerHTML += `<div class="text-center text-[10px] text-slate-400 dark:text-slate-600 py-4 mt-4 border-t border-slate-200 dark:border-slate-700">Dalam Mode Pengembang @BayuProjectone</div>`;
         }
 
         // DASHBOARD
@@ -454,7 +432,7 @@
                 <div class="bg-white p-6 rounded-xl">
                     <h3 class="font-bold mb-4">Pengaturan Akun</h3>
                     <div class="flex flex-col items-center space-y-3">
-                        <img id="prevAvatar" src="${currentUser.avatar_url || AI_IMG}" onerror="imgFallback(this)" class="w-24 h-24 rounded-full object-cover bg-slate-200">
+                        <img id="prevAvatar" src="${currentUser.avatar_url || AI_IMG}" class="w-24 h-24 rounded-full object-cover">
                         <input type="file" id="avatarFile" accept="image/*" class="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
                         <button onclick="uploadAvatar()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm">Upload Foto</button>
                     </div>
@@ -539,7 +517,7 @@
                 document.getElementById('content').innerHTML = `
                 <div class="flex items-center justify-center min-h-[80vh] p-4">
                     <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl text-center max-w-md w-full border border-slate-100 dark:border-slate-700">
-                        <img src="${AI_IMG}" onerror="imgFallback(this)" class="w-24 h-24 rounded-2xl mx-auto mb-5 object-cover shadow-md bg-slate-200" alt="AI Logo">
+                        <img src="./assets/logo.png" class="w-24 h-24 rounded-2xl mx-auto mb-5 object-cover shadow-md" alt="AI Logo">
                         <h3 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Aktifkan Asisten AI</h3>
                         <p class="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
                             Dapatkan akses <strong>SELAMANYA</strong> ke semua fitur AI (Buat Soal, Modul Ajar, RPP, dll).
@@ -581,10 +559,10 @@
             }
 
             document.getElementById('content').innerHTML = `
-            <div class="flex flex-col flex-1 min-h-0 max-w-4xl w-full mx-auto bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden">
-                <div class="p-4 flex-none border-b dark:border-slate-700 flex justify-between items-center bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700">
+            <div class="flex flex-col h-[calc(100vh-120px)] max-w-4xl mx-auto bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden">
+                <div class="p-4 border-b dark:border-slate-700 flex justify-between items-center bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700">
                     <div class="flex items-center gap-3">
-                        <img src="${AI_IMG}" onerror="imgFallback(this)" alt="GURU SMART AI" class="w-10 h-10 rounded-xl object-cover shadow-sm bg-slate-200">
+                        <img src="./assets/logo.png" alt="GURU SMART AI" class="w-10 h-10 rounded-xl object-cover shadow-sm">
                         <div>
                             <h3 class="font-bold text-slate-800 dark:text-white">Asisten AI Guru</h3>
                             <p class="text-xs text-slate-500 dark:text-slate-400">SIAP Membantu dengan sepenuh HATI</p>
@@ -592,9 +570,9 @@
                     </div>
                 </div>
                 
-                <div id="aiMessages" class="flex-1 min-h-0 overflow-y-auto overscroll-contain p-5 space-y-4 bg-slate-50 dark:bg-slate-900"></div>
+                <div id="aiMessages" class="flex-1 overflow-y-auto p-5 space-y-4 bg-slate-50 dark:bg-slate-900"></div>
                 
-                <div class="p-3 flex-none border-t dark:border-slate-700 bg-white dark:bg-slate-800">
+                <div class="p-3 border-t dark:border-slate-700 bg-white dark:bg-slate-800">
                     <div class="flex gap-2 items-end">
                         <textarea id="aiInput" rows="2" placeholder="Tulis perintah..." class="flex-1 px-4 py-2 rounded-xl border dark:bg-slate-700 dark:text-white resize-none focus:ring-2 focus:ring-blue-500 outline-none text-sm"></textarea>
                         <button id="aiSendBtn" onclick="sendAI()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold flex items-center gap-1 text-sm">
@@ -809,113 +787,100 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
             }
         }
 
-        function getAIExportHTML(includeAnswerKey = false) {
-            if(!lastAIFormattedHTML) return '';
+        function printAIResult(includeAnswerKey = false) { 
+            if(!lastAIFormattedHTML) return; 
             let cleanHTML = lastAIFormattedHTML;
-
+            
             if(!includeAnswerKey) {
-                cleanHTML = cleanHTML.replace(/<div class="kunci-jawaban-section[^\"]*"[^>]*>[\s\S]*?<\/div><\/div>/g, '');
-                cleanHTML = cleanHTML.replace(/<div class="soal-answer[^\"]*"[^>]*>[\s\S]*?<\/div>/g, '');
-                cleanHTML = cleanHTML.replace(/class="soal-opt[^\"]*correct[^\"]*"/g, 'class="soal-opt"');
+                cleanHTML = cleanHTML.replace(/<div class="kunci-jawaban-section[^"]*"[^>]*>[\s\S]*?<\/div><\/div>/g, '');
+                cleanHTML = cleanHTML.replace(/<div class="soal-answer[^"]*"[^>]*>[\s\S]*?<\/div>/g, '');
+                cleanHTML = cleanHTML.replace(/class="soal-opt[^"]*correct[^"]*"/g, 'class="soal-opt"');
             } else {
                 cleanHTML = cleanHTML.replace(/hide-on-print/g, '');
             }
-
-            return `<div style="font-family:'Times New Roman',Georgia,serif;color:#000;background:#fff;padding:0;margin:0;width:100%;">
-                <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:10px;margin-bottom:20px;">
-                    <h2 style="margin:0;font-size:18px;">SOAL PILIHAN GANDA</h2>
-                    <p style="margin:5px 0 0;font-size:12px;">Dibuat oleh GURU SMART</p>
+            
+            document.getElementById('printArea').innerHTML = `
+            <div style="font-family: 'Times New Roman', Georgia, serif; color: #000; padding: 0; margin: 0; width: 100%;">
+                <div style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 25px;">
+                    <h2 style="margin:0; font-size: 18px;">SOAL PILIHAN GANDA</h2>
+                    <p style="margin: 5px 0 0; font-size: 12px;">Dibuat oleh GURU SMART</p>
                 </div>
-                <div>${cleanHTML}</div>
-            </div>`;
-        }
-
-        async function printAIResult(includeAnswerKey = false) {
-            if(!lastAIFormattedHTML) { showToast('Tidak ada soal untuk diekspor', 'error'); return; }
-            const exportHTML = getAIExportHTML(includeAnswerKey);
-            const wrapper = document.createElement('div');
-            wrapper.innerHTML = exportHTML;
-            wrapper.style.background = '#fff';
-            wrapper.style.color = '#000';
-            wrapper.style.width = '190mm';
-            wrapper.style.padding = '10mm';
-            wrapper.style.position = 'fixed';
-            wrapper.style.left = '-100000px';
-            wrapper.style.top = '0';
-            wrapper.style.zIndex = '-1';
-            document.body.appendChild(wrapper);
-
-            try {
-                if(typeof html2pdf !== 'function') throw new Error('Mesin PDF belum termuat. Periksa koneksi internet lalu coba lagi.');
-                const filename = includeAnswerKey ? 'Soal_Guru_Smart_dengan_Kunci.pdf' : 'Soal_Guru_Smart.pdf';
-                await html2pdf().set({
-                    margin: [10, 10, 10, 10],
-                    filename,
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
-                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                    pagebreak: { mode: ['css', 'legacy'] }
-                }).from(wrapper).save();
-                showToast('PDF berhasil didownload', 'success');
-            } catch(e) {
-                console.error('PDF export error:', e);
-                showToast('PDF gagal dibuat: ' + e.message, 'error');
-            } finally {
-                wrapper.remove();
-            }
+                <div class="ai-output" style="color: #000; margin: 0; padding: 0;">${cleanHTML}</div>
+            </div>`; 
+            window.print(); 
         }
 
         function exportToWord() {
             if(!lastAIFormattedHTML) { showToast('Tidak ada teks untuk diekspor', 'error'); return; }
-
+            
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = lastAIFormattedHTML;
+            
             tempDiv.querySelectorAll('.kunci-jawaban-section, .soal-answer').forEach(el => el.remove());
             tempDiv.querySelectorAll('.soal-opt.correct').forEach(el => el.classList.remove('correct'));
-
+            
             tempDiv.querySelectorAll('.soal-item').forEach(item => {
                 item.style.marginBottom = '18px';
                 item.style.paddingBottom = '15px';
                 item.style.borderBottom = '1px solid #eee';
-                item.style.overflow = 'hidden';
-                item.style.pageBreakInside = 'avoid';
+                item.style.overflow = 'hidden'; 
             });
-            tempDiv.querySelectorAll('.soal-header').forEach(header => header.style.marginBottom = '8px');
-            tempDiv.querySelectorAll('.soal-number').forEach(num => { num.style.fontWeight = 'bold'; num.style.marginRight = '8px'; });
-            tempDiv.querySelectorAll('.soal-text').forEach(text => { text.style.fontWeight = '600'; text.style.lineHeight = '1.6'; });
+            tempDiv.querySelectorAll('.soal-header').forEach(header => {
+                header.style.marginBottom = '8px';
+            });
+            tempDiv.querySelectorAll('.soal-number').forEach(num => {
+                num.style.fontWeight = 'bold';
+                num.style.marginRight = '8px';
+            });
+            tempDiv.querySelectorAll('.soal-text').forEach(text => {
+                text.style.fontWeight = '600';
+                text.style.lineHeight = '1.6';
+            });
+            
             tempDiv.querySelectorAll('.soal-opts').forEach(optsDiv => {
-                optsDiv.style.display = 'block'; optsDiv.style.width = '100%'; optsDiv.style.marginLeft = '25px'; optsDiv.style.marginTop = '8px';
-                optsDiv.querySelectorAll('.opt-col').forEach(col => {
-                    col.style.display = 'inline-block'; col.style.width = '48%'; col.style.verticalAlign = 'top'; col.style.cssFloat = 'left'; col.style.marginRight = '2%';
+                optsDiv.style.display = 'block';
+                optsDiv.style.width = '100%';
+                optsDiv.style.marginLeft = '25px';
+                optsDiv.style.marginTop = '8px';
+                
+                const cols = optsDiv.querySelectorAll('.opt-col');
+                cols.forEach(col => {
+                    col.style.display = 'inline-block';
+                    col.style.width = '48%';
+                    col.style.verticalAlign = 'top';
+                    col.style.styleFloat = 'left';
+                    col.style.cssFloat = 'left';
+                    col.style.marginRight = '2%';
                 });
             });
-
-            const sourceHTML = `<!DOCTYPE html><html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Soal - GURU SMART</title><style>
-                @page { size: A4; margin: 2cm; }
-                body { font-family: 'Times New Roman', Georgia, serif; font-size: 12pt; color:#000; line-height:1.5; }
-                h2 { text-align:center; font-size:16pt; margin-bottom:5px; } p { font-size:10pt; margin-top:0; }
-                table { border-collapse:collapse; } img { max-width:100%; }
+            
+            let cleanHTML = tempDiv.innerHTML;
+            
+            const header = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Soal - GURU SMART</title>
+            <style>
+                @page { size: 21cm 29.7cm; margin: 2cm; }
+                body { font-family: 'Times New Roman', Georgia, serif; font-size: 12pt; color: #000; line-height: 1.5; }
+                h2 { text-align: center; font-size: 16pt; margin-bottom: 5px; }
+                p { text-align: center; font-size: 10pt; margin-top: 0; }
             </style></head><body>
-            <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:10px;margin-bottom:20px;"><h2>SOAL PILIHAN GANDA</h2><p>Dibuat oleh GURU SMART</p></div>
-            ${tempDiv.innerHTML}</body></html>`;
-
-            try {
-                const blob = new Blob(['\ufeff', sourceHTML], {type: 'application/msword'});
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'Soal_Guru_Smart.doc';
-                a.style.display = 'none';
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                // Jangan revoke terlalu cepat: beberapa browser mobile/Cloudflare masih memproses URL blob.
-                setTimeout(() => URL.revokeObjectURL(url), 30000);
-                showToast('Word berhasil didownload', 'success');
-            } catch(e) {
-                console.error('Word export error:', e);
-                showToast('Word gagal didownload: ' + e.message, 'error');
-            }
+            <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
+                <h2>SOAL PILIHAN GANDA</h2>
+                <p>Dibuat oleh GURU SMART</p>
+            </div>`;
+            
+            const footer = `</body></html>`;
+            const sourceHTML = header + cleanHTML + footer;
+            
+            const blob = new Blob(['\ufeff', sourceHTML], {type: 'application/msword'});
+            const url = URL.createObjectURL(blob);
+            const fileDownload = document.createElement("a");
+            fileDownload.href = url;
+            fileDownload.download = 'Soal_Guru_Smart.doc';
+            document.body.appendChild(fileDownload);
+            fileDownload.click();
+            document.body.removeChild(fileDownload);
+            URL.revokeObjectURL(url);
+            showToast('Berhasil diekspor ke Word', 'success');
         }
 
         async function saveData(key, data, id) { 
@@ -939,8 +904,8 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
             document.getElementById('userRole').innerText = currentUser.role;
             
             let avatarUrl = currentUser.avatar_url || AI_IMG;
-            // Tambahkan parameter cache buster jika dari URL online (http) dan BUKAN auth_key
-            if (avatarUrl.startsWith('http') && !avatarUrl.includes('auth_key=')) {
+            // Tambahkan parameter cache buster jika dari URL online (http)
+            if (avatarUrl.startsWith('http')) {
                 avatarUrl += (avatarUrl.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
             }
             document.getElementById('userAvatar').src = avatarUrl;
