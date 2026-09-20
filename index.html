@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <!-- Tambahan library untuk generate PDF langsung di APK -->
+    <!-- Library untuk cetak PDF di APK/Cloudflare -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://js.puter.com/v2/"></script>
@@ -17,7 +17,7 @@
     </script>
     <style>
         body { font-family: 'Inter', sans-serif; overscroll-behavior: none; touch-action: manipulation; }
-        html, body { height: 100%; overflow: hidden; } /* Cegah scroll body utama di HP */
+        html, body { height: 100%; overflow: hidden; }
         .sidebar::-webkit-scrollbar { width: 5px; } .sidebar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 5px; }
         .modal-scroll::-webkit-scrollbar { width: 5px; } .modal-scroll::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 5px; }
         .fade-in { animation: fadeIn 0.3s ease-in-out; } @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
@@ -48,7 +48,6 @@
         .ai-output .kunci-jawaban-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 4px; margin-top: 8px; }
         .ai-output .kunci-jawaban-grid span { background: rgba(255,255,255,0.15); padding: 4px 8px; border-radius: 4px; text-align: center; }
 
-        /* Style khusus untuk hasil PDF agar terlihat seperti dokumen asli */
         .pdf-container { padding: 20px; color: #000; font-family: 'Times New Roman', Georgia, serif; }
         .pdf-container .pdf-soal-item { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee; page-break-inside: avoid; }
         .pdf-container .pdf-soal-header { margin-bottom: 8px; }
@@ -319,7 +318,7 @@
         }
 
         // DASHBOARD
-        async function renderDashboard() { const students = await DB.get('students'); const teachers = await DB.get('teachers'); const classes = await DB.get('classes'); const announcements = await DB.get('announcements'); const grades = await DB.get('grades'); const keuangan = await DB.get('keuangan'); const unpaidSpp = keuangan.filter(k => k.status === 'Belum Bayar').length; document.getElementById('content').innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">${dashboardCard('Total Siswa', students.length, 'from-blue-500 to-blue-700', 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z')}${dashboardCard('Total Guru', teachers.length, 'from-emerald-500 to-emerald-700', 'M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-5a4 4 0 11-8 0 4 4 0 018 0zm6 0a4 4 0 11-8 0 4 4 0 018 0z')}${dashboardCard('Total Kelas', classes.length, 'from-amber-500 to-orange-600', 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4')}${dashboardCard('SPP Belum Lunas', unpaidSpp, 'from-rose-500 to-red-700', 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1V6m0 2c-1.11 0-2.08.402-2.599 1M3 12h18M12 18v-1m0 1v-1')}</div><div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><h3 class="font-semibold text-slate-800 dark:text-white mb-4">Statistik Nilai Siswa</h3><canvas id="chartGrades" height="100"></canvas></div><div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><h3 class="font-semibold text-slate-800 dark:text-white mb-4">Pengumuman Terbaru</h3><div class="space-y-4 max-h-80 overflow-y-auto modal-scroll">${announcements.length ? announcements.map(a => `<div class="p-3 bg-slate-50 dark:bg-slate-700 rounded-lg border-l-4 border-blue-500"><p class="font-medium text-sm text-blue-600 dark:text-blue-400">${a.title}</p><p class="text-xs text-slate-500 dark:text-slate-300 mt-1">${a.content}</p><p class="text-[10px] text-slate-400 mt-1">${a.date}</p></div>`).join('') : '<p class="text-sm text-slate-500 text-center py-4">Belum ada pengumuman.</p>'}</div></div></div>`; const ctx = document.getElementById('chartGrades').getContext('2d'); const types = ['Tugas', 'Ulangan Harian', 'PTS', 'PAS']; const data = types.map(t => { const tGrades = grades.filter(g => g.type === t); return tGrades.length ? (tGrades.reduce((s, g) => s + g.score, 0) / tGrades.length).toFixed(1) : 0; }); new Chart(ctx, { type: 'bar', data: { labels: types, datasets: [{ label: 'Rata-rata Nilai', data: data, backgroundColor: 'rgba(37, 99, 235, 0.5)', borderColor: 'rgba(37, 99, 235, 1)', borderWidth: 1 }] }, options: { responsive: true, scales: { y: { beginAtZero: 0, max: 100 } }, plugins: { legend: { labels: { color: document.documentElement.classList.contains('dark') ? '#fff' : '#000' } } } } }); }
+        async function renderDashboard() { const students = await DB.get('students'); const teachers = await DB.get('teachers'); const classes = await DB.get('classes'); const announcements = await DB.get('announcements'); const grades = await DB.get('grades'); const keuangan = await DB.get('keuangan'); const unpaidSpp = keuangan.filter(k => k.status === 'Belum Bayar').length; document.getElementById('content').innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">${dashboardCard('Total Siswa', students.length, 'from-blue-500 to-blue-700', 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z')}${dashboardCard('Total Guru', teachers.length, 'from-emerald-500 to-emerald-700', 'M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-5a4 4 0 11-8 0 4 4 0 018 0zm6 0a4 4 0 11-8 0 4 4 0 018 0z')}${dashboardCard('Total Kelas', classes.length, 'from-amber-500 to-orange-600', 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4')}${dashboardCard('SPP Belum Lunas', unpaidSpp, 'from-rose-500 to-red-700', 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1V6m0 2c-1.11 0-2.08.402-2.599 1M3 12h18M12 18v-1m0 1v-1')}</div><div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><h3 class="font-semibold text-slate-800 dark:text-white mb-4">Statistik Nilai Siswa</h3><canvas id="chartGrades' height="100"></canvas></div><div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><h3 class="font-semibold text-slate-800 dark:text-white mb-4">Pengumuman Terbaru</h3><div class="space-y-4 max-h-80 overflow-y-auto modal-scroll">${announcements.length ? announcements.map(a => `<div class="p-3 bg-slate-50 dark:bg-slate-700 rounded-lg border-l-4 border-blue-500"><p class="font-medium text-sm text-blue-600 dark:text-blue-400">${a.title}</p><p class="text-xs text-slate-500 dark:text-slate-300 mt-1">${a.content}</p><p class="text-[10px] text-slate-400 mt-1">${a.date}</p></div>`).join('') : '<p class="text-sm text-slate-500 text-center py-4">Belum ada pengumuman.</p>'}</div></div></div>`; const ctx = document.getElementById('chartGrades').getContext('2d'); const types = ['Tugas', 'Ulangan Harian', 'PTS', 'PAS']; const data = types.map(t => { const tGrades = grades.filter(g => g.type === t); return tGrades.length ? (tGrades.reduce((s, g) => s + g.score, 0) / tGrades.length).toFixed(1) : 0; }); new Chart(ctx, { type: 'bar', data: { labels: types, datasets: [{ label: 'Rata-rata Nilai', data: data, backgroundColor: 'rgba(37, 99, 235, 0.5)', borderColor: 'rgba(37, 99, 235, 1)', borderWidth: 1 }] }, options: { responsive: true, scales: { y: { beginAtZero: 0, max: 100 } }, plugins: { legend: { labels: { color: document.documentElement.classList.contains('dark') ? '#fff' : '#000' } } } } }); }
         function dashboardCard(title, count, color, icon) { return `<div class="bg-gradient-to-br ${color} p-6 rounded-xl shadow-sm flex items-center space-x-4 text-white"><div class="p-3 bg-white/20 rounded-lg"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${icon}"></path></svg></div><div><p class="text-white/80 text-sm">${title}</p><h3 class="text-2xl font-bold">${count}</h3></div></div>`; }
 
         // PERANGKAT AJAR
@@ -794,7 +793,7 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
             }
         }
 
-        // PERBAIKAN PDF: Menggunakan html2pdf.js yang merender PDF secara native di dalam APK
+        // PERBAIKAN: Sistem Cetak PDF & Word yang Anti-Blokir Webview
         function openPrintPreview(htmlContent, filename = 'Dokumen_Guru_Smart.pdf') {
             const container = document.createElement('div');
             container.style.position = 'fixed';
@@ -837,13 +836,10 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
                 cleanHTML = cleanHTML.replace(/hide-on-print/g, '');
             }
             
-            // Format khusus agar html2pdf merender soal dengan rapi
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = cleanHTML;
             
-            tempDiv.querySelectorAll('.soal-item').forEach(item => {
-                item.classList.add('pdf-soal-item');
-            });
+            tempDiv.querySelectorAll('.soal-item').forEach(item => item.classList.add('pdf-soal-item'));
             tempDiv.querySelectorAll('.soal-header').forEach(h => h.classList.add('pdf-soal-header'));
             tempDiv.querySelectorAll('.soal-number').forEach(n => n.classList.add('pdf-soal-number'));
             tempDiv.querySelectorAll('.soal-text').forEach(t => t.classList.add('pdf-soal-text'));
@@ -864,7 +860,6 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
             openPrintPreview(printableHTML, 'Soal_Guru_Smart.pdf');
         }
 
-        // PERBAIKAN WORD: Menggunakan Base64 Data URI agar tidak diblokir Webview
         function exportToWord() {
             if(!lastAIFormattedHTML) { showToast('Tidak ada teks untuk diekspor', 'error'); return; }
             
@@ -911,7 +906,7 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
             
             let cleanHTML = tempDiv.innerHTML;
             
-            const header = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Soal - GURU SMART</title>
+            const header = `<!DOCTYPE html><html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Soal - GURU SMART</title>
             <style>
                 @page { size: 21cm 29.7cm; margin: 2cm; }
                 body { font-family: 'Times New Roman', Georgia, serif; font-size: 12pt; color: #000; line-height: 1.5; }
@@ -926,15 +921,19 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
             const footer = `</body></html>`;
             const sourceHTML = header + cleanHTML + footer;
             
-            // Mengubah ke Base64
-            const base64 = btoa(unescape(encodeURIComponent(sourceHTML)));
+            // Menggunakan metode Blob yang sangat aman untuk Cloudflare / Webview
+            const blob = new Blob(['\ufeff', sourceHTML], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
             const fileDownload = document.createElement("a");
-            fileDownload.href = 'data:application/vnd.ms-word;base64,' + base64;
+            fileDownload.href = url;
             fileDownload.download = 'Soal_Guru_Smart.doc';
             document.body.appendChild(fileDownload);
             fileDownload.click();
-            document.body.removeChild(fileDownload);
-            showToast('File Word berhasil diunduh!', 'success');
+            setTimeout(function() {
+                document.body.removeChild(fileDownload);
+                URL.revokeObjectURL(url);
+            }, 100);
+            showToast('File Word berhasil dibuat!', 'success');
         }
 
         async function saveData(key, data, id) { 
