@@ -9,6 +9,8 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://js.puter.com/v2/"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: ['Inter', 'sans-serif'], colors: { primary: { 50:'#eff6ff', 100:'#dbeafe', 500:'#3b82f6', 600:'#2563eb', 700:'#1d4ed8', 900:'#1e3a8a' } } } } }
@@ -808,10 +810,15 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
             }
         }
 
-        function printAIResult(includeAnswerKey = false) { 
-            if(!lastAIFormattedHTML) return; 
+        async function printAIResult(includeAnswerKey = false) {
+            if(!lastAIFormattedHTML) {
+                showToast('Tidak ada soal untuk dibuat PDF', 'error');
+                return;
+            }
+
+            // Bersihkan isi sesuai pilihan pengguna
             let cleanHTML = lastAIFormattedHTML;
-            
+
             if(!includeAnswerKey) {
                 cleanHTML = cleanHTML.replace(/<div class="kunci-jawaban-section[^"]*"[^>]*>[\s\S]*?<\/div><\/div>/g, '');
                 cleanHTML = cleanHTML.replace(/<div class="soal-answer[^"]*"[^>]*>[\s\S]*?<\/div>/g, '');
@@ -819,16 +826,99 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
             } else {
                 cleanHTML = cleanHTML.replace(/hide-on-print/g, '');
             }
-            
-            document.getElementById('printArea').innerHTML = `
-            <div style="font-family: 'Times New Roman', Georgia, serif; color: #000; padding: 0; margin: 0; width: 100%;">
-                <div style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 25px;">
-                    <h2 style="margin:0; font-size: 18px;">SOAL PILIHAN GANDA</h2>
-                    <p style="margin: 5px 0 0; font-size: 12px;">Dibuat oleh GURU SMART</p>
+
+            const pdfContent = document.createElement('div');
+            pdfContent.id = 'guruSmartPdfContent';
+            pdfContent.style.cssText = `
+                position: fixed;
+                left: -100000px;
+                top: 0;
+                width: 794px;
+                background: #fff;
+                color: #000;
+                padding: 55px;
+                box-sizing: border-box;
+                font-family: "Times New Roman", Georgia, serif;
+                font-size: 14px;
+                line-height: 1.5;
+            `;
+
+            pdfContent.innerHTML = `
+                <div style="text-align:center;border-bottom:3px solid #000;padding-bottom:15px;margin-bottom:25px;">
+                    <h2 style="margin:0;font-size:22px;">SOAL PILIHAN GANDA</h2>
+                    <p style="margin:5px 0 0;font-size:14px;">Dibuat oleh GURU SMART</p>
                 </div>
-                <div class="ai-output" style="color: #000; margin: 0; padding: 0;">${cleanHTML}</div>
-            </div>`; 
-            window.print(); 
+                <div class="ai-output" style="color:#000;">${cleanHTML}</div>
+            `;
+
+            document.body.appendChild(pdfContent);
+
+            // Tunggu font/gambar selesai agar hasil PDF tidak kosong/terpotong
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            if (typeof html2pdf === 'undefined') {
+                document.body.removeChild(pdfContent);
+                showToast('Modul PDF belum termuat. Periksa koneksi internet lalu coba lagi.', 'error');
+                return;
+            }
+
+            const fileName = includeAnswerKey
+                ? 'Soal_Guru_Smart_dengan_Kunci.pdf'
+                : 'Soal_Guru_Smart.pdf';
+
+            const options = {
+                margin: [10, 10, 10, 10],
+                filename: fileName,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    logging: false
+                },
+                jsPDF: {
+                    unit: 'mm',
+                    format: 'a4',
+                    orientation: 'portrait',
+                    compress: true
+                },
+                pagebreak: {
+                    mode: ['css', 'legacy']
+                }
+            };
+
+            try {
+                showToast('Sedang membuat PDF...', 'success');
+
+                // Gunakan output PDF + anchor download agar bekerja lebih baik di browser mobile.
+                const pdfBlob = await html2pdf()
+                    .set(options)
+                    .from(pdfContent)
+                    .outputPdf('blob');
+
+                const blobUrl = URL.createObjectURL(pdfBlob);
+                const fileDownload = document.createElement('a');
+                fileDownload.href = blobUrl;
+                fileDownload.download = fileName;
+                fileDownload.target = '_blank';
+                fileDownload.rel = 'noopener';
+                document.body.appendChild(fileDownload);
+                fileDownload.click();
+                fileDownload.remove();
+
+                // Fallback: buka PDF jika WebView menolak atribut download.
+                setTimeout(() => {
+                    try { window.open(blobUrl, '_blank'); } catch(e) {}
+                    setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+                }, 500);
+
+                showToast('PDF berhasil dibuat. Jika tidak langsung tersimpan, pilih Download pada halaman PDF.', 'success');
+            } catch (error) {
+                console.error('PDF error:', error);
+                showToast('Gagal membuat PDF: ' + (error.message || error), 'error');
+            } finally {
+                pdfContent.remove();
+            }
         }
 
         function exportToWord() {
