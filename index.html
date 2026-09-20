@@ -9,8 +9,6 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://js.puter.com/v2/"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: ['Inter', 'sans-serif'], colors: { primary: { 50:'#eff6ff', 100:'#dbeafe', 500:'#3b82f6', 600:'#2563eb', 700:'#1d4ed8', 900:'#1e3a8a' } } } } }
@@ -143,10 +141,8 @@
             auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
         });
         
-        // URL Gambar Logo Baru
         const AI_IMG = 'https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe';
 
-        // Fungsi cadangan jika logo gagal dimuat di HP
         function imgFallback(img) {
             img.onerror = null;
             img.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="#1e3a8a"/><circle cx="50" cy="45" r="20" fill="white"/><rect x="35" y="40" width="10" height="6" rx="3" fill="#3b82f6"/><rect x="55" y="40" width="10" height="6" rx="3" fill="#3b82f6"/><path d="M30 55 Q50 70 70 55 L70 65 Q50 80 30 65 Z" fill="#3b82f6"/><text x="50" y="95" font-size="15" text-anchor="middle" fill="white" font-family="sans-serif" font-weight="bold">AI</text></svg>';
@@ -293,15 +289,16 @@
 
         function renderMenu() { const navMenu = document.getElementById('navMenu'); navMenu.innerHTML = ''; menus.filter(m => m.roles.includes(currentUser.role)).forEach(menu => { const isActive = currentPage === menu.id ? 'bg-white/20 text-white font-semibold' : 'text-blue-100 hover:bg-white/10 hover:text-white'; navMenu.innerHTML += `<a href="#" onclick="navigate('${menu.id}')" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg ${isActive} transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${menu.icon}"></path></svg><span>${menu.label}</span></a>`; }); }
         function navigate(page) { currentPage = page; document.getElementById('pageTitle').innerText = menus.find(m => m.id === page)?.label || 'Page'; renderMenu(); renderContent(page); if (window.innerWidth < 1024) toggleSidebar(); }
+        
         async function renderContent(page) {
             const contentEl = document.getElementById('content');
             
             // Reset kelas ke default (bisa scroll normal)
             contentEl.className = 'flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 lg:p-6 bg-slate-100 dark:bg-slate-900';
             
-            // Jika halaman AI, kunci layar utama agar tidak scroll bersamaan
+            // PERBAIKAN SCROLL HP: Gunakan absolute layout untuk halaman AI agar keyboard HP tidak merusak scroll
             if (page === 'ai') {
-                contentEl.className = 'flex-1 min-h-0 flex flex-col overflow-hidden overscroll-contain p-4 bg-slate-100 dark:bg-slate-900';
+                contentEl.className = 'absolute inset-0 top-16 flex flex-col overflow-hidden overscroll-contain p-4 bg-slate-100 dark:bg-slate-900';
             }
             
             contentEl.innerHTML = `<div class="text-center py-10 text-slate-500">Memuat data...</div>`;
@@ -375,7 +372,7 @@
                 if(!doc) return; 
                 const typeLabel = kurikulumTypes.find(t => t.id === doc.type)?.label || doc.type; 
                 const htmlContent = marked.parse(doc.content); 
-                document.getElementById('printArea').innerHTML = `
+                const printableHTML = `
                 <div style="font-family: 'Times New Roman', Georgia, serif; color: #000; padding: 0; margin: 0; width: 100%;">
                     <div style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 25px;">
                         <h2 style="margin:0; font-size: 18px;">${typeLabel.toUpperCase()}</h2>
@@ -384,8 +381,8 @@
                     <div class="ai-output" style="color: #000; margin: 0; padding: 0;">
                         ${htmlContent}
                     </div>
-                </div>`; 
-                window.print(); 
+                </div>`;
+                openPrintPreview(printableHTML);
             }); 
         }
 
@@ -424,7 +421,7 @@
         async function confirmPayment(id) { await DB.update('keuangan', id, { status: 'Lunas' }); showToast('Pembayaran lunas!', 'success'); renderKeuangan(); }
 
         async function renderRapor() { if(currentUser.role === 'siswa') { printRapor(currentUser.id); return; } const students = await DB.get('students'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><h3 class="font-bold mb-4">Cetak Rapor</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4">${students.length ? students.map(s => `<button onclick="printRapor('${s.id}')" class="p-4 border rounded-lg text-left"><p class="font-bold">${s.name}</p><p class="text-xs text-slate-500">NIS: ${s.nis}</p><span class="mt-2 inline-block text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">Cetak</span></button>`).join('') : '<div class="col-span-3 text-center py-8 text-slate-500">Belum ada siswa.</div>'}</div></div>`; }
-        async function printRapor(studentId) { const student = (await DB.get('students')).find(s => s.id === studentId); const classes = (await DB.get('classes')).find(c => c.id === student.class_id); const grades = (await DB.get('grades')).filter(g => g.student_id === studentId); const subjects = await DB.get('subjects'); const profile = (await DB.get('school_profile'))[0] || {}; let gradeRows = ''; let totalScore = 0; let totalSubjects = 0; subjects.forEach(sub => { const subGrades = grades.filter(g => g.subject_id === sub.id); if(subGrades.length > 0){ const avgScore = Math.round(subGrades.reduce((s, g) => s + g.score, 0) / subGrades.length); const predikat = avgScore >= 90 ? 'A' : avgScore >= 80 ? 'B' : avgScore >= 70 ? 'C' : 'D'; gradeRows += `<tr><td style="padding: 8px; border: 1px solid #ddd;">${sub.name}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${sub.kkm}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${avgScore}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${predikat}</td></tr>`; totalScore += avgScore; totalSubjects++; } }); const finalAvg = totalSubjects ? (totalScore/totalSubjects).toFixed(1) : 0; document.getElementById('printArea').innerHTML = `<div style="font-family: Arial; color: #000;"><div style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px;"><h2>${profile.name || 'Sekolah'}</h2><p>${profile.address || ''}</p></div><h3 style="text-align: center; margin: 20px 0;">RAPOR SISWA</h3><table style="width: 100%; margin-bottom: 20px;"><tr><td>Nama</td><td>: ${student.name}</td><td>Kelas</td><td>: ${classes?.name || '-'}</td></tr><tr><td>NIS</td><td>: ${student.nis}</td><td>Semester</td><td>: ${profile.semester || '-'}</td></tr></table><table style="width: 100%; border-collapse: collapse;"><thead><tr style="background: #eee;"><th style="padding: 8px; border: 1px solid #ddd;">Mapel</th><th style="padding: 8px; border: 1px solid #ddd;">KKM</th><th style="padding: 8px; border: 1px solid #ddd;">Nilai</th><th style="padding: 8px; border: 1px solid #ddd;">Predikat</th></tr></thead><tbody>${gradeRows || `<tr><td colspan="4" style="text-align:center; padding: 10px; border: 1px solid #ddd;">Belum ada nilai</td></tr>`}</tbody><tfoot><tr><td colspan="2" style="padding: 8px; border: 1px solid #ddd; text-align: right;">Rata-rata:</td><td colspan="2" style="padding: 8px; border: 1px solid #ddd; text-align: center;">${finalAvg}</td></tr></tfoot></table></div>`; window.print(); }
+        async function printRapor(studentId) { const student = (await DB.get('students')).find(s => s.id === studentId); const classes = (await DB.get('classes')).find(c => c.id === student.class_id); const grades = (await DB.get('grades')).filter(g => g.student_id === studentId); const subjects = await DB.get('subjects'); const profile = (await DB.get('school_profile'))[0] || {}; let gradeRows = ''; let totalScore = 0; let totalSubjects = 0; subjects.forEach(sub => { const subGrades = grades.filter(g => g.subject_id === sub.id); if(subGrades.length > 0){ const avgScore = Math.round(subGrades.reduce((s, g) => s + g.score, 0) / subGrades.length); const predikat = avgScore >= 90 ? 'A' : avgScore >= 80 ? 'B' : avgScore >= 70 ? 'C' : 'D'; gradeRows += `<tr><td style="padding: 8px; border: 1px solid #ddd;">${sub.name}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${sub.kkm}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${avgScore}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${predikat}</td></tr>`; totalScore += avgScore; totalSubjects++; } }); const finalAvg = totalSubjects ? (totalScore/totalSubjects).toFixed(1) : 0; const printableHTML = `<div style="font-family: Arial; color: #000;"><div style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px;"><h2>${profile.name || 'Sekolah'}</h2><p>${profile.address || ''}</p></div><h3 style="text-align: center; margin: 20px 0;">RAPOR SISWA</h3><table style="width: 100%; margin-bottom: 20px;"><tr><td>Nama</td><td>: ${student.name}</td><td>Kelas</td><td>: ${classes?.name || '-'}</td></tr><tr><td>NIS</td><td>: ${student.nis}</td><td>Semester</td><td>: ${profile.semester || '-'}</td></tr></table><table style="width: 100%; border-collapse: collapse;"><thead><tr style="background: #eee;"><th style="padding: 8px; border: 1px solid #ddd;">Mapel</th><th style="padding: 8px; border: 1px solid #ddd;">KKM</th><th style="padding: 8px; border: 1px solid #ddd;">Nilai</th><th style="padding: 8px; border: 1px solid #ddd;">Predikat</th></tr></thead><tbody>${gradeRows || `<tr><td colspan="4" style="text-align:center; padding: 10px; border: 1px solid #ddd;">Belum ada nilai</td></tr>`}</tbody><tfoot><tr><td colspan="2" style="padding: 8px; border: 1px solid #ddd; text-align: right;">Rata-rata:</td><td colspan="2" style="padding: 8px; border: 1px solid #ddd; text-align: center;">${finalAvg}</td></tr></tfoot></table></div>`; openPrintPreview(printableHTML); }
 
         async function renderAnnouncements() { const anns = await DB.get('announcements'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Pengumuman</h3><button onclick="annForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Buat Pengumuman</button></div><div class="space-y-4">${anns.length ? anns.map(a => `<div class="p-4 bg-slate-50 rounded-lg"><div class="flex justify-between"><h4 class="font-bold">${a.title}</h4><div class="flex gap-2"><button onclick="annForm('${a.id}')" class="text-xs text-blue-500">Edit</button><button onclick="deleteData('announcements', '${a.id}', renderAnnouncements)" class="text-xs text-red-500">Hapus</button></div></div><p class="text-xs text-slate-400 mt-1">${a.date}</p><p class="text-sm mt-2">${a.content}</p></div>`).join('') : '<p class="text-sm text-slate-500 text-center py-4">Belum ada pengumuman.</p>'}</div></div>`; }
         async function annForm(id = null) { let a = null; if(id) { a = (await DB.get('announcements')).find(x => x.id === id); } openModal('Buat Pengumuman', `<form id="annForm" class="space-y-4"><div><label class="block text-sm mb-1">Judul</label><input type="text" id="an_title" value="${a?.title || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Isi</label><textarea id="an_content" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${a?.content || ''}</textarea></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('annForm').onsubmit = async (e) => { e.preventDefault(); const payload = { title: document.getElementById('an_title').value, content: document.getElementById('an_content').value, date: new Date().toISOString().split('T')[0] }; await saveData('announcements', payload, id); closeModal(); renderAnnouncements(); }; }
@@ -810,15 +807,68 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
             }
         }
 
-        async function printAIResult(includeAnswerKey = false) {
-            if(!lastAIFormattedHTML) {
-                showToast('Tidak ada soal untuk dibuat PDF', 'error');
+        // PERBAIKAN: Sistem Export PDF & Word yang bisa berjalan baik di HP Android dan iPhone
+        function openPrintPreview(htmlContent) {
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) {
+                showToast('Pop-up diblokir browser. Mohon izinkan pop-up untuk mencetak.', 'error');
+                document.getElementById('printArea').innerHTML = htmlContent;
+                window.print();
                 return;
             }
+            printWindow.document.write(`
+                <html lang="id">
+                <head>
+                    <title>Cetak Dokumen</title>
+                    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"><\/script>
+                    <style>
+                        body { font-family: 'Times New Roman', Georgia, serif; margin: 20px; color: #000; }
+                        .ai-output h1, .ai-output h2, .ai-output h3 { font-weight: bold; margin-top: 12px; margin-bottom: 6px; }
+                        .ai-output p { margin-bottom: 8px; }
+                        .ai-output ul, .ai-output ol { margin-left: 20px; margin-bottom: 8px; }
+                        .ai-output table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+                        .ai-output th, .ai-output td { border: 1px solid #000; padding: 6px; text-align: left; }
+                        .ai-output .soal-item { margin-bottom: 18px; padding-bottom: 15px; border-bottom: 1px solid #eee; page-break-inside: avoid; }
+                        .ai-output .soal-header { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 8px; }
+                        .ai-output .soal-number { font-weight: bold; min-width: 28px; }
+                        .ai-output .soal-text { font-size: 14px; line-height: 1.7; font-weight: 500; flex: 1; }
+                        .ai-output .soal-opts { display: flex; gap: 24px; margin: 8px 0 8px 34px; }
+                        .ai-output .opt-col { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+                        .ai-output .soal-opt { display: flex; align-items: flex-start; font-size: 13px; }
+                        .ai-output .soal-opt .opt-label { font-weight: bold; margin-right: 6px; min-width: 20px; }
+                        @media print {
+                            body { margin: 0; }
+                            .no-print { display: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="no-print" style="text-align:center; margin-bottom: 20px; position: fixed; bottom: 10px; left: 0; width: 100%;">
+                        <button onclick="window.print()" style="padding: 10px 20px; font-size: 16px; background: #2563eb; color: white; border: none; border-radius: 8px; cursor: pointer;">🖨️ Cetak / Simpan PDF</button>
+                    </div>
+                    <div id="contentArea">${htmlContent}</div>
+                    <script>
+                        // Render markdown jika ada
+                        const contentArea = document.getElementById('contentArea');
+                        const rawText = contentArea.textContent;
+                        if (rawText.trim().startsWith('#') || rawText.includes('**')) {
+                            contentArea.innerHTML = marked.parse(rawText);
+                        }
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => {
+                printWindow.print();
+            }, 500);
+        }
 
-            // Bersihkan isi sesuai pilihan pengguna
+        function printAIResult(includeAnswerKey = false) { 
+            if(!lastAIFormattedHTML) return; 
             let cleanHTML = lastAIFormattedHTML;
-
+            
             if(!includeAnswerKey) {
                 cleanHTML = cleanHTML.replace(/<div class="kunci-jawaban-section[^"]*"[^>]*>[\s\S]*?<\/div><\/div>/g, '');
                 cleanHTML = cleanHTML.replace(/<div class="soal-answer[^"]*"[^>]*>[\s\S]*?<\/div>/g, '');
@@ -826,99 +876,17 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
             } else {
                 cleanHTML = cleanHTML.replace(/hide-on-print/g, '');
             }
-
-            const pdfContent = document.createElement('div');
-            pdfContent.id = 'guruSmartPdfContent';
-            pdfContent.style.cssText = `
-                position: fixed;
-                left: -100000px;
-                top: 0;
-                width: 794px;
-                background: #fff;
-                color: #000;
-                padding: 55px;
-                box-sizing: border-box;
-                font-family: "Times New Roman", Georgia, serif;
-                font-size: 14px;
-                line-height: 1.5;
-            `;
-
-            pdfContent.innerHTML = `
-                <div style="text-align:center;border-bottom:3px solid #000;padding-bottom:15px;margin-bottom:25px;">
-                    <h2 style="margin:0;font-size:22px;">SOAL PILIHAN GANDA</h2>
-                    <p style="margin:5px 0 0;font-size:14px;">Dibuat oleh GURU SMART</p>
+            
+            const printableHTML = `
+            <div style="font-family: 'Times New Roman', Georgia, serif; color: #000; padding: 0; margin: 0; width: 100%;">
+                <div style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 25px;">
+                    <h2 style="margin:0; font-size: 18px;">SOAL PILIHAN GANDA</h2>
+                    <p style="margin: 5px 0 0; font-size: 12px;">Dibuat oleh GURU SMART</p>
                 </div>
-                <div class="ai-output" style="color:#000;">${cleanHTML}</div>
-            `;
-
-            document.body.appendChild(pdfContent);
-
-            // Tunggu font/gambar selesai agar hasil PDF tidak kosong/terpotong
-            await new Promise(resolve => setTimeout(resolve, 300));
-
-            if (typeof html2pdf === 'undefined') {
-                document.body.removeChild(pdfContent);
-                showToast('Modul PDF belum termuat. Periksa koneksi internet lalu coba lagi.', 'error');
-                return;
-            }
-
-            const fileName = includeAnswerKey
-                ? 'Soal_Guru_Smart_dengan_Kunci.pdf'
-                : 'Soal_Guru_Smart.pdf';
-
-            const options = {
-                margin: [10, 10, 10, 10],
-                filename: fileName,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: {
-                    scale: 2,
-                    useCORS: true,
-                    backgroundColor: '#ffffff',
-                    logging: false
-                },
-                jsPDF: {
-                    unit: 'mm',
-                    format: 'a4',
-                    orientation: 'portrait',
-                    compress: true
-                },
-                pagebreak: {
-                    mode: ['css', 'legacy']
-                }
-            };
-
-            try {
-                showToast('Sedang membuat PDF...', 'success');
-
-                // Gunakan output PDF + anchor download agar bekerja lebih baik di browser mobile.
-                const pdfBlob = await html2pdf()
-                    .set(options)
-                    .from(pdfContent)
-                    .outputPdf('blob');
-
-                const blobUrl = URL.createObjectURL(pdfBlob);
-                const fileDownload = document.createElement('a');
-                fileDownload.href = blobUrl;
-                fileDownload.download = fileName;
-                fileDownload.target = '_blank';
-                fileDownload.rel = 'noopener';
-                document.body.appendChild(fileDownload);
-                fileDownload.click();
-                fileDownload.remove();
-
-                // Fallback: buka PDF jika WebView menolak atribut download.
-                setTimeout(() => {
-                    try { window.open(blobUrl, '_blank'); } catch(e) {}
-                    setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
-                }, 500);
-
-                showToast('PDF berhasil dibuat. Jika tidak langsung tersimpan, pilih Download pada halaman PDF.', 'success');
-            } catch (error) {
-                console.error('PDF error:', error);
-                showToast('Gagal membuat PDF: ' + (error.message || error), 'error');
-            } finally {
-                pdfContent.remove();
-            }
+                <div class="ai-output" style="color: #000; margin: 0; padding: 0;">${cleanHTML}</div>
+            </div>`;
+            
+            openPrintPreview(printableHTML);
         }
 
         function exportToWord() {
@@ -1015,7 +983,6 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
             document.getElementById('userRole').innerText = currentUser.role;
             
             let avatarUrl = currentUser.avatar_url || AI_IMG;
-            // Tambahkan parameter cache buster jika dari URL online (http) dan BUKAN auth_key
             if (avatarUrl.startsWith('http') && !avatarUrl.includes('auth_key=')) {
                 avatarUrl += (avatarUrl.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
             }
