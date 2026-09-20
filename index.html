@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>GURU SMART - Sistem Manajemen Sekolah</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -14,7 +14,8 @@
         tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: ['Inter', 'sans-serif'], colors: { primary: { 50:'#eff6ff', 100:'#dbeafe', 500:'#3b82f6', 600:'#2563eb', 700:'#1d4ed8', 900:'#1e3a8a' } } } } }
     </script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', sans-serif; overscroll-behavior: none; touch-action: manipulation; }
+        html, body { height: 100%; overflow: hidden; } /* Cegah scroll body utama di HP */
         .sidebar::-webkit-scrollbar { width: 5px; } .sidebar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 5px; }
         .modal-scroll::-webkit-scrollbar { width: 5px; } .modal-scroll::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 5px; }
         .fade-in { animation: fadeIn 0.3s ease-in-out; } @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
@@ -61,10 +62,10 @@
 </head>
 <body class="bg-slate-100 dark:bg-slate-900 transition-colors duration-300">
 
-    <div id="authScreen" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700">
+    <div id="authScreen" class="min-h-[100dvh] flex items-center justify-center p-4 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700">
         <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 w-full max-w-md fade-in">
             <div class="text-center mb-8">
-                <img src="https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe" alt="GURU SMART AI" class="w-32 h-32 rounded-xl mx-auto mb-4 object-cover">
+                <img src="https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe" onerror="imgFallback(this)" alt="GURU SMART AI" class="w-32 h-32 rounded-xl mx-auto mb-4 object-cover bg-slate-200">
                 <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">GURU SMART</h1>
                 <p class="text-slate-500 dark:text-slate-400 mt-2 text-sm">Sistem Manajemen Sekolah Berbasis Cloud</p>
             </div>
@@ -84,11 +85,11 @@
         </div>
     </div>
 
-    <div id="appScreen" class="hidden h-screen flex overflow-hidden bg-slate-100 dark:bg-slate-900">
+    <div id="appScreen" class="hidden h-[100dvh] flex flex-col overflow-hidden bg-slate-100 dark:bg-slate-900">
         <aside id="sidebar" class="sidebar fixed lg:relative z-40 w-64 h-full bg-gradient-to-b from-blue-800 to-indigo-900 dark:from-slate-800 dark:to-slate-900 border-r border-blue-700/50 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out overflow-y-auto text-white">
             <div class="p-4 flex items-center justify-between border-b border-blue-700/50 dark:border-slate-700">
                 <div class="flex items-center space-x-2">
-                    <img src="https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe" alt="Logo" class="w-10 h-10 rounded-lg object-cover">
+                    <img src="https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe" onerror="imgFallback(this)" alt="Logo" class="w-10 h-10 rounded-lg object-cover bg-slate-200">
                     <div><h1 class="font-bold text-white text-lg leading-tight">GURU SMART</h1></div>
                 </div>
                 <button onclick="toggleSidebar()" class="lg:hidden text-slate-300"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
@@ -97,7 +98,7 @@
         </aside>
         <div id="sidebarOverlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-black/50 z-30"></div>
         <main class="flex-1 flex flex-col overflow-hidden bg-slate-100 dark:bg-slate-900">
-            <header class="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 lg:px-6 shadow-sm">
+            <header class="h-16 flex-none bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 lg:px-6 shadow-sm">
                 <div class="flex items-center space-x-4">
                     <button onclick="toggleSidebar()" class="lg:hidden text-slate-500"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
                     <h2 id="pageTitle" class="text-xl font-semibold text-slate-800 dark:text-white">Dashboard</h2>
@@ -108,7 +109,7 @@
                         <svg id="iconMoon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
                     </button>
                     <div class="flex items-center space-x-2">
-                        <img id="userAvatar" src="https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe" alt="User" class="w-8 h-8 rounded-full object-cover bg-blue-500 ring-2 ring-blue-500">
+                        <img id="userAvatar" src="https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe" onerror="imgFallback(this)" alt="User" class="w-8 h-8 rounded-full object-cover bg-blue-500 ring-2 ring-blue-500">
                         <div class="hidden md:block">
                             <p id="userName" class="text-sm font-medium text-slate-800 dark:text-white">Admin</p>
                             <p id="userRole" class="text-xs text-slate-500 dark:text-slate-400 capitalize">Administrator</p>
@@ -117,7 +118,7 @@
                     </div>
                 </div>
             </header>
-            <div id="content" class="flex-1 overflow-y-auto p-4 lg:p-6 bg-slate-100 dark:bg-slate-900"></div>
+            <div id="content" class="flex-1 min-h-0 overflow-y-auto p-4 lg:p-6 bg-slate-100 dark:bg-slate-900"></div>
         </main>
     </div>
 
@@ -142,6 +143,12 @@
         
         // URL Gambar Logo Baru
         const AI_IMG = 'https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe';
+
+        // Fungsi cadangan jika logo gagal dimuat di HP
+        function imgFallback(img) {
+            img.onerror = null;
+            img.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="#1e3a8a"/><circle cx="50" cy="45" r="20" fill="white"/><rect x="35" y="40" width="10" height="6" rx="3" fill="#3b82f6"/><rect x="55" y="40" width="10" height="6" rx="3" fill="#3b82f6"/><path d="M30 55 Q50 70 70 55 L70 65 Q50 80 30 65 Z" fill="#3b82f6"/><text x="50" y="95" font-size="15" text-anchor="middle" fill="white" font-family="sans-serif" font-weight="bold">AI</text></svg>';
+        }
 
         const DB = {
             get: async (table) => { const { data, error } = await sb.from(table).select('*').eq('user_id', currentUser.id); if (error) { console.error(`Error fetching ${table}:`, error); return []; } return data; },
@@ -287,12 +294,12 @@
         async function renderContent(page) {
             const contentEl = document.getElementById('content');
             
-            // Reset kelas menjadi default (scroll normal)
-            contentEl.className = 'flex-1 overflow-y-auto p-4 lg:p-6 bg-slate-100 dark:bg-slate-900';
+            // Reset kelas ke default (bisa scroll normal)
+            contentEl.className = 'flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 lg:p-6 bg-slate-100 dark:bg-slate-900';
             
-            // Jika halaman AI, ubah layout agar tidak ada scroll body utama di HP
+            // Jika halaman AI, kunci layar utama agar tidak scroll bersamaan
             if (page === 'ai') {
-                contentEl.className = 'flex-1 flex flex-col overflow-hidden p-4 bg-slate-100 dark:bg-slate-900';
+                contentEl.className = 'flex-1 min-h-0 flex flex-col overflow-hidden overscroll-contain p-4 bg-slate-100 dark:bg-slate-900';
             }
             
             contentEl.innerHTML = `<div class="text-center py-10 text-slate-500">Memuat data...</div>`;
@@ -446,7 +453,7 @@
                 <div class="bg-white p-6 rounded-xl">
                     <h3 class="font-bold mb-4">Pengaturan Akun</h3>
                     <div class="flex flex-col items-center space-y-3">
-                        <img id="prevAvatar" src="${currentUser.avatar_url || AI_IMG}" class="w-24 h-24 rounded-full object-cover">
+                        <img id="prevAvatar" src="${currentUser.avatar_url || AI_IMG}" onerror="imgFallback(this)" class="w-24 h-24 rounded-full object-cover bg-slate-200">
                         <input type="file" id="avatarFile" accept="image/*" class="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
                         <button onclick="uploadAvatar()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm">Upload Foto</button>
                     </div>
@@ -531,7 +538,7 @@
                 document.getElementById('content').innerHTML = `
                 <div class="flex items-center justify-center min-h-[80vh] p-4">
                     <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl text-center max-w-md w-full border border-slate-100 dark:border-slate-700">
-                        <img src="${AI_IMG}" class="w-24 h-24 rounded-2xl mx-auto mb-5 object-cover shadow-md" alt="AI Logo">
+                        <img src="${AI_IMG}" onerror="imgFallback(this)" class="w-24 h-24 rounded-2xl mx-auto mb-5 object-cover shadow-md bg-slate-200" alt="AI Logo">
                         <h3 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Aktifkan Asisten AI</h3>
                         <p class="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
                             Dapatkan akses <strong>SELAMANYA</strong> ke semua fitur AI (Buat Soal, Modul Ajar, RPP, dll).
@@ -573,10 +580,10 @@
             }
 
             document.getElementById('content').innerHTML = `
-            <div class="flex flex-col flex-1 max-w-4xl w-full mx-auto bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden">
-                <div class="p-4 border-b dark:border-slate-700 flex justify-between items-center bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700">
+            <div class="flex flex-col flex-1 min-h-0 max-w-4xl w-full mx-auto bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden">
+                <div class="p-4 flex-none border-b dark:border-slate-700 flex justify-between items-center bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700">
                     <div class="flex items-center gap-3">
-                        <img src="${AI_IMG}" alt="GURU SMART AI" class="w-10 h-10 rounded-xl object-cover shadow-sm">
+                        <img src="${AI_IMG}" onerror="imgFallback(this)" alt="GURU SMART AI" class="w-10 h-10 rounded-xl object-cover shadow-sm bg-slate-200">
                         <div>
                             <h3 class="font-bold text-slate-800 dark:text-white">Asisten AI Guru</h3>
                             <p class="text-xs text-slate-500 dark:text-slate-400">SIAP Membantu dengan sepenuh HATI</p>
@@ -584,9 +591,9 @@
                     </div>
                 </div>
                 
-                <div id="aiMessages" class="flex-1 overflow-y-auto overscroll-contain p-5 space-y-4 bg-slate-50 dark:bg-slate-900"></div>
+                <div id="aiMessages" class="flex-1 min-h-0 overflow-y-auto overscroll-contain p-5 space-y-4 bg-slate-50 dark:bg-slate-900"></div>
                 
-                <div class="p-3 border-t dark:border-slate-700 bg-white dark:bg-slate-800">
+                <div class="p-3 flex-none border-t dark:border-slate-700 bg-white dark:bg-slate-800">
                     <div class="flex gap-2 items-end">
                         <textarea id="aiInput" rows="2" placeholder="Tulis perintah..." class="flex-1 px-4 py-2 rounded-xl border dark:bg-slate-700 dark:text-white resize-none focus:ring-2 focus:ring-blue-500 outline-none text-sm"></textarea>
                         <button id="aiSendBtn" onclick="sendAI()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold flex items-center gap-1 text-sm">
