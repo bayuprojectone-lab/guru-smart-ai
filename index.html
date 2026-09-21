@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>GURU SMART - Sistem Manajemen Sekolah</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -14,7 +14,8 @@
         tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: ['Inter', 'sans-serif'], colors: { primary: { 50:'#eff6ff', 100:'#dbeafe', 500:'#3b82f6', 600:'#2563eb', 700:'#1d4ed8', 900:'#1e3a8a' } } } } }
     </script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', sans-serif; overscroll-behavior: none; touch-action: manipulation; }
+        html, body { height: 100%; overflow: hidden; } /* Cegah scroll body utama di HP */
         .sidebar::-webkit-scrollbar { width: 5px; } .sidebar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 5px; }
         .modal-scroll::-webkit-scrollbar { width: 5px; } .modal-scroll::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 5px; }
         .fade-in { animation: fadeIn 0.3s ease-in-out; } @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
@@ -61,10 +62,10 @@
 </head>
 <body class="bg-slate-100 dark:bg-slate-900 transition-colors duration-300">
 
-    <div id="authScreen" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700">
+    <div id="authScreen" class="min-h-[100dvh] flex items-center justify-center p-4 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700">
         <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 w-full max-w-md fade-in">
             <div class="text-center mb-8">
-                <img src="./assets/logo.png" alt="GURU SMART AI" class="w-32 h-32 rounded-xl mx-auto mb-4 object-cover">
+                <img src="https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe" onerror="imgFallback(this)" alt="GURU SMART AI" class="w-32 h-32 rounded-xl mx-auto mb-4 object-cover bg-slate-200">
                 <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">GURU SMART</h1>
                 <p class="text-slate-500 dark:text-slate-400 mt-2 text-sm">Sistem Manajemen Sekolah Berbasis Cloud</p>
             </div>
@@ -84,11 +85,11 @@
         </div>
     </div>
 
-    <div id="appScreen" class="hidden h-screen flex overflow-hidden bg-slate-100 dark:bg-slate-900">
+    <div id="appScreen" class="hidden h-[100dvh] flex flex-col overflow-hidden bg-slate-100 dark:bg-slate-900">
         <aside id="sidebar" class="sidebar fixed lg:relative z-40 w-64 h-full bg-gradient-to-b from-blue-800 to-indigo-900 dark:from-slate-800 dark:to-slate-900 border-r border-blue-700/50 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out overflow-y-auto text-white">
             <div class="p-4 flex items-center justify-between border-b border-blue-700/50 dark:border-slate-700">
                 <div class="flex items-center space-x-2">
-                    <img src="./assets/logo.png" alt="Logo" class="w-10 h-10 rounded-lg object-cover">
+                    <img src="https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe" onerror="imgFallback(this)" alt="Logo" class="w-10 h-10 rounded-lg object-cover bg-slate-200">
                     <div><h1 class="font-bold text-white text-lg leading-tight">GURU SMART</h1></div>
                 </div>
                 <button onclick="toggleSidebar()" class="lg:hidden text-slate-300"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
@@ -97,7 +98,7 @@
         </aside>
         <div id="sidebarOverlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-black/50 z-30"></div>
         <main class="flex-1 flex flex-col overflow-hidden bg-slate-100 dark:bg-slate-900">
-            <header class="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 lg:px-6 shadow-sm">
+            <header class="h-16 flex-none bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 lg:px-6 shadow-sm">
                 <div class="flex items-center space-x-4">
                     <button onclick="toggleSidebar()" class="lg:hidden text-slate-500"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
                     <h2 id="pageTitle" class="text-xl font-semibold text-slate-800 dark:text-white">Dashboard</h2>
@@ -108,7 +109,7 @@
                         <svg id="iconMoon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
                     </button>
                     <div class="flex items-center space-x-2">
-                        <img id="userAvatar" src="https://raw.githubusercontent.com/githubaccountname/repository/main/default-avatar.png" alt="User" class="w-8 h-8 rounded-full object-cover bg-blue-500 ring-2 ring-blue-500">
+                        <img id="userAvatar" src="https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe" onerror="imgFallback(this)" alt="User" class="w-8 h-8 rounded-full object-cover bg-blue-500 ring-2 ring-blue-500">
                         <div class="hidden md:block">
                             <p id="userName" class="text-sm font-medium text-slate-800 dark:text-white">Admin</p>
                             <p id="userRole" class="text-xs text-slate-500 dark:text-slate-400 capitalize">Administrator</p>
@@ -117,7 +118,7 @@
                     </div>
                 </div>
             </header>
-            <div id="content" class="flex-1 overflow-y-auto p-4 lg:p-6 bg-slate-100 dark:bg-slate-900"></div>
+            <div id="content" class="flex-1 min-h-0 overflow-y-auto p-4 lg:p-6 bg-slate-100 dark:bg-slate-900"></div>
         </main>
     </div>
 
@@ -140,8 +141,12 @@
             auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
         });
         
-        // Ganti URL ini dengan raw link gambar default dari GitHub Anda
-        const AI_IMG = 'https://raw.githubusercontent.com/githubaccountname/repository/main/default-avatar.png';
+        const AI_IMG = 'https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe';
+
+        function imgFallback(img) {
+            img.onerror = null;
+            img.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="#1e3a8a"/><circle cx="50" cy="45" r="20" fill="white"/><rect x="35" y="40" width="10" height="6" rx="3" fill="#3b82f6"/><rect x="55" y="40" width="10" height="6" rx="3" fill="#3b82f6"/><path d="M30 55 Q50 70 70 55 L70 65 Q50 80 30 65 Z" fill="#3b82f6"/><text x="50" y="95" font-size="15" text-anchor="middle" fill="white" font-family="sans-serif" font-weight="bold">AI</text></svg>';
+        }
 
         const DB = {
             get: async (table) => { const { data, error } = await sb.from(table).select('*').eq('user_id', currentUser.id); if (error) { console.error(`Error fetching ${table}:`, error); return []; } return data; },
@@ -284,8 +289,20 @@
 
         function renderMenu() { const navMenu = document.getElementById('navMenu'); navMenu.innerHTML = ''; menus.filter(m => m.roles.includes(currentUser.role)).forEach(menu => { const isActive = currentPage === menu.id ? 'bg-white/20 text-white font-semibold' : 'text-blue-100 hover:bg-white/10 hover:text-white'; navMenu.innerHTML += `<a href="#" onclick="navigate('${menu.id}')" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg ${isActive} transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${menu.icon}"></path></svg><span>${menu.label}</span></a>`; }); }
         function navigate(page) { currentPage = page; document.getElementById('pageTitle').innerText = menus.find(m => m.id === page)?.label || 'Page'; renderMenu(); renderContent(page); if (window.innerWidth < 1024) toggleSidebar(); }
+        
         async function renderContent(page) {
-            document.getElementById('content').innerHTML = `<div class="text-center py-10 text-slate-500">Memuat data...</div>`;
+            const contentEl = document.getElementById('content');
+            
+            // Reset kelas ke default (bisa scroll normal)
+            contentEl.className = 'flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 lg:p-6 bg-slate-100 dark:bg-slate-900';
+            
+            // PERBAIKAN SCROLL HP: Gunakan absolute layout untuk halaman AI agar keyboard HP tidak merusak scroll
+            if (page === 'ai') {
+                contentEl.className = 'absolute inset-0 top-16 flex flex-col overflow-hidden overscroll-contain p-4 bg-slate-100 dark:bg-slate-900';
+            }
+            
+            contentEl.innerHTML = `<div class="text-center py-10 text-slate-500">Memuat data...</div>`;
+            
             switch(page) {
                 case 'dashboard': await renderDashboard(); break;
                 case 'ai': renderAI(); break;
@@ -304,7 +321,10 @@
                 case 'announcements': await renderAnnouncements(); break;
                 case 'settings': await renderSettings(); break;
             }
-            document.getElementById('content').innerHTML += `<div class="text-center text-[10px] text-slate-400 dark:text-slate-600 py-4 mt-4 border-t border-slate-200 dark:border-slate-700">Dalam Mode Pengembang @BayuProjectone</div>`;
+            
+            if (page !== 'ai') {
+                contentEl.innerHTML += `<div class="text-center text-[10px] text-slate-400 dark:text-slate-600 py-4 mt-4 border-t border-slate-200 dark:border-slate-700">Dalam Mode Pengembang @BayuProjectone</div>`;
+            }
         }
 
         // DASHBOARD
@@ -352,7 +372,7 @@
                 if(!doc) return; 
                 const typeLabel = kurikulumTypes.find(t => t.id === doc.type)?.label || doc.type; 
                 const htmlContent = marked.parse(doc.content); 
-                document.getElementById('printArea').innerHTML = `
+                const printableHTML = `
                 <div style="font-family: 'Times New Roman', Georgia, serif; color: #000; padding: 0; margin: 0; width: 100%;">
                     <div style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 25px;">
                         <h2 style="margin:0; font-size: 18px;">${typeLabel.toUpperCase()}</h2>
@@ -361,8 +381,8 @@
                     <div class="ai-output" style="color: #000; margin: 0; padding: 0;">
                         ${htmlContent}
                     </div>
-                </div>`; 
-                window.print(); 
+                </div>`;
+                openPrintPreview(printableHTML);
             }); 
         }
 
@@ -401,7 +421,7 @@
         async function confirmPayment(id) { await DB.update('keuangan', id, { status: 'Lunas' }); showToast('Pembayaran lunas!', 'success'); renderKeuangan(); }
 
         async function renderRapor() { if(currentUser.role === 'siswa') { printRapor(currentUser.id); return; } const students = await DB.get('students'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><h3 class="font-bold mb-4">Cetak Rapor</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4">${students.length ? students.map(s => `<button onclick="printRapor('${s.id}')" class="p-4 border rounded-lg text-left"><p class="font-bold">${s.name}</p><p class="text-xs text-slate-500">NIS: ${s.nis}</p><span class="mt-2 inline-block text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">Cetak</span></button>`).join('') : '<div class="col-span-3 text-center py-8 text-slate-500">Belum ada siswa.</div>'}</div></div>`; }
-        async function printRapor(studentId) { const student = (await DB.get('students')).find(s => s.id === studentId); const classes = (await DB.get('classes')).find(c => c.id === student.class_id); const grades = (await DB.get('grades')).filter(g => g.student_id === studentId); const subjects = await DB.get('subjects'); const profile = (await DB.get('school_profile'))[0] || {}; let gradeRows = ''; let totalScore = 0; let totalSubjects = 0; subjects.forEach(sub => { const subGrades = grades.filter(g => g.subject_id === sub.id); if(subGrades.length > 0){ const avgScore = Math.round(subGrades.reduce((s, g) => s + g.score, 0) / subGrades.length); const predikat = avgScore >= 90 ? 'A' : avgScore >= 80 ? 'B' : avgScore >= 70 ? 'C' : 'D'; gradeRows += `<tr><td style="padding: 8px; border: 1px solid #ddd;">${sub.name}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${sub.kkm}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${avgScore}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${predikat}</td></tr>`; totalScore += avgScore; totalSubjects++; } }); const finalAvg = totalSubjects ? (totalScore/totalSubjects).toFixed(1) : 0; document.getElementById('printArea').innerHTML = `<div style="font-family: Arial; color: #000;"><div style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px;"><h2>${profile.name || 'Sekolah'}</h2><p>${profile.address || ''}</p></div><h3 style="text-align: center; margin: 20px 0;">RAPOR SISWA</h3><table style="width: 100%; margin-bottom: 20px;"><tr><td>Nama</td><td>: ${student.name}</td><td>Kelas</td><td>: ${classes?.name || '-'}</td></tr><tr><td>NIS</td><td>: ${student.nis}</td><td>Semester</td><td>: ${profile.semester || '-'}</td></tr></table><table style="width: 100%; border-collapse: collapse;"><thead><tr style="background: #eee;"><th style="padding: 8px; border: 1px solid #ddd;">Mapel</th><th style="padding: 8px; border: 1px solid #ddd;">KKM</th><th style="padding: 8px; border: 1px solid #ddd;">Nilai</th><th style="padding: 8px; border: 1px solid #ddd;">Predikat</th></tr></thead><tbody>${gradeRows || `<tr><td colspan="4" style="text-align:center; padding: 10px; border: 1px solid #ddd;">Belum ada nilai</td></tr>`}</tbody><tfoot><tr><td colspan="2" style="padding: 8px; border: 1px solid #ddd; text-align: right;">Rata-rata:</td><td colspan="2" style="padding: 8px; border: 1px solid #ddd; text-align: center;">${finalAvg}</td></tr></tfoot></table></div>`; window.print(); }
+        async function printRapor(studentId) { const student = (await DB.get('students')).find(s => s.id === studentId); const classes = (await DB.get('classes')).find(c => c.id === student.class_id); const grades = (await DB.get('grades')).filter(g => g.student_id === studentId); const subjects = await DB.get('subjects'); const profile = (await DB.get('school_profile'))[0] || {}; let gradeRows = ''; let totalScore = 0; let totalSubjects = 0; subjects.forEach(sub => { const subGrades = grades.filter(g => g.subject_id === sub.id); if(subGrades.length > 0){ const avgScore = Math.round(subGrades.reduce((s, g) => s + g.score, 0) / subGrades.length); const predikat = avgScore >= 90 ? 'A' : avgScore >= 80 ? 'B' : avgScore >= 70 ? 'C' : 'D'; gradeRows += `<tr><td style="padding: 8px; border: 1px solid #ddd;">${sub.name}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${sub.kkm}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${avgScore}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${predikat}</td></tr>`; totalScore += avgScore; totalSubjects++; } }); const finalAvg = totalSubjects ? (totalScore/totalSubjects).toFixed(1) : 0; const printableHTML = `<div style="font-family: Arial; color: #000;"><div style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px;"><h2>${profile.name || 'Sekolah'}</h2><p>${profile.address || ''}</p></div><h3 style="text-align: center; margin: 20px 0;">RAPOR SISWA</h3><table style="width: 100%; margin-bottom: 20px;"><tr><td>Nama</td><td>: ${student.name}</td><td>Kelas</td><td>: ${classes?.name || '-'}</td></tr><tr><td>NIS</td><td>: ${student.nis}</td><td>Semester</td><td>: ${profile.semester || '-'}</td></tr></table><table style="width: 100%; border-collapse: collapse;"><thead><tr style="background: #eee;"><th style="padding: 8px; border: 1px solid #ddd;">Mapel</th><th style="padding: 8px; border: 1px solid #ddd;">KKM</th><th style="padding: 8px; border: 1px solid #ddd;">Nilai</th><th style="padding: 8px; border: 1px solid #ddd;">Predikat</th></tr></thead><tbody>${gradeRows || `<tr><td colspan="4" style="text-align:center; padding: 10px; border: 1px solid #ddd;">Belum ada nilai</td></tr>`}</tbody><tfoot><tr><td colspan="2" style="padding: 8px; border: 1px solid #ddd; text-align: right;">Rata-rata:</td><td colspan="2" style="padding: 8px; border: 1px solid #ddd; text-align: center;">${finalAvg}</td></tr></tfoot></table></div>`; openPrintPreview(printableHTML); }
 
         async function renderAnnouncements() { const anns = await DB.get('announcements'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Pengumuman</h3><button onclick="annForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Buat Pengumuman</button></div><div class="space-y-4">${anns.length ? anns.map(a => `<div class="p-4 bg-slate-50 rounded-lg"><div class="flex justify-between"><h4 class="font-bold">${a.title}</h4><div class="flex gap-2"><button onclick="annForm('${a.id}')" class="text-xs text-blue-500">Edit</button><button onclick="deleteData('announcements', '${a.id}', renderAnnouncements)" class="text-xs text-red-500">Hapus</button></div></div><p class="text-xs text-slate-400 mt-1">${a.date}</p><p class="text-sm mt-2">${a.content}</p></div>`).join('') : '<p class="text-sm text-slate-500 text-center py-4">Belum ada pengumuman.</p>'}</div></div>`; }
         async function annForm(id = null) { let a = null; if(id) { a = (await DB.get('announcements')).find(x => x.id === id); } openModal('Buat Pengumuman', `<form id="annForm" class="space-y-4"><div><label class="block text-sm mb-1">Judul</label><input type="text" id="an_title" value="${a?.title || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Isi</label><textarea id="an_content" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${a?.content || ''}</textarea></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('annForm').onsubmit = async (e) => { e.preventDefault(); const payload = { title: document.getElementById('an_title').value, content: document.getElementById('an_content').value, date: new Date().toISOString().split('T')[0] }; await saveData('announcements', payload, id); closeModal(); renderAnnouncements(); }; }
@@ -432,7 +452,7 @@
                 <div class="bg-white p-6 rounded-xl">
                     <h3 class="font-bold mb-4">Pengaturan Akun</h3>
                     <div class="flex flex-col items-center space-y-3">
-                        <img id="prevAvatar" src="${currentUser.avatar_url || AI_IMG}" class="w-24 h-24 rounded-full object-cover">
+                        <img id="prevAvatar" src="${currentUser.avatar_url || AI_IMG}" onerror="imgFallback(this)" class="w-24 h-24 rounded-full object-cover bg-slate-200">
                         <input type="file" id="avatarFile" accept="image/*" class="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
                         <button onclick="uploadAvatar()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm">Upload Foto</button>
                     </div>
@@ -517,10 +537,10 @@
                 document.getElementById('content').innerHTML = `
                 <div class="flex items-center justify-center min-h-[80vh] p-4">
                     <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl text-center max-w-md w-full border border-slate-100 dark:border-slate-700">
-                        <img src="./assets/logo.png" class="w-24 h-24 rounded-2xl mx-auto mb-5 object-cover shadow-md" alt="AI Logo">
+                        <img src="${AI_IMG}" onerror="imgFallback(this)" class="w-24 h-24 rounded-2xl mx-auto mb-5 object-cover shadow-md bg-slate-200" alt="AI Logo">
                         <h3 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Aktifkan Asisten AI</h3>
                         <p class="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
-                            Dapatkan akses <strong>SELAMANYA</strong> ke semua fitur AI (Buat Soal, Modul Ajar, RPP, dll).
+                            Dapatkan akses <strong>SELAMANYA</strong> ke semua fitur AI (Buat Soal, Modul Ajar, RPP, Scanner Teks, Generator Gambar, dll).
                         </p>
                         
                         <div class="bg-slate-50 dark:bg-slate-700 p-4 rounded-xl mb-6 border border-slate-100 dark:border-slate-600">
@@ -559,22 +579,26 @@
             }
 
             document.getElementById('content').innerHTML = `
-            <div class="flex flex-col h-[calc(100vh-120px)] max-w-4xl mx-auto bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden">
-                <div class="p-4 border-b dark:border-slate-700 flex justify-between items-center bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700">
+            <div class="flex flex-col flex-1 min-h-0 max-w-4xl w-full mx-auto bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden">
+                <div class="p-4 flex-none border-b dark:border-slate-700 flex justify-between items-center bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700">
                     <div class="flex items-center gap-3">
-                        <img src="./assets/logo.png" alt="GURU SMART AI" class="w-10 h-10 rounded-xl object-cover shadow-sm">
+                        <img src="${AI_IMG}" onerror="imgFallback(this)" alt="GURU SMART AI" class="w-10 h-10 rounded-xl object-cover shadow-sm bg-slate-200">
                         <div>
                             <h3 class="font-bold text-slate-800 dark:text-white">Asisten AI Guru</h3>
-                            <p class="text-xs text-slate-500 dark:text-slate-400">SIAP Membantu dengan sepenuh HATI</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Dilengkapi Scanner Teks & Generator Gambar</p>
                         </div>
                     </div>
                 </div>
                 
-                <div id="aiMessages" class="flex-1 overflow-y-auto p-5 space-y-4 bg-slate-50 dark:bg-slate-900"></div>
+                <div id="aiMessages" class="flex-1 min-h-0 overflow-y-auto overscroll-contain p-5 space-y-4 bg-slate-50 dark:bg-slate-900"></div>
                 
-                <div class="p-3 border-t dark:border-slate-700 bg-white dark:bg-slate-800">
+                <div class="p-3 flex-none border-t dark:border-slate-700 bg-white dark:bg-slate-800">
                     <div class="flex gap-2 items-end">
-                        <textarea id="aiInput" rows="2" placeholder="Tulis perintah..." class="flex-1 px-4 py-2 rounded-xl border dark:bg-slate-700 dark:text-white resize-none focus:ring-2 focus:ring-blue-500 outline-none text-sm"></textarea>
+                        <input type="file" id="aiImageInput" accept="image/*" class="hidden" onchange="handleAIImageUpload(event)">
+                        <button onclick="document.getElementById('aiImageInput').click()" class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-white p-2.5 rounded-xl" title="Upload Gambar untuk Scanner">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        </button>
+                        <textarea id="aiInput" rows="2" placeholder="Tulis perintah... (Contoh: Buatkan gambar pemandangan)" class="flex-1 px-4 py-2 rounded-xl border dark:bg-slate-700 dark:text-white resize-none focus:ring-2 focus:ring-blue-500 outline-none text-sm"></textarea>
                         <button id="aiSendBtn" onclick="sendAI()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold flex items-center gap-1 text-sm">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9 2zm0 0v-8" /></svg>
                             Kirim
@@ -665,7 +689,7 @@
             const box=document.getElementById('aiMessages');
             if(!box)return;
             if(aiChatHistory.length === 0){
-                box.innerHTML = `<div class="flex justify-start"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="whitespace-pre-wrap text-gray-800">Halo! Saya adalah Asisten AI Guru Anda. Silakan tulis perintah atau materi lainnya.</div></div></div>`;
+                box.innerHTML = `<div class="flex justify-start"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="whitespace-pre-wrap text-gray-800">Halo! Saya adalah Asisten AI Guru Anda. Anda bisa meminta saya membuat soal, RPP, modul, men_scan teks dari gambar, atau membuat gambar (contoh: "Buatkan gambar pemandangan pegunungan").</div></div></div>`;
             }
         }
 
@@ -767,6 +791,15 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
                 const res = await puter.ai.chat([{role:'system',content:sys}, ...aiChatHistory]);
                 let ans = typeof res==='string' ? res : (res.message?.content || '');
                 
+                // Cek apakah prompt meminta pembuatan gambar
+                if (/gambar|foto|image|gambarin|buatkan gambar|draw/i.test(prompt)) {
+                    const imgResp = await puter.ai.txt2img(prompt);
+                    const imgHTML = `<div class="flex justify-start fade-in"><div class="max-w-[95%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="text-sm mb-2 text-gray-700">Berikut adalah gambar yang Anda minta:</div><img src="${imgResp}" alt="Generated Image" class="rounded-lg max-w-full h-auto border border-slate-200 shadow-md"></div></div>`;
+                    box.innerHTML += imgHTML;
+                    box.scrollTop = box.scrollHeight;
+                    return; // Hentikan di sani karena gambar tidak butuh tombol PDF/Word
+                }
+
                 aiChatHistory.push({role:'assistant', content:ans});
 
                 document.getElementById('typingIndicator')?.remove();
@@ -787,6 +820,114 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
             }
         }
 
+        // FITUR BARU: Upload Gambar untuk Scanner (OCR) ke PDF/Word
+        async function handleAIImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const btn=document.getElementById('aiSendBtn');
+            btn.disabled=true; btn.innerText='Memproses Gambar...';
+            
+            const box=document.getElementById('aiMessages');
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const imgUrl = e.target.result;
+                box.innerHTML += `<div class="flex justify-end fade-in"><div class="max-w-[80%] rounded-xl px-2 py-2 bg-blue-600 text-white shadow-sm"><div class="text-xs opacity-70 mb-1 px-2">Anda (Gambar)</div><img src="${imgUrl}" class="rounded-lg max-w-full h-auto"></div></div>`;
+                box.innerHTML += `<div id="typingIndicator" class="flex justify-start fade-in"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="animate-pulse text-blue-600">Sedang membaca teks gambar (OCR)...</div></div></div>`;
+                box.scrollTop = box.scrollHeight;
+
+                try {
+                    // Menggunakan Puter AI Vision untuk OCR
+                    const prompt = "Baca semua teks yang ada di gambar ini dan munculkan persis seperti aslinya tanpa penjelasan tambahan.";
+                    const res = await puter.ai.chat([{role: 'system', content: 'Anda adalah AI OCR yang membaca teks dari gambar dengan sangat akurat.'}, {role: 'user', content: [{type: 'text', text: prompt}, {type: 'image_url', url: imgUrl}]}]);
+                    
+                    let extractedText = typeof res === 'string' ? res : (res.message?.content || '');
+                    
+                    document.getElementById('typingIndicator')?.remove();
+
+                    if (!extractedText.trim()) {
+                        throw new Error("Tidak ada teks terdeteksi di gambar.");
+                    }
+
+                    const formattedHTML = marked.parse(extractedText);
+                    lastAIFormattedHTML = formattedHTML; // Simpan untuk ekspor
+                    
+                    box.innerHTML += `<div class="flex justify-start fade-in"><div class="max-w-[95%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI (Teks hasil Scan)</div><div class="ai-output text-gray-800">${formattedHTML}</div></div></div>`;
+                    box.scrollTop = box.scrollHeight;
+                    
+                    // Tampilkan tombol export
+                    ['aiPrintBtn', 'aiWordBtn'].forEach(id => document.getElementById(id).classList.remove('hidden'));
+                    showToast('Teks berhasil dipindai!', 'success');
+                    
+                } catch (err) {
+                    document.getElementById('typingIndicator')?.remove();
+                    showToast('Gagal membaca gambar: ' + err.message, 'error');
+                } finally {
+                    btn.disabled=false; btn.innerText='Kirim';
+                    event.target.value = ''; // Reset input file
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // PERBAIKAN: Sistem Export PDF & Word yang bisa berjalan baik di HP Android dan iPhone
+        function openPrintPreview(htmlContent) {
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) {
+                showToast('Pop-up diblokir browser. Mohon izinkan pop-up untuk mencetak.', 'error');
+                document.getElementById('printArea').innerHTML = htmlContent;
+                window.print();
+                return;
+            }
+            printWindow.document.write(`
+                <html lang="id">
+                <head>
+                    <title>Cetak Dokumen</title>
+                    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"><\/script>
+                    <style>
+                        body { font-family: 'Times New Roman', Georgia, serif; margin: 20px; color: #000; }
+                        .ai-output h1, .ai-output h2, .ai-output h3 { font-weight: bold; margin-top: 12px; margin-bottom: 6px; }
+                        .ai-output p { margin-bottom: 8px; }
+                        .ai-output ul, .ai-output ol { margin-left: 20px; margin-bottom: 8px; }
+                        .ai-output table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+                        .ai-output th, .ai-output td { border: 1px solid #000; padding: 6px; text-align: left; }
+                        .ai-output .soal-item { margin-bottom: 18px; padding-bottom: 15px; border-bottom: 1px solid #eee; page-break-inside: avoid; }
+                        .ai-output .soal-header { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 8px; }
+                        .ai-output .soal-number { font-weight: bold; min-width: 28px; }
+                        .ai-output .soal-text { font-size: 14px; line-height: 1.7; font-weight: 500; flex: 1; }
+                        .ai-output .soal-opts { display: flex; gap: 24px; margin: 8px 0 8px 34px; }
+                        .ai-output .opt-col { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+                        .ai-output .soal-opt { display: flex; align-items: flex-start; font-size: 13px; }
+                        .ai-output .soal-opt .opt-label { font-weight: bold; margin-right: 6px; min-width: 20px; }
+                        @media print {
+                            body { margin: 0; }
+                            .no-print { display: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="no-print" style="text-align:center; margin-bottom: 20px; position: fixed; bottom: 10px; left: 0; width: 100%;">
+                        <button onclick="window.print()" style="padding: 10px 20px; font-size: 16px; background: #2563eb; color: white; border: none; border-radius: 8px; cursor: pointer;">🖨️ Cetak / Simpan PDF</button>
+                    </div>
+                    <div id="contentArea">${htmlContent}</div>
+                    <script>
+                        // Render markdown jika ada
+                        const contentArea = document.getElementById('contentArea');
+                        const rawText = contentArea.textContent;
+                        if (rawText.trim().startsWith('#') || rawText.includes('**')) {
+                            contentArea.innerHTML = marked.parse(rawText);
+                        }
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => {
+                printWindow.print();
+            }, 500);
+        }
+
         function printAIResult(includeAnswerKey = false) { 
             if(!lastAIFormattedHTML) return; 
             let cleanHTML = lastAIFormattedHTML;
@@ -799,15 +940,16 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
                 cleanHTML = cleanHTML.replace(/hide-on-print/g, '');
             }
             
-            document.getElementById('printArea').innerHTML = `
+            const printableHTML = `
             <div style="font-family: 'Times New Roman', Georgia, serif; color: #000; padding: 0; margin: 0; width: 100%;">
                 <div style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 25px;">
                     <h2 style="margin:0; font-size: 18px;">SOAL PILIHAN GANDA</h2>
                     <p style="margin: 5px 0 0; font-size: 12px;">Dibuat oleh GURU SMART</p>
                 </div>
                 <div class="ai-output" style="color: #000; margin: 0; padding: 0;">${cleanHTML}</div>
-            </div>`; 
-            window.print(); 
+            </div>`;
+            
+            openPrintPreview(printableHTML);
         }
 
         function exportToWord() {
@@ -904,8 +1046,7 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
             document.getElementById('userRole').innerText = currentUser.role;
             
             let avatarUrl = currentUser.avatar_url || AI_IMG;
-            // Tambahkan parameter cache buster jika dari URL online (http)
-            if (avatarUrl.startsWith('http')) {
+            if (avatarUrl.startsWith('http') && !avatarUrl.includes('auth_key=')) {
                 avatarUrl += (avatarUrl.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
             }
             document.getElementById('userAvatar').src = avatarUrl;
