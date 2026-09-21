@@ -15,7 +15,7 @@
     </script>
     <style>
         body { font-family: 'Inter', sans-serif; overscroll-behavior: none; touch-action: manipulation; }
-        html, body { height: 100%; overflow: hidden; } /* Cegah scroll body utama di HP */
+        html, body { height: 100%; overflow: hidden; } 
         .sidebar::-webkit-scrollbar { width: 5px; } .sidebar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 5px; }
         .modal-scroll::-webkit-scrollbar { width: 5px; } .modal-scroll::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 5px; }
         .fade-in { animation: fadeIn 0.3s ease-in-out; } @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
@@ -148,33 +148,27 @@
             img.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="#1e3a8a"/><circle cx="50" cy="45" r="20" fill="white"/><rect x="35" y="40" width="10" height="6" rx="3" fill="#3b82f6"/><rect x="55" y="40" width="10" height="6" rx="3" fill="#3b82f6"/><path d="M30 55 Q50 70 70 55 L70 65 Q50 80 30 65 Z" fill="#3b82f6"/><text x="50" y="95" font-size="15" text-anchor="middle" fill="white" font-family="sans-serif" font-weight="bold">AI</text></svg>';
         }
 
+        // PERBAIKAN: Menghapus filter user_id agar data bisa dibaca bersama (RLS yang atur)
         const DB = {
-            get: async (table) => { const { data, error } = await sb.from(table).select('*').eq('user_id', currentUser.id); if (error) { console.error(`Error fetching ${table}:`, error); return []; } return data; },
+            get: async (table) => { 
+                if (!currentUser || !currentUser.id) return [];
+                const { data, error } = await sb.from(table).select('*'); 
+                if (error) { console.error(`Error fetching ${table}:`, error.message); return []; } 
+                return data; 
+            },
             insert: async (table, payload) => { 
                 const { data, error } = await sb.from(table).insert([{ ...payload, user_id: currentUser.id }]).select(); 
-                if (error) { 
-                    console.error(`Error inserting ${table}:`, error); 
-                    showToast(`Gagal simpan: ${error.message}`, 'error'); 
-                    return null; 
-                } 
+                if (error) { console.error(`Error inserting ${table}:`, error); showToast(`Gagal simpan: ${error.message}`, 'error'); return null; } 
                 return data; 
             },
             update: async (table, id, payload) => { 
-                const { data, error } = await sb.from(table).update(payload).eq('id', id).eq('user_id', currentUser.id).select(); 
-                if (error) { 
-                    console.error(`Error updating ${table}:`, error); 
-                    showToast(`Gagal update: ${error.message}`, 'error'); 
-                    return null; 
-                } 
+                const { data, error } = await sb.from(table).update(payload).eq('id', id).select(); 
+                if (error) { console.error(`Error updating ${table}:`, error); showToast(`Gagal update: ${error.message}`, 'error'); return null; } 
                 return data; 
             },
             remove: async (table, id) => { 
-                const { error } = await sb.from(table).delete().eq('id', id).eq('user_id', currentUser.id); 
-                if (error) { 
-                    console.error(`Error deleting ${table}:`, error); 
-                    showToast(`Gagal hapus: ${error.message}`, 'error'); 
-                    return false; 
-                } 
+                const { error } = await sb.from(table).delete().eq('id', id); 
+                if (error) { console.error(`Error deleting ${table}:`, error); showToast(`Gagal hapus: ${error.message}`, 'error'); return false; } 
                 return true; 
             }
         };
@@ -292,13 +286,10 @@
         
         async function renderContent(page) {
             const contentEl = document.getElementById('content');
-            
-            // Reset kelas ke default (bisa scroll normal)
             contentEl.className = 'flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 lg:p-6 bg-slate-100 dark:bg-slate-900';
             
-            // PERBAIKAN SCROLL HP: Gunakan absolute layout untuk halaman AI agar keyboard HP tidak merusak scroll
             if (page === 'ai') {
-                contentEl.className = 'absolute inset-0 top-16 flex flex-col overflow-hidden overscroll-contain p-4 bg-slate-100 dark:bg-slate-900';
+                contentEl.className = 'flex-1 min-h-0 flex flex-col overflow-hidden p-4 bg-slate-100 dark:bg-slate-900';
             }
             
             contentEl.innerHTML = `<div class="text-center py-10 text-slate-500">Memuat data...</div>`;
@@ -474,7 +465,7 @@
         async function saveSchoolProfile(data, id) {
             let result = null;
             if (id) {
-                const { data: res, error } = await sb.from('school_profile').update(data).eq('id', id).eq('user_id', currentUser.id).select();
+                const { data: res, error } = await sb.from('school_profile').update(data).eq('id', id).select();
                 if (error) { showToast(`Gagal update: ${error.message}`, 'error'); return false; }
                 result = res;
             } else {
@@ -595,13 +586,13 @@
                 <div class="p-3 flex-none border-t dark:border-slate-700 bg-white dark:bg-slate-800">
                     <div class="flex gap-2 items-end">
                         <input type="file" id="aiImageInput" accept="image/*" class="hidden" onchange="handleAIImageUpload(event)">
-                        <button onclick="document.getElementById('aiImageInput').click()" class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-white p-2.5 rounded-xl" title="Upload Gambar untuk Scanner">
+                        <button onclick="document.getElementById('aiImageInput').click()" class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-white p-2.5 rounded-xl flex-none" title="Upload Gambar untuk Scanner">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                         </button>
                         <textarea id="aiInput" rows="2" placeholder="Tulis perintah... (Contoh: Buatkan gambar pemandangan)" class="flex-1 px-4 py-2 rounded-xl border dark:bg-slate-700 dark:text-white resize-none focus:ring-2 focus:ring-blue-500 outline-none text-sm"></textarea>
-                        <button id="aiSendBtn" onclick="sendAI()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold flex items-center gap-1 text-sm">
+                        <button id="aiSendBtn" onclick="sendAI()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold flex items-center gap-1 text-sm flex-none">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9 2zm0 0v-8" /></svg>
-                            Kirim
+                            <span class="hidden sm:inline">Kirim</span>
                         </button>
                     </div>
                     <div class="flex justify-end gap-2 mt-2 flex-wrap">
@@ -681,7 +672,16 @@
         }
 
         function aiPrompt(text){document.getElementById('aiInput').value=text;sendAI();}
-        async function getSchoolContext(){return {students:await DB.get('students'),teachers:await DB.get('teachers'),subjects:await DB.get('subjects')};}
+        async function getSchoolContext(){
+            try {
+                const students = await DB.get('students');
+                const teachers = await DB.get('teachers');
+                const subjects = await DB.get('subjects');
+                return `Total Siswa: ${students.length}, Total Guru: ${teachers.length}, Mata Pelajaran: ${subjects.map(s=>s.name).join(', ') || 'Belum ada'}`;
+            } catch (e) {
+                return "Data sekolah tidak dapat dibaca dari database.";
+            }
+        }
         
         let aiChatHistory = [];
         
@@ -689,7 +689,10 @@
             const box=document.getElementById('aiMessages');
             if(!box)return;
             if(aiChatHistory.length === 0){
-                box.innerHTML = `<div class="flex justify-start"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="whitespace-pre-wrap text-gray-800">Halo! Saya adalah Asisten AI Guru Anda. Anda bisa meminta saya membuat soal, RPP, modul, men_scan teks dari gambar, atau membuat gambar (contoh: "Buatkan gambar pemandangan pegunungan").</div></div></div>`;
+                const div = document.createElement('div');
+                div.className = 'flex justify-start';
+                div.innerHTML = `<div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="whitespace-pre-wrap text-gray-800">Halo! Saya adalah Asisten AI Guru Anda. Anda bisa meminta saya membuat soal, RPP, modul, memindai teks dari gambar (Scanner), atau membuat gambar (Contoh: "Buatkan gambar pemandangan pegunungan").</div></div>`;
+                box.appendChild(div);
             }
         }
 
@@ -767,16 +770,23 @@
             
             const box=document.getElementById('aiMessages');
             
-            box.innerHTML += `<div class="flex justify-end fade-in"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-blue-600 text-white shadow-sm"><div class="text-xs opacity-70 mb-1">Anda</div><div class="whitespace-pre-wrap">${escapeHTML(prompt)}</div></div></div>`;
+            const userMsgDiv = document.createElement('div');
+            userMsgDiv.className = 'flex justify-end fade-in';
+            userMsgDiv.innerHTML = `<div class="max-w-[90%] rounded-xl px-4 py-3 bg-blue-600 text-white shadow-sm"><div class="text-xs opacity-70 mb-1">Anda</div><div class="whitespace-pre-wrap">${escapeHTML(prompt)}</div></div>`;
+            box.appendChild(userMsgDiv);
             
-            box.innerHTML += `<div id="typingIndicator" class="flex justify-start fade-in"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="animate-pulse text-blue-600">Sedang mengetik...</div></div></div>`;
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typingIndicator';
+            typingDiv.className = 'flex justify-start fade-in';
+            typingDiv.innerHTML = `<div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="animate-pulse text-blue-600">Sedang mengetik...</div></div>`;
+            box.appendChild(typingDiv);
             
             box.scrollTop = box.scrollHeight;
 
             try{
-                const ctx=await getSchoolContext();
+                const ctx = await getSchoolContext();
                 
-                const sys = `Anda adalah Asisten AI Guru. Data sekolah: ${JSON.stringify(ctx)}. Saat membuat soal pilihan ganda, WAJIB gunakan format PLAIN TEXT berikut:
+                const sys = `Anda adalah Asisten AI Guru. Data sekolah saat ini: ${ctx}. Saat membuat soal pilihan ganda, WAJIB gunakan format PLAIN TEXT berikut:
 1. Pertanyaan lengkap di sini?
 A. Pilihan A
 B. Pilihan B
@@ -788,18 +798,24 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
                 
                 aiChatHistory.push({role:'user', content:prompt});
                 
+                // PERBAIKAN: Jika prompt meminta gambar, langsung gunakan txt2img
+                if (/gambar|foto|image|gambarin|buatkan gambar|draw/i.test(prompt)) {
+                    const imgEl = await puter.ai.txt2img(prompt);
+                    const imgSrc = imgEl?.src || imgEl;
+                    
+                    document.getElementById('typingIndicator')?.remove();
+                    
+                    const aiMsgDiv = document.createElement('div');
+                    aiMsgDiv.className = 'flex justify-start fade-in';
+                    aiMsgDiv.innerHTML = `<div class="max-w-[95%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="text-sm mb-2 text-gray-700">Berikut adalah gambar yang Anda minta:</div><img src="${imgSrc}" alt="Generated Image" class="rounded-lg max-w-full h-auto border border-slate-200 shadow-md"></div>`;
+                    box.appendChild(aiMsgDiv);
+                    box.scrollTop = box.scrollHeight;
+                    return; 
+                }
+
                 const res = await puter.ai.chat([{role:'system',content:sys}, ...aiChatHistory]);
                 let ans = typeof res==='string' ? res : (res.message?.content || '');
                 
-                // Cek apakah prompt meminta pembuatan gambar
-                if (/gambar|foto|image|gambarin|buatkan gambar|draw/i.test(prompt)) {
-                    const imgResp = await puter.ai.txt2img(prompt);
-                    const imgHTML = `<div class="flex justify-start fade-in"><div class="max-w-[95%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="text-sm mb-2 text-gray-700">Berikut adalah gambar yang Anda minta:</div><img src="${imgResp}" alt="Generated Image" class="rounded-lg max-w-full h-auto border border-slate-200 shadow-md"></div></div>`;
-                    box.innerHTML += imgHTML;
-                    box.scrollTop = box.scrollHeight;
-                    return; // Hentikan di sani karena gambar tidak butuh tombol PDF/Word
-                }
-
                 aiChatHistory.push({role:'assistant', content:ans});
 
                 document.getElementById('typingIndicator')?.remove();
@@ -807,7 +823,10 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
                 const formattedHTML = formatSoalHTML(ans);
                 lastAIFormattedHTML = formattedHTML;
                 
-                box.innerHTML += `<div class="flex justify-start fade-in"><div class="max-w-[95%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="ai-output text-gray-800">${formattedHTML}</div></div></div>`;
+                const aiMsgDiv = document.createElement('div');
+                aiMsgDiv.className = 'flex justify-start fade-in';
+                aiMsgDiv.innerHTML = `<div class="max-w-[95%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="ai-output text-gray-800">${formattedHTML}</div></div>`;
+                box.appendChild(aiMsgDiv);
                 
                 box.scrollTop = box.scrollHeight;
 
@@ -832,14 +851,29 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
             const reader = new FileReader();
             reader.onload = async (e) => {
                 const imgUrl = e.target.result;
-                box.innerHTML += `<div class="flex justify-end fade-in"><div class="max-w-[80%] rounded-xl px-2 py-2 bg-blue-600 text-white shadow-sm"><div class="text-xs opacity-70 mb-1 px-2">Anda (Gambar)</div><img src="${imgUrl}" class="rounded-lg max-w-full h-auto"></div></div>`;
-                box.innerHTML += `<div id="typingIndicator" class="flex justify-start fade-in"><div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="animate-pulse text-blue-600">Sedang membaca teks gambar (OCR)...</div></div></div>`;
+                
+                const userMsgDiv = document.createElement('div');
+                userMsgDiv.className = 'flex justify-end fade-in';
+                userMsgDiv.innerHTML = `<div class="max-w-[80%] rounded-xl px-2 py-2 bg-blue-600 text-white shadow-sm"><div class="text-xs opacity-70 mb-1 px-2">Anda (Gambar)</div><img src="${imgUrl}" class="rounded-lg max-w-full h-auto"></div>`;
+                box.appendChild(userMsgDiv);
+                
+                const typingDiv = document.createElement('div');
+                typingDiv.id = 'typingIndicator';
+                typingDiv.className = 'flex justify-start fade-in';
+                typingDiv.innerHTML = `<div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="animate-pulse text-blue-600">Sedang membaca teks gambar (OCR)...</div></div>`;
+                box.appendChild(typingDiv);
+                
                 box.scrollTop = box.scrollHeight;
 
                 try {
-                    // Menggunakan Puter AI Vision untuk OCR
-                    const prompt = "Baca semua teks yang ada di gambar ini dan munculkan persis seperti aslinya tanpa penjelasan tambahan.";
-                    const res = await puter.ai.chat([{role: 'system', content: 'Anda adalah AI OCR yang membaca teks dari gambar dengan sangat akurat.'}, {role: 'user', content: [{type: 'text', text: prompt}, {type: 'image_url', url: imgUrl}]}]);
+                    // Menggunakan Puter AI Vision untuk OCR dengan format pesan standar OpenAI
+                    const messages = [
+                        { role: 'user', content: [
+                            { type: 'text', text: "Baca semua teks yang ada di gambar ini dan munculkan persis seperti aslinya. Jika ada struktur paragraf atau list, format menggunakan markdown." },
+                            { type: 'image_url', image_url: { url: imgUrl } }
+                        ]}
+                    ];
+                    const res = await puter.ai.chat(messages);
                     
                     let extractedText = typeof res === 'string' ? res : (res.message?.content || '');
                     
@@ -850,12 +884,15 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
                     }
 
                     const formattedHTML = marked.parse(extractedText);
-                    lastAIFormattedHTML = formattedHTML; // Simpan untuk ekspor
+                    lastAIFormattedHTML = formattedHTML; 
                     
-                    box.innerHTML += `<div class="flex justify-start fade-in"><div class="max-w-[95%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI (Teks hasil Scan)</div><div class="ai-output text-gray-800">${formattedHTML}</div></div></div>`;
+                    const aiMsgDiv = document.createElement('div');
+                    aiMsgDiv.className = 'flex justify-start fade-in';
+                    aiMsgDiv.innerHTML = `<div class="max-w-[95%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI (Teks hasil Scan)</div><div class="ai-output text-gray-800">${formattedHTML}</div></div>`;
+                    box.appendChild(aiMsgDiv);
+                    
                     box.scrollTop = box.scrollHeight;
                     
-                    // Tampilkan tombol export
                     ['aiPrintBtn', 'aiWordBtn'].forEach(id => document.getElementById(id).classList.remove('hidden'));
                     showToast('Teks berhasil dipindai!', 'success');
                     
@@ -864,7 +901,7 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
                     showToast('Gagal membaca gambar: ' + err.message, 'error');
                 } finally {
                     btn.disabled=false; btn.innerText='Kirim';
-                    event.target.value = ''; // Reset input file
+                    event.target.value = ''; 
                 }
             };
             reader.readAsDataURL(file);
@@ -911,7 +948,6 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
                     </div>
                     <div id="contentArea">${htmlContent}</div>
                     <script>
-                        // Render markdown jika ada
                         const contentArea = document.getElementById('contentArea');
                         const rawText = contentArea.textContent;
                         if (rawText.trim().startsWith('#') || rawText.includes('**')) {
