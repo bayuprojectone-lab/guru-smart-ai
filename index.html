@@ -148,7 +148,6 @@
             img.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="#1e3a8a"/><circle cx="50" cy="45" r="20" fill="white"/><rect x="35" y="40" width="10" height="6" rx="3" fill="#3b82f6"/><rect x="55" y="40" width="10" height="6" rx="3" fill="#3b82f6"/><path d="M30 55 Q50 70 70 55 L70 65 Q50 80 30 65 Z" fill="#3b82f6"/><text x="50" y="95" font-size="15" text-anchor="middle" fill="white" font-family="sans-serif" font-weight="bold">AI</text></svg>';
         }
 
-        // PERBAIKAN: Menghapus filter user_id agar data bisa dibaca bersama (RLS yang atur)
         const DB = {
             get: async (table) => { 
                 if (!currentUser || !currentUser.id) return [];
@@ -262,6 +261,7 @@
         function openModal(title, contentHtml) { document.getElementById('modalTitle').innerText = title; document.getElementById('modalContent').innerHTML = contentHtml; document.getElementById('modalContainer').classList.remove('hidden'); }
         function closeModal() { document.getElementById('modalContainer').classList.add('hidden'); }
 
+        // PERBAIKAN ERROR: Koma yang hilang di array menu telah dikembalikan
         const menus = [
             { id: 'dashboard', label: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', roles: ['admin', 'guru', 'siswa'] },
             { id: 'ai', label: 'Asisten AI Guru', icon: 'M12 2a7 7 0 00-7 7v3a7 7 0 0014 0V9a7 7 0 00-7-7zm-4 18h8M9 22h6', roles: ['admin', 'guru', 'siswa'] },
@@ -417,7 +417,6 @@
         async function renderAnnouncements() { const anns = await DB.get('announcements'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Pengumuman</h3><button onclick="annForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Buat Pengumuman</button></div><div class="space-y-4">${anns.length ? anns.map(a => `<div class="p-4 bg-slate-50 rounded-lg"><div class="flex justify-between"><h4 class="font-bold">${a.title}</h4><div class="flex gap-2"><button onclick="annForm('${a.id}')" class="text-xs text-blue-500">Edit</button><button onclick="deleteData('announcements', '${a.id}', renderAnnouncements)" class="text-xs text-red-500">Hapus</button></div></div><p class="text-xs text-slate-400 mt-1">${a.date}</p><p class="text-sm mt-2">${a.content}</p></div>`).join('') : '<p class="text-sm text-slate-500 text-center py-4">Belum ada pengumuman.</p>'}</div></div>`; }
         async function annForm(id = null) { let a = null; if(id) { a = (await DB.get('announcements')).find(x => x.id === id); } openModal('Buat Pengumuman', `<form id="annForm" class="space-y-4"><div><label class="block text-sm mb-1">Judul</label><input type="text" id="an_title" value="${a?.title || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Isi</label><textarea id="an_content" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${a?.content || ''}</textarea></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('annForm').onsubmit = async (e) => { e.preventDefault(); const payload = { title: document.getElementById('an_title').value, content: document.getElementById('an_content').value, date: new Date().toISOString().split('T')[0] }; await saveData('announcements', payload, id); closeModal(); renderAnnouncements(); }; }
 
-        // PERBAIKAN TOTAL: PROFIL SEKOLAH & PENGATURAN
         async function renderSettings() { 
             const profile = (await DB.get('school_profile'))[0] || {}; 
             document.getElementById('content').innerHTML = `
@@ -457,7 +456,6 @@
                 address: document.getElementById('p_address').value, 
                 principal: document.getElementById('p_principal').value 
             };
-            
             const success = await saveSchoolProfile(data, profileId || null);
             if(success) renderSettings(); 
         }
@@ -798,7 +796,6 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
                 
                 aiChatHistory.push({role:'user', content:prompt});
                 
-                // PERBAIKAN: Jika prompt meminta gambar, langsung gunakan txt2img
                 if (/gambar|foto|image|gambarin|buatkan gambar|draw/i.test(prompt)) {
                     const imgEl = await puter.ai.txt2img(prompt);
                     const imgSrc = imgEl?.src || imgEl;
@@ -839,7 +836,6 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
             }
         }
 
-        // FITUR BARU: Upload Gambar untuk Scanner (OCR) ke PDF/Word
         async function handleAIImageUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -866,7 +862,6 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
                 box.scrollTop = box.scrollHeight;
 
                 try {
-                    // Menggunakan Puter AI Vision untuk OCR dengan format pesan standar OpenAI
                     const messages = [
                         { role: 'user', content: [
                             { type: 'text', text: "Baca semua teks yang ada di gambar ini dan munculkan persis seperti aslinya. Jika ada struktur paragraf atau list, format menggunakan markdown." },
@@ -907,7 +902,6 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
             reader.readAsDataURL(file);
         }
 
-        // PERBAIKAN: Sistem Export PDF & Word yang bisa berjalan baik di HP Android dan iPhone
         function openPrintPreview(htmlContent) {
             const printWindow = window.open('', '_blank');
             if (!printWindow) {
