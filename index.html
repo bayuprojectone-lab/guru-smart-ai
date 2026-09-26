@@ -185,8 +185,8 @@
             let newUserId = data.user?.id;
             let newUserEmail = data.user?.email;
             if (newUserId) {
-                await sb.from('users').upsert({ id: newUserId, name: name, username: newUserEmail, role: 'guru', is_premium: false, payment_status: 'Belum Bayar' });
-                currentUser = { id: newUserId, email: newUserEmail, name: name, role: 'guru', is_premium: false, payment_status: 'Belum Bayar', avatar_url: AI_IMG }; 
+                await sb.from('users').upsert({ id: newUserId, name: name, username: newUserEmail, role: 'guru', is_premium: true, payment_status: 'Aktif' });
+                currentUser = { id: newUserId, email: newUserEmail, name: name, role: 'guru', is_premium: true, payment_status: 'Aktif', avatar_url: AI_IMG }; 
                 localStorage.setItem('gs_currentUser', JSON.stringify(currentUser)); 
                 showToast('Pendaftaran berhasil!', 'success'); 
                 initApp(); 
@@ -209,16 +209,15 @@
                 userData = userDataRes;
             } else {
                 const { data: newUserData } = await sb.from('users').upsert({ 
-                    id: data.user.id, name: email.split('@')[0], username: email, role: 'guru', is_premium: false, payment_status: 'Belum Bayar' 
+                    id: data.user.id, name: email.split('@')[0], username: email, role: 'guru', is_premium: true, payment_status: 'Aktif' 
                 }).select().maybeSingle();
                 if (newUserData) userData = newUserData;
-                else userData = { name: email, role: 'guru', is_premium: false, payment_status: 'Belum Bayar' };
+                else userData = { name: email, role: 'guru', is_premium: true, payment_status: 'Aktif' };
             }
             currentUser = { 
                 id: data.user.id, email: data.user.email, name: userData?.name || data.user.email, 
                 role: userData?.role || 'guru', avatar_url: userData?.avatar_url || AI_IMG,
-                is_premium: userData?.is_premium || false, payment_status: userData?.payment_status || 'Belum Bayar',
-                payment_sender: userData?.payment_sender || ''
+                is_premium: true, payment_status: 'Aktif'
             }; 
             localStorage.setItem('gs_currentUser', JSON.stringify(currentUser)); 
             showToast('Login berhasil!', 'success');
@@ -243,9 +242,8 @@
                     name: dbUser?.name || storedUser.name || data.session.user.email, 
                     role: dbUser?.role || storedUser.role || 'guru', 
                     avatar_url: dbUser?.avatar_url || storedUser.avatar_url || AI_IMG, 
-                    is_premium: dbUser?.is_premium ?? storedUser.is_premium ?? false, 
-                    payment_status: dbUser?.payment_status || storedUser.payment_status || 'Belum Bayar',
-                    payment_sender: dbUser?.payment_sender || storedUser.payment_sender || ''
+                    is_premium: true, 
+                    payment_status: 'Aktif'
                 }; 
                 
                 localStorage.setItem('gs_currentUser', JSON.stringify(currentUser)); 
@@ -261,7 +259,6 @@
         function openModal(title, contentHtml) { document.getElementById('modalTitle').innerText = title; document.getElementById('modalContent').innerHTML = contentHtml; document.getElementById('modalContainer').classList.remove('hidden'); }
         function closeModal() { document.getElementById('modalContainer').classList.add('hidden'); }
 
-        // PERBAIKAN ERROR: Koma yang hilang di array menu telah dikembalikan
         const menus = [
             { id: 'dashboard', label: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', roles: ['admin', 'guru', 'siswa'] },
             { id: 'ai', label: 'Asisten AI Guru', icon: 'M12 2a7 7 0 00-7 7v3a7 7 0 0014 0V9a7 7 0 00-7-7zm-4 18h8M9 22h6', roles: ['admin', 'guru', 'siswa'] },
@@ -296,7 +293,7 @@
             
             switch(page) {
                 case 'dashboard': await renderDashboard(); break;
-                case 'ai': renderAI(); break;
+                case 'ai': await renderAI(); break;
                 case 'kurikulum': await renderKurikulum(); break;
                 case 'teachers': await renderTeachers(); break;
                 case 'students': await renderStudents(); break;
@@ -493,88 +490,26 @@
             showToast('Foto profil diperbarui!', 'success'); 
         }
 
-        // AI ASSISTANT
+        // =======================
+        // AI ASSISTANT FUNCTIONALITY (Tanpa Panel Quick Action)
+        // =======================
         async function renderAI() {
             let isSignedIn = false;
-            const { data: userData } = await sb.from('users').select('*').eq('id', currentUser.id).maybeSingle();
-            if(userData) {
-                currentUser.is_premium = userData.is_premium;
-                currentUser.payment_status = userData.payment_status;
-                currentUser.payment_sender = userData.payment_sender;
-            }
-
-            let isPremium = currentUser.is_premium || false;
-
-            try {
-                isSignedIn = puter.auth.isSignedIn();
-            } catch (e) {
-                isSignedIn = false;
-            }
-
-            if (!isPremium) {
-                let infoStatus = '';
-                if(currentUser.payment_status === 'Menunggu Verifikasi') {
-                    infoStatus = `
-                    <div class="mt-4 bg-yellow-50 border border-yellow-200 text-yellow-800 p-4 rounded-lg text-sm">
-                        <strong>Status: Menunggu Verifikasi Admin</strong><br>
-                        Pembayaran Rp 25.000 atas nama <strong>${currentUser.payment_sender || '-'}</strong> sedang ditinjau. 
-                        Pastikan Anda sudah transfer ke DANA 081212514747 (BAYU PRATAMA). 
-                        Akses akan otomatis terbuka setelah admin menverifikasi.
-                    </div>`;
-                }
-
-                document.getElementById('content').innerHTML = `
-                <div class="flex items-center justify-center min-h-[80vh] p-4">
-                    <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl text-center max-w-md w-full border border-slate-100 dark:border-slate-700">
-                        <img src="${AI_IMG}" onerror="imgFallback(this)" class="w-24 h-24 rounded-2xl mx-auto mb-5 object-cover shadow-md bg-slate-200" alt="AI Logo">
-                        <h3 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Aktifkan Asisten AI</h3>
-                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
-                            Dapatkan akses <strong>SELAMANYA</strong> ke semua fitur AI (Buat Soal, Modul Ajar, RPP, Scanner Teks, Generator Gambar, dll).
-                        </p>
-                        
-                        <div class="bg-slate-50 dark:bg-slate-700 p-4 rounded-xl mb-6 border border-slate-100 dark:border-slate-600">
-                            <p class="text-sm text-slate-600 dark:text-slate-300 mb-1">Biaya Aktivasi (Bayar Sekali):</p>
-                            <p class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-emerald-600 mb-4">Rp 25.000</p>
-                            
-                            <div class="border-t border-slate-200 dark:border-slate-600 pt-3 mt-3">
-                                <p class="text-sm font-semibold text-slate-700 dark:text-slate-200">Pembayaran via DANA:</p>
-                                <p class="text-2xl font-mono font-bold text-blue-600 dark:text-blue-400 tracking-wider mt-1">081212514747</p>
-                                <p class="text-xs font-semibold text-slate-500 mt-1">a.n BAYU PRATAMA</p>
-                            </div>
-                        </div>
-                        
-                        ${currentUser.payment_status !== 'Menunggu Verifikasi' ? `
-                        <button onclick="confirmPaymentAI()" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 rounded-lg transition-colors shadow-md flex items-center justify-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                            Saya Sudah Bayar
-                        </button>
-                        <p class="text-xs text-slate-400 mt-4">Klik tombol di atas setelah melakukan transfer Rp 25.000 ke nomor DANA di atas.</p>
-                        ` : ''}
-                        
-                        ${infoStatus}
-                    </div>
-                </div>`;
-                return;
-            }
+            try { isSignedIn = puter.auth.isSignedIn(); } catch (e) { isSignedIn = false; }
 
             if (!isSignedIn) {
-                try {
-                    await puter.auth.signIn();
-                    renderAI(); 
-                } catch (e) {
-                    showToast('Gagal menghubungkan ke server AI.', 'error');
-                }
+                try { await puter.auth.signIn(); renderAI(); } catch (e) { showToast('Gagal menghubungkan ke server AI.', 'error'); }
                 return;
             }
 
             document.getElementById('content').innerHTML = `
-            <div class="flex flex-col flex-1 min-h-0 max-w-4xl w-full mx-auto bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden">
+            <div class="flex flex-col flex-1 min-h-0 max-w-5xl w-full mx-auto bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden">
                 <div class="p-4 flex-none border-b dark:border-slate-700 flex justify-between items-center bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700">
                     <div class="flex items-center gap-3">
                         <img src="${AI_IMG}" onerror="imgFallback(this)" alt="GURU SMART AI" class="w-10 h-10 rounded-xl object-cover shadow-sm bg-slate-200">
                         <div>
                             <h3 class="font-bold text-slate-800 dark:text-white">Asisten AI Guru</h3>
-                            <p class="text-xs text-slate-500 dark:text-slate-400">Dilengkapi Scanner Teks & Generator Gambar</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">AI Internasional Lengkap - Powered by Puter</p>
                         </div>
                     </div>
                 </div>
@@ -584,10 +519,10 @@
                 <div class="p-3 flex-none border-t dark:border-slate-700 bg-white dark:bg-slate-800">
                     <div class="flex gap-2 items-end">
                         <input type="file" id="aiImageInput" accept="image/*" class="hidden" onchange="handleAIImageUpload(event)">
-                        <button onclick="document.getElementById('aiImageInput').click()" class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-white p-2.5 rounded-xl flex-none" title="Upload Gambar untuk Scanner">
+                        <button onclick="document.getElementById('aiImageInput').click()" class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-white p-2.5 rounded-xl flex-none" title="Upload Gambar untuk Scanner OCR">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                         </button>
-                        <textarea id="aiInput" rows="2" placeholder="Tulis perintah... (Contoh: Buatkan gambar pemandangan)" class="flex-1 px-4 py-2 rounded-xl border dark:bg-slate-700 dark:text-white resize-none focus:ring-2 focus:ring-blue-500 outline-none text-sm"></textarea>
+                        <textarea id="aiInput" rows="2" placeholder="Tulis perintah bebas... (Contoh: Buatkan gambar pemandangan, jelaskan sejarah Indonesia, buat soal PG, terjemahkan teks, dll)" class="flex-1 px-4 py-2 rounded-xl border dark:bg-slate-700 dark:text-white resize-none focus:ring-2 focus:ring-blue-500 outline-none text-sm"></textarea>
                         <button id="aiSendBtn" onclick="sendAI()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold flex items-center gap-1 text-sm flex-none">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9 2zm0 0v-8" /></svg>
                             <span class="hidden sm:inline">Kirim</span>
@@ -622,54 +557,6 @@
             });
         }
 
-        async function confirmPaymentAI() {
-            openModal('Konfirmasi Aktivasi AI', `
-            <form id="paymentConfirmForm" class="space-y-4">
-                <div class="bg-yellow-50 dark:bg-slate-700 p-3 rounded-lg text-sm text-yellow-700 dark:text-yellow-300 text-center border border-yellow-200">
-                    <strong>Perhatian:</strong> Silakan transfer Rp 25.000 ke DANA <br><strong>081212514747 (BAYU PRATAMA)</strong>.<br>
-                    Setelah transfer, masukkan nama pengirim di bawah ini. Chat WA Ke 0812 1251 4747 Admin akan memverifikasi pembayaran Anda maksimal 1x24 Jam.
-                </div>
-                <div>
-                    <label class="block text-sm mb-1">Nama Pengirim DANA</label>
-                    <input type="text" id="dana_sender" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" placeholder="Masukkan nama Anda" required>
-                </div>
-                <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 rounded-lg font-semibold flex items-center justify-center gap-2">
-                    <svg class="animate-spin hidden h-5 w-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-                    <span id="btnTextAI">Kirim Bukti Transfer</span>
-                </button>
-            </form>`);
-
-            document.getElementById('paymentConfirmForm').onsubmit = async (e) => { 
-                e.preventDefault(); 
-                const btn = document.querySelector('#paymentConfirmForm button[type="submit"]'); 
-                const btnText = document.getElementById('btnTextAI'); 
-                const spinner = btn.querySelector('svg');
-                btn.disabled = true; btnText.innerText = 'Mengirim Data...'; spinner.classList.remove('hidden');
-                
-                try { 
-                    const senderName = document.getElementById('dana_sender').value;
-                    await sb.from('users').update({ 
-                        is_premium: false, 
-                        payment_sender: senderName, 
-                        payment_status: 'Menunggu Verifikasi' 
-                    }).eq('id', currentUser.id);
-                    
-                    currentUser.payment_sender = senderName;
-                    currentUser.payment_status = 'Menunggu Verifikasi';
-                    
-                    showToast('Bukti transfer terkirim! Tunggu verifikasi admin maks 1x24 Jam.', 'success'); 
-                    closeModal(); 
-                    renderAI(); 
-                } catch (err) { 
-                    showToast('Gagal mengirim data. Coba lagi.', 'error'); 
-                    btn.disabled = false; 
-                    btnText.innerText = 'Kirim Bukti Transfer'; 
-                    spinner.classList.add('hidden'); 
-                } 
-            };
-        }
-
-        function aiPrompt(text){document.getElementById('aiInput').value=text;sendAI();}
         async function getSchoolContext(){
             try {
                 const students = await DB.get('students');
@@ -689,7 +576,16 @@
             if(aiChatHistory.length === 0){
                 const div = document.createElement('div');
                 div.className = 'flex justify-start';
-                div.innerHTML = `<div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="whitespace-pre-wrap text-gray-800">Halo! Saya adalah Asisten AI Guru Anda. Anda bisa meminta saya membuat soal, RPP, modul, memindai teks dari gambar (Scanner), atau membuat gambar (Contoh: "Buatkan gambar pemandangan pegunungan").</div></div>`;
+                div.innerHTML = `<div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="whitespace-pre-wrap text-gray-800">Halo! Saya Asisten AI Guru pintar yang didukung AI internasional. Saya bisa membantu Anda:
+• Membuat soal pilihan ganda lengkap dengan kunci jawaban
+• Membuat RPP, modul ajar, dan perangkat kurikulum
+• Menganalisis karakter & psikologi siswa
+• Memindai teks dari gambar (Scanner OCR)
+• Membuat gambar ilustrasi untuk pelajaran
+• Menerjemahkan berbagai bahasa
+• Menjelaskan materi pelajaran apapun
+
+Ketik perintah apa saja di bawah ini, atau gunakan fitur export Word/PDF di bawah.</div></div>`;
                 box.appendChild(div);
             }
         }
@@ -784,7 +680,7 @@
             try{
                 const ctx = await getSchoolContext();
                 
-                const sys = `Anda adalah Asisten AI Guru. Data sekolah saat ini: ${ctx}. Saat membuat soal pilihan ganda, WAJIB gunakan format PLAIN TEXT berikut:
+                const sys = `Anda adalah Asisten AI Guru Pendidikan Digital yang sangat cerdas. Data sekolah saat ini: ${ctx}. Anda mampu menjawab pertanyaan apa saja dalam bahasa apapun, membuat soal, RPP, modul ajar, materi pelajaran, menganalisis siswa, menerjemahkan teks, dan banyak lagi. Saat membuat soal pilihan ganda, WAJIB gunakan format PLAIN TEXT berikut:
 1. Pertanyaan lengkap di sini?
 A. Pilihan A
 B. Pilihan B
@@ -796,7 +692,7 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
                 
                 aiChatHistory.push({role:'user', content:prompt});
                 
-                if (/gambar|foto|image|gambarin|buatkan gambar|draw/i.test(prompt)) {
+                if (/gambar|foto|image|gambarin|buatkan gambar|draw|ilustrasi|sketsa/i.test(prompt)) {
                     const imgEl = await puter.ai.txt2img(prompt);
                     const imgSrc = imgEl?.src || imgEl;
                     
