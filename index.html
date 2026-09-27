@@ -434,7 +434,7 @@
                             <label class="block text-sm mb-1">Kepala Sekolah</label>
                             <input type="text" id="p_principal" value="${profile.principal || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">
                         </div>
-                        <button type="button" onclick="saveSchoolProfileData('${profile.id || ''}')" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Simpan</button>
+                        <button type="button" onclick="saveSchoolProfileData('${profile.id || ''}')" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Simpan Profil</button>
                     </div>
                 </div>
                 <div class="bg-white p-6 rounded-xl">
@@ -477,7 +477,7 @@
                                 <label class="block text-sm mb-1">Teks Baris 3 (Website/No Telp)</label>
                                 <input type="text" id="kop_line3" value="${profile.kop_line3 || 'Email: sekolah@email.com | Telp: (021) 123456'}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">
                             </div>
-                            <button onclick="saveKopData('${profile.id || ''}')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Simpan Kop</button>
+                            <button onclick="saveKopData('${profile.id || ''}')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Simpan Kop Surat</button>
                         </div>
 
                         <div class="md:col-span-2">
@@ -550,6 +550,7 @@
         }
 
         async function saveKopData(profileId) {
+            // Kumpulkan data teks dari form
             const data = {
                 name: document.getElementById('p_name').value, 
                 address: document.getElementById('p_address').value, 
@@ -563,15 +564,21 @@
             const rightFile = document.getElementById('logoRightFile').files[0];
 
             showToast('Menyimpan kop...', 'info');
+            
+            // Upload logo kiri jika ada file baru
             if (leftFile) {
                 const ext = leftFile.name.split('.').pop();
                 const { data: upLeft, error: errLeft } = await sb.storage.from('avatars').upload('kop_left_' + Date.now() + '.' + ext, leftFile);
                 if (!errLeft) data.logo_left = sb.storage.from('avatars').getPublicUrl(upLeft.path).data.publicUrl;
+                else showToast('Gagal upload logo kiri: ' + errLeft.message, 'error');
             }
+            
+            // Upload logo kanan jika ada file baru
             if (rightFile) {
                 const ext = rightFile.name.split('.').pop();
                 const { data: upRight, error: errRight } = await sb.storage.from('avatars').upload('kop_right_' + Date.now() + '.' + ext, rightFile);
                 if (!errRight) data.logo_right = sb.storage.from('avatars').getPublicUrl(upRight.path).data.publicUrl;
+                else showToast('Gagal upload logo kanan: ' + errRight.message, 'error');
             }
 
             const success = await saveSchoolProfile(data, profileId || null);
@@ -735,7 +742,7 @@
                 div.className = 'flex justify-start';
                 div.innerHTML = `<div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="whitespace-pre-wrap text-gray-800">Halo! 👋 Senang bertemu dengan Anda. Saya Asisten AI Guru SMART. 
 
-Apa yang ingin Anda lakukan hari ini? Tulis Permintaan Anda 😊</div></div>`;
+Apa yang ingin Anda lakukan hari ini? Tulis Perintah Atau Pertanyaan 😊</div></div>`;
                 box.appendChild(div);
             }
         }
@@ -864,7 +871,7 @@ Apa yang ingin Anda lakukan hari ini? Tulis Permintaan Anda 😊</div></div>`;
                      - Di bagian paling akhir, buat ringkasan "Kunci Jawaban:".`;
                 
                 aiChatHistory.push({role:'user', content:prompt});
-
+                
                 const res = await puter.ai.chat([{role:'system',content:sys}, ...aiChatHistory]);
                 let ans = typeof res==='string' ? res : (res.message?.content || '');
                 
