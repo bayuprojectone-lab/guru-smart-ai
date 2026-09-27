@@ -33,6 +33,7 @@
         .ai-output ul, .ai-output ol { margin-left: 20px; margin-bottom: 8px; list-style-position: inside; }
         .ai-output table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
         .ai-output th, .ai-output td { border: 1px solid #000; padding: 6px; text-align: left; }
+        .ai-output img { max-width: 100%; border-radius: 8px; margin: 10px 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         
         .ai-output .soal-item {
             font-family: 'Times New Roman', Georgia, serif;
@@ -355,18 +356,17 @@
         }
         async function viewKurikulum(id) { const doc = (await DB.get('kurikulum')).find(k => k.id === id); if(!doc) return; const typeLabel = kurikulumTypes.find(t => t.id === doc.type)?.label || doc.type; openModal(typeLabel, `<div class="ai-output text-gray-800 dark:text-white">${marked.parse(doc.content)}</div><div class="mt-4 flex gap-2"><button onclick="printKurikulumDoc('${doc.id}')" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm flex-1">🖨️ Cetak / PDF</button><button onclick="closeModal()" class="bg-slate-500 text-white px-4 py-2 rounded-lg text-sm">Tutup</button></div>`); }
         function printKurikulumDoc(id) { 
-            DB.get('kurikulum').then(docs => { 
+            DB.get('kurikulum').then(async docs => { 
                 const doc = docs.find(k => k.id === id); 
                 if(!doc) return; 
                 const typeLabel = kurikulumTypes.find(t => t.id === doc.type)?.label || doc.type; 
                 const htmlContent = marked.parse(doc.content); 
+                const kopHTML = await generateKopHTML();
                 const printableHTML = `
                 <div style="font-family: 'Times New Roman', Georgia, serif; color: #000; padding: 0; margin: 0; width: 100%;">
-                    <div style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 25px;">
-                        <h2 style="margin:0; font-size: 18px;">${typeLabel.toUpperCase()}</h2>
-                        <p style="margin: 5px 0 0; font-size: 12px;">${doc.class_name} | ${doc.title}</p>
-                    </div>
+                    ${kopHTML}
                     <div class="ai-output" style="color: #000; margin: 0; padding: 0;">
+                        <h3 style="text-align: center; margin-top: 10px; margin-bottom: 15px;">${typeLabel.toUpperCase()}</h3>
                         ${htmlContent}
                     </div>
                 </div>`;
@@ -409,11 +409,12 @@
         async function confirmPayment(id) { await DB.update('keuangan', id, { status: 'Lunas' }); showToast('Pembayaran lunas!', 'success'); renderKeuangan(); }
 
         async function renderRapor() { if(currentUser.role === 'siswa') { printRapor(currentUser.id); return; } const students = await DB.get('students'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><h3 class="font-bold mb-4">Cetak Rapor</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4">${students.length ? students.map(s => `<button onclick="printRapor('${s.id}')" class="p-4 border rounded-lg text-left"><p class="font-bold">${s.name}</p><p class="text-xs text-slate-500">NIS: ${s.nis}</p><span class="mt-2 inline-block text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">Cetak</span></button>`).join('') : '<div class="col-span-3 text-center py-8 text-slate-500">Belum ada siswa.</div>'}</div></div>`; }
-        async function printRapor(studentId) { const student = (await DB.get('students')).find(s => s.id === studentId); const classes = (await DB.get('classes')).find(c => c.id === student.class_id); const grades = (await DB.get('grades')).filter(g => g.student_id === studentId); const subjects = await DB.get('subjects'); const profile = (await DB.get('school_profile'))[0] || {}; let gradeRows = ''; let totalScore = 0; let totalSubjects = 0; subjects.forEach(sub => { const subGrades = grades.filter(g => g.subject_id === sub.id); if(subGrades.length > 0){ const avgScore = Math.round(subGrades.reduce((s, g) => s + g.score, 0) / subGrades.length); const predikat = avgScore >= 90 ? 'A' : avgScore >= 80 ? 'B' : avgScore >= 70 ? 'C' : 'D'; gradeRows += `<tr><td style="padding: 8px; border: 1px solid #ddd;">${sub.name}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${sub.kkm}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${avgScore}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${predikat}</td></tr>`; totalScore += avgScore; totalSubjects++; } }); const finalAvg = totalSubjects ? (totalScore/totalSubjects).toFixed(1) : 0; const printableHTML = `<div style="font-family: Arial; color: #000;"><div style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px;"><h2>${profile.name || 'Sekolah'}</h2><p>${profile.address || ''}</p></div><h3 style="text-align: center; margin: 20px 0;">RAPOR SISWA</h3><table style="width: 100%; margin-bottom: 20px;"><tr><td>Nama</td><td>: ${student.name}</td><td>Kelas</td><td>: ${classes?.name || '-'}</td></tr><tr><td>NIS</td><td>: ${student.nis}</td><td>Semester</td><td>: ${profile.semester || '-'}</td></tr></table><table style="width: 100%; border-collapse: collapse;"><thead><tr style="background: #eee;"><th style="padding: 8px; border: 1px solid #ddd;">Mapel</th><th style="padding: 8px; border: 1px solid #ddd;">KKM</th><th style="padding: 8px; border: 1px solid #ddd;">Nilai</th><th style="padding: 8px; border: 1px solid #ddd;">Predikat</th></tr></thead><tbody>${gradeRows || `<tr><td colspan="4" style="text-align:center; padding: 10px; border: 1px solid #ddd;">Belum ada nilai</td></tr>`}</tbody><tfoot><tr><td colspan="2" style="padding: 8px; border: 1px solid #ddd; text-align: right;">Rata-rata:</td><td colspan="2" style="padding: 8px; border: 1px solid #ddd; text-align: center;">${finalAvg}</td></tr></tfoot></table></div>`; openPrintPreview(printableHTML); }
+        async function printRapor(studentId) { const student = (await DB.get('students')).find(s => s.id === studentId); const classes = (await DB.get('classes')).find(c => c.id === student.class_id); const grades = (await DB.get('grades')).filter(g => g.student_id === studentId); const subjects = await DB.get('subjects'); const profile = (await DB.get('school_profile'))[0] || {}; let gradeRows = ''; let totalScore = 0; let totalSubjects = 0; subjects.forEach(sub => { const subGrades = grades.filter(g => g.subject_id === sub.id); if(subGrades.length > 0){ const avgScore = Math.round(subGrades.reduce((s, g) => s + g.score, 0) / subGrades.length); const predikat = avgScore >= 90 ? 'A' : avgScore >= 80 ? 'B' : avgScore >= 70 ? 'C' : 'D'; gradeRows += `<tr><td style="padding: 8px; border: 1px solid #ddd;">${sub.name}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${sub.kkm}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${avgScore}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${predikat}</td></tr>`; totalScore += avgScore; totalSubjects++; } }); const finalAvg = totalSubjects ? (totalScore/totalSubjects).toFixed(1) : 0; const kopHTML = await generateKopHTML(); const printableHTML = `<div style="font-family: Arial; color: #000;">${kopHTML}<h3 style="text-align: center; margin: 20px 0;">RAPOR SISWA</h3><table style="width: 100%; margin-bottom: 20px;"><tr><td>Nama</td><td>: ${student.name}</td><td>Kelas</td><td>: ${classes?.name || '-'}</td></tr><tr><td>NIS</td><td>: ${student.nis}</td><td>Semester</td><td>: ${profile.semester || '-'}</td></tr></table><table style="width: 100%; border-collapse: collapse;"><thead><tr style="background: #eee;"><th style="padding: 8px; border: 1px solid #ddd;">Mapel</th><th style="padding: 8px; border: 1px solid #ddd;">KKM</th><th style="padding: 8px; border: 1px solid #ddd;">Nilai</th><th style="padding: 8px; border: 1px solid #ddd;">Predikat</th></tr></thead><tbody>${gradeRows || `<tr><td colspan="4" style="text-align:center; padding: 10px; border: 1px solid #ddd;">Belum ada nilai</td></tr>`}</tbody><tfoot><tr><td colspan="2" style="padding: 8px; border: 1px solid #ddd; text-align: right;">Rata-rata:</td><td colspan="2" style="padding: 8px; border: 1px solid #ddd; text-align: center;">${finalAvg}</td></tr></tfoot></table></div>`; openPrintPreview(printableHTML); }
 
         async function renderAnnouncements() { const anns = await DB.get('announcements'); document.getElementById('content').innerHTML = `<div class="bg-white p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold">Pengumuman</h3><button onclick="annForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Buat Pengumuman</button></div><div class="space-y-4">${anns.length ? anns.map(a => `<div class="p-4 bg-slate-50 rounded-lg"><div class="flex justify-between"><h4 class="font-bold">${a.title}</h4><div class="flex gap-2"><button onclick="annForm('${a.id}')" class="text-xs text-blue-500">Edit</button><button onclick="deleteData('announcements', '${a.id}', renderAnnouncements)" class="text-xs text-red-500">Hapus</button></div></div><p class="text-xs text-slate-400 mt-1">${a.date}</p><p class="text-sm mt-2">${a.content}</p></div>`).join('') : '<p class="text-sm text-slate-500 text-center py-4">Belum ada pengumuman.</p>'}</div></div>`; }
         async function annForm(id = null) { let a = null; if(id) { a = (await DB.get('announcements')).find(x => x.id === id); } openModal('Buat Pengumuman', `<form id="annForm" class="space-y-4"><div><label class="block text-sm mb-1">Judul</label><input type="text" id="an_title" value="${a?.title || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Isi</label><textarea id="an_content" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${a?.content || ''}</textarea></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('annForm').onsubmit = async (e) => { e.preventDefault(); const payload = { title: document.getElementById('an_title').value, content: document.getElementById('an_content').value, date: new Date().toISOString().split('T')[0] }; await saveData('announcements', payload, id); closeModal(); renderAnnouncements(); }; }
 
+        // PENGATURAN (PROFIL SEKOLAH & KOP)
         async function renderSettings() { 
             const profile = (await DB.get('school_profile'))[0] || {}; 
             document.getElementById('content').innerHTML = `
@@ -444,7 +445,163 @@
                         <button onclick="uploadAvatar()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm">Upload Foto</button>
                     </div>
                 </div>
+
+                <div class="bg-white p-6 rounded-xl md:col-span-2 border-t-4 border-indigo-600">
+                    <h3 class="font-bold mb-4">Kop Surat / Kepala Cetak Dokumen</h3>
+                    <p class="text-xs text-slate-500 mb-4">Pengaturan ini digunakan saat mencetak Rapor, Soal, RPP, dan dokumen lainnya.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+                        <div class="md:col-span-1 space-y-4">
+                            <div>
+                                <label class="block text-sm mb-1">Logo Kiri (Opsional)</label>
+                                <div class="flex items-center gap-2">
+                                    <img id="prevLogoLeft" src="${profile.logo_left || ''}" onerror="this.style.display='none'" class="w-16 h-16 object-contain border rounded-lg bg-slate-50">
+                                    <input type="file" id="logoLeftFile" accept="image/*" class="text-xs text-slate-500">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm mb-1">Logo Kanan (Opsional)</label>
+                                <div class="flex items-center gap-2">
+                                    <img id="prevLogoRight" src="${profile.logo_right || ''}" onerror="this.style.display='none'" class="w-16 h-16 object-contain border rounded-lg bg-slate-50">
+                                    <input type="file" id="logoRightFile" accept="image/*" class="text-xs text-slate-500">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm mb-1">Teks Baris 1 (Nama Sekolah)</label>
+                                <input type="text" id="kop_line1" value="${profile.kop_line1 || profile.name || 'NAMA SEKOLAH'}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">
+                            </div>
+                            <div>
+                                <label class="block text-sm mb-1">Teks Baris 2 (Alamat)</label>
+                                <input type="text" id="kop_line2" value="${profile.kop_line2 || profile.address || 'Alamat Sekolah'}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">
+                            </div>
+                            <div>
+                                <label class="block text-sm mb-1">Teks Baris 3 (Website/No Telp)</label>
+                                <input type="text" id="kop_line3" value="${profile.kop_line3 || 'Email: sekolah@email.com | Telp: (021) 123456'}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">
+                            </div>
+                            <button onclick="saveKopData('${profile.id || ''}')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Simpan Kop</button>
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <p class="text-sm font-semibold mb-2 text-slate-600">Pratinjau Kop:</p>
+                            <div class="border p-4 bg-white rounded-lg shadow-sm" id="kopPreviewArea">
+                                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px double #000; padding-bottom: 10px; margin-bottom: 20px;">
+                                    <div style="width: 80px; height: 80px;">
+                                        <img id="prevLogoLeftLarge" src="${profile.logo_left || ''}" onerror="this.style.display='none'" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                                    </div>
+                                    <div style="text-align: center; flex: 1; padding: 0 20px; font-family: Arial;">
+                                        <h2 style="margin: 0; font-size: 18px; font-weight: bold; text-transform: uppercase;">${profile.kop_line1 || profile.name || 'NAMA SEKOLAH'}</h2>
+                                        <p style="margin: 4px 0 0; font-size: 12px;">${profile.kop_line2 || profile.address || 'Alamat Sekolah'}</p>
+                                        <p style="margin: 2px 0 0; font-size: 12px;">${profile.kop_line3 || 'Email: sekolah@email.com | Telp: (021) 123456'}</p>
+                                    </div>
+                                    <div style="width: 80px; height: 80px;">
+                                        <img id="prevLogoRightLarge" src="${profile.logo_right || ''}" onerror="this.style.display='none'" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>`; 
+
+            document.getElementById('logoLeftFile').addEventListener('change', (e) => previewFile(e, 'prevLogoLeft', 'prevLogoLeftLarge'));
+            document.getElementById('logoRightFile').addEventListener('change', (e) => previewFile(e, 'prevLogoRight', 'prevLogoRightLarge'));
+            document.getElementById('kop_line1').addEventListener('input', updateKopPreview);
+            document.getElementById('kop_line2').addEventListener('input', updateKopPreview);
+            document.getElementById('kop_line3').addEventListener('input', updateKopPreview);
+        }
+
+        function previewFile(event, imgIdSmall, imgIdLarge) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const url = e.target.result;
+                const sm = document.getElementById(imgIdSmall);
+                const lg = document.getElementById(imgIdLarge);
+                if(sm) { sm.src = url; sm.style.display = 'block'; }
+                if(lg) { lg.src = url; lg.style.display = 'block'; }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function updateKopPreview() {
+            const l1 = document.getElementById('kop_line1').value || 'NAMA SEKOLAH';
+            const l2 = document.getElementById('kop_line2').value || 'Alamat Sekolah';
+            const l3 = document.getElementById('kop_line3').value || 'Email | Telp';
+            const area = document.getElementById('kopPreviewArea');
+            if(!area) return;
+            
+            const leftImg = document.getElementById('prevLogoLeftLarge')?.src || '';
+            const rightImg = document.getElementById('prevLogoRightLarge')?.src || '';
+
+            area.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px double #000; padding-bottom: 10px; margin-bottom: 20px;">
+                    <div style="width: 80px; height: 80px;">
+                        <img src="${leftImg}" onerror="this.style.display='none'" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                    </div>
+                    <div style="text-align: center; flex: 1; padding: 0 20px; font-family: Arial;">
+                        <h2 style="margin: 0; font-size: 18px; font-weight: bold; text-transform: uppercase;">${l1}</h2>
+                        <p style="margin: 4px 0 0; font-size: 12px;">${l2}</p>
+                        <p style="margin: 2px 0 0; font-size: 12px;">${l3}</p>
+                    </div>
+                    <div style="width: 80px; height: 80px;">
+                        <img src="${rightImg}" onerror="this.style.display='none'" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                    </div>
+                </div>`;
+        }
+
+        async function saveKopData(profileId) {
+            const data = {
+                name: document.getElementById('p_name').value, 
+                address: document.getElementById('p_address').value, 
+                principal: document.getElementById('p_principal').value,
+                kop_line1: document.getElementById('kop_line1').value,
+                kop_line2: document.getElementById('kop_line2').value,
+                kop_line3: document.getElementById('kop_line3').value
+            };
+
+            const leftFile = document.getElementById('logoLeftFile').files[0];
+            const rightFile = document.getElementById('logoRightFile').files[0];
+
+            showToast('Menyimpan kop...', 'info');
+            if (leftFile) {
+                const ext = leftFile.name.split('.').pop();
+                const { data: upLeft, error: errLeft } = await sb.storage.from('avatars').upload('kop_left_' + Date.now() + '.' + ext, leftFile);
+                if (!errLeft) data.logo_left = sb.storage.from('avatars').getPublicUrl(upLeft.path).data.publicUrl;
+            }
+            if (rightFile) {
+                const ext = rightFile.name.split('.').pop();
+                const { data: upRight, error: errRight } = await sb.storage.from('avatars').upload('kop_right_' + Date.now() + '.' + ext, rightFile);
+                if (!errRight) data.logo_right = sb.storage.from('avatars').getPublicUrl(upRight.path).data.publicUrl;
+            }
+
+            const success = await saveSchoolProfile(data, profileId || null);
+            if(success) renderSettings();
+        }
+
+        async function generateKopHTML() {
+            const profile = (await DB.get('school_profile'))[0] || {};
+            if(!profile.kop_line1 && !profile.logo_left) return ''; 
+            
+            const line1 = profile.kop_line1 || profile.name || 'NAMA SEKOLAH';
+            const line2 = profile.kop_line2 || profile.address || 'Alamat Sekolah';
+            const line3 = profile.kop_line3 || 'Email | Telp';
+            const leftLogo = profile.logo_left ? `<img src="${profile.logo_left}" style="max-width: 90px; max-height: 90px; object-fit: contain;">` : '';
+            const rightLogo = profile.logo_right ? `<img src="${profile.logo_right}" style="max-width: 90px; max-height: 90px; object-fit: contain;">` : '';
+
+            return `
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px double #000; padding-bottom: 10px; margin-bottom: 25px; font-family: Arial;">
+                <div style="width: 90px; height: 90px; display: flex; align-items: center; justify-content: center;">
+                    ${leftLogo}
+                </div>
+                <div style="text-align: center; flex: 1; padding: 0 20px;">
+                    <h2 style="margin: 0; font-size: 18px; font-weight: bold; text-transform: uppercase;">${line1}</h2>
+                    <p style="margin: 4px 0 0; font-size: 12px;">${line2}</p>
+                    <p style="margin: 2px 0 0; font-size: 12px;">${line3}</p>
+                </div>
+                <div style="width: 90px; height: 90px; display: flex; align-items: center; justify-content: center;">
+                    ${rightLogo}
+                </div>
+            </div>`;
         }
 
         async function saveSchoolProfileData(profileId) {
@@ -491,7 +648,7 @@
         }
 
         // =======================
-        // AI ASSISTANT FUNCTIONALITY (Tanpa Panel Quick Action)
+        // AI ASSISTANT FUNCTIONALITY
         // =======================
         async function renderAI() {
             let isSignedIn = false;
@@ -509,7 +666,7 @@
                         <img src="${AI_IMG}" onerror="imgFallback(this)" alt="GURU SMART AI" class="w-10 h-10 rounded-xl object-cover shadow-sm bg-slate-200">
                         <div>
                             <h3 class="font-bold text-slate-800 dark:text-white">Asisten AI Guru</h3>
-                            <p class="text-xs text-slate-500 dark:text-slate-400">AI Internasional Lengkap - Powered by Puter</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Siap Membantu Dengan Sepenuh Hati...</p>
                         </div>
                     </div>
                 </div>
@@ -522,7 +679,7 @@
                         <button onclick="document.getElementById('aiImageInput').click()" class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-white p-2.5 rounded-xl flex-none" title="Upload Gambar untuk Scanner OCR">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                         </button>
-                        <textarea id="aiInput" rows="2" placeholder="Tulis perintah bebas... (Contoh: Buatkan gambar pemandangan, jelaskan sejarah Indonesia, buat soal PG, terjemahkan teks, dll)" class="flex-1 px-4 py-2 rounded-xl border dark:bg-slate-700 dark:text-white resize-none focus:ring-2 focus:ring-blue-500 outline-none text-sm"></textarea>
+                        <textarea id="aiInput" rows="2" placeholder="Tulis perintah..." class="flex-1 px-4 py-2 rounded-xl border dark:bg-slate-700 dark:text-white resize-none focus:ring-2 focus:ring-blue-500 outline-none text-sm"></textarea>
                         <button id="aiSendBtn" onclick="sendAI()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold flex items-center gap-1 text-sm flex-none">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9 2zm0 0v-8" /></svg>
                             <span class="hidden sm:inline">Kirim</span>
@@ -576,16 +733,9 @@
             if(aiChatHistory.length === 0){
                 const div = document.createElement('div');
                 div.className = 'flex justify-start';
-                div.innerHTML = `<div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="whitespace-pre-wrap text-gray-800">Halo! Saya Asisten AI Guru pintar yang didukung AI internasional. Saya bisa membantu Anda:
-• Membuat soal pilihan ganda lengkap dengan kunci jawaban
-• Membuat RPP, modul ajar, dan perangkat kurikulum
-• Menganalisis karakter & psikologi siswa
-• Memindai teks dari gambar (Scanner OCR)
-• Membuat gambar ilustrasi untuk pelajaran
-• Menerjemahkan berbagai bahasa
-• Menjelaskan materi pelajaran apapun
+                div.innerHTML = `<div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="whitespace-pre-wrap text-gray-800">Halo! 👋 Senang bertemu dengan Anda. Saya Asisten AI Guru SMART. 
 
-Ketik perintah apa saja di bawah ini, atau gunakan fitur export Word/PDF di bawah.</div></div>`;
+Apa yang ingin Anda lakukan hari ini? Tulis Permintaan Anda 😊</div></div>`;
                 box.appendChild(div);
             }
         }
@@ -657,6 +807,10 @@ Ketik perintah apa saja di bawah ini, atau gunakan fitur export Word/PDF di bawa
             const prompt=input.value.trim();
             input.value='';
             
+            if(aiChatHistory.length > 10) {
+                aiChatHistory = aiChatHistory.slice(-10);
+            }
+            
             const btn=document.getElementById('aiSendBtn');
             btn.disabled=true; btn.innerText='Memproses...';
             
@@ -680,31 +834,36 @@ Ketik perintah apa saja di bawah ini, atau gunakan fitur export Word/PDF di bawa
             try{
                 const ctx = await getSchoolContext();
                 
-                const sys = `Anda adalah Asisten AI Guru Pendidikan Digital yang sangat cerdas. Data sekolah saat ini: ${ctx}. Anda mampu menjawab pertanyaan apa saja dalam bahasa apapun, membuat soal, RPP, modul ajar, materi pelajaran, menganalisis siswa, menerjemahkan teks, dan banyak lagi. Saat membuat soal pilihan ganda, WAJIB gunakan format PLAIN TEXT berikut:
-1. Pertanyaan lengkap di sini?
-A. Pilihan A
-B. Pilihan B
-C. Pilihan C
-D. Pilihan D
-Jawaban: B
+                const isGreeting = /^(hai|halo|hello|hi|selamat\s+(pagi|siang|sore|malam)|assalamualaikum|p|woi|woy|apa\s+kabar|bagaimana\s+kabarmu)\b/i.test(prompt.trim()) 
+                                   && prompt.trim().length < 30 
+                                   && !/(buat|buatkan|tolong\s+bikin|bikinkan|soal|pelajaran|materi|rpp|modul|latihan|ujian|ulangan|pertanyaan|essay|pilihan\s*ganda)/i.test(prompt);
 
-ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap soal. Di bagian paling akhir, buat ringkasan "Kunci Jawaban:".`;
+                const sys = isGreeting 
+                  ? `Anda adalah Asisten AI yang ramah dan natural. Data sekolah saat ini: ${ctx}. 
+                     
+                     ATURAN PERILAKU:
+                     - Jika user menyapa (halo, hai, selamat malam, dll), jawab dengan ramah dan natural seperti chat biasa. JANGAN langsung membahas pelajaran, soal, atau materi.
+                     - Perkenalkan diri singkat jika baru pertama kali disapa, sebut bahwa Anda siap membantu urusan sekolah/mengajar.
+                     - Tanyakan apa yang bisa dibantu, tapi tetap santai dan tidak memaksa.
+                     - Jawab singkat, hangat, dan manusiawi.`
+                  : `Anda adalah Asisten AI Guru Pendidikan Digital yang sangat cerdas. Data sekolah saat ini: ${ctx}. 
+                     
+                     Anda mampu menjawab pertanyaan apa saja dalam bahasa apapun, membuat soal, RPP, modul ajar, materi pelajaran, menganalisis siswa, menerjemahkan teks, dan banyak lagi. 
+                     
+                     Saat user meminta soal pilihan ganda, WAJIB gunakan format PLAIN TEXT berikut:
+                     1. Pertanyaan lengkap di sini?
+                     A. Pilihan A
+                     B. Pilihan B
+                     C. Pilihan C
+                     D. Pilihan D
+                     Jawaban: B
+                     
+                     ATURAN: 
+                     - Hanya 4 pilihan (A, B, C, D) tanpa E. 
+                     - Tulis "Jawaban: X" di akhir setiap soal. 
+                     - Di bagian paling akhir, buat ringkasan "Kunci Jawaban:".`;
                 
                 aiChatHistory.push({role:'user', content:prompt});
-                
-                if (/gambar|foto|image|gambarin|buatkan gambar|draw|ilustrasi|sketsa/i.test(prompt)) {
-                    const imgEl = await puter.ai.txt2img(prompt);
-                    const imgSrc = imgEl?.src || imgEl;
-                    
-                    document.getElementById('typingIndicator')?.remove();
-                    
-                    const aiMsgDiv = document.createElement('div');
-                    aiMsgDiv.className = 'flex justify-start fade-in';
-                    aiMsgDiv.innerHTML = `<div class="max-w-[95%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="text-sm mb-2 text-gray-700">Berikut adalah gambar yang Anda minta:</div><img src="${imgSrc}" alt="Generated Image" class="rounded-lg max-w-full h-auto border border-slate-200 shadow-md"></div>`;
-                    box.appendChild(aiMsgDiv);
-                    box.scrollTop = box.scrollHeight;
-                    return; 
-                }
 
                 const res = await puter.ai.chat([{role:'system',content:sys}, ...aiChatHistory]);
                 let ans = typeof res==='string' ? res : (res.message?.content || '');
@@ -798,7 +957,7 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
             reader.readAsDataURL(file);
         }
 
-        function openPrintPreview(htmlContent) {
+        async function openPrintPreview(htmlContent) {
             const printWindow = window.open('', '_blank');
             if (!printWindow) {
                 showToast('Pop-up diblokir browser. Mohon izinkan pop-up untuk mencetak.', 'error');
@@ -854,7 +1013,7 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
             }, 500);
         }
 
-        function printAIResult(includeAnswerKey = false) { 
+        async function printAIResult(includeAnswerKey = false) { 
             if(!lastAIFormattedHTML) return; 
             let cleanHTML = lastAIFormattedHTML;
             
@@ -866,19 +1025,17 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
                 cleanHTML = cleanHTML.replace(/hide-on-print/g, '');
             }
             
+            const kopHTML = await generateKopHTML();
             const printableHTML = `
             <div style="font-family: 'Times New Roman', Georgia, serif; color: #000; padding: 0; margin: 0; width: 100%;">
-                <div style="text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 25px;">
-                    <h2 style="margin:0; font-size: 18px;">SOAL PILIHAN GANDA</h2>
-                    <p style="margin: 5px 0 0; font-size: 12px;">Dibuat oleh GURU SMART</p>
-                </div>
+                ${kopHTML}
                 <div class="ai-output" style="color: #000; margin: 0; padding: 0;">${cleanHTML}</div>
             </div>`;
             
             openPrintPreview(printableHTML);
         }
 
-        function exportToWord() {
+        async function exportToWord() {
             if(!lastAIFormattedHTML) { showToast('Tidak ada teks untuk diekspor', 'error'); return; }
             
             const tempDiv = document.createElement('div');
@@ -923,6 +1080,8 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
             });
             
             let cleanHTML = tempDiv.innerHTML;
+            const profile = (await DB.get('school_profile'))[0] || {};
+            const kopHTML = await generateKopHTML();
             
             const header = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Soal - GURU SMART</title>
             <style>
@@ -930,14 +1089,9 @@ ATURAN: Hanya 4 pilihan (A, B, C, D) tanpa E. Tulis "Jawaban: X" di akhir setiap
                 body { font-family: 'Times New Roman', Georgia, serif; font-size: 12pt; color: #000; line-height: 1.5; }
                 h2 { text-align: center; font-size: 16pt; margin-bottom: 5px; }
                 p { text-align: center; font-size: 10pt; margin-top: 0; }
-            </style></head><body>
-            <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
-                <h2>SOAL PILIHAN GANDA</h2>
-                <p>Dibuat oleh GURU SMART</p>
-            </div>`;
+            </style></head><body>${kopHTML}<div class="ai-output">${cleanHTML}</div></body></html>`;
             
-            const footer = `</body></html>`;
-            const sourceHTML = header + cleanHTML + footer;
+            const sourceHTML = header;
             
             const blob = new Blob(['\ufeff', sourceHTML], {type: 'application/msword'});
             const url = URL.createObjectURL(blob);
