@@ -237,7 +237,7 @@
         async function printRapor(studentId) { const student = (await DB.get('students')).find(s => s.id === studentId); const classes = (await DB.get('classes')).find(c => c.id === student.class_id); const grades = (await DB.get('grades')).filter(g => g.student_id === studentId); const subjects = await DB.get('subjects'); const profile = (await DB.get('school_profile'))[0] || {}; let gradeRows = ''; let totalScore = 0; let totalSubjects = 0; subjects.forEach(sub => { const subGrades = grades.filter(g => g.subject_id === sub.id); if(subGrades.length > 0){ const avgScore = Math.round(subGrades.reduce((s, g) => s + g.score, 0) / subGrades.length); const predikat = avgScore >= 90 ? 'A' : avgScore >= 80 ? 'B' : avgScore >= 70 ? 'C' : 'D'; gradeRows += `<tr><td style="padding: 8px; border: 1px solid #ddd;">${sub.name}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${sub.kkm}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${avgScore}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${predikat}</td></tr>`; totalScore += avgScore; totalSubjects++; } }); const finalAvg = totalSubjects ? (totalScore/totalSubjects).toFixed(1) : 0; const kopHTML = await generateKopHTML(); const printableHTML = `<div style="font-family: Arial; color: #000;">${kopHTML}<h3 style="text-align: center; margin: 20px 0;">RAPOR SISWA</h3><table style="width: 100%; margin-bottom: 20px;"><tr><td>Nama</td><td>: ${student.name}</td><td>Kelas</td><td>: ${classes?.name || '-'}</td></tr><tr><td>NIS</td><td>: ${student.nis}</td><td>Semester</td><td>: ${profile.semester || '-'}</td></tr></table><table style="width: 100%; border-collapse: collapse;"><thead><tr style="background: #eee;"><th style="padding: 8px; border: 1px solid #ddd;">Mapel</th><th style="padding: 8px; border: 1px solid #ddd;">KKM</th><th style="padding: 8px; border: 1px solid #ddd;">Nilai</th><th style="padding: 8px; border: 1px solid #ddd;">Predikat</th></tr></thead><tbody>${gradeRows || `<tr><td colspan="4" style="text-align:center; padding: 10px; border: 1px solid #ddd;">Belum ada nilai</td></tr>`}</tbody><tfoot><tr><td colspan="2" style="padding: 8px; border: 1px solid #ddd; text-align: right;">Rata-rata:</td><td colspan="2" style="padding: 8px; border: 1px solid #ddd; text-align: center;">${finalAvg}</td></tr></tfoot></table></div>`; openPrintPreview(printableHTML); }
         async function renderAnnouncements() { const anns = await DB.get('announcements'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold text-slate-800 dark:text-white">Pengumuman</h3><button onclick="annForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Buat Pengumuman</button></div><div class="space-y-4">${anns.length ? anns.map(a => `<div class="p-4 bg-slate-50 dark:bg-slate-700 rounded-lg"><div class="flex justify-between"><h4 class="font-bold text-slate-800 dark:text-white">${a.title}</h4><div class="flex gap-2"><button onclick="annForm('${a.id}')" class="text-xs text-blue-500">Edit</button><button onclick="deleteData('announcements', '${a.id}', renderAnnouncements)" class="text-xs text-red-500">Hapus</button></div></div><p class="text-xs text-slate-400 dark:text-slate-500 mt-1">${a.date}</p><p class="text-sm mt-2 text-slate-700 dark:text-slate-300">${a.content}</p></div>`).join('') : '<p class="text-sm text-slate-500 dark:text-slate-400 text-center py-4">Belum ada pengumuman.</p>'}</div></div>`; }
         async function annForm(id = null) { let a = null; if(id) { a = (await DB.get('announcements')).find(x => x.id === id); } openModal('Buat Pengumuman', `<form id="annForm" class="space-y-4"><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Judul</label><input type="text" id="an_title" value="${a?.title || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Isi</label><textarea id="an_content" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${a?.content || ''}</textarea></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('annForm').onsubmit = async (e) => { e.preventDefault(); const payload = { title: document.getElementById('an_title').value, content: document.getElementById('an_content').value, date: new Date().toISOString().split('T')[0] }; await saveData('announcements', payload, id); closeModal(); renderAnnouncements(); }; }
-        async function renderSettings() { 
+                async function renderSettings() { 
             const profile = (await DB.get('school_profile'))[0] || {}; 
             document.getElementById('content').innerHTML = `
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -258,22 +258,30 @@
                         <button onclick="uploadAvatar()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm">Upload Foto</button>
                     </div>
                 </div>
+                
+                <!-- KOP SURAT DILEBARKAN KE KOLOM PENUH AGAR MEMANJANG KE SAMPING -->
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-xl md:col-span-2 border-t-4 border-indigo-600">
                     <h3 class="font-bold mb-4 text-slate-800 dark:text-white">Kop Surat / Kepala Cetak Dokumen</h3>
                     <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Pengaturan ini digunakan saat mencetak Rapor, Soal, RPP, dan dokumen lainnya.</p>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-                        <div class="md:col-span-1 space-y-4">
+                    
+                    <!-- Layout diganti menjadi 1 baris atas (Form) dan 1 baris bawah (Preview memanjang) -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                        <!-- Form Input -->
+                        <div class="lg:col-span-1 space-y-4">
                             <div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Logo Kiri (Opsional)</label><div class="flex items-center gap-2"><img id="prevLogoLeft" src="${profile.logo_left || ''}" onerror="this.style.display='none'" class="w-16 h-16 object-contain border dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-700"><input type="file" id="logoLeftFile" accept="image/*" class="text-xs text-slate-500 dark:text-slate-400"></div></div>
                             <div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Logo Kanan (Opsional)</label><div class="flex items-center gap-2"><img id="prevLogoRight" src="${profile.logo_right || ''}" onerror="this.style.display='none'" class="w-16 h-16 object-contain border dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-700"><input type="file" id="logoRightFile" accept="image/*" class="text-xs text-slate-500 dark:text-slate-400"></div></div>
-                            <div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Teks Baris 1a - Nama Dinas</label><input type="text" id="kop_line1" value="${profile.kop_line1 || profile.name || 'Nama Dinas'}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"placeholder="Contoh: DINAS PENDIDIKAN"</div>
-                            <div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Teks Baris 1b - Kabupaten / Kota</label><input type="text" id="kop_line1b" value="${profile.kop_line1b || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" placeholder="Contoh: KABUPATEN OKU TIMUR"></div>
-                            <div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Teks Baris 2 (Nama Sekolah)</label><input type="text" id="kop_line2" value="${profile.kop_line2 || profile.address || 'Nama Sekolah'}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"placeholder="Contoh: SMP KURUNGAN NYAWA 1"></div>
-                            <div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Teks Baris 3 (Alamat/Website/No Telp)</label><input type="text" id="kop_line3" value="${profile.kop_line3 || 'Alamat, Email, No. Telp'}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"placeholder="Contoh: Jl. Kurungan Nyawa 1"</div>
+                            <div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Teks Baris 1a - (Nama Dinas)</label><input type="text" id="kop_line1" value="${profile.kop_line1 || profile.name || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"placeholder="Contoh: DINAS PENDIDIKAN"></div>
+                            <div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Teks Baris 1b - Kabupaten/Kota</label><input type="text" id="kop_line1b" value="${profile.kop_line1b || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" placeholder="Contoh: KABUPATEN OKU TIMUR"></div>
+                            <div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Teks Baris 2 (Nama Sekolah)</label><input type="text" id="kop_line2" value="${profile.kop_line2 || profile.address || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"placeholder="Contoh: SMP OKU TIMUR"></div>
+                            <div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Teks Baris 3 (Alamat/Website/No Telp)</label><input type="text" id="kop_line3" value="${profile.kop_line3 || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"placeholder="Contoh: Jl. Kurungan Nyawa 1"></div>
                             <button onclick="saveKopData('${profile.id || ''}')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Simpan Kop Surat</button>
                         </div>
-                        <div class="md:col-span-2">
+                        
+                        <!-- Preview Kop Surat (Dibuat memanjang kesamping penuh) -->
+                        <div class="lg:col-span-2">
                             <p class="text-sm font-semibold mb-2 text-slate-600 dark:text-slate-300">Pratinjau Kop:</p>
-                            <div class="border dark:border-slate-600 p-4 bg-white dark:bg-slate-700 rounded-lg shadow-sm" id="kopPreviewArea"></div>
+                            <!-- CSS 'aspect-ratio' membuat area ini memanjang horizontal layaknya kertas surat, bukan kotak -->
+                            <div class="border dark:border-slate-600 p-4 bg-white dark:bg-slate-700 rounded-lg shadow-sm w-full" id="kopPreviewArea" style="aspect-ratio: 3 / 1;"></div>
                         </div>
                     </div>
                 </div>
@@ -286,18 +294,42 @@
             document.getElementById('kop_line3').addEventListener('input', updateKopPreview);
             updateKopPreview();
         }
-        function previewFile(event, imgIdSmall, imgIdLarge) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { const url = e.target.result; const sm = document.getElementById(imgIdSmall); const lg = document.getElementById(imgIdLarge); if(sm) { sm.src = url; sm.style.display = 'block'; } if(lg) { lg.src = url; lg.style.display = 'block'; } }; reader.readAsDataURL(file); }
-        function updateKopPreview() {
+        function previewFile(event, imgIdSmall, imgIdLarge) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { const url = e.target.result; const sm = document.getElementById(imgIdSmall); const lg = document.getElementById(imgIdLarge); if(sm) { sm.src = url; sm.style.display = 'block'; } if(lg) { lg.src = url; lg.style.display = 'block'; } updateKopPreview(); }; reader.readAsDataURL(file); }
+                        function updateKopPreview() {
             const l1 = document.getElementById('kop_line1')?.value || 'NAMA DINAS';
-            const l1b = document.getElementById('kop_line1b')?.value || 'NAMA KABUPATEN / KOTA';
-            const l2 = document.getElementById('kop_line2')?.value || 'NAMA SEKOLAH';
+            const l1b = document.getElementById('kop_line1b')?.value || '';
+            const l2 = document.getElementById('kop_line2')?.value || 'Nama Sekolah';
             const l3 = document.getElementById('kop_line3')?.value || 'Alamat | Telp';
             const area = document.getElementById('kopPreviewArea');
             if(!area) return;
             const leftImg = document.getElementById('prevLogoLeft')?.src || '';
             const rightImg = document.getElementById('prevLogoRight')?.src || '';
             let line1bHTML = l1b.trim() ? `<p style="margin: 2px 0 0; font-size: 14px; font-weight: bold; text-transform: uppercase; color: #000; line-height: 1.8;">${l1b}</p>` : '';
-            area.innerHTML = `<div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px double #000; padding-bottom: 10px; margin-bottom: 20px;"><div style="width: 80px; height: 80px;"><img src="${leftImg}" onerror="this.style.display='none'" style="max-width: 100%; max-height: 100%; object-fit: contain;"></div><div style="text-align: center; flex: 1; padding: 0 20px; font-family: Arial;"><h2 style="margin: 0; font-size: 18px; font-weight: bold; text-transform: uppercase; color: #000; line-height: 1.8;">${l1}</h2>${line1bHTML}<p style="margin: 4px 0 0; font-size: 14px; font-weight: bold; text-transform: uppercase; color: #000; line-height: 1.8;">${l2}</p><p style="margin: 2px 0 0; font-size: 12px; color: #000; line-height: 1.8;">${l3}</p></div><div style="width: 80px; height: 80px;"><img src="${rightImg}" onerror="this.style.display='none'" style="max-width: 100%; max-height: 100%; object-fit: contain;"></div></div>`;
+            
+            // Deteksi layar HP atau PC untuk menyesuaikan ukuran teks dan logo
+            const isMobile = window.innerWidth < 768;
+            const headerFontSize = isMobile ? '14px' : '18px';
+            const subFontSize = isMobile ? '12px' : '14px';
+            const addrFontSize = isMobile ? '10px' : '12px';
+            const logoSize = isMobile ? '60px' : '90px';
+
+            // Layout memanjang kesamping (kiri - tengah - kanan)
+            area.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 10px; border-bottom: 3px double #000; padding-bottom: 10px; margin-bottom: 20px; font-family: Arial;">
+                    <div style="width: ${logoSize}; min-width: ${logoSize}; height: ${logoSize}; display: flex; align-items: center; justify-content: flex-start;">
+                        <img src="${leftImg}" onerror="this.style.display='none'" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                    </div>
+                    <div style="text-align: center; flex: 1; min-width: 0;">
+                        <h2 style="margin: 0; font-size: ${headerFontSize}; font-weight: bold; text-transform: uppercase; color: #000; line-height: 1.8;">${l1}</h2>
+                        ${line1bHTML}
+                        <p style="margin: 4px 0 0; font-size: ${subFontSize}; font-weight: bold; text-transform: uppercase; color: #000; line-height: 1.8;">${l2}</p>
+                        <p style="margin: 2px 0 0; font-size: ${addrFontSize}; color: #000; line-height: 1.8;">${l3}</p>
+                    </div>
+                    <div style="width: ${logoSize}; min-width: ${logoSize}; height: ${logoSize}; display: flex; align-items: center; justify-content: flex-end;">
+                        <img src="${rightImg}" onerror="this.style.display='none'" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                    </div>
+                </div>
+            `;
         }
         async function saveKopData(profileId) {
             const data = { name: document.getElementById('p_name').value, address: document.getElementById('p_address').value, principal: document.getElementById('p_principal').value, kop_line1: document.getElementById('kop_line1').value, kop_line1b: document.getElementById('kop_line1b').value, kop_line2: document.getElementById('kop_line2').value, kop_line3: document.getElementById('kop_line3').value };
@@ -315,17 +347,11 @@
             const line1 = profile.kop_line1 || profile.name || 'NAMA SEKOLAH';
             const line1b = profile.kop_line1b || '';
             const line2 = profile.kop_line2 || profile.address || 'Alamat Sekolah';
-            const line3 = profile.kop_line3 || 'Alamat | Email | Telp';
-            const leftLogo = profile.logo_left ? `<img src="${profile.logo_left}" style="max-width: 80px; max-height: 80px; object-fit: contain;">` : '';
-            const rightLogo = profile.logo_right ? `<img src="${profile.logo_right}" style="max-width: 80px; max-height: 80px; object-fit: contain;">` : '';
+            const line3 = profile.kop_line3 || 'Email | Telp';
+            const leftLogo = profile.logo_left ? `<img src="${profile.logo_left}" style="max-width: 90px; max-height: 90px; object-fit: contain;">` : '';
+            const rightLogo = profile.logo_right ? `<img src="${profile.logo_right}" style="max-width: 90px; max-height: 90px; object-fit: contain;">` : '';
             let line1bHTML = line1b.trim() ? `<p style="margin: 2px 0 0; font-size: 18px; font-weight: bold; text-transform: uppercase; line-height: 1.8;">${line1b}</p>` : '';
-            return `<div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px double #000; padding-bottom: 10px; margin-bottom: 25px; font-family: Arial;"><div style="width: 90px; height: 90px; display: flex; align-items: center; justify-content: center;">${leftLogo}</div><div style="text-align: center; flex: 1; padding: 0 20px;"><h2 
-
-style="margin: 0; font-size: 18px; font-weight: bold; text-transform: uppercase; line-height: 1.8;">${line1}</h2>${line1bHTML}<p 
-
-style="margin: 4px 0 0; font-size: 20px; font-weight: bold; text-transform: uppercase; line-height: 1.8;">${line2}</p><p 
-
-style="margin: 2px 0 0; font-size: 12px; line-height: 1.8;">${line3}</p></div><div style="width: 90px; height: 90px; display: flex; align-items: center; justify-content: center;">${rightLogo}</div></div>`;
+            return `<div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px double #000; padding-bottom: 10px; margin-bottom: 25px; font-family: Arial;"><div style="width: 90px; height: 90px; display: flex; align-items: center; justify-content: center;">${leftLogo}</div><div style="text-align: center; flex: 1; padding: 0 20px;"><h2 style="margin: 0; font-size: 18px; font-weight: bold; text-transform: uppercase; line-height: 1.8;">${line1}</h2>${line1bHTML}<p style="margin: 4px 0 0; font-size: 14px; font-weight: bold; text-transform: uppercase; line-height: 1.8;">${line2}</p><p style="margin: 2px 0 0; font-size: 12px; line-height: 1.8;">${line3}</p></div><div style="width: 90px; height: 90px; display: flex; align-items: center; justify-content: center;">${rightLogo}</div></div>`;
         }
         async function saveSchoolProfileData(profileId) { const data = { name: document.getElementById('p_name').value, address: document.getElementById('p_address').value, principal: document.getElementById('p_principal').value }; const success = await saveSchoolProfile(data, profileId || null); if(success) renderSettings(); }
         async function saveSchoolProfile(data, id) { let result = null; if (id) { const { data: res, error } = await sb.from('school_profile').update(data).eq('id', id).eq('user_id', currentUser.id).select(); if (error) { showToast(`Gagal update: ${error.message}`, 'error'); return false; } result = res; } else { const { data: res, error } = await sb.from('school_profile').insert([{ ...data, user_id: currentUser.id }]).select(); if (error) { showToast(`Gagal simpan: ${error.message}`, 'error'); return false; } result = res; } if(result) { showToast('Profil sekolah berhasil disimpan!', 'success'); return true; } return false; }
