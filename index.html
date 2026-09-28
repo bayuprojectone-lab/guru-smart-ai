@@ -469,7 +469,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm mb-1">Teks Baris 1 (Nama Dinas)</label>
-                                <input type="text" id="kop_line1" value="${profile.kop_line1 || profile.name || 'NAMA DINAS'}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">
+                                <input type="text" id="kop_line1" value="${profile.kop_line1 || profile.name || 'Nama Dinas'}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">
                             </div>
                             <div>
                                 <label class="block text-sm mb-1">Teks Baris 2 (Nama Sekolah)</label>
@@ -477,7 +477,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm mb-1">Teks Baris 3 (Alamat/Website/No Telp)</label>
-                                <input type="text" id="kop_line3" value="${profile.kop_line3 || 'Alamat Sekolah,Email: sekolah@email.com | Telp: (021) 123456'}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">
+                                <input type="text" id="kop_line3" value="${profile.kop_line3 || 'Alamat,Email, No Telp'}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">
                             </div>
                             <button onclick="saveKopData('${profile.id || ''}')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Simpan Kop Surat</button>
                         </div>
@@ -490,9 +490,9 @@
                                         <img id="prevLogoLeftLarge" src="${profile.logo_left || ''}" onerror="this.style.display='none'" style="max-width: 100%; max-height: 100%; object-fit: contain;">
                                     </div>
                                     <div style="text-align: center; flex: 1; padding: 0 20px; font-family: Arial;">
-                                        <h2 style="margin: 0; font-size: 18px; font-weight: bold; text-transform: uppercase;">${profile.kop_line1 || profile.name || 'NAMA SEKOLAH'}</h2>
-                                        <p style="margin: 4px 0 0; font-size: 12px;">${profile.kop_line2 || profile.address || 'Alamat Sekolah'}</p>
-                                        <p style="margin: 2px 0 0; font-size: 12px;">${profile.kop_line3 || 'Email: sekolah@email.com | Telp: (021) 123456'}</p>
+                                        <h2 style="margin: 0; font-size: 18px; font-weight: bold; text-transform: uppercase;">${profile.kop_line1 || profile.name || 'NAMA DINAS'}</h2>
+                                        <p style="margin: 4px 0 0; font-size: 12px;">${profile.kop_line2 || profile.address || 'NAMA SEKOLAH'}</p>
+                                        <p style="margin: 2px 0 0; font-size: 12px;">${profile.kop_line3 || 'Alamat Sekolah | Email: sekolah@email.com | Telp: (021) 123456'}</p>
                                     </div>
                                     <div style="width: 80px; height: 80px;">
                                         <img id="prevLogoRightLarge" src="${profile.logo_right || ''}" onerror="this.style.display='none'" style="max-width: 100%; max-height: 100%; object-fit: contain;">
