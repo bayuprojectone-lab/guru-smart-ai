@@ -86,8 +86,8 @@
         </div>
     </div>
 
-    <!-- PERHATIAN: Perubahan kelas pada div di bawah ini (h-screen dan min-h-0) -->
-    <div id="appScreen" class="hidden h-screen lg:h-[100dvh] flex flex-col overflow-hidden bg-slate-100 dark:bg-slate-900">
+    <!-- PERHATIAN: Tinggi diubah menjadi h-screen h-[100dvh] agar tidak terpotong address bar di HP -->
+    <div id="appScreen" class="hidden h-screen h-[100dvh] flex flex-col overflow-hidden bg-slate-100 dark:bg-slate-900">
         <div class="flex flex-1 min-h-0 overflow-hidden">
             <aside id="sidebar" class="sidebar fixed lg:relative z-40 w-64 h-full bg-gradient-to-b from-blue-800 to-indigo-900 dark:from-slate-800 dark:to-slate-900 border-r border-blue-700/50 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out overflow-y-auto text-white">
                 <div class="p-4 flex items-center justify-between border-b border-blue-700/50 dark:border-slate-700">
@@ -350,7 +350,7 @@
                 const prompt = `Buatkan ${typeLabel} lengkap dan profesional untuk mata pelajaran ${subject.name}, kelas ${className}, Fase ${phase}, topik: ${topic}. Gunakan format markdown yang rapi. Sesuaikan dengan Kurikulum Merdeka.`; 
                 try { 
                     const sys = `Anda adalah ahli kurikulum pendidikan Indonesia. Buatkan ${typeLabel} yang sesuai dengan Kurikulum Merdeka. Gunakan format markdown yang baik dengan heading, bullet points, dan tabel jika perlu. Pastikan isi lengkap, profesional, dan siap digunakan guru.`; 
-                    const res = await puter.ai.chat([{role:'system',content:sys},{role:'user',content:prompt}]); const content = typeof res === 'string' ? res : (res.message?.content || ''); 
+                    const res = await puter.ai.chat([{role:'system',content:sys},{role:'user',content:prompt}]); const content = typeof res === 'string' ? res : (res?.message?.content || ''); 
                     if(!content) throw new Error("AI tidak memberikan respon. Coba lagi.");
                     await DB.insert('kurikulum', { type, title: `${typeLabel} - ${topic}`, subject_id: subjectId, class_name: className, content }); 
                     showToast('Dokumen berhasil dibuat!', 'success'); closeModal(); renderKurikulum(); 
@@ -553,7 +553,6 @@
         }
 
         async function saveKopData(profileId) {
-            // Kumpulkan data teks dari form
             const data = {
                 name: document.getElementById('p_name').value, 
                 address: document.getElementById('p_address').value, 
@@ -568,7 +567,6 @@
 
             showToast('Menyimpan kop...', 'info');
             
-            // Upload logo kiri jika ada file baru
             if (leftFile) {
                 const ext = leftFile.name.split('.').pop();
                 const { data: upLeft, error: errLeft } = await sb.storage.from('avatars').upload('kop_left_' + Date.now() + '.' + ext, leftFile);
@@ -576,7 +574,6 @@
                 else showToast('Gagal upload logo kiri: ' + errLeft.message, 'error');
             }
             
-            // Upload logo kanan jika ada file baru
             if (rightFile) {
                 const ext = rightFile.name.split('.').pop();
                 const { data: upRight, error: errRight } = await sb.storage.from('avatars').upload('kop_right_' + Date.now() + '.' + ext, rightFile);
@@ -696,14 +693,14 @@
                         </button>
                     </div>
                     <div class="flex justify-end gap-2 mt-2 flex-wrap">
-                        <button id="aiWordBtn" onclick="exportToWord()" class="hidden bg-blue-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>Word
+                        <button id="aiWordBtn" onclick="exportToWord()" class="hidden bg-blue-500 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>Word
                         </button>
-                        <button id="aiPrintBtn" onclick="printAIResult(false)" class="hidden bg-slate-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>PDF
+                        <button id="aiPrintBtn" onclick="printAIResult(false)" class="hidden bg-slate-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>PDF
                         </button>
-                        <button id="aiPrintKeyBtn" onclick="printAIResult(true)" class="hidden bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>Soal + Kunci
+                        <button id="aiPrintKeyBtn" onclick="printAIResult(true)" class="hidden bg-green-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>Kunci
                         </button>
                     </div>
                 </div>
@@ -745,7 +742,7 @@
                 div.className = 'flex justify-start';
                 div.innerHTML = `<div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="whitespace-pre-wrap text-gray-800">Halo! 👋 Senang bertemu dengan Anda. Saya Asisten AI Guru SMART. 
 
-Apa yang ingin Anda lakukan hari ini? Tulis Perintah Atau Pertanyaan 😊</div></div>`;
+Apa yang ingin Anda lakukan hari ini? Tulis Perintah Atau Pertanyaan😊</div></div>`;
                 box.appendChild(div);
             }
         }
@@ -753,7 +750,7 @@ Apa yang ingin Anda lakukan hari ini? Tulis Perintah Atau Pertanyaan 😊</div><
         function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
         function formatSoalHTML(rawText) {
-            let text = rawText;
+            let text = rawText || '';
             let kunciSection = '';
             const kunciMatch = text.match(/\n?\**(?:Kunci Jawaban|Jawaban)[*:]*\s*\n([\s\S]*?)$/i);
             if (kunciMatch) {
@@ -824,7 +821,7 @@ Apa yang ingin Anda lakukan hari ini? Tulis Perintah Atau Pertanyaan 😊</div><
             const btn=document.getElementById('aiSendBtn');
             btn.disabled=true; btn.innerText='Memproses...';
             
-            ['aiPrintBtn', 'aiWordBtn', 'aiPrintKeyBtn'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            ['aiPrintBtn', 'aiWordBtn', 'aiPrintKeyBtn'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
             
             const box=document.getElementById('aiMessages');
             
@@ -876,7 +873,11 @@ Apa yang ingin Anda lakukan hari ini? Tulis Perintah Atau Pertanyaan 😊</div><
                 aiChatHistory.push({role:'user', content:prompt});
                 
                 const res = await puter.ai.chat([{role:'system',content:sys}, ...aiChatHistory]);
-                let ans = typeof res==='string' ? res : (res.message?.content || '');
+                let ans = typeof res === 'string' ? res : (res?.message?.content || res?.text || '');
+                
+                if (!ans || ans.trim() === '') {
+                    ans = "Maaf, saya tidak dapat memberikan respons saat ini. Silakan coba lagi.";
+                }
                 
                 aiChatHistory.push({role:'assistant', content:ans});
 
@@ -892,7 +893,10 @@ Apa yang ingin Anda lakukan hari ini? Tulis Perintah Atau Pertanyaan 😊</div><
                 
                 box.scrollTop = box.scrollHeight;
 
-                ['aiPrintBtn', 'aiWordBtn', 'aiPrintKeyBtn'].forEach(id => document.getElementById(id).classList.remove('hidden'));
+                ['aiPrintBtn', 'aiWordBtn', 'aiPrintKeyBtn'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) el.classList.remove('hidden');
+                });
             }catch(e){
                 document.getElementById('typingIndicator')?.remove();
                 showToast('Error AI: ' + e.message,'error');
@@ -935,11 +939,11 @@ Apa yang ingin Anda lakukan hari ini? Tulis Perintah Atau Pertanyaan 😊</div><
                     ];
                     const res = await puter.ai.chat(messages);
                     
-                    let extractedText = typeof res === 'string' ? res : (res.message?.content || '');
+                    let extractedText = typeof res === 'string' ? res : (res?.message?.content || res?.text || '');
                     
                     document.getElementById('typingIndicator')?.remove();
 
-                    if (!extractedText.trim()) {
+                    if (!extractedText || !extractedText.trim()) {
                         throw new Error("Tidak ada teks terdeteksi di gambar.");
                     }
 
@@ -953,7 +957,10 @@ Apa yang ingin Anda lakukan hari ini? Tulis Perintah Atau Pertanyaan 😊</div><
                     
                     box.scrollTop = box.scrollHeight;
                     
-                    ['aiPrintBtn', 'aiWordBtn'].forEach(id => document.getElementById(id).classList.remove('hidden'));
+                    ['aiPrintBtn', 'aiWordBtn'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if(el) el.classList.remove('hidden');
+                    });
                     showToast('Teks berhasil dipindai!', 'success');
                     
                 } catch (err) {
