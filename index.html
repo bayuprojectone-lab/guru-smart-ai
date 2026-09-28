@@ -86,41 +86,44 @@
         </div>
     </div>
 
-    <div id="appScreen" class="hidden h-[100dvh] flex flex-col overflow-hidden bg-slate-100 dark:bg-slate-900">
-        <aside id="sidebar" class="sidebar fixed lg:relative z-40 w-64 h-full bg-gradient-to-b from-blue-800 to-indigo-900 dark:from-slate-800 dark:to-slate-900 border-r border-blue-700/50 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out overflow-y-auto text-white">
-            <div class="p-4 flex items-center justify-between border-b border-blue-700/50 dark:border-slate-700">
-                <div class="flex items-center space-x-2">
-                    <img src="https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe" onerror="imgFallback(this)" alt="Logo" class="w-10 h-10 rounded-lg object-cover bg-slate-200">
-                    <div><h1 class="font-bold text-white text-lg leading-tight">GURU SMART</h1></div>
-                </div>
-                <button onclick="toggleSidebar()" class="lg:hidden text-slate-300"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
-            </div>
-            <nav id="navMenu" class="p-4 space-y-1 text-sm"></nav>
-        </aside>
-        <div id="sidebarOverlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-black/50 z-30"></div>
-        <main class="flex-1 flex flex-col overflow-hidden bg-slate-100 dark:bg-slate-900">
-            <header class="h-16 flex-none bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 lg:px-6 shadow-sm">
-                <div class="flex items-center space-x-4">
-                    <button onclick="toggleSidebar()" class="lg:hidden text-slate-500"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
-                    <h2 id="pageTitle" class="text-xl font-semibold text-slate-800 dark:text-white">Dashboard</h2>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <button onclick="toggleDarkMode()" class="text-slate-500 hover:text-blue-600">
-                        <svg id="iconSun" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                        <svg id="iconMoon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-                    </button>
+    <!-- PERHATIAN: Perubahan kelas pada div di bawah ini (h-screen dan min-h-0) -->
+    <div id="appScreen" class="hidden h-screen lg:h-[100dvh] flex flex-col overflow-hidden bg-slate-100 dark:bg-slate-900">
+        <div class="flex flex-1 min-h-0 overflow-hidden">
+            <aside id="sidebar" class="sidebar fixed lg:relative z-40 w-64 h-full bg-gradient-to-b from-blue-800 to-indigo-900 dark:from-slate-800 dark:to-slate-900 border-r border-blue-700/50 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out overflow-y-auto text-white">
+                <div class="p-4 flex items-center justify-between border-b border-blue-700/50 dark:border-slate-700">
                     <div class="flex items-center space-x-2">
-                        <img id="userAvatar" src="https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe" onerror="imgFallback(this)" alt="User" class="w-8 h-8 rounded-full object-cover bg-blue-500 ring-2 ring-blue-500">
-                        <div class="hidden md:block">
-                            <p id="userName" class="text-sm font-medium text-slate-800 dark:text-white">Admin</p>
-                            <p id="userRole" class="text-xs text-slate-500 dark:text-slate-400 capitalize">Administrator</p>
-                        </div>
-                        <button onclick="logout()" class="text-red-500 hover:text-red-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg></button>
+                        <img src="https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe" onerror="imgFallback(this)" alt="Logo" class="w-10 h-10 rounded-lg object-cover bg-slate-200">
+                        <div><h1 class="font-bold text-white text-lg leading-tight">GURU SMART</h1></div>
                     </div>
+                    <button onclick="toggleSidebar()" class="lg:hidden text-slate-300"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
                 </div>
-            </header>
-            <div id="content" class="flex-1 min-h-0 overflow-y-auto p-4 lg:p-6 bg-slate-100 dark:bg-slate-900"></div>
-        </main>
+                <nav id="navMenu" class="p-4 space-y-1 text-sm"></nav>
+            </aside>
+            <div id="sidebarOverlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-black/50 z-30"></div>
+            <main class="flex-1 flex flex-col min-h-0 overflow-hidden bg-slate-100 dark:bg-slate-900">
+                <header class="h-16 flex-none bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 lg:px-6 shadow-sm">
+                    <div class="flex items-center space-x-4">
+                        <button onclick="toggleSidebar()" class="lg:hidden text-slate-500"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
+                        <h2 id="pageTitle" class="text-xl font-semibold text-slate-800 dark:text-white">Dashboard</h2>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button onclick="toggleDarkMode()" class="text-slate-500 hover:text-blue-600">
+                            <svg id="iconSun" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                            <svg id="iconMoon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                        </button>
+                        <div class="flex items-center space-x-2">
+                            <img id="userAvatar" src="https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe" onerror="imgFallback(this)" alt="User" class="w-8 h-8 rounded-full object-cover bg-blue-500 ring-2 ring-blue-500">
+                            <div class="hidden md:block">
+                                <p id="userName" class="text-sm font-medium text-slate-800 dark:text-white">Admin</p>
+                                <p id="userRole" class="text-xs text-slate-500 dark:text-slate-400 capitalize">Administrator</p>
+                            </div>
+                            <button onclick="logout()" class="text-red-500 hover:text-red-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg></button>
+                        </div>
+                    </div>
+                </header>
+                <div id="content" class="flex-1 min-h-0 overflow-y-auto p-4 lg:p-6 bg-slate-100 dark:bg-slate-900"></div>
+            </main>
+        </div>
     </div>
 
     <div id="modalContainer" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
