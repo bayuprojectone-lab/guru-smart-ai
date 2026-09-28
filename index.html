@@ -86,8 +86,7 @@
         </div>
     </div>
 
-    <!-- PERHATIAN: Tinggi diubah menjadi h-screen h-[100dvh] agar tidak terpotong address bar di HP -->
-    <div id="appScreen" class="hidden h-screen h-[100dvh] flex flex-col overflow-hidden bg-slate-100 dark:bg-slate-900">
+    <div id="appScreen" class="hidden fixed inset-0 flex flex-col overflow-hidden bg-slate-100 dark:bg-slate-900">
         <div class="flex flex-1 min-h-0 overflow-hidden">
             <aside id="sidebar" class="sidebar fixed lg:relative z-40 w-64 h-full bg-gradient-to-b from-blue-800 to-indigo-900 dark:from-slate-800 dark:to-slate-900 border-r border-blue-700/50 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out overflow-y-auto text-white">
                 <div class="p-4 flex items-center justify-between border-b border-blue-700/50 dark:border-slate-700">
@@ -350,7 +349,7 @@
                 const prompt = `Buatkan ${typeLabel} lengkap dan profesional untuk mata pelajaran ${subject.name}, kelas ${className}, Fase ${phase}, topik: ${topic}. Gunakan format markdown yang rapi. Sesuaikan dengan Kurikulum Merdeka.`; 
                 try { 
                     const sys = `Anda adalah ahli kurikulum pendidikan Indonesia. Buatkan ${typeLabel} yang sesuai dengan Kurikulum Merdeka. Gunakan format markdown yang baik dengan heading, bullet points, dan tabel jika perlu. Pastikan isi lengkap, profesional, dan siap digunakan guru.`; 
-                    const res = await puter.ai.chat([{role:'system',content:sys},{role:'user',content:prompt}]); const content = typeof res === 'string' ? res : (res?.message?.content || ''); 
+                    const res = await puter.ai.chat([{role:'system',content:sys},{role:'user',content:prompt}]); const content = typeof res === 'string' ? res : (res?.message?.content || res?.text || ''); 
                     if(!content) throw new Error("AI tidak memberikan respon. Coba lagi.");
                     await DB.insert('kurikulum', { type, title: `${typeLabel} - ${topic}`, subject_id: subjectId, class_name: className, content }); 
                     showToast('Dokumen berhasil dibuat!', 'success'); closeModal(); renderKurikulum(); 
@@ -742,7 +741,7 @@
                 div.className = 'flex justify-start';
                 div.innerHTML = `<div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500">Asisten AI</div><div class="whitespace-pre-wrap text-gray-800">Halo! 👋 Senang bertemu dengan Anda. Saya Asisten AI Guru SMART. 
 
-Apa yang ingin Anda lakukan hari ini? Tulis Perintah Atau Pertanyaan😊</div></div>`;
+Apa yang ingin Anda lakukan hari ini? Tulis Perintah Atau Pertanyaan 😊</div></div>`;
                 box.appendChild(div);
             }
         }
@@ -821,7 +820,10 @@ Apa yang ingin Anda lakukan hari ini? Tulis Perintah Atau Pertanyaan😊</div></
             const btn=document.getElementById('aiSendBtn');
             btn.disabled=true; btn.innerText='Memproses...';
             
-            ['aiPrintBtn', 'aiWordBtn', 'aiPrintKeyBtn'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
+            ['aiPrintBtn', 'aiWordBtn', 'aiPrintKeyBtn'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.classList.add('hidden');
+            });
             
             const box=document.getElementById('aiMessages');
             
@@ -876,7 +878,7 @@ Apa yang ingin Anda lakukan hari ini? Tulis Perintah Atau Pertanyaan😊</div></
                 let ans = typeof res === 'string' ? res : (res?.message?.content || res?.text || '');
                 
                 if (!ans || ans.trim() === '') {
-                    ans = "Maaf, saya tidak dapat memberikan respons saat ini. Silakan coba lagi.";
+                    throw new Error("Respon AI kosong atau tidak valid.");
                 }
                 
                 aiChatHistory.push({role:'assistant', content:ans});
