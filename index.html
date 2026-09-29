@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://js.puter.com/v2/"></script>
@@ -68,22 +68,22 @@
         .dark #aiMessages .text-gray-800 { color: rgb(241 245 249) !important; }
         .dark #aiMessages .text-gray-500 { color: rgb(148 163 184) !important; }
         
-        /* CSS KAMERA ASLI BROWSER */
-        #qr-reader-container { width: 100%; height: 350px; background: #000; border-radius: 8px; overflow: hidden; position: relative; }
-        #qr-video { width: 100% !important; height: 100% !important; object-fit: cover !important; border-radius: 8px; }
-        #qr-canvas { display: none; }
-        
-        /* DESAIN KARTU SISWA */
-        .student-card-print { width: 8.5cm; height: 5.4cm; border-radius: 12px; overflow: hidden; display: flex; font-family: 'Arial', sans-serif; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative; background: white; border: 2px solid #1e3a8a; }
+        /* DESAIN KARTU SISWA (UKURAN BESAR UNTUK MODAL) */
+        .student-card-modal { width: 8.5cm; height: 5.4cm; border-radius: 12px; overflow: hidden; display: flex; font-family: 'Arial', sans-serif; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative; background: white; border: 2px solid #1e3a8a; margin: 0 auto; }
         .card-left { width: 35%; background: linear-gradient(135deg, #1e3a8a 0%, #4c1d95 100%); padding: 10px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; color: white; text-align: center; position: relative; overflow: hidden; }
-        .card-left::before { content: ''; position: absolute; top: -20px; left: -20px; width: 60px; height: 60px; background: rgba(255,255,255,0.1); border-radius: 50%; }
-        .card-left::after { content: ''; position: absolute; bottom: -30px; right: -30px; width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 50%; }
         .card-right { width: 65%; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
         .card-right::before { content: ''; position: absolute; top: 0; left: 0; width: 5px; height: 100%; background: linear-gradient(180deg, #3b82f6 0%, #8b5cf6 100%); }
         .card-logo { width: 40px; height: 40px; object-fit: contain; z-index: 2; }
         .card-photo { width: 70px; height: 80px; object-fit: cover; border: 3px solid white; border-radius: 6px; background: #cbd5e1; z-index: 2; }
         .card-qr { width: 60px; height: 60px; background: white; padding: 3px; border-radius: 4px; z-index: 2; }
-        .card-signature { height: 25px; object-fit: contain; margin-bottom: -2px; }
+        
+        /* DESAIN KARTU SISWA (UKURAN KECIL UNTUK CETAK MASSAL) */
+        .student-card-print { width: 8.5cm; height: 5.4cm; border-radius: 10px; overflow: hidden; display: flex; font-family: 'Arial', sans-serif; position: relative; background: white; border: 1.5px solid #1e3a8a; page-break-inside: avoid; }
+        
+        /* Tabel Absensi Bulanan */
+        .att-table { font-size: 10px; border-collapse: collapse; width: 100%; }
+        .att-table th, .att-table td { border: 1px solid #cbd5e1; padding: 2px; text-align: center; }
+        .att-table th { background: #f1f5f9; }
     </style>
 </head>
 <body class="bg-slate-100 dark:bg-slate-900 transition-colors duration-300">
@@ -125,7 +125,7 @@
             <main class="flex-1 flex flex-col min-h-0 overflow-hidden bg-slate-100 dark:bg-slate-900">
                 <header class="h-16 flex-none bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 lg:px-6 shadow-sm">
                     <div class="flex items-center space-x-4">
-                        <button onclick="toggleSidebar()" class="lg:hidden text-slate-500"><svg class="w-6 h-6" fill="none, stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
+                        <button onclick="toggleSidebar()" class="lg:hidden text-slate-500"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
                         <h2 id="pageTitle" class="text-xl font-semibold text-slate-800 dark:text-white">Dashboard</h2>
                     </div>
                     <div class="flex items-center space-x-4">
@@ -170,7 +170,20 @@
             update: async (table, id, payload) => { const { data, error } = await sb.from(table).update(payload).eq('id', id).eq('user_id', currentUser.id).select(); if (error) { console.error(`Error updating ${table}:`, error); showToast(`Gagal update: ${error.message}`, 'error'); return null; } return data; },
             remove: async (table, id) => { const { error } = await sb.from(table).delete().eq('id', id).eq('user_id', currentUser.id); if (error) { console.error(`Error deleting ${table}:`, error); showToast(`Gagal hapus: ${error.message}`, 'error'); return false; } return true; }
         };
-        let currentUser = null; let currentPage = 'dashboard'; let videoStream = null;
+        let currentUser = null; let currentPage = 'dashboard'; let html5QrCode = null;
+        
+        function formatDateID(dateStr) {
+            if(!dateStr) return '-';
+            try {
+                const date = new Date(dateStr);
+                if (isNaN(date.getTime())) return dateStr;
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                return `${day}-${month}-${year}`;
+            } catch(e) { return dateStr; }
+        }
+        
         function toggleAuth(form) { if(form === 'register') { document.getElementById('loginForm').classList.add('hidden'); document.getElementById('registerForm').classList.remove('hidden'); } else { document.getElementById('registerForm').classList.add('hidden'); document.getElementById('loginForm').classList.remove('hidden'); } }
         document.getElementById('registerForm').addEventListener('submit', async (e) => { e.preventDefault(); const name = document.getElementById('regName').value; const email = document.getElementById('regEmail').value; const password = document.getElementById('regPassword').value; const { data, error } = await sb.auth.signUp({ email, password, options: { data: { name } } }); if (error) { showToast('Gagal daftar: ' + error.message, 'error'); return; } let newUserId = data.user?.id; let newUserEmail = data.user?.email; if (newUserId) { await sb.from('users').upsert({ id: newUserId, name: name, username: newUserEmail, role: 'guru', is_premium: false, payment_status: 'Belum Bayar' }); currentUser = { id: newUserId, email: newUserEmail, name: name, role: 'guru', is_premium: false, payment_status: 'Belum Bayar', avatar_url: AI_IMG }; localStorage.setItem('gs_currentUser', JSON.stringify(currentUser)); showToast('Pendaftaran berhasil!', 'success'); initApp(); } else { showToast('Pendaftaran berhasil! Silakan login.', 'success'); toggleAuth('login'); document.getElementById('loginEmail').value = email; } });
         document.getElementById('loginForm').addEventListener('submit', async (e) => { e.preventDefault(); const email = document.getElementById('loginEmail').value; const password = document.getElementById('loginPassword').value; const { data, error } = await sb.auth.signInWithPassword({ email, password }); if (error) { showToast('Login gagal: ' + error.message, 'error'); return; } let userData = null; const { data: userDataRes } = await sb.from('users').select('*').eq('id', data.user.id).maybeSingle(); if (userDataRes) { userData = userDataRes; } else { const { data: newUserData } = await sb.from('users').upsert({ id: data.user.id, name: email.split('@')[0], username: email, role: 'guru', is_premium: false, payment_status: 'Belum Bayar' }).select().maybeSingle(); if (newUserData) userData = newUserData; else userData = { name: email, role: 'guru', is_premium: false, payment_status: 'Belum Bayar' }; } currentUser = { id: data.user.id, email: data.user.email, name: userData?.name || data.user.email, role: userData?.role || 'guru', avatar_url: userData?.avatar_url || AI_IMG, is_premium: userData?.is_premium || false, payment_status: userData?.payment_status || 'Belum Bayar', payment_sender: userData?.payment_sender || '' }; localStorage.setItem('gs_currentUser', JSON.stringify(currentUser)); showToast('Login berhasil!', 'success'); initApp(); });
@@ -227,7 +240,7 @@
             }
             if (page !== 'ai') { contentEl.innerHTML += `<div class="text-center text-[10px] text-slate-400 dark:text-slate-600 py-4 mt-4 border-t border-slate-200 dark:border-slate-700">Dalam Mode Pengembang @BayuProjectone</div>`; }
         }
-        async function renderDashboard() { const students = await DB.get('students'); const teachers = await DB.get('teachers'); const classes = await DB.get('classes'); const announcements = await DB.get('announcements'); const grades = await DB.get('grades'); const keuangan = await DB.get('keuangan'); const unpaidSpp = keuangan.filter(k => k.status === 'Belum Bayar').length; document.getElementById('content').innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">${dashboardCard('Total Siswa', students.length, 'from-blue-500 to-blue-700', 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z')}${dashboardCard('Total Guru', teachers.length, 'from-emerald-500 to-emerald-700', 'M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-5a4 4 0 11-8 0 4 4 0 018 0zm6 0a4 4 0 11-8 0 4 4 0 018 0z')}${dashboardCard('Total Kelas', classes.length, 'from-amber-500 to-orange-600', 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4')}${dashboardCard('SPP Belum Lunas', unpaidSpp, 'from-rose-500 to-red-700', 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1V6m0 2c-1.11 0-2.08.402-2.599 1M3 12h18M12 18v-1m0 1v-1')}</div><div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><h3 class="font-semibold text-slate-800 dark:text-white mb-4">Statistik Nilai Siswa</h3><canvas id="chartGrades" height="100"></canvas></div><div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><h3 class="font-semibold text-slate-800 dark:text-white mb-4">Pengumuman Terbaru</h3><div class="space-y-4 max-h-80 overflow-y-auto modal-scroll">${announcements.length ? announcements.map(a => `<div class="p-3 bg-slate-50 dark:bg-slate-700 rounded-lg border-l-4 border-blue-500"><p class="font-medium text-sm text-blue-600 dark:text-blue-400">${a.title}</p><p class="text-xs text-slate-500 dark:text-slate-300 mt-1">${a.content}</p><p class="text-[10px] text-slate-400 mt-1">${a.date}</p></div>`).join('') : '<p class="text-sm text-slate-500 dark:text-slate-400 text-center py-4">Belum ada pengumuman.</p>'}</div></div></div>`; const ctx = document.getElementById('chartGrades').getContext('2d'); const types = ['Tugas', 'Ulangan Harian', 'PTS', 'PAS']; const data = types.map(t => { const tGrades = grades.filter(g => g.type === t); return tGrades.length ? (tGrades.reduce((s, g) => s + g.score, 0) / tGrades.length).toFixed(1) : 0; }); new Chart(ctx, { type: 'bar', data: { labels: types, datasets: [{ label: 'Rata-rata Nilai', data: data, backgroundColor: 'rgba(37, 99, 235, 0.5)', borderColor: 'rgba(37, 99, 235, 1)', borderWidth: 1 }] }, options: { responsive: true, scales: { y: { beginAtZero: 0, max: 100 } }, plugins: { legend: { labels: { color: document.documentElement.classList.contains('dark') ? '#fff' : '#000' } } } } }); }
+        async function renderDashboard() { const students = await DB.get('students'); const teachers = await DB.get('teachers'); const classes = await DB.get('classes'); const announcements = await DB.get('announcements'); const grades = await DB.get('grades'); const keuangan = await DB.get('keuangan'); const unpaidSpp = keuangan.filter(k => k.status === 'Belum Bayar').length; document.getElementById('content').innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">${dashboardCard('Total Siswa', students.length, 'from-blue-500 to-blue-700', 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z')}${dashboardCard('Total Guru', teachers.length, 'from-emerald-500 to-emerald-700', 'M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-5a4 4 0 11-8 0 4 4 0 018 0zm6 0a4 4 0 11-8 0 4 4 0 018 0z')}${dashboardCard('Total Kelas', classes.length, 'from-amber-500 to-orange-600', 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4')}${dashboardCard('SPP Belum Lunas', unpaidSpp, 'from-rose-500 to-red-700', 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1V6m0 2c-1.11 0-2.08.402-2.599 1M3 12h18M12 18v-1m0 1v-1')}</div><div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><h3 class="font-semibold text-slate-800 dark:text-white mb-4">Statistik Nilai Siswa</h3><canvas id="chartGrades" height="100"></canvas></div><div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><h3 class="font-semibold text-slate-800 dark:text-white mb-4">Pengumuman Terbaru</h3><div class="space-y-4 max-h-80 overflow-y-auto modal-scroll">${announcements.length ? announcements.map(a => `<div class="p-3 bg-slate-50 dark:bg-slate-700 rounded-lg border-left-4 border-blue-500"><p class="font-medium text-sm text-blue-600 dark:text-blue-400">${a.title}</p><p class="text-xs text-slate-500 dark:text-slate-300 mt-1">${a.content}</p><p class="text-[10px] text-slate-400 mt-1">${formatDateID(a.date)}</p></div>`).join('') : '<p class="text-sm text-slate-500 dark:text-slate-400 text-center py-4">Belum ada pengumuman.</p>'}</div></div></div>`; const ctx = document.getElementById('chartGrades').getContext('2d'); const types = ['Tugas', 'Ulangan Harian', 'PTS', 'PAS']; const data = types.map(t => { const tGrades = grades.filter(g => g.type === t); return tGrades.length ? (tGrades.reduce((s, g) => s + g.score, 0) / tGrades.length).toFixed(1) : 0; }); new Chart(ctx, { type: 'bar', data: { labels: types, datasets: [{ label: 'Rata-rata Nilai', data: data, backgroundColor: 'rgba(37, 99, 235, 0.5)', borderColor: 'rgba(37, 99, 235, 1)', borderWidth: 1 }] }, options: { responsive: true, scales: { y: { beginAtZero: 0, max: 100 } }, plugins: { legend: { labels: { color: document.documentElement.classList.contains('dark') ? '#fff' : '#000' } } } } }); }
         function dashboardCard(title, count, color, icon) { return `<div class="bg-gradient-to-br ${color} p-6 rounded-xl shadow-sm flex items-center space-x-4 text-white"><div class="p-3 bg-white/20 rounded-lg"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${icon}"></path></svg></div><div><p class="text-white/80 text-sm">${title}</p><h3 class="text-2xl font-bold">${count}</h3></div></div>`; }
         const kurikulumTypes = [ { id: 'cp', label: 'Capaian Pembelajaran (CP)', desc: 'Kompetensi yang harus dicapai peserta didik', color: 'from-blue-500 to-cyan-600', icon: 'M13 10V3L4 14h7v7l9-11h-7z' }, { id: 'tp', label: 'Tujuan Pembelajaran (TP)', desc: 'Tujuan spesifik dari setiap CP', color: 'from-green-500 to-emerald-600', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' }, { id: 'atp', label: 'Alur Tujuan Pembelajaran (ATP)', desc: 'Urutan logis tujuan pembelajaran', color: 'from-purple-500 to-pink-600', icon: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6' }, { id: 'modul', label: 'Modul Ajar', desc: 'Panduan lengkap untuk guru', color: 'from-orange-500 to-red-600', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' }, { id: 'rpp', label: 'RPP (Rencana Pelaksanaan Pembelajaran)', desc: 'Rencana kegiatan pembelajaran', color: 'from-indigo-500 to-blue-700', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' }, { id: 'prota', label: 'Program Tahunan', desc: 'Program pembelajaran satu tahun', color: 'from-teal-500 to-green-600', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' }, { id: 'lkpd', label: 'LKPD (Lembar Kerja Peserta Didik)', desc: 'Lembar kerja untuk siswa', color: 'from-rose-500 to-pink-600', icon: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' } ];
         async function renderKurikulum() { const subjects = await DB.get('subjects'); const kurikulumData = await DB.get('kurikulum'); document.getElementById('content').innerHTML = `<div class="mb-6 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-6 text-white shadow-lg"><h2 class="text-2xl font-bold mb-2">📚 Perangkat Ajar Kurikulum</h2><p class="text-indigo-100 text-sm">Buat dan kelola dokumen kurikulum: CP, TP, ATP, Modul Ajar, RPP, Program Tahunan, hingga LKPD</p></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">${kurikulumTypes.map(t => `<button onclick="generateKurikulum('${t.id}', '${t.label}')" class="bg-gradient-to-br ${t.color} p-5 rounded-xl text-white text-left shadow-md hover:scale-105 transition-transform"><svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${t.icon}"></path></svg><h3 class="font-bold text-sm">${t.label}</h3><p class="text-xs opacity-90 mt-1">${t.desc}</p></button>`).join('')}</div><div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><h3 class="font-bold text-slate-800 dark:text-white mb-4">Dokumen Tersimpan</h3><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase"><tr><th class="px-4 py-3 text-slate-800 dark:text-white">Jenis</th><th class="px-4 py-3 text-slate-800 dark:text-white">Mapel</th><th class="px-4 py-3 text-slate-800 dark:text-white">Judul</th><th class="px-4 py-3 text-slate-800 dark:text-white">Kelas</th><th class="px-4 py-3 text-slate-800 dark:text-white">Aksi</th></tr></thead><tbody class="divide-y dark:divide-slate-700">${kurikulumData.length ? kurikulumData.map(k => { const sub = subjects.find(s => s.id === k.subject_id); const typeLabel = kurikulumTypes.find(t => t.id === k.type)?.label || k.type; return `<tr><td class="px-4 py-3"><span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">${typeLabel}</span></td><td class="px-4 py-3">${sub?.name || '-'}</td><td class="px-4 py-3 font-medium">${k.title}</td><td class="px-4 py-3">${k.class_name || '-'}</td><td class="px-4 py-3 flex gap-2"><button onclick="viewKurikulum('${k.id}')" class="text-blue-500">Lihat</button><button onclick="printKurikulumDoc('${k.id}')" class="text-green-500">Cetak</button><button onclick="deleteData('kurikulum', '${k.id}', renderKurikulum)" class="text-red-500">Hapus</button></td></tr>`; }).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500 dark:text-slate-400">Belum ada dokumen. Gunakan tombol di atas untuk membuat.</td></tr>`}</tbody></table></div></div>`; }
@@ -275,7 +288,7 @@
                                         <td class="px-4 py-3">${t.phone || '-'}</td>
                                         <td class="px-4 py-3">${t.email || '-'}</td>
                                         <td class="px-4 py-3">${t.address || '-'}</td>
-                                        <td class="px-4 py-3">${t.birthdate || '-'}</td>
+                                        <td class="px-4 py-3">${formatDateID(t.birthdate)}</td>
                                         <td class="px-4 py-3 flex gap-2">
                                             <button onclick="teacherForm('${t.id}')" class="text-blue-500">Edit</button>
                                             <button onclick="deleteData('teachers', '${t.id}', renderTeachers)" class="text-red-500">Hapus</button>
@@ -298,7 +311,7 @@
                 <div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">No HP</label><input type="text" id="tch_phone" value="${t?.phone || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>
                 <div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Email</label><input type="email" id="tch_email" value="${t?.email || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>
                 <div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Alamat</label><textarea id="tch_address" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${t?.address || ''}</textarea></div>
-                <div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Tanggal Lahir</label><input type="date" id="tch_birthdate" value="${t?.birthdate || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>
+                <div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Tanggal Lahir</label><input type="date" id="tch_birthdate" value="${t?.birthdate || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" style="color-scheme: light;"></div>
                 <div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Mapel</label><input type="text" id="tch_subject" value="${t?.subject || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>
                 <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button>
             </form>`); 
@@ -320,45 +333,144 @@
             }; 
         }
 
-        async function renderStudents() { const students = await DB.get('students'); const classes = await DB.get('classes'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex justify-between mb-4"><button onclick="studentForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Siswa</button></div><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase"><tr><th class="px-4 py-3 text-slate-800 dark:text-white">NIS</th><th class="px-4 py-3 text-slate-800 dark:text-white">Nama</th><th class="px-4 py-3 text-slate-800 dark:text-white">Kelas</th><th class="px-4 py-3 text-slate-800 dark:text-white">Aksi</th></tr></thead><tbody class="divide-y dark:divide-slate-700">${students.length ? students.map(s => { const cls = classes.find(c => c.id === s.class_id); return `<tr><td class="px-4 py-3">${s.nis}</td><td class="px-4 py-3 font-medium">${s.name}</td><td class="px-4 py-3">${cls?.name || 'N/A'}</td><td class="px-4 py-3 flex gap-2"><button onclick="printStudentCard('${s.id}')" class="text-xs text-purple-600">Cetak Kartu</button><button onclick="studentForm('${s.id}')" class="text-blue-500">Edit</button><button onclick="deleteData('students', '${s.id}', renderStudents)" class="text-red-500">Hapus</button></td></tr>`; }).join('') : `<tr><td colspan="4" class="text-center py-4 text-slate-500 dark:text-slate-400">Belum ada data.</td></tr>`}</tbody></table></div></div>`; }
-        async function studentForm(id = null) { const classes = await DB.get('classes'); let s = null; if(id) { s = (await DB.get('students')).find(x => x.id === id); } openModal(id ? 'Edit Siswa' : 'Tambah Siswa', `<form id="studentForm" class="space-y-4"><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">NIS</label><input type="text" id="std_nis" value="${s?.nis || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Nama</label><input type="text" id="std_name" value="${s?.name || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Kelas</label><select id="std_class" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}" ${s?.class_id == c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Jenis Kelamin</label><select id="std_gender" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option value="L" ${s?.gender == 'L' ? 'selected' : ''}>Laki-laki</option><option value="P" ${s?.gender == 'P' ? 'selected' : ''}>Perempuan</option></select></div><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Tempat Lahir</label><input type="text" id="std_birthplace" value="${s?.birthplace || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Tanggal Lahir</label><input type="date" id="std_birthdate" value="${s?.birthdate || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Alamat</label><textarea id="std_address" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${s?.address || ''}</textarea></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button></form>`); document.getElementById('studentForm').onsubmit = async (e) => { e.preventDefault(); const payload = { nis: document.getElementById('std_nis').value, name: document.getElementById('std_name').value, class_id: document.getElementById('std_class').value, gender: document.getElementById('std_gender').value, birthplace: document.getElementById('std_birthplace').value, birthdate: document.getElementById('std_birthdate').value, address: document.getElementById('std_address').value }; await saveData('students', payload, id); closeModal(); renderStudents(); }; }
+        async function renderStudents() { 
+            const students = await DB.get('students'); 
+            const classes = await DB.get('classes'); 
+            document.getElementById('content').innerHTML = `
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm">
+                    <div class="flex justify-between mb-4">
+                        <h3 class="font-bold text-slate-800 dark:text-white">Data Siswa</h3>
+                        <div class="flex gap-2">
+                            <button onclick="printAllStudentCards()" class="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Cetak Semua Kartu</button>
+                            <button onclick="studentForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Siswa</button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase">
+                                <tr>
+                                    <th class="px-4 py-3 text-slate-800 dark:text-white">Foto</th>
+                                    <th class="px-4 py-3 text-slate-800 dark:text-white">NIS</th>
+                                    <th class="px-4 py-3 text-slate-800 dark:text-white">Nama</th>
+                                    <th class="px-4 py-3 text-slate-800 dark:text-white">Kelas</th>
+                                    <th class="px-4 py-3 text-slate-800 dark:text-white">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y dark:divide-slate-700">
+                                ${students.length ? students.map(s => { 
+                                    const cls = classes.find(c => c.id === s.class_id); 
+                                    return `<tr>
+                                        <td class="px-4 py-3">
+                                            <img src="${s.photo_url || 'https://via.placeholder.com/40x40?text=No+Image'}" class="w-10 h-10 rounded-full object-cover bg-slate-200" onerror="this.src='https://via.placeholder.com/40x40?text=No+Image'">
+                                        </td>
+                                        <td class="px-4 py-3">${s.nis}</td>
+                                        <td class="px-4 py-3 font-medium">${s.name}</td>
+                                        <td class="px-4 py-3">${cls?.name || 'N/A'}</td>
+                                        <td class="px-4 py-3 flex gap-2">
+                                            <button onclick="printStudentCard('${s.id}')" class="text-xs text-purple-600">Cetak Kartu</button>
+                                            <button onclick="studentForm('${s.id}')" class="text-blue-500">Edit</button>
+                                            <button onclick="deleteData('students', '${s.id}', renderStudents)" class="text-red-500">Hapus</button>
+                                        </td>
+                                    </tr>`; 
+                                }).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500 dark:text-slate-400">Belum ada data.</td></tr>`}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `; 
+        }
+
+        async function studentForm(id = null) { 
+            const classes = await DB.get('classes'); 
+            let s = null; 
+            if(id) { s = (await DB.get('students')).find(x => x.id === id); } 
+            openModal(id ? 'Edit Siswa' : 'Tambah Siswa', `<form id="studentForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Foto Siswa</label>
+                    <div class="flex items-center gap-4">
+                        <img id="std_photo_preview" src="${s?.photo_url || 'https://via.placeholder.com/80x80?text=Foto'}" class="w-20 h-20 rounded-lg object-cover border dark:border-slate-600 bg-slate-50 dark:bg-slate-700">
+                        <div class="flex-1">
+                            <input type="file" id="std_photo_file" accept="image/*" class="hidden" onchange="handleStudentPhotoUpload(event)">
+                            <button type="button" onclick="document.getElementById('std_photo_file').click()" class="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-white px-4 py-2 rounded-lg text-sm font-medium">Pilih Foto</button>
+                            <p id="std_photo_name" class="text-xs text-slate-500 dark:text-slate-400 mt-1 truncate">${s?.photo_url ? 'Tersimpan di Database' : 'Belum ada foto'}</p>
+                        </div>
+                    </div>
+                </div>
+                <div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">NIS</label><input type="text" id="std_nis" value="${s?.nis || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div>
+                <div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Nama</label><input type="text" id="std_name" value="${s?.name || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div>
+                <div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Kelas</label><select id="std_class" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}" ${s?.class_id == c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select></div>
+                <div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Jenis Kelamin</label><select id="std_gender" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option value="L" ${s?.gender == 'L' ? 'selected' : ''}>Laki-laki</option><option value="P" ${s?.gender == 'P' ? 'selected' : ''}>Perempuan</option></select></div>
+                <div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Tempat Lahir</label><input type="text" id="std_birthplace" value="${s?.birthplace || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>
+                <div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Tanggal Lahir</label><input type="date" id="std_birthdate" value="${s?.birthdate || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" style="color-scheme: light;"></div>
+                <div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Alamat</label><textarea id="std_address" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${s?.address || ''}</textarea></div>
+                <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button>
+            </form>`); 
+            
+            let photoUrl = s?.photo_url || '';
+            
+            window.handleStudentPhotoUpload = async function(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                document.getElementById('std_photo_name').innerText = file.name;
+                const reader = new FileReader();
+                reader.onload = (e) => document.getElementById('std_photo_preview').src = e.target.result;
+                reader.readAsDataURL(file);
+                
+                showToast('Mengunggah foto...', 'info');
+                const { data, error } = await sb.storage.from('avatars').upload('student_' + currentUser.id + '_' + Date.now() + '.jpg', file);
+                if (error) { showToast('Gagal upload foto: ' + error.message, 'error'); return; }
+                photoUrl = sb.storage.from('avatars').getPublicUrl(data.path).data.publicUrl;
+                document.getElementById('std_photo_name').innerText = 'Tersimpan di Database';
+                showToast('Foto siap disimpan!', 'success');
+            };
+            
+            document.getElementById('studentForm').onsubmit = async (e) => { 
+                e.preventDefault(); 
+                const payload = { 
+                    nis: document.getElementById('std_nis').value, 
+                    name: document.getElementById('std_name').value, 
+                    class_id: document.getElementById('std_class').value, 
+                    gender: document.getElementById('std_gender').value, 
+                    birthplace: document.getElementById('std_birthplace').value, 
+                    birthdate: document.getElementById('std_birthdate').value, 
+                    address: document.getElementById('std_address').value,
+                    photo_url: photoUrl
+                }; 
+                await saveData('students', payload, id); 
+                closeModal(); 
+                renderStudents(); 
+            }; 
+        }
         
         async function printStudentCard(id) {
             const s = (await DB.get('students')).find(x => x.id === id);
             const cls = (await DB.get('classes')).find(c => c.id === s.class_id);
             const profile = (await DB.get('school_profile'))[0] || {};
             const existingSign = profile.principal_sign || '';
+            const existingLogo = profile.logo_left || '';
             
-            openModal('Kartu Siswa', `<div class="space-y-4">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            openModal('Cetak Kartu Siswa', `<div class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs mb-1 text-slate-500 dark:text-slate-400">Foto Siswa</label>
-                        <label class="flex items-center justify-center w-full h-8 px-2 py-1 text-[10px] font-medium text-blue-700 bg-blue-50 rounded cursor-pointer hover:bg-blue-100 border border-blue-200">
-                            <span>Pilih Foto</span>
-                            <input type="file" id="cardPhotoInput" accept="image/*" class="hidden">
-                        </label>
-                        <p id="cardPhotoName" class="text-[9px] text-slate-400 mt-1 truncate">Belum ada file</p>
-                    </div>
-                    <div>
-                        <label class="block text-xs mb-1 text-slate-500 dark:text-slate-400">Logo Sekolah</label>
+                        <label class="block text-xs mb-1 text-slate-500 dark:text-slate-400">Logo Sekolah (Disimpan)</label>
                         <label class="flex items-center justify-center w-full h-8 px-2 py-1 text-[10px] font-medium text-indigo-700 bg-indigo-50 rounded cursor-pointer hover:bg-indigo-100 border border-indigo-200">
                             <span>Pilih Logo</span>
                             <input type="file" id="cardLogoInput" accept="image/*" class="hidden">
                         </label>
-                        <p id="cardLogoName" class="text-[9px] text-slate-400 mt-1 truncate">Belum ada file</p>
+                        <p id="cardLogoName" class="text-[9px] text-slate-400 mt-1 truncate">${existingLogo ? 'Tersimpan' : 'Belum ada file'}</p>
                     </div>
                     <div>
-                        <label class="block text-xs mb-1 text-slate-500 dark:text-slate-400">TTD Kepala Sekolah</label>
+                        <label class="block text-xs mb-1 text-slate-500 dark:text-slate-400">TTD Kepala Sekolah (Disimpan)</label>
                         <label class="flex items-center justify-center w-full h-8 px-2 py-1 text-[10px] font-medium text-green-700 bg-green-50 rounded cursor-pointer hover:bg-green-100 border border-green-200">
-                            <span>Upload TTD (Disimpan)</span>
+                            <span>Upload TTD</span>
                             <input type="file" id="cardSignInput" accept="image/*" class="hidden">
                         </label>
-                        <p id="cardSignName" class="text-[9px] text-slate-400 mt-1 truncate">${existingSign ? 'Tersimpan di Database' : 'Belum ada file'}</p>
+                        <p id="cardSignName" class="text-[9px] text-slate-400 mt-1 truncate">${existingSign ? 'Tersimpan' : 'Belum ada file'}</p>
                     </div>
                 </div>
-                <div id="printableCard" class="student-card-print mx-auto">
+                <div id="printableCard" class="student-card-modal">
                     <div class="card-left">
-                        <img id="cardLogo" src="${profile.logo_left || 'https://via.placeholder.com/40x40?text=Logo'}" onerror="this.style.display='none'" class="card-logo">
+                        <img id="cardLogo" src="${existingLogo || 'https://via.placeholder.com/40x40?text=Logo'}" onerror="this.style.display='none'" class="card-logo">
                         <img id="cardPhoto" src="${s.photo_url || 'https://via.placeholder.com/70x80?text=Foto'}" class="card-photo">
                         <div style="font-size: 8px; margin-top: 5px; opacity: 0.9; z-index: 2;">${profile.name || 'NAMA SEKOLAH'}</div>
                     </div>
@@ -369,7 +481,7 @@
                                 <tr><td style="font-weight: 600; width: 25%;">Nama</td><td>: ${s.name}</td></tr>
                                 <tr><td style="font-weight: 600;">NIS</td><td>: ${s.nis}</td></tr>
                                 <tr><td style="font-weight: 600;">Kelas</td><td>: ${cls?.name || '-'}</td></tr>
-                                <tr><td style="font-weight: 600;">Lahir</td><td>: ${s.birthplace || '-'}, ${s.birthdate || '-'}</td></tr>
+                                <tr><td style="font-weight: 600;">Lahir</td><td>: ${s.birthplace || '-'}, ${formatDateID(s.birthdate)}</td></tr>
                                 <tr><td style="font-weight: 600; vertical-align: top;">Alamat</td><td style="max-width: 90px;">: ${s.address || '-'}</td></tr>
                             </table>
                         </div>
@@ -383,27 +495,36 @@
                     </div>
                 </div>
                 <div class="mt-4 flex gap-2">
-                    <button onclick="printCardNow()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm flex-1">🖨️ Cetak Kartu</button>
+                    <button onclick="printCardNow('${s.id}')" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm flex-1">🖨️ Cetak Kartu</button>
                     <button onclick="closeModal()" class="bg-slate-500 text-white px-4 py-2 rounded-lg text-sm">Tutup</button>
                 </div>
             </div>`);
             
             new QRCode(document.getElementById("qrcode"), { text: s.nis, width: 60, height: 60 });
             
-            document.getElementById('cardPhotoInput').addEventListener('change', (e) => {
-                const file = e.target.files[0]; if (!file) return;
-                document.getElementById('cardPhotoName').innerText = file.name;
-                const reader = new FileReader();
-                reader.onload = (ev) => document.getElementById('cardPhoto').src = ev.target.result;
-                reader.readAsDataURL(file);
-            });
-            document.getElementById('cardLogoInput').addEventListener('change', (e) => {
+            document.getElementById('cardLogoInput').addEventListener('change', async (e) => {
                 const file = e.target.files[0]; if (!file) return;
                 document.getElementById('cardLogoName').innerText = file.name;
-                const reader = new FileReader();
-                reader.onload = (ev) => document.getElementById('cardLogo').src = ev.target.result;
-                reader.readAsDataURL(file);
+                showToast('Mengunggah logo ke database...', 'info');
+                const ext = file.name.split('.').pop();
+                const { data, error } = await sb.storage.from('avatars').upload('logo_' + currentUser.id + '_' + Date.now() + '.' + ext, file);
+                if (error) { showToast('Gagal upload logo: ' + error.message, 'error'); return; }
+                const url = sb.storage.from('avatars').getPublicUrl(data.path).data.publicUrl;
+                
+                const profileData = (await DB.get('school_profile'))[0] || {};
+                if (profileData.id) {
+                    await sb.from('school_profile').update({ logo_left: url }).eq('id', profileData.id).eq('user_id', currentUser.id);
+                } else {
+                    await sb.from('school_profile').insert([{ logo_left: url, user_id: currentUser.id }]).select();
+                }
+                
+                document.getElementById('cardLogoName').innerText = 'Tersimpan di Database';
+                const img = document.getElementById('cardLogo');
+                img.src = url;
+                img.style.display = 'block';
+                showToast('Logo permanen disimpan!', 'success');
             });
+            
             document.getElementById('cardSignInput').addEventListener('change', async (e) => {
                 const file = e.target.files[0]; if (!file) return;
                 showToast('Mengunggah tanda tangan ke database...', 'info');
@@ -426,9 +547,122 @@
                 showToast('Tanda tangan permanen disimpan!', 'success');
             });
         }
-        function printCardNow() {
-            const printContent = document.getElementById('printableCard').outerHTML;
-            document.getElementById('printArea').innerHTML = printContent;
+
+        // Cetak 1 Kartu
+        window.printCardNow = async function(studentId) {
+            const s = (await DB.get('students')).find(x => x.id === studentId);
+            const cls = (await DB.get('classes')).find(c => c.id === s.class_id);
+            const profile = (await DB.get('school_profile'))[0] || {};
+            const logoUrl = profile.logo_left || '';
+            const signUrl = profile.principal_sign || '';
+            const birthDateStr = s.birthplace || '-' + ', ' + formatDateID(s.birthdate);
+            
+            const cardHTML = (data) => `
+                <div class="student-card-print">
+                    <div style="width: 35%; background: linear-gradient(135deg, #1e3a8a 0%, #4c1d95 100%); padding: 10px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; color: white; text-align: center; position: relative; overflow: hidden;">
+                        ${logoUrl ? `<img src="${logoUrl}" style="width: 40px; height: 40px; object-fit: contain; z-index: 2;">` : ''}
+                        ${data.photo_url ? `<img src="${data.photo_url}" style="width: 70px; height: 80px; object-fit: cover; border: 3px solid white; border-radius: 6px; background: #cbd5e1; z-index: 2;">` : ''}
+                        <div style="font-size: 8px; margin-top: 5px; opacity: 0.9; z-index: 2;">${profile.name || 'NAMA SEKOLAH'}</div>
+                    </div>
+                    <div style="width: 65%; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; position: relative;">
+                        <div style="position: absolute; top: 0; left: 0; width: 5px; height: 100%; background: linear-gradient(180deg, #3b82f6 0%, #8b5cf6 100%);"></div>
+                        <div>
+                            <h3 style="font-size: 14px; font-weight: 800; color: #1e3a8a; text-transform: uppercase; margin-bottom: 4px; border-bottom: 2px solid #3b82f6; padding-bottom: 2px;">KARTU PELAJAR</h3>
+                            <table style="font-size: 10px; color: #333; width: 100%;">
+                                <tr><td style="font-weight: 600; width: 25%;">Nama</td><td>: ${data.name}</td></tr>
+                                <tr><td style="font-weight: 600;">NIS</td><td>: ${data.nis}</td></tr>
+                                <tr><td style="font-weight: 600;">Kelas</td><td>: ${cls?.name || '-'}</td></tr>
+                                <tr><td style="font-weight: 600;">Lahir</td><td>: ${birthDateStr}</td></tr>
+                                <tr><td style="font-weight: 600; vertical-align: top;">Alamat</td><td style="max-width: 90px;">: ${data.address || '-'}</td></tr>
+                            </table>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                            <div id="qrcode_${data.id}" class="card-qr" style="width: 60px; height: 60px; background: white; padding: 3px; border-radius: 4px; z-index: 2;"></div>
+                            <div style="text-align: center; color: #555; margin-right: 5px; margin-bottom: 2px; display: flex; flex-direction: column; align-items: center;">
+                                ${signUrl ? `<img src="${signUrl}" style="display: block; height: 25px; object-fit: contain; margin-bottom: -2px;">` : ''}
+                                <p style="font-size: 9px; margin: 0; margin-top: 2px; font-weight: bold; border-top: 1px solid #555; padding-top: 2px; white-space: nowrap;">${profile.principal || 'Kepala Sekolah'}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            let printHTML = `<div style="display: grid; grid-template-columns: repeat(2, auto); gap: 10px; justify-content: center; padding: 20px;">`;
+            for(let i=0; i<8; i++) {
+                printHTML += cardHTML(s);
+            }
+            printHTML += `</div>`;
+
+            document.getElementById('printArea').innerHTML = printHTML;
+            
+            for(let i=0; i<8; i++) {
+                new QRCode(document.getElementById(`qrcode_${s.id}`), { text: s.nis, width: 60, height: 60 });
+            }
+            
+            window.print();
+            document.getElementById('printArea').innerHTML = '';
+        }
+
+        // Cetak 10 Kartu Untuk Semua Siswa
+        window.printAllStudentCards = async function() {
+            const students = await DB.get('students');
+            if (students.length === 0) { showToast('Belum ada data siswa!', 'error'); return; }
+            
+            const clsList = await DB.get('classes');
+            const profile = (await DB.get('school_profile'))[0] || {};
+            const logoUrl = profile.logo_left || '';
+            const signUrl = profile.principal_sign || '';
+            
+            const cardHTML = (data, index) => {
+                const cls = clsList.find(c => c.id === data.class_id);
+                const birthDateStr = data.birthplace || '-' + ', ' + formatDateID(data.birthdate);
+                const qrId = `qrcode_${data.id}_${index}`;
+                return `
+                <div class="student-card-print">
+                    <div style="width: 35%; background: linear-gradient(135deg, #1e3a8a 0%, #4c1d95 100%); padding: 10px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; color: white; text-align: center; position: relative; overflow: hidden;">
+                        ${logoUrl ? `<img src="${logoUrl}" style="width: 40px; height: 40px; object-fit: contain; z-index: 2;">` : ''}
+                        ${data.photo_url ? `<img src="${data.photo_url}" style="width: 70px; height: 80px; object-fit: cover; border: 3px solid white; border-radius: 6px; background: #cbd5e1; z-index: 2;">` : ''}
+                        <div style="font-size: 8px; margin-top: 5px; opacity: 0.9; z-index: 2;">${profile.name || 'NAMA SEKOLAH'}</div>
+                    </div>
+                    <div style="width: 65%; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; position: relative;">
+                        <div style="position: absolute; top: 0; left: 0; width: 5px; height: 100%; background: linear-gradient(180deg, #3b82f6 0%, #8b5cf6 100%);"></div>
+                        <div>
+                            <h3 style="font-size: 14px; font-weight: 800; color: #1e3a8a; text-transform: uppercase; margin-bottom: 4px; border-bottom: 2px solid #3b82f6; padding-bottom: 2px;">KARTU PELAJAR</h3>
+                            <table style="font-size: 10px; color: #333; width: 100%;">
+                                <tr><td style="font-weight: 600; width: 25%;">Nama</td><td>: ${data.name}</td></tr>
+                                <tr><td style="font-weight: 600;">NIS</td><td>: ${data.nis}</td></tr>
+                                <tr><td style="font-weight: 600;">Kelas</td><td>: ${cls?.name || '-'}</td></tr>
+                                <tr><td style="font-weight: 600;">Lahir</td><td>: ${birthDateStr}</td></tr>
+                                <tr><td style="font-weight: 600; vertical-align: top;">Alamat</td><td style="max-width: 90px;">: ${data.address || '-'}</td></tr>
+                            </table>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                            <div id="${qrId}" style="width: 60px; height: 60px; background: white; padding: 3px; border-radius: 4px; z-index: 2;"></div>
+                            <div style="text-align: center; color: #555; margin-right: 5px; margin-bottom: 2px; display: flex; flex-direction: column; align-items: center;">
+                                ${signUrl ? `<img src="${signUrl}" style="display: block; height: 25px; object-fit: contain; margin-bottom: -2px;">` : ''}
+                                <p style="font-size: 9px; margin: 0; margin-top: 2px; font-weight: bold; border-top: 1px solid #555; padding-top: 2px; white-space: nowrap;">${profile.principal || 'Kepala Sekolah'}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            };
+
+            let printHTML = `<div style="display: grid; grid-template-columns: repeat(2, auto); gap: 10px; justify-content: center; padding: 20px;">`;
+            let qrIds = [];
+            students.forEach((s, index) => {
+                printHTML += cardHTML(s, index);
+                qrIds.push(`qrcode_${s.id}_${index}`);
+            });
+            printHTML += `</div>`;
+
+            document.getElementById('printArea').innerHTML = printHTML;
+            
+            // Generate QR Codes
+            qrIds.forEach((id, index) => {
+                const s = students[index];
+                new QRCode(document.getElementById(id), { text: s.nis, width: 60, height: 60 });
+            });
+            
             window.print();
             document.getElementById('printArea').innerHTML = '';
         }
@@ -443,15 +677,17 @@
         async function renderAttendance() { 
             const students = await DB.get('students'); 
             const classes = await DB.get('classes'); 
+            let daysHtml = '';
+            for(let i=1; i<=31; i++) { daysHtml += `<th class="px-1 py-1" style="font-size: 8px;">${i}</th>`; }
             document.getElementById('content').innerHTML = `
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm">
+                <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
                     <div class="flex flex-wrap justify-between mb-4 items-center gap-2">
-                        <h3 class="font-semibold text-slate-800 dark:text-white">Input Absensi</h3>
+                        <h3 class="font-semibold text-slate-800 dark:text-white">Absensi Bulanan</h3>
                         <div class="flex gap-2 flex-wrap w-full sm:w-auto">
                             <select id="att_class" class="px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white text-slate-800 text-base sm:text-sm min-h-[42px] flex-1 sm:flex-none">
                                 ${classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
                             </select>
-                            <input type="date" id="att_date" class="px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white text-slate-800 text-base sm:text-sm min-h-[42px] flex-1 sm:flex-none min-w-[150px]">
+                            <input type="date" id="att_date" class="px-3 py-2 border rounded-lg dark:bg-slate-700 text-slate-800 text-base sm:text-sm min-h-[42px] flex-1 sm:flex-none min-w-[150px]" style="color-scheme: light;">
                             <button onclick="startNativeScanner()" class="bg-green-600 text-white px-3 py-2 rounded-lg text-base sm:text-sm font-semibold flex items-center justify-center gap-1 min-h-[42px] flex-1 sm:flex-none">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" /></svg> Scan QR
                             </button>
@@ -461,45 +697,110 @@
                         </div>
                     </div>
                     <div class="overflow-x-auto">
-                        <table class="w-full text-sm text-left">
-                            <thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase">
+                        <table class="att-table">
+                            <thead>
                                 <tr>
-                                    <th class="px-4 py-3 text-slate-800 dark:text-white">Nama Siswa</th>
-                                    <th class="px-4 py-3 text-slate-800 dark:text-white">Status</th>
+                                    <th rowspan="2" class="px-2 py-1">No</th>
+                                    <th rowspan="2" class="px-2 py-1">Nama Siswa</th>
+                                    <th colspan="31" style="font-size: 8px;">Tanggal</th>
+                                    <th rowspan="2" class="px-2 py-1">H</th>
+                                    <th rowspan="2" class="px-2 py-1">S</th>
+                                    <th rowspan="2" class="px-2 py-1">I</th>
+                                    <th rowspan="2" class="px-2 py-1">A</th>
+                                </tr>
+                                <tr>
+                                    ${daysHtml}
                                 </tr>
                             </thead>
-                            <tbody class="divide-y dark:divide-slate-700">
-                                ${students.length ? students.map(s => `
-                                    <tr>
-                                        <td class="px-4 py-3 text-slate-800 dark:text-slate-300">${s.name}</td>
-                                        <td class="px-4 py-3">
-                                            <select id="att_${s.id}" class="px-2 py-1 border rounded dark:bg-slate-700 dark:text-white text-slate-800 text-xs">
-                                                <option value="Hadir">Hadir</option>
-                                                <option value="Sakit">Sakit</option>
-                                                <option value="Izin">Izin</option>
-                                                <option value="Alpa">Alpa</option>
-                                            </select>
-                                        </td>
-                                    </tr>
-                                `).join('') : `<tr><td colspan="2" class="text-center py-4 text-slate-500 dark:text-slate-400">Belum ada data siswa.</td></tr>`}
+                            <tbody>
+                                ${students.length ? students.map((s, i) => {
+                                    let tds = '';
+                                    for(let d=1; d<=31; d++) { tds += `<td id="att_${s.id}_${d}" onclick="setAttendance('${s.id}', ${d}, 'H')" style="cursor: pointer; min-width: 12px;"></td>`; }
+                                    return `<tr>
+                                        <td class="px-2 py-1">${i + 1}</td>
+                                        <td class="px-2 py-1 text-left">${s.name}</td>
+                                        ${tds}
+                                        <td id="recap_h_${s.id}" class="font-bold">0</td>
+                                        <td id="recap_s_${s.id}" class="font-bold">0</td>
+                                        <td id="recap_i_${s.id}" class="font-bold">0</td>
+                                        <td id="recap_a_${s.id}" class="font-bold">0</td>
+                                    </tr>`; }).join('') : `<tr><td colspan="36" class="text-center py-4 text-slate-500 dark:text-slate-400">Belum ada data siswa.</td></tr>`}
                             </tbody>
                         </table>
                     </div>
-                    <button onclick="saveAttendance()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Simpan Absensi</button>
+                    <div class="mt-4 flex gap-2 items-center">
+                        <span class="text-sm font-medium">Pilih Status:</span>
+                        <select id="att_status_global" class="px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white text-slate-800 text-sm">
+                            <option value="H">Hadir (H)</option>
+                            <option value="S">Sakit (S)</option>
+                            <option value="I">Izin (I)</option>
+                            <option value="A">Alpa (A)</option>
+                        </select>
+                        <button onclick="saveAttendance()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold ml-auto">Simpan Absensi</button>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2">Klik pada tabel untuk menandai kehadiran. Klik 2x untuk menghapus.</p>
                 </div>
             `; 
+            // Load Attendance Data
+            const dateVal = document.getElementById('att_date')?.value || new Date().toISOString().split('T')[0];
+            const month = dateVal.substring(0, 7);
+            const { data: attData } = await sb.from('attendance').select('*').eq('user_id', currentUser.id).gte('date', `${month}-01`).lte('date', `${month}-31`);
+            if (attData) {
+                attData.forEach(att => {
+                    const day = new Date(att.date).getDate();
+                    const cell = document.getElementById(`att_${att.student_id}_${day}`);
+                    if (cell) {
+                        cell.innerText = att.status;
+                        cell.style.color = att.status === 'H' ? 'green' : att.status === 'A' ? 'red' : 'orange';
+                    }
+                });
+                updateRecap();
+            }
         }
-        
+
+        window.setAttendance = function(studentId, day, status) {
+            const cell = document.getElementById(`att_${studentId}_${day}`);
+            const isDouble = cell.innerText === status; // Hapus jika diklik 2x
+            status = isDouble ? '' : document.getElementById('att_status_global').value;
+            cell.innerText = status;
+            cell.style.color = status === 'H' ? 'green' : status === 'A' ? 'red' : status === '' ? '' : 'orange';
+            updateRecap();
+        }
+
+        function updateRecap() {
+            const students = document.querySelectorAll('[id^="att_"][id$="_1"]'); // Cari baris pertama
+            // Hitung rekap
+            document.querySelectorAll('tr').forEach(row => {
+                const idMatch = row.querySelector('td[id^="att_"]');
+                if (idMatch) {
+                    const studentId = idMatch.id.split('_')[1];
+                    let h=0, s=0, i=0, a=0;
+                    for(let d=1; d<=31; d++) {
+                        const cell = document.getElementById(`att_${studentId}_${d}`);
+                        const val = cell?.innerText || '';
+                        if (val === 'H') h++;
+                        else if (val === 'S') s++;
+                        else if (val === 'I') i++;
+                        else if (val === 'A') a++;
+                    }
+                    const recapH = document.getElementById(`recap_h_${studentId}`);
+                    if (recapH) recapH.innerText = h;
+                    const recapS = document.getElementById(`recap_s_${studentId}`);
+                    if (recapS) recapS.innerText = s;
+                    const recapI = document.getElementById(`recap_i_${studentId}`);
+                    if (recapI) recapI.innerText = i;
+                    const recapA = document.getElementById(`recap_a_${studentId}`);
+                    if (recapA) recapA.innerText = a;
+                }
+            });
+        }
+
         async function startNativeScanner() {
             const date = document.getElementById('att_date').value;
             if(!date){ showToast('Pilih tanggal absensi dahulu!', 'error'); return; }
             
             openModal('Scan QR Siswa', `
-                <div id="qr-reader-container" style="width: 100%; height: 300px; background: #000; border-radius: 8px; overflow: hidden; position: relative; max-width: 400px; margin: 0 auto;">
-                    <video id="qr-video" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover;"></video>
-                    <canvas id="qr-canvas" style="display: none;"></canvas>
-                    <div id="qr-scan-box" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 65%; height: 40%; border: 4px solid #3b82f6; border-radius: 12px; box-shadow: 0 0 0 1000px rgba(0,0,0,0.4);"></div>
-                </div>
+                <div id="qr-reader" style="width: 100%; max-width: 400px; margin: 0 auto; border-radius: 12px; overflow: hidden;"></div>
                 <p class="text-center text-sm mt-3 text-slate-500 dark:text-slate-400">Arahkan kamera ke QR Code siswa.</p>
                 <div id="qr-status" class="text-center text-xs text-blue-500 mt-2">Memulai kamera...</div>
                 
@@ -512,63 +813,35 @@
                 </div>
             `);
 
-            const video = document.getElementById('qr-video');
-            const canvas = document.getElementById('qr-canvas');
-            const context = canvas.getContext('2d', { willReadFrequently: true });
             const statusEl = document.getElementById('qr-status');
-            const scanBox = document.getElementById('qr-scan-box');
 
             try {
-                // Request video stream, explicitly disable audio to prevent permission issues
-                videoStream = await navigator.mediaDevices.getUserMedia({
-                    audio: false,
-                    video: { 
-                        facingMode: { ideal: "environment" },
-                        width: { ideal: 640 },
-                        height: { ideal: 480 }
-                    } 
-                });
+                html5QrCode = new Html5Qrcode("qr-reader");
+                const config = {
+                    fps: 10,
+                    qrbox: (videoWidth, videoHeight) => {
+                        const minEdge = Math.min(videoWidth, videoHeight);
+                        const size = Math.floor(minEdge * 0.7);
+                        return { width: size, height: size };
+                    },
+                    aspectRatio: 1.333
+                };
                 
-                video.srcObject = videoStream;
-                video.setAttribute('playsinline', true);
-                video.muted = true;
-                
-                // Wait for video metadata to load properly
-                await new Promise((resolve) => {
-                    if (video.readyState >= 2) {
-                        resolve();
-                    } else {
-                        video.onloadedmetadata = () => resolve();
+                await html5QrCode.start(
+                    { facingMode: "environment" },
+                    config,
+                    (decodedText) => {
+                        stopCameraStream();
+                        playBeep();
+                        processQRResult(decodedText);
+                    },
+                    (errorMessage) => {
+                        // Ignore scan errors
                     }
-                });
-                
-                await video.play();
+                );
                 
                 statusEl.innerText = "Kamera aktif. Arahkan ke QR Code.";
                 statusEl.className = "text-center text-xs text-green-500 mt-2";
-                scanBox.style.borderColor = '#3b82f6';
-
-                const scanLoop = () => {
-                    if (!videoStream) return;
-                    
-                    if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0) {
-                        canvas.width = video.videoWidth;
-                        canvas.height = video.videoHeight;
-                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-                        const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "attemptBoth" });
-                        
-                        if (code) {
-                            const decodedText = code.data;
-                            stopCameraStream();
-                            playBeep();
-                            processQRResult(decodedText);
-                            return;
-                        }
-                    }
-                    requestAnimationFrame(scanLoop);
-                };
-                requestAnimationFrame(scanLoop);
 
             } catch (err) {
                 console.error("Kamera Error:", err);
@@ -578,7 +851,6 @@
             }
         }
 
-        // Play beep sound on successful scan
         function playBeep() {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -608,9 +880,14 @@
         }
 
         function stopCameraStream() {
-            if (videoStream) {
-                videoStream.getTracks().forEach(track => track.stop());
-                videoStream = null;
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => {
+                    html5QrCode.clear();
+                    html5QrCode = null;
+                }).catch((err) => {
+                    console.error("Error stopping camera", err);
+                    html5QrCode = null;
+                });
             }
         }
 
@@ -618,11 +895,14 @@
             const students = await DB.get('students');
             const std = students.find(s => s.nis === decodedText);
             if (std) {
-                const selectEl = document.getElementById(`att_${std.id}`);
-                if (selectEl) {
-                    selectEl.value = "Hadir";
-                    selectEl.classList.add('bg-green-100', 'text-green-700', 'font-bold');
-                    setTimeout(() => selectEl.classList.remove('bg-green-100', 'text-green-700', 'font-bold'), 2000);
+                const dateVal = document.getElementById('att_date').value;
+                if (!dateVal) { showToast('Pilih tanggal dahulu!', 'error'); return; }
+                const day = new Date(dateVal).getDate();
+                const cell = document.getElementById(`att_${std.id}_${day}`);
+                if (cell) {
+                    cell.innerText = 'H';
+                    cell.style.color = 'green';
+                    updateRecap();
                     showToast(`✅ ${std.name} berhasil absen!`, 'success');
                 } else {
                     showToast(`Siswa tidak ditemukan di daftar absensi.`, 'error');
@@ -638,44 +918,95 @@
             const classVal = document.getElementById('att_class').value;
             const classes = await DB.get('classes');
             const cls = classes.find(c => c.id === classVal);
-            const dateStr = dateVal ? new Date(dateVal).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : 'Semua Tanggal';
+            const dateStr = dateVal ? formatDateID(dateVal) : 'Semua Tanggal';
+            const monthStr = dateVal ? new Date(dateVal).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }) : '-';
+            
+            let daysHtml = '';
+            for(let d=1; d<=31; d++) { daysHtml += `<th style="font-size: 8px; padding: 2px;">${d}</th>`; }
+            
+            let rowsHtml = '';
+            students.forEach((s, i) => {
+                let tds = '';
+                for(let d=1; d<=31; d++) {
+                    const cell = document.getElementById(`att_${s.id}_${d}`);
+                    const val = cell?.innerText || '';
+                    const color = val === 'H' ? 'green' : val === 'A' ? 'red' : val === '' ? '' : 'orange';
+                    tds += `<td style="font-size: 8px; padding: 2px; color: ${color}; font-weight: bold;">${val}</td>`;
+                }
+                let h=0, sk=0, iz=0, al=0;
+                for(let d=1; d<=31; d++) {
+                    const cell = document.getElementById(`att_${s.id}_${d}`);
+                    const val = cell?.innerText || '';
+                    if (val === 'H') h++;
+                    else if (val === 'S') sk++;
+                    else if (val === 'I') iz++;
+                    else if (val === 'A') al++;
+                }
+                rowsHtml += `<tr>
+                    <td style="padding: 2px; text-align: center;">${i + 1}</td>
+                    <td style="padding: 2px;">${s.name}</td>
+                    ${tds}
+                    <td style="padding: 2px; text-align: center;">${h}</td>
+                    <td style="padding: 2px; text-align: center;">${sk}</td>
+                    <td style="padding: 2px; text-align: center;">${iz}</td>
+                    <td style="padding: 2px; text-align: center;">${al}</td>
+                </tr>`;
+            });
             
             let html = `<div style="font-family: Arial; color: #000;">
                 <h3 style="text-align: center; margin: 0;">DAFTAR HADIR SISWA</h3>
-                <p style="text-align: center; margin: 2px 0 10px;">Kelas: ${cls?.name || 'Semua'} | Tanggal: ${dateStr}</p>
-                <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
-                    <thead><tr style="background: #eee;">
-                        <th style="padding: 5px; border: 1px solid #ddd; width: 5%;">No</th>
-                        <th style="padding: 5px; border: 1px solid #ddd; width: 15%;">NIS</th>
-                        <th style="padding: 5px; border: 1px solid #ddd;">Nama Siswa</th>
-                        <th style="padding: 5px; border: 1px solid #ddd; width: 20%;">Status</th>
-                        <th style="padding: 5px; border: 1px solid #ddd; width: 25%;">Tanda Tangan</th>
-                    </tr></thead>
-                    <tbody>`;
-            if (students.length === 0) {
-                html += `<tr><td colspan="5" style="text-align:center; padding: 10px; border: 1px solid #ddd;">Tidak ada data siswa.</td></tr>`;
-            } else {
-                students.forEach((s, i) => {
-                    const status = document.getElementById(`att_${s.id}`)?.value || 'Hadir';
-                    const statusColor = status === 'Hadir' ? 'green' : status === 'Alpa' ? 'red' : 'orange';
-                    html += `<tr>
-                        <td style="padding: 5px; border: 1px solid #ddd; text-align: center;">${i + 1}</td>
-                        <td style="padding: 5px; border: 1px solid #ddd;">${s.nis}</td>
-                        <td style="padding: 5px; border: 1px solid #ddd;">${s.name}</td>
-                        <td style="padding: 5px; border: 1px solid #ddd; text-align: center; color: ${statusColor}; font-weight: bold;">${status}</td>
-                        <td style="padding: 5px; border: 1px solid #ddd;"></td>
-                    </tr>`;
-                });
-            }
-            html += `</tbody></table></div>`;
+                <p style="text-align: center; margin: 2px 0 10px;">Kelas: ${cls?.name || 'Semua'} | Bulan: ${monthStr}</p>
+                <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+                    <thead>
+                        <tr style="background: #eee;">
+                            <th rowspan="2" style="padding: 4px; border: 1px solid #ddd;">No</th>
+                            <th rowspan="2" style="padding: 4px; border: 1px solid #ddd;">Nama Siswa</th>
+                            <th colspan="31" style="border: 1px solid #ddd;">Tanggal</th>
+                            <th rowspan="2" style="padding: 4px; border: 1px solid #ddd;">H</th>
+                            <th rowspan="2" style="padding: 4px; border: 1px solid #ddd;">S</th>
+                            <th rowspan="2" style="padding: 4px; border: 1px solid #ddd;">I</th>
+                            <th rowspan="2" style="padding: 4px; border: 1px solid #ddd;">A</th>
+                        </tr>
+                        <tr style="background: #eee;">
+                            ${daysHtml}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rowsHtml}
+                    </tbody>
+                </table>
+            </div>`;
             openPrintPreview(html);
         }
 
-        async function saveAttendance() { const students = await DB.get('students'); const date = document.getElementById('att_date').value; if(!date){ showToast('Pilih tanggal!', 'error'); return; } for(const s of students) { const status = document.getElementById(`att_${s.id}`).value; const existingAtt = await sb.from('attendance').select('*').eq('student_id', s.id).eq('date', date).eq('user_id', currentUser.id).single(); if(existingAtt.data) { await DB.update('attendance', existingAtt.data.id, { status }); } else { await DB.insert('attendance', { student_id: s.id, date, status, subject: 'Umum' }); } } showToast('Absensi disimpan!', 'success'); }
+        async function saveAttendance() { 
+            const students = await DB.get('students');
+            const dateVal = document.getElementById('att_date').value;
+            if(!dateVal){ showToast('Pilih tanggal!', 'error'); return; }
+            const day = new Date(dateVal).getDate();
+            let saved = 0;
+            for(const s of students) {
+                const cell = document.getElementById(`att_${s.id}_${day}`);
+                const status = cell?.innerText || '';
+                
+                const { data: existingAtt } = await sb.from('attendance').select('*').eq('student_id', s.id).eq('date', dateVal).eq('user_id', currentUser.id).single();
+                
+                if (status !== '') {
+                    if (existingAtt.data) {
+                        await DB.update('attendance', existingAtt.data.id, { status });
+                    } else {
+                        await DB.insert('attendance', { student_id: s.id, date: dateVal, status, subject: 'Umum' });
+                    }
+                    saved++;
+                }
+            }
+            showToast(`${saved} data absensi tersimpan!`, 'success');
+        }
+
         async function renderGrades() { const students = await DB.get('students'); const subjects = await DB.get('subjects'); const grades = await DB.get('grades'); if(currentUser.role === 'siswa') { const myGrades = grades.filter(g => g.student_id === currentUser.id); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl"><h3 class="font-bold mb-4 text-slate-800 dark:text-white">Nilai Saya</h3><ul class="divide-y dark:divide-slate-700">${myGrades.length ? myGrades.map(g => { const sub = subjects.find(s => s.id === g.subject_id); return `<li class="py-3 flex justify-between text-slate-700 dark:text-slate-300"><span>${sub?.name || ''} (${g.type})</span><span class="font-bold text-blue-600">${g.score}</span></li>`; }).join('') : '<li class="py-4 text-center text-slate-500 dark:text-slate-400">Belum ada nilai.</li>'}</ul></div>`; return; } document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold text-slate-800 dark:text-white">Input Nilai Massal</h3><button onclick="gradeForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Input Nilai</button></div><table class="w-full text-sm"><thead class="bg-slate-50 dark:bg-slate-700"><tr><th class="px-4 py-3 text-slate-800 dark:text-white">Nama</th><th class="px-4 py-3 text-slate-800 dark:text-white">Mapel</th><th class="px-4 py-3 text-slate-800 dark:text-white">Tipe</th><th class="px-4 py-3 text-slate-800 dark:text-white">Nilai</th><th class="px-4 py-3 text-slate-800 dark:text-white">Aksi</th></tr></thead><tbody class="divide-y dark:divide-slate-700">${grades.length ? grades.map(g => { const std = students.find(s => s.id === g.student_id); const sub = subjects.find(s => s.id === g.subject_id); return `<tr><td class="px-4 py-3 text-slate-700 dark:text-slate-300">${std?.name || ''}</td><td class="px-4 py-3 text-slate-700 dark:text-slate-300">${sub?.name || ''}</td><td class="px-4 py-3 text-slate-700 dark:text-slate-300">${g.type}</td><td class="px-4 py-3 font-bold text-blue-600">${g.score}</td><td class="px-4 py-3 flex gap-2"><button onclick="gradeForm('${g.id}')" class="text-xs text-blue-500">Edit</button><button onclick="deleteData('grades', '${g.id}', renderGrades)" class="text-xs text-red-500">Hapus</button></td></tr>`; }).join('') : `<tr><td colspan="5" class="text-center py-4 text-slate-500 dark:text-slate-400">Belum ada nilai.</td></tr>`}</tbody></table></div>`; }
         async function gradeForm(id = null) { const students = await DB.get('students'); const subjects = await DB.get('subjects'); let g = null; if(id) { g = (await DB.get('grades')).find(x => x.id === id); } openModal('Input Nilai', `<form id="gradeForm" class="space-y-4"><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Siswa</label><select id="g_student" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${students.map(s => `<option value="${s.id}" ${g?.student_id == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Mapel</label><select id="g_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}" ${g?.subject_id == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Tipe</label><select id="g_type" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option ${g?.type == 'Tugas' ? 'selected' : ''}>Tugas</option><option ${g?.type == 'Ulangan Harian' ? 'selected' : ''}>Ulangan Harian</option><option ${g?.type == 'PTS' ? 'selected' : ''}>PTS</option><option ${g?.type == 'PAS' ? 'selected' : ''}>PAS</option></select></div><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Nilai</label><input type="number" id="g_score" value="${g?.score || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('gradeForm').onsubmit = async (e) => { e.preventDefault(); const payload = { student_id: document.getElementById('g_student').value, subject_id: document.getElementById('g_subject').value, type: document.getElementById('g_type').value, score: parseInt(document.getElementById('g_score').value) }; await saveData('grades', payload, id); closeModal(); renderGrades(); }; }
-        async function renderAssignments() { const assignments = await DB.get('assignments'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold text-slate-800 dark:text-white">Daftar Tugas</h3><button onclick="assignmentForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Buat Tugas</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4">${assignments.length ? assignments.map(a => `<div class="p-4 border dark:border-slate-700 rounded-lg"><h4 class="font-bold text-slate-800 dark:text-white">${a.title}</h4><p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Deadline: ${a.deadline}</p><p class="text-sm mt-2 text-slate-700 dark:text-slate-300">${a.description}</p><div class="mt-3 flex gap-2"><button onclick="assignmentForm('${a.id}')" class="text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded">Edit</button><button onclick="deleteData('assignments', '${a.id}', renderAssignments)" class="text-xs bg-red-100 text-red-600 px-3 py-1 rounded">Hapus</button></div></div>`).join('') : '<div class="col-span-3 text-center py-8 text-slate-500 dark:text-slate-400">Belum ada tugas.</div>'}</div></div>`; }
-        async function assignmentForm(id = null) { const classes = await DB.get('classes'); const subjects = await DB.get('subjects'); let a = null; if(id) { a = (await DB.get('assignments')).find(x => x.id === id); } openModal('Buat Tugas', `<form id="assignmentForm" class="space-y-4"><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Judul</label><input type="text" id="a_title" value="${a?.title || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Deskripsi</label><textarea id="a_desc" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${a?.description || ''}</textarea></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Mapel</label><select id="a_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}" ${a?.subject_id == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Kelas</label><select id="a_class" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}" ${a?.class_id == c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select></div></div><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Deadline</label><input type="date" id="a_deadline" value="${a?.deadline || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('assignmentForm').onsubmit = async (e) => { e.preventDefault(); const payload = { title: document.getElementById('a_title').value, description: document.getElementById('a_desc').value, subject_id: document.getElementById('a_subject').value, class_id: document.getElementById('a_class').value, deadline: document.getElementById('a_deadline').value }; await saveData('assignments', payload, id); closeModal(); renderAssignments(); }; }
+        async function renderAssignments() { const assignments = await DB.get('assignments'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold text-slate-800 dark:text-white">Daftar Tugas</h3><button onclick="assignmentForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Buat Tugas</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4">${assignments.length ? assignments.map(a => `<div class="p-4 border dark:border-slate-700 rounded-lg"><h4 class="font-bold text-slate-800 dark:text-white">${a.title}</h4><p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Deadline: ${formatDateID(a.deadline)}</p><p class="text-sm mt-2 text-slate-700 dark:text-slate-300">${a.description}</p><div class="mt-3 flex gap-2"><button onclick="assignmentForm('${a.id}')" class="text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded">Edit</button><button onclick="deleteData('assignments', '${a.id}', renderAssignments)" class="text-xs bg-red-100 text-red-600 px-3 py-1 rounded">Hapus</button></div></div>`).join('') : '<div class="col-span-3 text-center py-8 text-slate-500 dark:text-slate-400">Belum ada tugas.</div>'}</div></div>`; }
+        async function assignmentForm(id = null) { const classes = await DB.get('classes'); const subjects = await DB.get('subjects'); let a = null; if(id) { a = (await DB.get('assignments')).find(x => x.id === id); } openModal('Buat Tugas', `<form id="assignmentForm" class="space-y-4"><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Judul</label><input type="text" id="a_title" value="${a?.title || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Deskripsi</label><textarea id="a_desc" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${a?.description || ''}</textarea></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Mapel</label><select id="a_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}" ${a?.subject_id == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Kelas</label><select id="a_class" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}" ${a?.class_id == c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select></div></div><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Deadline</label><input type="date" id="a_deadline" value="${a?.deadline || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" style="color-scheme: light;"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('assignmentForm').onsubmit = async (e) => { e.preventDefault(); const payload = { title: document.getElementById('a_title').value, description: document.getElementById('a_desc').value, subject_id: document.getElementById('a_subject').value, class_id: document.getElementById('a_class').value, deadline: document.getElementById('a_deadline').value }; await saveData('assignments', payload, id); closeModal(); renderAssignments(); }; }
         async function renderMateri() { const materi = await DB.get('materi'); const subjects = await DB.get('subjects'); const classes = await DB.get('classes'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold text-slate-800 dark:text-white">Materi Pembelajaran</h3><button onclick="materiForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Tambah Materi</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4">${materi.length ? materi.map(m => { const sub = subjects.find(s => s.id === m.subject_id); const cls = classes.find(c => c.id === m.class_id); return `<div class="p-4 border dark:border-slate-700 rounded-lg"><h4 class="font-bold text-slate-800 dark:text-white">${m.title}</h4><p class="text-xs text-slate-500 dark:text-slate-400 mt-1">${sub?.name || ''} | ${cls?.name || ''}</p><p class="text-sm mt-2 text-slate-700 dark:text-slate-300">${m.description}</p><a href="${m.link}" target="_blank" class="mt-3 text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded inline-block">Buka Materi</a><div class="mt-3 flex gap-2"><button onclick="materiForm('${m.id}')" class="text-xs text-blue-500">Edit</button><button onclick="deleteData('materi', '${m.id}', renderMateri)" class="text-xs text-red-500">Hapus</button></div></div>`; }).join('') : '<div class="col-span-3 text-center py-8 text-slate-500 dark:text-slate-400">Belum ada materi.</div>'}</div></div>`; }
         async function materiForm(id = null) { const classes = await DB.get('classes'); const subjects = await DB.get('subjects'); let m = null; if(id) { m = (await DB.get('materi')).find(x => x.id === id); } openModal('Tambah Materi', `<form id="materiForm" class="space-y-4"><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Judul</label><input type="text" id="m_title" value="${m?.title || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Deskripsi</label><textarea id="m_desc" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${m?.description || ''}</textarea></div><div class="grid grid-cols-2 gap-4"><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Mapel</label><select id="m_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${subjects.map(s => `<option value="${s.id}" ${m?.subject_id == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Kelas</label><select id="m_class" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}" ${m?.class_id == c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select></div></div><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Link</label><input type="url" id="m_link" value="${m?.link || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('materiForm').onsubmit = async (e) => { e.preventDefault(); const payload = { title: document.getElementById('m_title').value, description: document.getElementById('m_desc').value, subject_id: document.getElementById('m_subject').value, class_id: document.getElementById('m_class').value, link: document.getElementById('m_link').value }; await saveData('materi', payload, id); closeModal(); renderMateri(); }; }
         
@@ -719,7 +1050,7 @@
                                         <td class="px-4 py-3 text-slate-700 dark:text-slate-300">${std?.name || ''}</td>
                                         <td class="px-4 py-3 text-slate-700 dark:text-slate-300">${k.month}</td>
                                         <td class="px-4 py-3 text-slate-700 dark:text-slate-300">Rp ${k.amount.toLocaleString('id-ID')}</td>
-                                        <td class="px-4 py-3 text-slate-700 dark:text-slate-300">${k.duedate || '-'}</td>
+                                        <td class="px-4 py-3 text-slate-700 dark:text-slate-300">${formatDateID(k.duedate)}</td>
                                         <td class="px-4 py-3"><span class="px-2 py-1 text-xs rounded ${k.status==='Lunas'?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}">${k.status}</span></td>
                                         <td class="px-4 py-3 flex gap-2">
                                             ${k.status !== 'Lunas' ? `<button onclick="confirmPayment('${k.id}')" class="text-xs text-green-600">Lunasi</button>` : ''}
@@ -741,7 +1072,7 @@
                 <div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Siswa</label><select id="k_student" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${students.map(s => `<option value="${s.id}" ${k?.student_id == s.id ? 'selected' : ''}>${s.name}</option>`).join('')}</select></div>
                 <div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Bulan</label><input type="text" id="k_month" value="${k?.month || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" placeholder="Contoh: Agustus 2024"></div>
                 <div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Jumlah Tagihan</label><input type="number" id="k_amount" value="${k?.amount || 150000}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>
-                <div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Tanggal Jatuh Tempo</label><input type="date" id="k_duedate" value="${k?.duedate || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>
+                <div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Tanggal Jatuh Tempo</label><input type="date" id="k_duedate" value="${k?.duedate || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" style="color-scheme: light;"></div>
                 <div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Status</label><select id="k_status" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option ${k?.status == 'Belum Bayar' ? 'selected' : ''}>Belum Bayar</option><option ${k?.status == 'Lunas' ? 'selected' : ''}>Lunas</option></select></div>
                 <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button>
             </form>`); 
@@ -763,7 +1094,7 @@
         async function confirmPayment(id) { await DB.update('keuangan', id, { status: 'Lunas' }); showToast('Pembayaran lunas!', 'success'); renderKeuangan(); }
         async function renderRapor() { if(currentUser.role === 'siswa') { printRapor(currentUser.id); return; } const students = await DB.get('students'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl"><h3 class="font-bold mb-4 text-slate-800 dark:text-white">Cetak Rapor</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4">${students.length ? students.map(s => `<button onclick="printRapor('${s.id}')" class="p-4 border dark:border-slate-700 rounded-lg text-left"><p class="font-bold text-slate-800 dark:text-white">${s.name}</p><p class="text-xs text-slate-500 dark:text-slate-400">NIS: ${s.nis}</p><span class="mt-2 inline-block text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">Cetak</span></button>`).join('') : '<div class="col-span-3 text-center py-8 text-slate-500 dark:text-slate-400">Belum ada siswa.</div>'}</div></div>`; }
         async function printRapor(studentId) { const student = (await DB.get('students')).find(s => s.id === studentId); const classes = (await DB.get('classes')).find(c => c.id === student.class_id); const grades = (await DB.get('grades')).filter(g => g.student_id === studentId); const subjects = await DB.get('subjects'); const profile = (await DB.get('school_profile'))[0] || {}; let gradeRows = ''; let totalScore = 0; let totalSubjects = 0; subjects.forEach(sub => { const subGrades = grades.filter(g => g.subject_id === sub.id); if(subGrades.length > 0){ const avgScore = Math.round(subGrades.reduce((s, g) => s + g.score, 0) / subGrades.length); const predikat = avgScore >= 90 ? 'A' : avgScore >= 80 ? 'B' : avgScore >= 70 ? 'C' : 'D'; gradeRows += `<tr><td style="padding: 8px; border: 1px solid #ddd;">${sub.name}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${sub.kkm}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${avgScore}</td><td style="padding: 8px; border: 1px solid #ddd; text-align:center;">${predikat}</td></tr>`; totalScore += avgScore; totalSubjects++; } }); const finalAvg = totalSubjects ? (totalScore/totalSubjects).toFixed(1) : 0; const kopHTML = await generateKopHTML(); const printableHTML = `<div style="font-family: Arial; color: #000;">${kopHTML}<h3 style="text-align: center; margin: 20px 0;">RAPOR SISWA</h3><table style="width: 100%; margin-bottom: 20px;"><tr><td>Nama</td><td>: ${student.name}</td><td>Kelas</td><td>: ${classes?.name || '-'}</td></tr><tr><td>NIS</td><td>: ${student.nis}</td><td>Semester</td><td>: ${profile.semester || '-'}</td></tr></table><table style="width: 100%; border-collapse: collapse;"><thead><tr style="background: #eee;"><th style="padding: 8px; border: 1px solid #ddd;">Mapel</th><th style="padding: 8px; border: 1px solid #ddd;">KKM</th><th style="padding: 8px; border: 1px solid #ddd;">Nilai</th><th style="padding: 8px; border: 1px solid #ddd;">Predikat</th></tr></thead><tbody>${gradeRows || `<tr><td colspan="4" style="text-align:center; padding: 10px; border: 1px solid #ddd;">Belum ada nilai</td></tr>`}</tbody><tfoot><tr><td colspan="2" style="padding: 8px; border: 1px solid #ddd; text-align: right;">Rata-rata:</td><td colspan="2" style="padding: 8px; border: 1px solid #ddd; text-align: center;">${finalAvg}</td></tr></tfoot></table></div>`; openPrintPreview(printableHTML); }
-        async function renderAnnouncements() { const anns = await DB.get('announcements'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold text-slate-800 dark:text-white">Pengumuman</h3><button onclick="annForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Buat Pengumuman</button></div><div class="space-y-4">${anns.length ? anns.map(a => `<div class="p-4 bg-slate-50 dark:bg-slate-700 rounded-lg"><div class="flex justify-between"><h4 class="font-bold text-slate-800 dark:text-white">${a.title}</h4><div class="flex gap-2"><button onclick="annForm('${a.id}')" class="text-xs text-blue-500">Edit</button><button onclick="deleteData('announcements', '${a.id}', renderAnnouncements)" class="text-xs text-red-500">Hapus</button></div></div><p class="text-xs text-slate-400 dark:text-slate-500 mt-1">${a.date}</p><p class="text-sm mt-2 text-slate-700 dark:text-slate-300">${a.content}</p></div>`).join('') : '<p class="text-sm text-slate-500 dark:text-slate-400 text-center py-4">Belum ada pengumuman.</p>'}</div></div>`; }
+        async function renderAnnouncements() { const anns = await DB.get('announcements'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl"><div class="flex justify-between mb-4"><h3 class="font-bold text-slate-800 dark:text-white">Pengumuman</h3><button onclick="annForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">Buat Pengumuman</button></div><div class="space-y-4">${anns.length ? anns.map(a => `<div class="p-4 bg-slate-50 dark:bg-slate-700 rounded-lg"><div class="flex justify-between"><h4 class="font-bold text-slate-800 dark:text-white">${a.title}</h4><div class="flex gap-2"><button onclick="annForm('${a.id}')" class="text-xs text-blue-500">Edit</button><button onclick="deleteData('announcements', '${a.id}', renderAnnouncements)" class="text-xs text-red-500">Hapus</button></div></div><p class="text-xs text-slate-400 dark:text-slate-500 mt-1">${formatDateID(a.date)}</p><p class="text-sm mt-2 text-slate-700 dark:text-slate-300">${a.content}</p></div>`).join('') : '<p class="text-sm text-slate-500 dark:text-slate-400 text-center py-4">Belum ada pengumuman.</p>'}</div></div>`; }
         async function annForm(id = null) { let a = null; if(id) { a = (await DB.get('announcements')).find(x => x.id === id); } openModal('Buat Pengumuman', `<form id="annForm" class="space-y-4"><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Judul</label><input type="text" id="an_title" value="${a?.title || ''}" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Isi</label><textarea id="an_content" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${a?.content || ''}</textarea></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>`); document.getElementById('annForm').onsubmit = async (e) => { e.preventDefault(); const payload = { title: document.getElementById('an_title').value, content: document.getElementById('an_content').value, date: new Date().toISOString().split('T')[0] }; await saveData('announcements', payload, id); closeModal(); renderAnnouncements(); }; }
         async function renderSettings() { 
             const profile = (await DB.get('school_profile'))[0] || {}; 
