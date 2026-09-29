@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://js.puter.com/v2/"></script>
@@ -68,9 +68,10 @@
         .dark #aiMessages .text-gray-800 { color: rgb(241 245 249) !important; }
         .dark #aiMessages .text-gray-500 { color: rgb(148 163 184) !important; }
         
-        /* CSS KAMERA FINAL */
-        #qr-reader { width: 100%; height: 350px; background: #000; border-radius: 8px; overflow: hidden; position: relative; }
-        #qr-reader video { width: 100% !important; height: 100% !important; object-fit: cover !important; border-radius: 8px; }
+        /* CSS KAMERA ASLI BROWSER */
+        #qr-reader-container { width: 100%; height: 350px; background: #000; border-radius: 8px; overflow: hidden; position: relative; }
+        #qr-video { width: 100% !important; height: 100% !important; object-fit: cover !important; border-radius: 8px; }
+        #qr-canvas { display: none; }
         
         /* DESAIN KARTU SISWA */
         .student-card-print { width: 8.5cm; height: 5.4cm; border-radius: 12px; overflow: hidden; display: flex; font-family: 'Arial', sans-serif; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative; background: white; border: 2px solid #1e3a8a; }
@@ -169,7 +170,7 @@
             update: async (table, id, payload) => { const { data, error } = await sb.from(table).update(payload).eq('id', id).eq('user_id', currentUser.id).select(); if (error) { console.error(`Error updating ${table}:`, error); showToast(`Gagal update: ${error.message}`, 'error'); return null; } return data; },
             remove: async (table, id) => { const { error } = await sb.from(table).delete().eq('id', id).eq('user_id', currentUser.id); if (error) { console.error(`Error deleting ${table}:`, error); showToast(`Gagal hapus: ${error.message}`, 'error'); return false; } return true; }
         };
-        let currentUser = null; let currentPage = 'dashboard'; let html5QrCode = null;
+        let currentUser = null; let currentPage = 'dashboard'; let videoStream = null;
         function toggleAuth(form) { if(form === 'register') { document.getElementById('loginForm').classList.add('hidden'); document.getElementById('registerForm').classList.remove('hidden'); } else { document.getElementById('registerForm').classList.add('hidden'); document.getElementById('loginForm').classList.remove('hidden'); } }
         document.getElementById('registerForm').addEventListener('submit', async (e) => { e.preventDefault(); const name = document.getElementById('regName').value; const email = document.getElementById('regEmail').value; const password = document.getElementById('regPassword').value; const { data, error } = await sb.auth.signUp({ email, password, options: { data: { name } } }); if (error) { showToast('Gagal daftar: ' + error.message, 'error'); return; } let newUserId = data.user?.id; let newUserEmail = data.user?.email; if (newUserId) { await sb.from('users').upsert({ id: newUserId, name: name, username: newUserEmail, role: 'guru', is_premium: false, payment_status: 'Belum Bayar' }); currentUser = { id: newUserId, email: newUserEmail, name: name, role: 'guru', is_premium: false, payment_status: 'Belum Bayar', avatar_url: AI_IMG }; localStorage.setItem('gs_currentUser', JSON.stringify(currentUser)); showToast('Pendaftaran berhasil!', 'success'); initApp(); } else { showToast('Pendaftaran berhasil! Silakan login.', 'success'); toggleAuth('login'); document.getElementById('loginEmail').value = email; } });
         document.getElementById('loginForm').addEventListener('submit', async (e) => { e.preventDefault(); const email = document.getElementById('loginEmail').value; const password = document.getElementById('loginPassword').value; const { data, error } = await sb.auth.signInWithPassword({ email, password }); if (error) { showToast('Login gagal: ' + error.message, 'error'); return; } let userData = null; const { data: userDataRes } = await sb.from('users').select('*').eq('id', data.user.id).maybeSingle(); if (userDataRes) { userData = userDataRes; } else { const { data: newUserData } = await sb.from('users').upsert({ id: data.user.id, name: email.split('@')[0], username: email, role: 'guru', is_premium: false, payment_status: 'Belum Bayar' }).select().maybeSingle(); if (newUserData) userData = newUserData; else userData = { name: email, role: 'guru', is_premium: false, payment_status: 'Belum Bayar' }; } currentUser = { id: data.user.id, email: data.user.email, name: userData?.name || data.user.email, role: userData?.role || 'guru', avatar_url: userData?.avatar_url || AI_IMG, is_premium: userData?.is_premium || false, payment_status: userData?.payment_status || 'Belum Bayar', payment_sender: userData?.payment_sender || '' }; localStorage.setItem('gs_currentUser', JSON.stringify(currentUser)); showToast('Login berhasil!', 'success'); initApp(); });
@@ -180,7 +181,7 @@
         if (localStorage.getItem('gs_darkMode') === 'true') { document.documentElement.classList.add('dark'); document.getElementById('iconSun').classList.remove('hidden'); document.getElementById('iconMoon').classList.add('hidden'); }
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); document.getElementById('sidebarOverlay').classList.toggle('hidden'); }
         function openModal(title, contentHtml) { document.getElementById('modalTitle').innerText = title; document.getElementById('modalContent').innerHTML = contentHtml; document.getElementById('modalContainer').classList.remove('hidden'); }
-        function closeModal() { if(html5QrCode && html5QrCode.isScanning) { html5QrCode.stop().catch(e=>console.error(e)); } document.getElementById('modalContainer').classList.add('hidden'); }
+        function closeModal() { stopCameraStream(); document.getElementById('modalContainer').classList.add('hidden'); }
         const menus = [
             { id: 'dashboard', label: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', roles: ['admin', 'guru', 'siswa'] },
             { id: 'ai', label: 'Asisten AI Guru', icon: 'M12 2a7 7 0 00-7 7v3a7 7 0 0014 0V9a7 7 0 00-7-7zm-4 18h8M9 22h6', roles: ['admin', 'guru', 'siswa'] },
@@ -439,74 +440,69 @@
         async function renderSchedules() { const schedules = await DB.get('schedules'); const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']; document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex justify-between mb-4"><h3 class="font-semibold text-slate-800 dark:text-white">Jadwal Pelajaran</h3><button onclick="scheduleForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Jadwal</button></div><div class="overflow-x-auto"><table class="w-full text-sm text-left border-collapse"><thead class="bg-slate-50 dark:bg-slate-700"><tr><th class="px-4 py-3 border dark:border-slate-600 text-slate-800 dark:text-white">Jam</th>${days.map(d => `<th class="px-4 py-3 border dark:border-slate-600 text-slate-800 dark:text-white">${d}</th>`).join('')}</tr></thead><tbody>${['07:30-09:00', '09:15-10:45', '11:00-12:30'].map(time => `<tr><td class="px-4 py-3 border dark:border-slate-600 font-medium text-slate-800 dark:text-white">${time}</td>${days.map(day => { const sch = schedules.find(s => s.day === day && s.start_time === time.split('-')[0]); return `<td class="px-4 py-3 border dark:border-slate-600 text-xs text-slate-700 dark:text-slate-300">${sch ? `${sch.subject}<br><span class="text-blue-500">${sch.teacher}</span>` : '-'}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div></div>`; }
         async function scheduleForm(id = null) { const classes = await DB.get('classes'); openModal('Tambah Jadwal', `<form id="scheduleForm" class="space-y-4"><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Hari</label><select id="sc_day" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option>Senin</option><option>Selasa</option><option>Rabu</option><option>Kamis</option><option>Jumat</option></select></div><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Jam Mulai</label><input type="text" id="sc_start" value="07:30" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Jam Selesai</label><input type="text" id="sc_end" value="09:00" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Kelas</label><select id="sc_class" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">${classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}</select></div><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Mapel</label><input type="text" id="sc_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1 text-slate-700 dark:text-slate-300">Guru</label><input type="text" id="sc_teacher" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button></form>`); document.getElementById('scheduleForm').onsubmit = async (e) => { e.preventDefault(); const payload = { day: document.getElementById('sc_day').value, start_time: document.getElementById('sc_start').value, end_time: document.getElementById('sc_end').value, class_id: document.getElementById('sc_class').value, subject: document.getElementById('sc_subject').value, teacher: document.getElementById('sc_teacher').value }; await saveData('schedules', payload, id); closeModal(); renderSchedules(); }; }
         
-        async function renderAttendance() { const students = await DB.get('students'); const classes = await DB.get('classes'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex flex-wrap justify-between mb-4 items-center gap-2"><h3 class="font-semibold text-slate-800 dark:text-white">Input Absensi</h3><div class="flex gap-2 flex-wrap"><select id="att_class" class="px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white text-sm">${classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}</select><input type="date" id="att_date" class="px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white text-sm"><button onclick="startQRScanner()" class="bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" /></svg> Scan QR</button><button onclick="printAttendance()" class="bg-purple-600 text-white px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg> Cetak</button></div></div><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase"><tr><th class="px-4 py-3 text-slate-800 dark:text-white">Nama Siswa</th><th class="px-4 py-3 text-slate-800 dark:text-white">Status</th></tr></thead><tbody class="divide-y dark:divide-slate-700">${students.length ? students.map(s => `<tr><td class="px-4 py-3 text-slate-800 dark:text-slate-300">${s.name}</td><td class="px-4 py-3"><select id="att_${s.id}" class="px-2 py-1 border rounded dark:bg-slate-700 dark:text-white text-xs"><option value="Hadir">Hadir</option><option value="Sakit">Sakit</option><option value="Izin">Izin</option><option value="Alpa">Alpa</option></select></td></tr>`).join('') : `<tr><td colspan="2" class="text-center py-4 text-slate-500 dark:text-slate-400">Belum ada data siswa.</td></tr>`}</tbody></table></div><button onclick="saveAttendance()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Simpan Absensi</button></div>`; }
+        async function renderAttendance() { const students = await DB.get('students'); const classes = await DB.get('classes'); document.getElementById('content').innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex flex-wrap justify-between mb-4 items-center gap-2"><h3 class="font-semibold text-slate-800 dark:text-white">Input Absensi</h3><div class="flex gap-2 flex-wrap"><select id="att_class" class="px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white text-sm">${classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}</select><input type="date" id="att_date" class="px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white text-sm"><button onclick="startNativeScanner()" class="bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" /></svg> Scan QR</button><button onclick="printAttendance()" class="bg-purple-600 text-white px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg> Cetak</button></div></div><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase"><tr><th class="px-4 py-3 text-slate-800 dark:text-white">Nama Siswa</th><th class="px-4 py-3 text-slate-800 dark:text-white">Status</th></tr></thead><tbody class="divide-y dark:divide-slate-700">${students.length ? students.map(s => `<tr><td class="px-4 py-3 text-slate-800 dark:text-slate-300">${s.name}</td><td class="px-4 py-3"><select id="att_${s.id}" class="px-2 py-1 border rounded dark:bg-slate-700 dark:text-white text-xs"><option value="Hadir">Hadir</option><option value="Sakit">Sakit</option><option value="Izin">Izin</option><option value="Alpa">Alpa</option></select></td></tr>`).join('') : `<tr><td colspan="2" class="text-center py-4 text-slate-500 dark:text-slate-400">Belum ada data siswa.</td></tr>`}</tbody></table></div><button onclick="saveAttendance()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Simpan Absensi</button></div>`; }
         
-        async function startQRScanner() {
+        async function startNativeScanner() {
             const date = document.getElementById('att_date').value;
             if(!date){ showToast('Pilih tanggal absensi dahulu!', 'error'); return; }
             
             openModal('Scan QR Siswa', `
-                <div id="qr-reader" style="width: 100%; height: 350px; background: #000; border-radius: 8px; overflow: hidden;"></div>
-                <p class="text-center text-sm mt-3 text-slate-500 dark:text-slate-400">Arahkan kamera ke QR Code. Jika kamera gelap, pastikan izin kamera diaktifkan di browser.</p>
-                <div id="qr-reader-status" class="text-center text-xs text-yellow-500 mt-2"></div>
+                <div id="qr-reader-container" style="width: 100%; height: 350px; background: #000; border-radius: 8px; overflow: hidden; position: relative;">
+                    <video id="qr-video" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover;"></video>
+                    <canvas id="qr-canvas"></canvas>
+                    <div id="qr-scan-overlay" style="position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); width: 70%; height: 30%; border: 3px solid #3b82f6; border-radius: 8px; box-shadow: 0 0 0 1000px rgba(0,0,0,0.4);"></div>
+                </div>
+                <p class="text-center text-sm mt-3 text-slate-500 dark:text-slate-400">Arahkan kamera ke QR Code siswa.</p>
+                <div id="qr-status" class="text-center text-xs text-yellow-500 mt-2">Memulai kamera...</div>
             `);
-            
-            html5QrCode = new Html5Qrcode("qr-reader");
-            const config = { fps: 10, qrbox: { width: 250, height: 150 } };
-            
-            const onScanSuccess = async (decodedText) => {
-                if (html5QrCode.isScanning) {
-                    html5QrCode.stop().then(() => {
-                        closeModal();
-                        processQRResult(decodedText);
-                    }).catch(err => console.error(err));
-                }
-            };
 
-            const onScanError = (errorMessage) => {
-                // Abaikan error parsing frame
-            };
-
-            const statusEl = document.getElementById('qr-reader-status');
-            if (statusEl) statusEl.innerText = "Meminta izin kamera...";
-
-            // Helper function untuk coba mulai kamera
-            const tryStartCamera = async (constraints) => {
-                try {
-                    await html5QrCode.start(constraints, config, onScanSuccess, onScanError);
-                    if (statusEl) statusEl.innerText = "Kamera aktif. Arahkan ke QR Code.";
-                    return true;
-                } catch (err) {
-                    console.warn(`Gagal start dengan constraints ${JSON.stringify(constraints)}:`, err);
-                    return false;
-                }
-            };
+            const video = document.getElementById('qr-video');
+            const canvas = document.getElementById('qr-canvas');
+            const context = canvas.getContext('2d', { willReadFrequently: true });
+            const statusEl = document.getElementById('qr-status');
 
             try {
-                // 1. Coba kamera belakang (HP)
-                let started = await tryStartCamera({ facingMode: { exact: "environment" } });
+                videoStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: "environment" } // Minta kamera belakang
+                });
+                video.srcObject = videoStream;
+                statusEl.innerText = "Kamera aktif. Arahkan ke QR Code.";
                 
-                // 2. Jika gagal, coba kamera default (biasanya depan di HP atau webcam di PC)
-                if (!started) {
-                    started = await tryStartCamera({ facingMode: "environment" });
-                }
-                if (!started) {
-                    started = await tryStartCamera({ facingMode: "user" });
-                }
-                // 3. Jika masih gagal, coba kamera apa saja yang tersedia
-                if (!started) {
-                    started = await tryStartCamera({ video: true });
-                }
+                // Loop untuk scan QR
+                const scanLoop = () => {
+                    if (!videoStream) return; // Stop if closed
+                    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                        const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "dontInvert" });
+                        
+                        if (code) {
+                            const decodedText = code.data;
+                            stopCameraStream();
+                            closeModal();
+                            processQRResult(decodedText);
+                            return;
+                        }
+                    }
+                    requestAnimationFrame(scanLoop);
+                };
+                requestAnimationFrame(scanLoop);
 
-                if (!started) {
-                    if (statusEl) statusEl.innerText = "Gagal mengakses kamera. Cek izin browser.";
-                    showToast('Gagal mengakses kamera. Pastikan tidak ada aplikasi lain yang menggunakan kamera dan izinkan akses kamera di browser (ikon gembok/setting di kanan atas).', 'error');
-                    setTimeout(() => closeModal(), 3000);
-                }
             } catch (err) {
-                console.error("Error scanner:", err);
-                showToast('Error kamera: ' + err, 'error');
-                closeModal();
+                console.error("Kamera Error:", err);
+                statusEl.innerText = "Gagal mengakses kamera: " + err.message;
+                statusEl.classList.remove('text-yellow-500');
+                statusEl.classList.add('text-red-500');
+                showToast('Gagal mengakses kamera. Pastikan izin kamera diberikan dan tidak ada aplikasi lain yang menggunakannya.', 'error');
+            }
+        }
+
+        function stopCameraStream() {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
             }
         }
 
