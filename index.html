@@ -443,7 +443,7 @@
             const date = document.getElementById('att_date').value;
             if(!date){ showToast('Pilih tanggal absensi dahulu!', 'error'); return; }
             
-            openModal('Scan QR Siswa', `<div id="qr-reader" style="width: 100%; min-height: 300px;"></div><p class="text-center text-sm mt-2 text-slate-500">Arahkan kamera ke QR Code di Kartu Siswa.</p>`);
+            openModal('Scan QR Siswa', `<div id="qr-reader" style="width: 100%; min-height: 300px; background: #000;"></div><p class="text-center text-sm mt-2 text-slate-500">Arahkan kamera ke QR Code di Kartu Siswa.</p>`);
             
             html5QrCode = new Html5Qrcode("qr-reader");
             const config = { fps: 10, qrbox: { width: 250, height: 150 } };
@@ -469,32 +469,50 @@
             
             const onScanFailure = (error) => { /* Ignore scan errors */ };
             
-            // Menggunakan fungsi native getUserMedia untuk deteksi kamera yang lebih stabil
-            if (!navigator.mediaDevice || !navigator.mediaDevices.getUserMedia) {
-                showToast('Browser tidak mendukung akses kamera.', 'error');
+            // Cek dulu apakah browser mendukung kamera
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                showToast('Browser tidak mendukung akses kamera. Gunakan Chrome/Safari terbaru.', 'error');
                 closeModal();
                 return;
             }
 
-            try {
-                // Coba akses kamera belakang (utama) untuk HP
-                await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-                await html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure);
-            } catch (err1) {
-                try {
-                    // Jika gagal (misal di PC atau tidak ada kamera belakang), fallback ke kamera apa saja yang tersedia
-                    await navigator.mediaDevices.getUserMedia({ video: true });
-                    await html5QrCode.start({ facingMode: "user" }, config, onScanSuccess, onScanFailure);
-                } catch (err2) {
-                    // Jika masih gagal, paksa buka kamera default tanpa constraint facingMode
-                    try {
-                        await html5QrCode.start(null, config, onScanSuccess, onScanFailure);
-                    } catch (err3) {
-                        showToast('Gagal membuka kamera. Pastikan izin kamera diaktifkan di browser.', 'error');
-                        closeModal();
-                    }
+            // Enumerasi kamera yang tersedia di perangkat
+            Html5Qrcode.getCameras().then(devices => {
+                if (devices && devices.length) {
+                    let cameraId = devices[0].id; // Default kamera pertama
+                    // Cari kamera belakang (back) jika ada
+                    const backCam = devices.find(d => d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('environment') || d.label.toLowerCase().includes('rear'));
+                    if (backCam) cameraId = backCam.id;
+                    
+                    html5QrCode.start(cameraId, config, onScanSuccess, onScanFailure)
+                        .catch(err => {
+                            console.error("Gagal memulai kamera spesifik, mencoba kamera default...", err);
+                            // Fallback ke constraint facingMode
+                            html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure)
+                            .catch(err2 => {
+                                 html5QrCode.start({ facingMode: "user" }, config, onScanSuccess, onScanFailure)
+                                 .catch(err3 => {
+                                     showToast('Gagal akses kamera. Pastikan izin diberikan (HTTPS/localhost).', 'error');
+                                     closeModal();
+                                 });
+                            });
+                        });
+                } else {
+                    showToast('Tidak ada kamera yang ditemukan di perangkat ini.', 'error');
+                    closeModal();
                 }
-            }
+            }).catch(err => {
+                console.error("Gagal mendapatkan list kamera: ", err);
+                // Fallback langsung ke getUserMedia constraint
+                html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure)
+                .catch(err2 => {
+                     html5QrCode.start({ facingMode: "user" }, config, onScanSuccess, onScanFailure)
+                     .catch(err3 => {
+                         showToast('Gagal akses kamera. Pastikan izin diberikan.', 'error');
+                         closeModal();
+                     });
+                });
+            });
         }
 
         async function printAttendance() {
