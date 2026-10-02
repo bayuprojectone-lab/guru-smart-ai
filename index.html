@@ -137,13 +137,12 @@ input, textarea, select { font-size: 16px !important; }
 </style>
 </head>
 <body class="bg-slate-100 dark:bg-slate-900 transition-colors duration-300">
-<div id="authScreen" class="min-h-[100dvh] flex items-center justify-center p-4 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700">
+<div id="authScreen" class="min-h-[100dvh] flex flex-col items-center justify-center p-4 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700">
 <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 w-full max-w-md fade-in">
 <div class="text-center mb-8">
 <img src="https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe" onerror="imgFallback(this)" alt="GURU SMART" class="w-32 h-32 rounded-xl mx-auto mb-4 object-cover bg-slate-200">
 <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">GURU SMART</h1>
 <p class="text-slate-500 dark:text-slate-400 mt-2 text-sm">Sistem Manajemen Sekolah Berbasis Cloud</p>
-<p class="text-[10px] text-slate-400 mt-3">Powered by @Bayu_projectone</p>
 </div>
 <form id="loginForm" class="space-y-4">
 <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label><input type="email" id="loginEmail" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" required></div>
@@ -159,6 +158,7 @@ input, textarea, select { font-size: 16px !important; }
 <p class="text-center text-sm text-slate-500 mt-4">Sudah punya akun? <button type="button" onclick="toggleAuth('login')" class="text-blue-600 font-semibold hover:underline">Login di sini</button></p>
 </form>
 </div>
+<p class="text-center text-xs text-white/70 mt-6">Powered by @bayuprojectone</p>
 </div>
 <div id="appScreen" class="hidden fixed inset-0 flex flex-col overflow-hidden bg-slate-100 dark:bg-slate-900">
 <div class="flex flex-1 min-h-0 overflow-hidden">
@@ -254,29 +254,43 @@ document.getElementById('loginForm').addEventListener('submit',async function(e)
   btn.disabled=true;btn.innerText='Memproses...';
   var email=document.getElementById('loginEmail').value;
   var password=document.getElementById('loginPassword').value;
-  var r=await sb.auth.signInWithPassword({email:email,password:password});
-  if(r.error){
-    var errMsg=r.error.message.toLowerCase();
-    if(errMsg.includes('invalid login credentials')){
-      showToast('⚠️ Email atau Password salah! Silakan periksa kembali.','error');
-    } else if(errMsg.includes('email not confirmed')){
-      showToast('⚠️ Email belum dikonfirmasi. Silakan cek email Anda.','error');
-    } else {
-      showToast('Gagal: '+r.error.message,'error');
+  try {
+    var r=await sb.auth.signInWithPassword({email:email,password:password});
+    if(r.error){
+      var errMsg=r.error.message.toLowerCase();
+      if(errMsg.includes('invalid login credentials')){
+        showToast('⚠️ Email atau Password salah! Silakan periksa kembali.','error');
+      } else if(errMsg.includes('email not confirmed')){
+        showToast('⚠️ Email belum dikonfirmasi. Silakan cek email Anda.','error');
+      } else {
+        showToast('Gagal: '+r.error.message,'error');
+      }
+      btn.disabled=false;btn.innerText='Masuk';
+      return;
     }
+    
+    var supabaseUser = r.data.user; // PERBAIKAN UTAMA ADA DI SINI: r.data.user bukan r.user
+    if(!supabaseUser) {
+      showToast('Gagal mendapatkan data user.', 'error');
+      btn.disabled=false;btn.innerText='Masuk';
+      return;
+    }
+
+    var ud=null;
+    var r2=await sb.from('users').select('*').eq('id',supabaseUser.id).maybeSingle();
+    if(r2.data){ud=r2.data;}else{
+      var r3=await sb.from('users').upsert({id:supabaseUser.id,name:email.split('@')[0],username:email,role:'guru',is_premium:false,payment_status:'Belum Bayar'}).select().maybeSingle();
+      if(r3.data)ud=r3.data;else ud={name:email,role:'guru',is_premium:false,payment_status:'Belum Bayar'};
+    }
+    currentUser={id:supabaseUser.id,email:supabaseUser.email,name:ud?.name||supabaseUser.email,role:ud?.role||'guru',avatar_url:ud?.avatar_url||AI_IMG,is_premium:ud?.is_premium||false,payment_status:ud?.payment_status||'Belum Bayar',payment_sender:ud?.payment_sender||''};
+    localStorage.setItem('gs_currentUser',JSON.stringify(currentUser));
+    
+    showToast('Login berhasil!','success');
+    initApp();
+  } catch(err){
+    showToast('Terjadi kesalahan: '+err.message,'error');
     btn.disabled=false;btn.innerText='Masuk';
-    return;
   }
-  var ud=null;
-  var r2=await sb.from('users').select('*').eq('id',r.user.id).maybeSingle();
-  if(r2.data){ud=r2.data;}else{
-    var r3=await sb.from('users').upsert({id:r.user.id,name:email.split('@')[0],username:email,role:'guru',is_premium:false,payment_status:'Belum Bayar'}).select().maybeSingle();
-    if(r3.data)ud=r3.data;else ud={name:email,role:'guru',is_premium:false,payment_status:'Belum Bayar'};
-  }
-  currentUser={id:r.user.id,email:r.user.email,name:ud?.name||r.user.email,role:ud?.role||'guru',avatar_url:ud?.avatar_url||AI_IMG,is_premium:ud?.is_premium||false,payment_status:ud?.payment_status||'Belum Bayar',payment_sender:ud?.payment_sender||''};
-  localStorage.setItem('gs_currentUser',JSON.stringify(currentUser));
-  showToast('Login berhasil!','success');
-  initApp();
 });
 async function logout(){await sb.auth.signOut();localStorage.removeItem('gs_currentUser');currentUser=null;location.reload();}
 async function checkSession(){var r=await sb.auth.getSession();if(r.data.session){await sb.auth.refreshSession();var dbU=null;var r2=await sb.from('users').select('*').eq('id',r.data.session.user.id).maybeSingle();if(r2.data)dbU=r2.data;var su=JSON.parse(localStorage.getItem('gs_currentUser')||'{}');currentUser={id:r.data.session.user.id,email:r.data.session.user.email,name:dbU?.name||su.name||r.data.session.user.email,role:dbU?.role||su.role||'guru',avatar_url:dbU?.avatar_url||su.avatar_url||AI_IMG,is_premium:dbU?.is_premium||false,payment_status:dbU?.payment_status||'Belum Bayar',payment_sender:dbU?.payment_sender||''};localStorage.setItem('gs_currentUser',JSON.stringify(currentUser));return true;}return false;}
@@ -396,7 +410,6 @@ new Chart(ctx,{type:'bar',data:{labels:types,datasets:[{label:'Rata-rata Nilai',
 async function generateMathSoal(shape) {
   showToast('🧮 Menyiapkan soal ' + shape + ' di Asisten AI...', 'info');
   navigate('ai');
-  // Tunggu render AI selesai
   await new Promise(r => setTimeout(r, 600));
   var input = document.getElementById('aiInput');
   if (input) {
@@ -429,9 +442,9 @@ document.addEventListener('click',function(e){if(e.target&&e.target.classList&&e
 async function loadAttendanceData(){var di=document.getElementById('att_date');if(!di)return;var dv=di.value||new Date().toISOString().split('T')[0];var m=dv.substring(0,7);document.querySelectorAll('.day-header').forEach(function(h){h.classList.remove('bg-blue-600','text-white');});var sd=parseInt(dv.split('-')[2],10);var sh=document.querySelector('.day-header[data-day="'+sd+'"]');if(sh)sh.classList.add('bg-blue-600','text-white');try{var r=await sb.from('attendance').select('*').eq('user_id',currentUser.id).gte('date',m+'-01').lte('date',m+'-'+String(currentDaysInMonth).padStart(2,'0'));if(r.error){console.error('Load:',r.error);return;}document.querySelectorAll('.att-cell').forEach(function(c){c.innerText='';c.classList.remove('bg-green-100','bg-blue-100','bg-yellow-100','bg-red-100','text-green-700','text-blue-700','text-yellow-700','text-red-700');});if(r.data&&r.data.length>0){r.data.forEach(function(a){var d=parseInt(a.date.split('-')[2],10);var c=document.getElementById('att_'+a.student_id+'_'+d);if(c){c.innerText=a.status;if(a.status==='H')c.classList.add('bg-green-100','text-green-700');else if(a.status==='S')c.classList.add('bg-blue-100','text-blue-700');else if(a.status==='I')c.classList.add('bg-yellow-100','text-yellow-700');else if(a.status==='A')c.classList.add('bg-red-100','text-red-700');}});}}catch(err){console.error('Load:',err);}updateRecap();}
 function updateRecap(){document.querySelectorAll('tr').forEach(function(r){var im=r.querySelector('td[id^="att_"]');if(im){var sid=im.id.split('_')[1];var h=0,s=0,i=0,a=0;r.querySelectorAll('td[id^="att_"]').forEach(function(c){var v=c.innerText.trim()||'';if(v==='H')h++;else if(v==='S')s++;else if(v==='I')i++;else if(v==='A')a++;});var rh=document.getElementById('recap_h_'+sid);if(rh)rh.innerText=h;var rs=document.getElementById('recap_s_'+sid);if(rs)rs.innerText=s;var ri=document.getElementById('recap_i_'+sid);if(ri)ri.innerText=i;var ra=document.getElementById('recap_a_'+sid);if(ra)ra.innerText=a;}});}
 async function saveAttendance(){var dv=document.getElementById('att_date').value;if(!dv){showToast('Pilih tanggal!','error');return;}var m=dv.substring(0,7);var all=await DB.get('students');var sc=document.getElementById('att_class').value;var sts=sc?all.filter(function(s){return s.class_id===sc;}):all;if(sts.length===0){showToast('Tidak ada siswa.','info');return;}var sids=sts.map(function(s){return s.id;});var rows=[];for(var i=0;i<sts.length;i++){var s=sts[i];for(var d=1;d<=currentDaysInMonth;d++){var c=document.getElementById('att_'+s.id+'_'+d);var st=c?.innerText.trim()||'';if(st==='H'||st==='S'||st==='I'||st==='A'){rows.push({user_id:currentUser.id,student_id:s.id,date:m+'-'+String(d).padStart(2,'0'),status:st,subject:'Umum'});}}}showToast('Menyimpan...','info');try{if(sids.length>0){var dr=await sb.from('attendance').delete().eq('user_id',currentUser.id).in('student_id',sids).gte('date',m+'-01').lte('date',m+'-'+String(currentDaysInMonth).padStart(2,'0'));if(dr.error)console.error('Del:',dr.error);}if(rows.length>0){var ir=await sb.from('attendance').insert(rows);if(ir.error)throw ir.error;}showToast('Absensi tersimpan!','success');}catch(err){console.error('Save:',err);showToast('Gagal: '+(err.message||'Unknown'),'error');}await loadAttendanceData();}
-async function startNativeScanner(){var d=document.getElementById('att_date')?.value;if(!d){showToast('Pilih tanggal!','error');return;}openModal('Scan QR Siswa',`<div class="flex flex-col items-center space-y-4"><div class="w-full max-w-xs p-1.5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg"><div id="qr-reader" class="relative w-full aspect-square bg-slate-900 rounded-xl overflow-hidden flex items-center justify-center"><div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent z-10 pointer-events:none"></div><div class="absolute top-0 left-0 w-12 h-12 border-t-4 border-l-4 border-white rounded-tl-lg m-2 z-10"></div><div class="absolute top-0 right-0 w-12 h-12 border-t-4 border-r-4 border-white rounded-tr-lg m-2 z-10"></div><div class="absolute bottom-0 left-0 w-12 h-12 border-b-4 border-l-4 border-white rounded-bl-lg m-2 z-10"></div><div class="absolute bottom-0 right-0 w-12 h-12 border-b-4 border-r-4 border-white rounded-br-lg m-2 z-10"></div><div class="text-center text-slate-500 text-sm z-0"><svg class="animate-pulse w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg><span id="qr-status">Memulai kamera...</span></div></div></div><div id="scan-result" class="w-full text-center min-h-[40px]"></div><div class="w-full border-t dark:border-slate-700 pt-4"><p class="text-xs text-slate-500 text-center mb-2">Atau input NIS manual:</p><div class="flex gap-2"><input type="text" id="manual-nis-input" placeholder="Masukkan NIS Siswa" class="flex-1 px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white text-sm"><button onclick="manualInputNIS()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Cari</button></div></div><button onclick="closeScannerModal()" class="w-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-white px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">Tutup Scanner</button></div>`);startScanCamera();}
+async function startNativeScanner(){var d=document.getElementById('att_date')?.value;if(!d){showToast('Pilih tanggal!','error');return;}openModal('Scan QR Siswa',`<div class="flex flex-col items-center space-y-4"><div class="w-full max-w-md p-1.5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg"><div id="qr-reader" class="relative w-full aspect-square bg-slate-900 rounded-xl overflow-hidden flex items-center justify-center"><div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent z-10 pointer-events:none"></div><div class="absolute top-0 left-0 w-16 h-16 border-t-4 border-l-4 border-white rounded-tl-lg m-2 z-10"></div><div class="absolute top-0 right-0 w-16 h-16 border-t-4 border-r-4 border-white rounded-tr-lg m-2 z-10"></div><div class="absolute bottom-0 left-0 w-16 h-16 border-b-4 border-l-4 border-white rounded-bl-lg m-2 z-10"></div><div class="absolute bottom-0 right-0 w-16 h-16 border-b-4 border-r-4 border-white rounded-br-lg m-2 z-10"></div><div class="text-center text-slate-500 text-sm z-0"><svg class="animate-pulse w-16 h-16 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg><span id="qr-status">Memulai kamera...</span></div></div></div><div id="scan-result" class="w-full text-center min-h-[40px]"></div><div class="w-full border-t dark:border-slate-700 pt-4"><p class="text-xs text-slate-500 text-center mb-2">Atau input NIS manual:</p><div class="flex gap-2"><input type="text" id="manual-nis-input" placeholder="Masukkan NIS Siswa" class="flex-1 px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white text-sm"><button onclick="manualInputNIS()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Cari</button></div></div><button onclick="closeScannerModal()" class="w-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-white px-6 py-2.5 rounded-lg text-sm font-semibold hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">Tutup Scanner</button></div>`);startScanCamera();}
 function closeScannerModal(){stopCameraStream();document.querySelectorAll('video').forEach(function(v){if(v.srcObject){v.srcObject.getTracks().forEach(function(track){track.stop();});v.srcObject=null;}v.remove();});closeModal();}
-function startScanCamera(){try{html5QrCode=new Html5Qrcode("qr-reader");html5QrCode.start({facingMode:"environment"},{fps:10,qrbox:{width:250,height:250}},function(t){stopCameraStream();processQRResult(t);},function(){});var st=document.getElementById('qr-status');if(st)st.innerText="Arahkan kamera ke QR Siswa";}catch(e){var st=document.getElementById('qr-status');if(st)st.innerText="Kamera gagal diakses";}}
+function startScanCamera(){try{html5QrCode=new Html5Qrcode("qr-reader");html5QrCode.start({facingMode:"environment"},{fps:10,qrbox:{width:280,height:280}},function(t){stopCameraStream();processQRResult(t);},function(){});var st=document.getElementById('qr-status');if(st)st.innerText="Arahkan kamera ke QR Siswa";}catch(e){var st=document.getElementById('qr-status');if(st)st.innerText="Kamera gagal diakses";}}
 function stopCameraStream(){if(html5QrCode){html5QrCode.stop().then(function(){html5QrCode.clear();html5QrCode=null;}).catch(function(){html5QrCode=null;});}}
 window.manualInputNIS=function(){var v=document.getElementById('manual-nis-input').value.trim();if(v){processQRResult(v);}else{showToast('NIS kosong!','error');}};
 async function processQRResult(t){var sts=await DB.get('students');var n=t;try{var p=JSON.parse(t);if(p.nis)n=p.nis;}catch(e){}var std=sts.find(function(s){return s.nis===n||s.nis===t;});if(std){var dv=document.getElementById('att_date').value;var day=new Date(dv).getDate();var c=document.getElementById('att_'+std.id+'_'+day);if(c){c.innerText='H';c.classList.remove('bg-blue-100','bg-yellow-100','bg-red-100','text-blue-700','text-yellow-700','text-red-700');c.classList.add('bg-green-100','text-green-700');updateRecap();var result=document.getElementById('scan-result');if(result){result.innerHTML='<div class="bg-green-100 text-green-700 px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>✅ '+std.name+' berhasil absen!</div>';}try{var er=await sb.from('attendance').select('id').eq('student_id',std.id).eq('date',dv).eq('user_id',currentUser.id).maybeSingle();if(er.data)await sb.from('attendance').update({status:'H'}).eq('id',er.data.id).eq('user_id',currentUser.id);else await sb.from('attendance').insert([{user_id:currentUser.id,student_id:std.id,date:dv,status:'H',subject:'Umum'}]);}catch(e){console.error('Scan:',e);}setTimeout(function(){var r=document.getElementById('scan-result');if(r)r.innerHTML='';startScanCamera();},1500);}else{var result=document.getElementById('scan-result');if(result)result.innerHTML='<div class="bg-red-100 text-red-700 px-4 py-2.5 rounded-lg text-sm font-semibold">❌ Siswa tidak ada di tabel kelas.</div>';setTimeout(function(){var r=document.getElementById('scan-result');if(r)r.innerHTML='';startScanCamera();},2000);}}else{var result=document.getElementById('scan-result');if(result)result.innerHTML='<div class="bg-red-100 text-red-700 px-4 py-2.5 rounded-lg text-sm font-semibold">❌ QR tidak dikenal: '+t+'</div>';setTimeout(function(){var r=document.getElementById('scan-result');if(r)r.innerHTML='';startScanCamera();},2000);}}
@@ -647,7 +660,7 @@ window.sendSoalToAI=async function(){
     var ad=document.createElement('div');
     ad.className='flex justify-start fade-in';
     ad.innerHTML='<div class="max-w-[95%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500 dark:text-slate-400">📋 Hasil Koreksi & Pembahasan AI</div><div class="ai-output text-gray-800 dark:text-white">'+formattedHTML+'</div></div>';
-    box.appendChild(ad);
+  box.appendChild(ad);
     box.scrollTop=box.scrollHeight;
     
     ['aiPrintBtn','aiWordBtn','aiPrintKeyBtn'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('hidden');});
