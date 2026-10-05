@@ -361,7 +361,7 @@ navigate('ai');
 await new Promise(r=>setTimeout(r,600));
 var input=document.getElementById('aiInput');
 if(input){
-input.value='Buatkan 1 soal matematika tingkat SMP/SMA tentang '+shape+'. WAJIB sertakan gambar ilustrasi bangun ruang/geometri tersebut menggunakan tag SVG langsung di dalam output (jangan gunakan blok kode markdown seperti ```svg, cukup tulis <svg>...</svg>). Gunakan rumus matematika baku yang cocok untuk sekolah di Indonesia (contoh: Luas = panjang × lebar, Volume = π × r² × tinggi, gunakan simbol ² untuk pangkat dua dan ³ untuk pangkat tiga). Setelah soal dan gambar, berikan pembahasan dan jawaban. Format output markdown yang rapi.';
+input.value='Buatkan 1 soal matematika tingkat asd/SMP/SMA tentang '+shape+'. WAJIB sertakan gambar ilustrasi bangun ruang/geometri tersebut menggunakan tag SVG langsung di dalam output (jangan gunakan blok kode markdown seperti ```svg, cukup tulis <svg>...</svg>). Gunakan rumus matematika baku yang cocok untuk sekolah di Indonesia (contoh: Luas = panjang × lebar, Volume = π × r² × tinggi, gunakan simbol ² untuk pangkat dua dan ³ untuk pangkat tiga). Setelah soal dan gambar, berikan pembahasan dan jawaban. WAJIB TULISKAN LANGKAH-LANGKAH PENYELESAIAN SECARA DETAIL DAN JELAS (langkah 1, langkah 2, dst) sehingga siswa bisa memahami alur perhitungannya. SELANJUTNYA, WAJIB TAMBAHKAN SATU BAGIAN BARU BERLABEL "Alternatif Cara Penyelesaian" yang menunjukkan cara lain untuk menyelesaikan soal yang sama secara matematis. Format output markdown yang rapi.';
 sendAI();
 }
 }
