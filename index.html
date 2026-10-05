@@ -1136,9 +1136,100 @@ async function sendAI(){var ip=document.getElementById('aiInput');if(!ip||!ip.va
 async function handleAIImageUpload(event){var file=event.target.files[0];if(!file)return;var btn=document.getElementById('aiSendBtn');btn.disabled=true;btn.innerText='Memproses Gambar...';var box=document.getElementById('aiMessages');var reader=new FileReader();reader.onload=async function(e){var iu=e.target.result;var ud=document.createElement('div');ud.className='flex justify-end fade-in';ud.innerHTML='<div class="max-w-[80%] rounded-xl px-2 py-2 bg-blue-600 text-white shadow-sm"><div class="text-xs opacity-70 mb-1 px-2">Anda (Gambar)</div><img src="'+iu+'" class="rounded-lg max-w-full h-auto"></div>';box.appendChild(ud);var td=document.createElement('div');td.id='typingIndicator';td.className='flex justify-start fade-in';td.innerHTML='<div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500 dark:text-slate-400">Asisten AI</div><div class="animate-pulse text-blue-600">Membaca teks (OCR)...</div></div>';box.appendChild(td);box.scrollTop=box.scrollHeight;try{var messages=[{role:'user',content:[{type:'text',text:"Baca semua teks di gambar ini."},{type:'image_url',image_url:{url:iu}}]}];var res=await puter.ai.chat(messages);var et=typeof res==='string'?res:(res?.message?.content||res?.text||'');document.getElementById('typingIndicator')?.remove();if(!et||!et.trim()){throw new Error("Tidak ada teks terdeteksi.");}var fh=formatSoalHTML(et);lastAIFormattedHTML=fh;var ad=document.createElement('div');ad.className='flex justify-start fade-in';ad.innerHTML='<div class="max-w-[95%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500 dark:text-slate-400">Asisten AI (Teks hasil Scan)</div><div class="ai-output text-gray-800 dark:text-white">'+fh+'</div></div>';box.appendChild(ad);box.scrollTop=box.scrollHeight;['aiPrintBtn','aiWordBtn'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('hidden');});showToast('Teks dipindai!','success');}catch(err){document.getElementById('typingIndicator')?.remove();showToast('Gagal: '+err.message,'error');}finally{btn.disabled=false;btn.innerText='Kirim';event.target.value='';}};reader.readAsDataURL(file);}
 
 // === PRINT & EXPORT ===
-async function openPrintPreview(htmlContent){var pw=window.open('','_blank');if(!pw){showToast('Pop-up diblokir.','error');document.getElementById('printArea').innerHTML=htmlContent;window.print();return;}pw.document.write('<html lang="id"><head><title>Cetak</title><script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"><\/script><style>body{font-family:Times New Roman,Georgia,serif;margin:20px;color:#000}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}table,th,td{border:1px solid #000!important;border-collapse:collapse!important}.rapor-info-table,.rapor-info-table td,.rapor-info-table tr{border:none!important;background:transparent!important}.card-info-table,.card-info-table td,.card-info-table tr{border:none!important;background:transparent!important}.ai-output h1,.ai-output h2,.ai-output h3{font-weight:bold;margin-top:12px;margin-bottom:6px}.ai-output p{margin-bottom:8px}.ai-output ul,.ai-output ol{margin-left:20px;margin-bottom:8px}.ai-output table{width:100%;border-collapse:collapse;margin-bottom:8px}.ai-output th,.ai-output td{border:1px solid #000;padding:6px;text-align:left}.ai-output img{max-width:100%;height:auto;border-radius:8px;margin:10px 0;box-shadow:0 2px 5px rgba(0,0,0,.1)}.ai-output svg{max-width:100%;height:auto;margin:10px 0}.ai-output .soal-item{margin-bottom:18px;padding-bottom:15px;border-bottom:1px solid #eee;page-break-inside:avoid}.ai-output .soal-header{display:flex;align-items:flex-start;gap:6px;margin-bottom:8px}.ai-output .soal-number{font-weight:bold;min-width:28px}.ai-output .soal-text{font-size:14px;line-height:1.7;font-weight:500;flex:1}.ai-output .soal-opts{display:flex;gap:24px;margin:8px 0 8px 34px}.ai-output .opt-col{flex:1;display:flex;flex-direction:column;gap:4px}.ai-output .soal-opt{display:flex;align-items:flex-start;font-size:13px}.ai-output .soal-opt .opt-label{font-weight:bold;margin-right:6px;min-width:20px}@media print{body{margin:0}.no-print{display:none}}</style></head><body><div class="no-print" style="text-align:center;margin-bottom:20px;position:fixed;bottom:10px;left:0;width:100%"><button onclick="window.print()" style="padding:10px 20px;font-size:16px;background:#2563eb;color:white;border:none;border-radius:8px;cursor:pointer">🖨️ Cetak / PDF</button></div><div id="contentArea">'+htmlContent+'</div><script>var ca=document.getElementById("contentArea");var rt=ca.textContent;if(rt.trim().startsWith("#")||rt.includes("**")){ca.innerHTML=marked.parse(rt);}<\/script></body></html>');pw.document.close();pw.focus();setTimeout(function(){pw.print();},500);}
-async function printAIResult(includeKey){if(!lastAIFormattedHTML)return;var ch=lastAIFormattedHTML;if(!includeKey){ch=ch.replace(/<div class="kunci-jawaban-section[^"]*"[^>]*>[\s\S]*?<\/div><\/div>/g,'');ch=ch.replace(/<div class="soal-answer[^"]*"[^>]*>[\s\S]*?<\/div>/g,'');ch=ch.replace(/class="soal-opt[^"]*correct[^"]*"/g,'class="soal-opt"');}else{ch=ch.replace(/hide-on-print/g,'');}var kh=await generateKopHTML();openPrintPreview('<div style="font-family:Times New Roman,Georgia,serif;color:#000;padding:0;margin:0;width:100%">'+kh+'<div class="ai-output" style="color:#000;margin:0;padding:0">'+ch+'</div></div>');}
-async function exportToWord(){if(!lastAIFormattedHTML){showToast('Tidak ada teks.','error');return;}var td=document.createElement('div');td.innerHTML=lastAIFormattedHTML;td.querySelectorAll('.kunci-jawaban-section,.soal-answer').forEach(function(el){el.remove();});td.querySelectorAll('.soal-opt.correct').forEach(function(el){el.classList.remove('correct');});td.querySelectorAll('.soal-item').forEach(function(item){item.style.marginBottom='18px';item.style.paddingBottom='15px';item.style.borderBottom='1px solid #eee';item.style.overflow='hidden';});td.querySelectorAll('.soal-header').forEach(function(h){h.style.marginBottom='8px';});td.querySelectorAll('.soal-number').forEach(function(n){n.style.fontWeight='bold';n.style.marginRight='8px';});td.querySelectorAll('.soal-text').forEach(function(t){t.style.fontWeight='600';t.style.lineHeight='1.6';});td.querySelectorAll('.soal-opts').forEach(function(od){od.style.display='block';od.style.width='100%';od.style.marginLeft='25px';od.style.marginTop='8px';var cols=od.querySelectorAll('.opt-col');cols.forEach(function(col){col.style.display='inline-block';col.style.width='48%';col.style.verticalAlign='top';col.style.styleFloat='left';col.style.cssFloat='left';col.style.marginRight='2%';});});var ch=td.innerHTML;var kh=await generateKopHTML();var htmlContent='<div style="font-family:Times New Roman,Georgia,serif;color:#000;padding:0;margin:0;width:100%">'+kh+'<div class="ai-output" style="color:#000;margin:0;padding:0">'+ch+'</div></div>';var header='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Soal - GURU SMART</title><style>@page{size:21cm 29.7cm;margin:2cm}body{font-family:Times New Roman,Georgia,serif;font-size:12pt;color:#000;line-height:1.5}h2{text-align:center;font-size:16pt;margin-bottom:5px}p{text-align:center;font-size:10pt;margin-top:0}img{max-width:100%;height:auto}.ai-output table{width:100%;border-collapse:collapse;margin-bottom:8px}.ai-output th,.ai-output td{border:1px solid #000;padding:6px;text-align:left}.ai-output img{max-width:100%;height:auto;border-radius:8px;margin:10px 0;box-shadow:0 2px 5px rgba(0,0,0,.1)}.ai-output svg{max-width:100%;height:auto;margin:10px 0}.ai-output .soal-item{margin-bottom:18px;padding-bottom:15px;border-bottom:1px solid #eee;page-break-inside:avoid}.ai-output .soal-header{display:flex;align-items:flex-start;gap:6px;margin-bottom:8px}.ai-output .soal-number{font-weight:bold;min-width:28px}.ai-output .soal-text{font-size:14px;line-height:1.7;font-weight:500;flex:1}.ai-output .soal-opts{display:flex;gap:24px;margin:8px 0 8px 34px}.ai-output .opt-col{flex:1;display:flex;flex-direction:column;gap:4px}.ai-output .soal-opt{display:flex;align-items:flex-start;font-size:13px}.ai-output .soal-opt .opt-label{font-weight:normal !important;margin-right:6px;min-width:20px}</style></head><body>'+htmlContent+'</body></html>';var blob=new Blob(['\ufeff',header],{type:'application/msword'});var url=URL.createObjectURL(blob);var fd=document.createElement("a");fd.href=url;fd.download='Soal_Guru_Smart.doc';document.body.appendChild(fd);fd.click();document.body.removeChild(fd);URL.revokeObjectURL(url);showToast('Diekspor ke Word!','success');}
+async function openPrintPreview(htmlContent){var pw=window.open('','_blank');if(!pw){showToast('Pop-up diblokir.','error');document.getElementById('printArea').innerHTML=htmlContent;window.print();return;}pw.document.write('<html lang="id"><head><title>Cetak</title><script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"><\/script><style>body{font-family:Times New Roman,Georgia,serif;margin:20px;color:#000}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}table,th,td{border:1px solid #000!important;border-collapse:collapse!important}.rapor-info-table,.rapor-info-table td,.rapor-info-table tr{border:none!important;background:transparent!important}.card-info-table,.card-info-table td,.card-info-table tr{border:none!important;background:transparent!important}.ai-output h1,.ai-output h2,.ai-output h3{font-weight:bold;margin-top:12px;margin-bottom:6px}.ai-output p{margin-bottom:8px}.ai-output ul,.ai-output ol{margin-left:20px;margin-bottom:8px}.ai-output table{width:100%;border-collapse:collapse;margin-bottom:8px}.ai-output th,.ai-output td{border:1px solid #000;padding:6px;text-align:left}.ai-output img{max-width:100%;height:auto;border-radius:8px;margin:10px 0;box-shadow:0 2px 5px rgba(0,0,0,.1)}.ai-output svg{max-width:100%;height:auto;margin:10px 0}.ai-output .soal-item{margin-bottom:20px;padding-bottom:15px;border-bottom:1px solid #eee;page-break-inside:avoid}.ai-output .soal-header{display:flex;align-items:flex-start;gap:6px;margin-bottom:8px}.ai-output .soal-number{font-weight:bold;min-width:28px}.ai-output .soal-text{font-size:14px;line-height:1.7;font-weight:500;flex:1}.ai-output .soal-opts{display:flex;flex-direction:column;gap:6px;margin:10px 0 8px 34px}.ai-output .opt-col{flex:1;display:flex;flex-direction:column;gap:6px}.ai-output .soal-opt{display:flex;align-items:flex-start;font-size:13px;line-height:1.6}.ai-output .soal-opt .opt-label{font-weight:bold;margin-right:6px;min-width:20px}.ai-output .soal-answer{display:none}.ai-output .kunci-jawaban-section{display:none}@media print{body{margin:0}.no-print{display:none}}</style></head><body><div class="no-print" style="text-align:center;margin-bottom:20px;position:fixed;bottom:10px;left:0;width:100%"><button onclick="window.print()" style="padding:10px 20px;font-size:16px;background:#2563eb;color:white;border:none;border-radius:8px;cursor:pointer">🖨️ Cetak / PDF</button></div><div id="contentArea">'+htmlContent+'</div><script>var ca=document.getElementById("contentArea");var rt=ca.textContent;if(rt.trim().startsWith("#")||rt.includes("**")){ca.innerHTML=marked.parse(rt);}<\/script></body></html>');pw.document.close();pw.focus();setTimeout(function(){pw.print();},500);}
+
+// CETAK PDF (MENYEMBUNYIKAN KUNCI JAWABAN)
+async function printAIResult(includeKey){if(!lastAIFormattedHTML)return;var ch=lastAIFormattedHTML;
+  // Jangan sertakan kunci jawaban saat PDF (includeKey === false)
+  if(!includeKey){
+    ch=ch.replace(/<div class="kunci-jawaban-section[^"]*"[^>]*>[\s\S]*?<\/div><\/div>/g,'');
+    ch=ch.replace(/<div class="kunci-jawaban-section[^"]*"[^>]*>[\s\S]*?<\/div>/g,'');
+    ch=ch.replace(/<div class="soal-answer[^"]*"[^>]*>[\s\S]*?<\/div>/g,'');
+    ch=ch.replace(/class="soal-opt[^"]*correct[^"]*"/g,'class="soal-opt"');
+  } else {
+    ch=ch.replace(/hide-on-print/g,'');
+  }
+  var kh=await generateKopHTML();
+  openPrintPreview('<div style="font-family:Times New Roman,Georgia,serif;color:#000;padding:0;margin:0;width:100%">'+kh+'<div class="ai-output" style="color:#000;margin:0;padding:0">'+ch+'</div></div>');
+}
+
+// EXPORT KE WORD (FORMAT TABEL SOAL RAPI Bawah)
+async function exportToWord(){
+  if(!lastAIFormattedHTML){showToast('Tidak ada teks.','error');return;}
+  var td=document.createElement('div');
+  td.innerHTML=lastAIFormattedHTML;
+  
+  // Hilangkan kunci jawaban di Word
+  td.querySelectorAll('.kunci-jawaban-section,.soal-answer').forEach(function(el){el.remove();});
+  td.querySelectorAll('.soal-opt.correct').forEach(function(el){el.classList.remove('correct');});
+  
+  // Restruktur Tampilan Soal agar mirip dengan format contoh (Opsi berjejer ke bawah)
+  td.querySelectorAll('.soal-item').forEach(function(item){
+    item.style.marginBottom='20px';
+    item.style.paddingBottom='15px';
+    item.style.borderBottom='1px solid #eee';
+    item.style.overflow='hidden';
+    item.style.pageBreakInside='avoid';
+  });
+  td.querySelectorAll('.soal-header').forEach(function(h){
+    h.style.marginBottom='10px';
+    h.style.display='block';
+  });
+  td.querySelectorAll('.soal-number').forEach(function(n){
+    n.style.fontWeight='bold';
+    n.style.marginRight='8px';
+    n.style.display='inline-block';
+  });
+  td.querySelectorAll('.soal-text').forEach(function(t){
+    t.style.fontWeight='600';
+    t.style.lineHeight='1.6';
+    t.style.display='inline';
+  });
+  td.querySelectorAll('.soal-opts').forEach(function(od){
+    od.style.display='block';
+    od.style.width='100%';
+    od.style.marginLeft='25px';
+    od.style.marginTop='10px';
+    od.style.flexDirection='column';
+    od.style.gap='6px';
+    
+    var cols=od.querySelectorAll('.opt-col');
+    cols.forEach(function(col){
+      col.style.display='block';
+      col.style.width='100%';
+      col.style.marginBottom='6px';
+    });
+  });
+  td.querySelectorAll('.soal-opt').forEach(function(opt){
+    opt.style.display='block';
+    opt.style.marginBottom='6px';
+    opt.style.fontSize='13px';
+    opt.style.lineHeight='1.6';
+    opt.querySelectorAll('.opt-label').forEach(function(label){
+      label.style.fontWeight='bold';
+      label.style.marginRight='8px';
+      label.style.minWidth='20px';
+      label.style.display='inline-block';
+    });
+  });
+
+  var ch=td.innerHTML;
+  var kh=await generateKopHTML();
+  var htmlContent='<div style="font-family:Times New Roman,Georgia,serif;color:#000;padding:0;margin:0;width:100%">'+kh+'<div class="ai-output" style="color:#000;margin:0;padding:0">'+ch+'</div></div>';
+  
+  var header='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Soal - GURU SMART</title><style>@page{size:21cm 29.7cm;margin:2cm}body{font-family:Times New Roman,Georgia,serif;font-size:12pt;color:#000;line-height:1.5}h2{text-align:center;font-size:16pt;margin-bottom:5px}p{text-align:center;font-size:10pt;margin-top:0}img{max-width:100%;height:auto}.ai-output table{width:100%;border-collapse:collapse;margin-bottom:8px}.ai-output th,.ai-output td{border:1px solid #000;padding:6px;text-align:left}.ai-output img{max-width:100%;height:auto;border-radius:8px;margin:10px 0}.ai-output svg{max-width:100%;height:auto;margin:10px 0}.ai-output .soal-item{margin-bottom:20px;padding-bottom:15px;border-bottom:1px solid #eee;page-break-inside:avoid}.ai-output .soal-header{display:block;margin-bottom:10px}.ai-output .soal-number{font-weight:bold;min-width:28px;margin-right:8px;display:inline-block}.ai-output .soal-text{font-size:14px;line-height:1.7;font-weight:500;display:inline}.ai-output .soal-opts{display:block;width:100%;margin-left:25px;margin-top:10px;flex-direction:column;gap:6px}.ai-output .opt-col{display:block;width:100%;margin-bottom:6px}.ai-output .soal-opt{display:block;margin-bottom:6px;font-size:13px;line-height:1.6}.ai-output .soal-opt .opt-label{font-weight:bold;margin-right:8px;min-width:20px;display:inline-block}.ai-output .soal-answer{display:none}.ai-output .kunci-jawaban-section{display:none}</style></head><body>'+htmlContent+'</body></html>';
+  
+  var blob=new Blob(['\ufeff',header],{type:'application/msword'});
+  var url=URL.createObjectURL(blob);
+  var fd=document.createElement("a");
+  fd.href=url;
+  fd.download='Soal_Guru_Smart.doc';
+  document.body.appendChild(fd);
+  fd.click();
+  document.body.removeChild(fd);
+  URL.revokeObjectURL(url);
+  showToast('Diekspor ke Word!','success');
+}
 </script>
 </body>
 </html>
