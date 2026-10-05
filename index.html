@@ -72,7 +72,7 @@ input,textarea,select{font-size:16px!important}
 .card-sign-area img{display:block;height:25px;object-fit:contain;margin-bottom:-2px;}
 .card-sign-area .sign-placeholder{height:25px;}
 .card-sign-area .card-name{font-size:9px;margin:0;margin-top:2px;font-weight:bold;border-top:1px solid #555;padding-top:2px;white-space:nowrap;}
-.card-sign-area .card-nip{font-size:8px;margin:0;white-space:nowrap;margin-top:1px;}
+.card-sign-area .card-nip{font-size:8px;margin:0;white-space:nowrap;margin: top 0;px;}
 .student-card-print{width:8.5cm;height:5.4cm;border-radius:10px;overflow:hidden;display:flex;font-family:'Arial',sans-serif;position:relative;background:white;border:1.5px solid #1e3a8a;page-break-inside:avoid;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
 .att-table{font-size:10px;border-collapse:collapse;width:100%}
 .att-table th,.att-table td{border:1px solid #cbd5e1;padding:2px;text-align:center}
@@ -303,6 +303,7 @@ html+='<button onclick="navigate(\'attendance\')" class="bg-white/15 hover:bg-wh
 html+='<button onclick="navigate(\'grades\')" class="bg-white/15 hover:bg-white/25 backdrop-blur-sm transition-colors p-3 rounded-xl text-sm font-medium flex flex-col items-center gap-1.5 border border-white/10"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/></svg>Input Nilai</button>';
 html+='<button onclick="navigate(\'students\')" class="bg-white/15 hover:bg-white/25 backdrop-blur-sm transition-colors p-3 rounded-xl text-sm font-medium flex flex-col items-center gap-1.5 border border-white/10"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>Data Siswa</button>';
 html+='<button onclick="navigate(\'ai\')" class="bg-white/15 hover:bg-white/25 backdrop-blur-sm transition-colors p-3 rounded-xl text-sm font-medium flex flex-col items-center gap-1.5 border border-white/10"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2a7 7 0 00-7 7v3a7 7 0 0014 0V9a7 7 0 00-7-7zm-4 18h8M9 22h6"/></svg>Asisten AI</button>';
+html+='<button onclick="generateMathSoal(\'Lingkaran\')" class="bg-white/15 hover:bg-white/25 backdrop-blur-sm transition-colors p-3 rounded-xl text-sm font-medium flex flex-col items-center gap-1.5 border border-white/10"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3a9 9 0 100 18 9 9 0 000-18z"/></svg>Soal Geometri AI</button>';
 html+='</div></div></div></div></div>';
 
 html+='<div id="perangkatAjarSection" class="mt-6 bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 slide-up">';
@@ -600,7 +601,7 @@ async function renderAI(){
   }
   if(!isSignedIn){try{await puter.auth.signIn();renderAI();}catch(e){showToast('Gagal hubungkan AI.','error');}return;}
 
-  document.getElementById('content').innerHTML=
+  document.getElementById('content').innerHTML= 
   '<div class="flex flex-col flex-1 min-h-0 max-w-6xl w-full mx-auto bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden">'+
     '<div class="p-3 flex-none border-b dark:border-slate-700 flex justify-between items-center bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700 flex-wrap gap-2">'+
       '<div class="flex items-center gap-3">'+
@@ -609,7 +610,6 @@ async function renderAI(){
       '</div>'+
       '<div class="flex gap-1 bg-slate-100 dark:bg-slate-700 rounded-lg p-1 flex-wrap">'+
         '<button id="tabChatAI" onclick="switchAITab(\'chat\')" class="px-3 py-1.5 text-xs font-semibold rounded-md bg-blue-600 text-white">💬 Chat</button>'+
-        '<button id="tabMathAI" onclick="switchAITab(\'math\')" class="px-3 py-1.5 text-xs font-semibold rounded-md text-slate-600 dark:text-slate-300">🧮 Matematika</button>'+
         '<button id="tabKuisAI" onclick="switchAITab(\'kuis\')" class="px-3 py-1.5 text-xs font-semibold rounded-md text-slate-600 dark:text-slate-300">📝 Kuis</button>'+
         '<button id="tabPapanAI" onclick="switchAITab(\'papan\')" class="px-3 py-1.5 text-xs font-semibold rounded-md text-slate-600 dark:text-slate-300">🖌️ Papan Tulis</button>'+
       '</div>'+
@@ -629,27 +629,10 @@ async function renderAI(){
         '<div class="flex justify-end gap-2 mt-2 flex-wrap">'+
           '<button onclick="openSoalCameraModal()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.072 4h3.856a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Foto Soal</button>'+
           '<button onclick="uploadSoalImage()" class="bg-teal-500 hover:bg-teal-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Galeri Soal</button>'+
+          '<button onclick="generateMathSoal(\'Lingkaran\')" class="bg-indigo-500 hover:bg-indigo-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3a9 9 0 100 18 9 9 0 000-18z"/></svg>Soal Geometri</button>'+
           '<button id="aiWordBtn" onclick="exportToWord()" class="hidden bg-blue-500 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>Word</button>'+
           '<button id="aiPrintBtn" onclick="printAIResult(false)" class="hidden bg-slate-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>PDF</button>'+
           '<button id="aiPrintKeyBtn" onclick="printAIResult(true)" class="hidden bg-green-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>Kunci</button>'+
-        '</div>'+
-      '</div>'+
-    '</div>'+
-
-    // PANEL MATEMATIKA
-    '<div id="aiMathPanel" class="hidden flex-1 min-h-0 overflow-y-auto p-5 bg-slate-50 dark:bg-slate-900">'+
-      '<div class="max-w-3xl mx-auto space-y-6">'+
-        '<div class="text-center">'+
-          '<div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl mx-auto mb-4 flex items-center justify-center text-white shadow-lg"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></div>'+
-          '<h3 class="text-xl font-bold text-slate-800 dark:text-white">AI Matematika Bergambar</h3>'+
-          '<p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Pilih bentuk di bawah ini untuk membuat soal otomatis beserta gambar (SVG).</p>'+
-        '</div>'+
-        '<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">'+
-          (function(){var shapes=[['Kubus','M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9'],['Balok','M3 7.5h18M3 7.5v9h18v-9M3 7.5l4.5-4.5h13.5M3 16.5l4.5 4.5h13.5v-9'],['Prisma Segitiga','M12 3L3 18h18L12 3z M12 3v18'],['Tabung','M12 3c4.97 0 9 1.34 9 3v12c0 1.66-4.03 3-9 3s-9-1.34-9-3V6c0-1.66 4.03-3 9-3zm0 0c4.97 0 9 1.34 9 3s-4.03 3-9 3-9-1.34-9-3 4.03-3 9-3z'],['Segitiga','M12 3L3 18h18L12 3z'],['Lingkaran','M12 3a9 9 0 100 18 9 9 0 000-18z'],['Bangun Ruang Lainnya','M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4']];var out='';shapes.forEach(function(s){out+='<button onclick="generateMathSoal(\''+s[0]+'\')" class="flex flex-col items-center justify-center p-4 bg-white dark:bg-slate-800 rounded-xl shadow-sm hover:shadow-md transition-shadow border dark:border-slate-700 group"><svg class="w-10 h-10 mb-2 text-slate-500 group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="'+s[1]+'"/></svg><span class="text-xs font-medium text-slate-700 dark:text-slate-200">'+s[0]+'</span></button>';});return out;})()+
-        '</div>'+
-        '<div class="bg-blue-50 dark:bg-slate-800 p-4 rounded-xl text-sm text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-slate-700">'+
-          '<p class="font-semibold mb-1">💡 Tips Penggunaan:</p>'+
-          '<p>Klik salah satu bentuk di atas, AI akan langsung membuatkan soal matematika yang sesuai, lengkap dengan gambar bangun ruang (format SVG) dan pembahasan jawaban.</p>'+
         '</div>'+
       '</div>'+
     '</div>'+
@@ -706,8 +689,8 @@ async function renderAI(){
 }
 
 window.switchAITab=function(tab){
-  var tabs={chat:'tabChatAI',math:'tabMathAI',kuis:'tabKuisAI',papan:'tabPapanAI'};
-  var panels={chat:'aiChatPanel',math:'aiMathPanel',kuis:'aiKuisPanel',papan:'aiPapanPanel'};
+  var tabs={chat:'tabChatAI',kuis:'tabKuisAI',papan:'tabPapanAI'};
+  var panels={chat:'aiChatPanel',kuis:'aiKuisPanel',papan:'aiPapanPanel'};
   Object.keys(tabs).forEach(function(k){
     var btn=document.getElementById(tabs[k]);
     if(btn){btn.className='px-3 py-1.5 text-xs font-semibold rounded-md text-slate-600 dark:text-slate-300';}
@@ -955,7 +938,7 @@ window.openSoalCameraModal=function(){
   soalCapturedDataUrl=null;tempOcrText='';
   openModal('📷 Pindai Soal (OCR Kamera)','<div class="space-y-5">'+
     '<div class="bg-emerald-50 dark:bg-slate-700 p-4 rounded-lg text-xs text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-slate-600 flex items-start gap-2"><svg class="w-4 h-4 flex-none mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>Arahkan kamera ke soal. AI akan mengekstrak teks (OCR) terlebih dahulu sebelum dikoreksi.</span></div>'+
-    '<div class="relative camera-viewfinder aspect-video"><video id="soalVideo" autoplay playsinline class="w-full h-full object-cover"></video><div id="soalCameraPlaceholder" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 text-sm bg-slate-900"><svg class="w-10 h-10 mx-auto mb-2 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.072 4h3.856a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span>Memulai kamera...</span></div><div class="viewfinder-corner tl"></div><div class="viewfinder-corner tr"></div><div class="viewfinder-corner bl"></div><div class="viewfinder-corner br"></div></div>'+
+    '<div class="relative camera-viewfinder aspect-video"><video id="soalVideo" autoplay playsinline class="w-full h-full object-cover"></video><div id="soalCameraPlaceholder" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 text-sm bg-slate-900"><svg class="w-10 h-10 mx-auto mb-2 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.072 4h3.856a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.072 4h3.856a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span>Memulai kamera...</span></div><div class="viewfinder-corner tl"></div><div class="viewfinder-corner tr"></div><div class="viewfinder-corner bl"></div><div class="viewfinder-corner br"></div></div>'+
     '<div id="soalCapturedPreview" class="hidden space-y-4"><div class="relative rounded-xl overflow-hidden border-2 border-emerald-500 shadow-lg"><img id="soalCapturedImg" class="w-full h-auto object-cover"><div class="absolute top-2 right-2 bg-emerald-500 text-white text-[10px] px-2 py-1 rounded-full font-bold">CAPTURED</div></div><div class="space-y-2"><div class="flex justify-between items-center"><h4 class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5"><svg class="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Hasil OCR</h4><button onclick="retryOCR()" class="text-[10px] text-blue-600 hover:underline font-semibold">Muat Ulang</button></div><div class="ocr-result-panel p-3 text-xs text-slate-700 dark:text-slate-200 whitespace-pre-wrap" id="ocrTextDisplay"><div class="flex items-center text-blue-500 font-medium"><div class="ocr-loading-dot"></div><div class="ocr-loading-dot"></div><div class="ocr-loading-dot"></div><span class="ml-2">AI sedang membaca teks...</span></div></div></div></div>'+
     '<div class="flex flex-col sm:flex-row gap-2"><button id="soalCaptureBtn" onclick="captureSoalPhoto()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-md"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.072 4h3.856a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Ambil Foto & Pindai</button><button id="soalRetakeBtn" onclick="retakeSoalPhoto()" class="hidden flex-1 bg-amber-500 hover:bg-amber-600 text-white px-4 py-3 rounded-xl text-sm font-semibold items-center justify-center gap-2 shadow-md"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>Ambil Ulang</button><button id="soalSendBtn" onclick="sendSoalToAI()" class="hidden flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl text-sm font-semibold items-center justify-center gap-2 shadow-md"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>Koreksi dengan AI</button></div><button onclick="closeSoalCamera()" class="w-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-4 py-2 rounded-xl text-sm font-medium">Tutup</button></div>');
   startSoalCamera();
@@ -1088,129 +1071,27 @@ function escapeHTML(s){return String(s).replace(/[&<>"']/g,function(c){return{'&
 function formatSoalHTML(rawText){
   var text=rawText||'';
   
-  // 1. EKSTRAK DAN RENDER GAMBAR SVG
-  var svgImages=[];
-  var svgRegex=/```svg\s*([\s\S]*?)```|<svg[\s\S]*?<\/svg>/gi;
+  // 1. EKSTRAK DAN RENDER GAMBAR SVG KE INLINE
+  var svgRegex=/```svg\s*([\s\S]*?)```/gi;
   var svgMatch;
   while((svgMatch=svgRegex.exec(text))!==null){
-    var rawSvg=svgMatch[1]||svgMatch[0];
-    if(!rawSvg.trim().startsWith('<svg')){
+    var rawSvg=svgMatch[1].trim();
+    if(!rawSvg.startsWith('<svg')){
       rawSvg='<svg '+rawSvg;
     }
-    svgImages.push(rawSvg);
-    text=text.replace(svgMatch[0],'|||SVG_MARKER_'+(svgImages.length-1)+'|||');
+    text=text.replace(svgMatch[0], rawSvg);
   }
 
-  // 2. PINDAHKAN GAMBAR SVG KE AKHIR BLOK (AGAR TIDAK MERUSAK TABEL SOAL)
-  var kunciSection='';
-  var kunciMatch=text.match(/\n?\**(?:Kunci Jawaban|Jawaban)[*:]*\s*\n([\s\S]*?)$/i);
-  if(kunciMatch){
-    var kt=kunciMatch[1].trim();
-    var kl=kt.split('\n').filter(function(l){return l.trim();});
-    var kh='<div class="kunci-jawaban-section hide-on-print"><h3>📋 KUNCI JAWABAN</h3><div class="kunci-jawaban-grid">';
-    kl.forEach(function(line){
-      var m=line.match(/(\d+)\s*[.):\s]\s*([A-D])/i);
-      if(m){kh+='<span>'+m[1]+'. '+m[2].toUpperCase()+'</span>';}
-    });
-    kh+='</div></div>';
-    kunciSection=kh;
-    text=text.replace(kunciMatch[0],'');
-  }
-
-  var sp=/(?:\*\*)?(\d+)[\.\)]\s*\*?\s*([\s\S]*?)(?=(?:\*\*)?\d+[\.\)]\s*\*?\s|$)/g;
-  var match;
-  var soalBlocks=[];
-  var hasQ=false;
-  
-  while((match=sp.exec(text))!==null){
-    var num=match[1];
-    var block=match[2];
-    var op=/(?:^|\n)\s*([A-D])[\.\)\s]\s*(.+?)(?=(?:\n\s*[A-D][\.\)\s])|(?:\n\s*(?:Jawaban|Kunci)[:\s])|$)/g;
-    var options=[];
-    var om;
-    while((om=op.exec(block))!==null){
-      options.push({label:om[1].toUpperCase(),text:om[2].trim()});
-    }
-    
-    if(options.length>=2){
-      hasQ=true;
-      var qt=block.substring(0,block.search(new RegExp('\\s*'+options[0].label+'[\\.\\)\\s]'))).trim();
-      var ca=null;
-      var ap=[/(?:Jawaban|Kunci)[:\s]*\*?\*?\s*([A-D])/i,/\[BENAR[:\s]*([A-D])\]/i,/\(BENAR[:\s]*([A-D])\)/i,/\*([A-D])\s*\(BENAR\)/i,/([A-D])\s*\(BENAR\)/i,/([A-D])\s*\[BENAR\]/i,/✅\s*([A-D])/i,/([A-D])\s*✅/i];
-      for(var i=0;i<ap.length;i++){
-        var am=block.match(ap[i]);
-        if(am){ca=am[1].toUpperCase();break;}
-      }
-      if(!ca&&kunciMatch){
-        var kunciText=kunciMatch[1];
-        var kl2=kunciText.match(new RegExp(num+'\\s*[.):\\s]\\s*([A-D])','i'));
-        if(kl2)ca=kl2[1].toUpperCase();
-      }
-      soalBlocks.push({num:num,question:qt,options:options,correct:ca,fullMatch:match[0]});
-    }
-  }
-
-  var fh='';
-
-  if(hasQ&&soalBlocks.length>0){
-    var sh='<div class="soal-container">';
-    soalBlocks.forEach(function(sb){
-      var qT=sb.question.replace(/^\*+|\*+$/g,'').replace(/_+/g,'').trim();
-      qT=qT.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
-      
-      // Kembalikan SVG yang ada di teks soal (jika ada)
-      qT=qT.replace(/\|\|\|SVG_MARKER_(\d+)\|\|\|/g, function(_, idx){
-        return '<div style="text-align:center;margin:10px 0;">'+svgImages[parseInt(idx)]+'</div>';
-      });
-
-      sh+='<div class="soal-item"><div class="soal-header"><span class="soal-number">'+sb.num+'.</span><span class="soal-text">'+qT+'</span></div><div class="soal-opts"><div class="opt-col">';
-      var half=Math.ceil(sb.options.length/2);
-      sb.options.forEach(function(opt,index){
-        if(index===half)sh+='</div><div class="opt-col">';
-        var isC=opt.label===sb.correct;
-        var optText=opt.text.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
-        sh+='<div class="soal-opt '+(isC?'correct':'')+'"><span class="opt-label">'+opt.label+'.</span><span class="opt-text">'+optText+'</span></div>';
-      });
-      sh+='</div></div>';
-      if(sb.correct){sh+='<div class="soal-answer hide-on-print">Jawaban: <strong>'+sb.correct+'</strong></div>';}
-      sh+='</div>';
-    });
-    sh+='</div>';
-    
-    var tt=text;
-    soalBlocks.forEach(function(sb){
-      var esc=sb.fullMatch.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-      tt=tt.replace(new RegExp(esc,'s'),'|||SOAL_MARKER|||');
-    });
-    var nsp=tt.split('|||SOAL_MARKER|||').filter(function(p){return p.trim();});
-    
-    nsp.forEach(function(part){
-      part=part.replace(/\|\|\|SVG_MARKER_(\d+)\|\|\|/g, function(_, idx){
-        return '<div style="text-align:center;margin:15px 0;">'+svgImages[parseInt(idx)]+'</div>';
-      });
-      if(part.trim()){fh+=marked.parse(part.trim());}
-    });
-    fh+=sh+kunciSection;
-  } else {
-    // Kembalikan SVG untuk teks non-soal pilihan ganda
-    text=text.replace(/\|\|\|SVG_MARKER_(\d+)\|\|\|/g, function(_, idx){
-      return '<div style="text-align:center;margin:15px 0;">'+svgImages[parseInt(idx)]+'</div>';
-    });
-    fh=marked.parse(text)+kunciSection;
-  }
-
-  // Jika masih ada SVG yang belum terpasang (misal di pembahasan), tampilkan di akhir
-  if(svgImages.length>0 && fh.indexOf('<svg') === -1){
-    svgImages.forEach(function(svg){
-      fh+='<div style="text-align:center;margin:15px 0;">'+svg+'</div>';
-    });
-  }
-
+  // Parse langsung dengan marked.js
+  // Ini memastikan gambar SVG tetap di posisi aslinya di dalam teks
+  // tanpa merusak format tabel atau pilihan ganda lainnya.
+  var fh=marked.parse(text);
   return fh;
 }
+
 var lastAIFormattedHTML='';
 async function sendAI(){var ip=document.getElementById('aiInput');if(!ip||!ip.value.trim())return;var prompt=ip.value.trim();ip.value='';if(aiChatHistory.length>10){aiChatHistory=aiChatHistory.slice(-10);}var btn=document.getElementById('aiSendBtn');btn.disabled=true;btn.innerText='Memproses...';['aiPrintBtn','aiWordBtn','aiPrintKeyBtn'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.add('hidden');});var box=document.getElementById('aiMessages');var ud=document.createElement('div');ud.className='flex justify-end fade-in';ud.innerHTML='<div class="max-w-[90%] rounded-xl px-4 py-3 bg-blue-600 text-white shadow-sm"><div class="text-xs opacity-70 mb-1">Anda</div><div class="whitespace-pre-wrap">'+escapeHTML(prompt)+'</div></div>';box.appendChild(ud);var td=document.createElement('div');td.id='typingIndicator';td.className='flex justify-start fade-in';td.innerHTML='<div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500 dark:text-slate-400">Asisten AI</div><div class="animate-pulse text-blue-600">Sedang mengetik...</div></div>';box.appendChild(td);box.scrollTop=box.scrollHeight;try{var ctx=await getSchoolContext();var isGreeting=/^(hai|halo|hello|hi|tes|test|selamat\s+(pagi|siang|sore|malam)|assalamualaikum|p|woi|woy|apa\s+kabar)\b/i.test(prompt.trim())&&prompt.trim().length<30&&!/(buat|buatkan|soal|pelajaran|materi|rpp|modul|latihan|ujian|ulangan|pertanyaan|essay|pilihan\s*ganda)/i.test(prompt);var sys=isGreeting?'Anda adalah Asisten AI Profesional yang ramah, sopan, dan berwawasan global.':'Anda adalah Asisten AI Profesional yang sangat cerdas, berwawasan internasional, dan ahli dalam bidang pendidikan. Anda menguasai Kurikulum Merdeka. Data sekolah: '+ctx+'. Saat user meminta soal pilihan ganda, WAJIB gunakan format: 1. Pertanyaan? A. Pilihan A B. Pilihan B C. Pilihan C D. Pilihan D Jawaban: B';aiChatHistory.push({role:'user',content:prompt});var res=await callAIWithAutoUpgrade([{role:'system',content:sys}].concat(aiChatHistory));var ans=typeof res==='string'?res:(res?.message?.content||res?.text||'');if(!ans||ans.trim()===''){throw new Error("Respon AI kosong.");}aiChatHistory.push({role:'assistant',content:ans});document.getElementById('typingIndicator')?.remove();var fh=formatSoalHTML(ans);lastAIFormattedHTML=fh;var ad=document.createElement('div');ad.className='flex justify-start fade-in';ad.innerHTML='<div class="max-w-[95%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500 dark:text-slate-400">Asisten AI</div><div class="ai-output text-gray-800 dark:text-white">'+fh+'</div></div>';box.appendChild(ad);box.scrollTop=box.scrollHeight;['aiPrintBtn','aiWordBtn','aiPrintKeyBtn'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('hidden');});}catch(e){document.getElementById('typingIndicator')?.remove();showToast('Error: '+e.message,'error');}finally{btn.disabled=false;btn.innerText='Kirim';}}
-async function handleAIImageUpload(event){var file=event.target.files[0];if(!file)return;var btn=document.getElementById('aiSendBtn');btn.disabled=true;btn.innerText='Memproses Gambar...';var box=document.getElementById('aiMessages');var reader=new FileReader();reader.onload=async function(e){var iu=e.target.result;var ud=document.createElement('div');ud.className='flex justify-end fade-in';ud.innerHTML='<div class="max-w-[80%] rounded-xl px-2 py-2 bg-blue-600 text-white shadow-sm"><div class="text-xs opacity-70 mb-1 px-2">Anda (Gambar)</div><img src="'+iu+'" class="rounded-lg max-w-full h-auto"></div>';box.appendChild(ud);var td=document.createElement('div');td.id='typingIndicator';td.className='flex justify-start fade-in';td.innerHTML='<div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500 dark:text-slate-400">Asisten AI</div><div class="animate-pulse text-blue-600">Membaca teks (OCR)...</div></div>';box.appendChild(td);box.scrollTop=box.scrollHeight;try{var messages=[{role:'user',content:[{type:'text',text:"Baca semua teks di gambar ini."},{type:'image_url',image_url:{url:iu}}]}];var res=await puter.ai.chat(messages);var et=typeof res==='string'?res:(res?.message?.content||res?.text||'');document.getElementById('typingIndicator')?.remove();if(!et||!et.trim()){throw new Error("Tidak ada teks terdeteksi.");}var fh=marked.parse(et);lastAIFormattedHTML=fh;var ad=document.createElement('div');ad.className='flex justify-start fade-in';ad.innerHTML='<div class="max-w-[95%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500 dark:text-slate-400">Asisten AI (Teks hasil Scan)</div><div class="ai-output text-gray-800 dark:text-white">'+fh+'</div></div>';box.appendChild(ad);box.scrollTop=box.scrollHeight;['aiPrintBtn','aiWordBtn'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('hidden');});showToast('Teks dipindai!','success');}catch(err){document.getElementById('typingIndicator')?.remove();showToast('Gagal: '+err.message,'error');}finally{btn.disabled=false;btn.innerText='Kirim';event.target.value='';}};reader.readAsDataURL(file);}
+async function handleAIImageUpload(event){var file=event.target.files[0];if(!file)return;var btn=document.getElementById('aiSendBtn');btn.disabled=true;btn.innerText='Memproses Gambar...';var box=document.getElementById('aiMessages');var reader=new FileReader();reader.onload=async function(e){var iu=e.target.result;var ud=document.createElement('div');ud.className='flex justify-end fade-in';ud.innerHTML='<div class="max-w-[80%] rounded-xl px-2 py-2 bg-blue-600 text-white shadow-sm"><div class="text-xs opacity-70 mb-1 px-2">Anda (Gambar)</div><img src="'+iu+'" class="rounded-lg max-w-full h-auto"></div>';box.appendChild(ud);var td=document.createElement('div');td.id='typingIndicator';td.className='flex justify-start fade-in';td.innerHTML='<div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500 dark:text-slate-400">Asisten AI</div><div class="animate-pulse text-blue-600">Membaca teks (OCR)...</div></div>';box.appendChild(td);box.scrollTop=box.scrollHeight;try{var messages=[{role:'user',content:[{type:'text',text:"Baca semua teks di gambar ini."},{type:'image_url',image_url:{url:iu}}]}];var res=await puter.ai.chat(messages);var et=typeof res==='string'?res:(res?.message?.content||res?.text||'');document.getElementById('typingIndicator')?.remove();if(!et||!et.trim()){throw new Error("Tidak ada teks terdeteksi.");}var fh=formatSoalHTML(et);lastAIFormattedHTML=fh;var ad=document.createElement('div');ad.className='flex justify-start fade-in';ad.innerHTML='<div class="max-w-[95%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500 dark:text-slate-400">Asisten AI (Teks hasil Scan)</div><div class="ai-output text-gray-800 dark:text-white">'+fh+'</div></div>';box.appendChild(ad);box.scrollTop=box.scrollHeight;['aiPrintBtn','aiWordBtn'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('hidden');});showToast('Teks dipindai!','success');}catch(err){document.getElementById('typingIndicator')?.remove();showToast('Gagal: '+err.message,'error');}finally{btn.disabled=false;btn.innerText='Kirim';event.target.value='';}};reader.readAsDataURL(file);}
 
 // === PRINT & EXPORT ===
 async function openPrintPreview(htmlContent){var pw=window.open('','_blank');if(!pw){showToast('Pop-up diblokir.','error');document.getElementById('printArea').innerHTML=htmlContent;window.print();return;}pw.document.write('<html lang="id"><head><title>Cetak</title><script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"><\/script><style>body{font-family:Times New Roman,Georgia,serif;margin:20px;color:#000}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}table,th,td{border:1px solid #000!important;border-collapse:collapse!important}.rapor-info-table,.rapor-info-table td,.rapor-info-table tr{border:none!important;background:transparent!important}.card-info-table,.card-info-table td,.card-info-table tr{border:none!important;background:transparent!important}.ai-output h1,.ai-output h2,.ai-output h3{font-weight:bold;margin-top:12px;margin-bottom:6px}.ai-output p{margin-bottom:8px}.ai-output ul,.ai-output ol{margin-left:20px;margin-bottom:8px}.ai-output table{width:100%;border-collapse:collapse;margin-bottom:8px}.ai-output th,.ai-output td{border:1px solid #000;padding:6px;text-align:left}.ai-output img{max-width:100%;height:auto;border-radius:8px;margin:10px 0;box-shadow:0 2px 5px rgba(0,0,0,.1)}.ai-output svg{max-width:100%;height:auto;margin:10px 0}.ai-output .soal-item{margin-bottom:18px;padding-bottom:15px;border-bottom:1px solid #eee;page-break-inside:avoid}.ai-output .soal-header{display:flex;align-items:flex-start;gap:6px;margin-bottom:8px}.ai-output .soal-number{font-weight:bold;min-width:28px}.ai-output .soal-text{font-size:14px;line-height:1.7;font-weight:500;flex:1}.ai-output .soal-opts{display:flex;gap:24px;margin:8px 0 8px 34px}.ai-output .opt-col{flex:1;display:flex;flex-direction:column;gap:4px}.ai-output .soal-opt{display:flex;align-items:flex-start;font-size:13px}.ai-output .soal-opt .opt-label{font-weight:bold;margin-right:6px;min-width:20px}@media print{body{margin:0}.no-print{display:none}}</style></head><body><div class="no-print" style="text-align:center;margin-bottom:20px;position:fixed;bottom:10px;left:0;width:100%"><button onclick="window.print()" style="padding:10px 20px;font-size:16px;background:#2563eb;color:white;border:none;border-radius:8px;cursor:pointer">🖨️ Cetak / PDF</button></div><div id="contentArea">'+htmlContent+'</div><script>var ca=document.getElementById("contentArea");var rt=ca.textContent;if(rt.trim().startsWith("#")||rt.includes("**")){ca.innerHTML=marked.parse(rt);}<\/script></body></html>');pw.document.close();pw.focus();setTimeout(function(){pw.print();},500);}
