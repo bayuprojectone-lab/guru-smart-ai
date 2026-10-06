@@ -85,14 +85,23 @@ input,textarea,select{font-size:16px!important}
 .ai-output th,.ai-output td{border:1px solid #000;padding:6px;text-align:left}
 .ai-output img{max-width:100%;border-radius:8px;margin:10px 0;box-shadow:0 2px 5px rgba(0,0,0,.1)}
 .ai-output svg{max-width:100%;height:auto;margin:10px 0;border-radius:8px;box-shadow:0 2px 5px rgba(0,0,0,.1)}
-/* Format Soal Rapi di UI */
+/* Format Soal Rapi di UI dan Hemat Kertas */
 .ai-output ol{margin-left:0;padding-left:20px;list-style-position:outside;}
 .ai-output ol > li{font-family:'Times New Roman',Georgia,serif;margin-bottom:18px;padding:14px 16px;background:#f8fafc;border-left:3px solid #3b82f6;border-radius:0 8px 8px 0;page-break-inside:avoid;line-height:1.7;}
-.ai-output ol > li p{margin:0;}
+.ai-output ol > li p{margin:0 0 8px 0;}
+.ai-output .soal-header{display:flex;align-items:flex-start;gap:6px;margin-bottom:8px}
+.ai-output .soal-number{font-weight:bold;color:#1e3a8a;min-width:28px}
+.ai-output .soal-text{font-size:14px;line-height:1.7;color:#1e293b;font-weight:500;flex:1}
+.ai-output .soal-opts{display:flex;gap:24px;margin:8px 0 8px 34px;width:100%}
+.ai-output .opt-col{flex:1;display:flex;flex-direction:column;gap:4px}
+.ai-output .soal-opt{display:flex;align-items:flex-start;font-size:13px;color:#334155}
+.ai-output .soal-opt .opt-label{font-weight:bold;margin-right:6px;min-width:20px;color:#475569}
+.ai-output .soal-opt.correct{background:#fef08a;font-weight:600;box-shadow:0 0 0 1px #eab308;padding:2px 4px;border-radius:3px}
+.ai-output .soal-answer{margin:6px 0 0 34px;padding:4px 10px;font-size:12px;background:#dbeafe;border-radius:4px;display:inline-block;color:#1e3a8a;font-family:'Inter',sans-serif}
 .ai-output .kunci-jawaban-section{margin-top:20px;padding:12px 16px;background:#1e3a8a;border-radius:8px;color:white;font-family:'Inter',sans-serif}
 .ai-output .kunci-jawaban-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:4px;margin-top:8px}
 .ai-output .kunci-jawaban-grid span{background:rgba(255,255,255,.15);padding:4px 8px;border-radius:4px;text-align:center}
-@media print{.ai-output ol > li{background:white!important;border-left:none!important;padding:0 0 15px 0!important;margin-bottom:15px;border-bottom:1px solid #eee}.hide-on-print{display:none!important}}
+@media print{.ai-output ol > li{background:white!important;border-left:none!important;padding:0 0 15px 0!important;margin-bottom:15px;border-bottom:1px solid #eee}.ai-output .soal-opt.correct{background:transparent!important;font-weight:normal!important;box-shadow:none!important}.hide-on-print{display:none!important}}
 #whiteboardCanvas{touch-action:none;cursor:crosshair;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.08)}
 .wb-tool-btn{transition:all .2s}
 .wb-tool-btn.active{background:#2563eb!important;color:white!important}
@@ -202,40 +211,16 @@ if(localStorage.getItem('gs_darkMode')==='true'){document.documentElement.classL
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('-translate-x-full');document.getElementById('sidebarOverlay').classList.toggle('hidden');}
 function openModal(title,html){document.getElementById('modalTitle').innerText=title;document.getElementById('modalContent').innerHTML=html;document.getElementById('modalContainer').classList.remove('hidden');}
 function closeModal(){if(typeof stopCameraStream==='function')stopCameraStream();if(typeof stopSoalCameraStream==='function')stopSoalCameraStream();document.getElementById('modalContainer').classList.add('hidden');}
-var menus=[
-{id:'dashboard',label:'Dashboard',icon:'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',roles:['admin','guru','siswa']},
-{id:'ai',label:'Asisten AI Guru',icon:'M12 2a7 7 0 00-7 7v3a7 7 0 0014 0V9a7 7 0 00-7-7zm-4 18h8M9 22h6',roles:['admin','guru','siswa']},
-{id:'teachers',label:'Data Guru',icon:'M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-5a4 4 0 11-8 0 4 4 0 018 0zm6 0a4 4 0 11-8 0 4 4 0 018 0z',roles:['admin','guru']},
-{id:'students',label:'Data Siswa',icon:'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z',roles:['admin','guru']},
-{id:'classes',label:'Kelas',icon:'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4',roles:['admin','guru']},
-{id:'subjects',label:'Mata Pelajaran',icon:'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253',roles:['admin','guru','siswa']},
-{id:'schedules',label:'Jadwal',icon:'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',roles:['admin','guru','siswa']},
-{id:'attendance',label:'Absensi',icon:'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',roles:['admin','guru']},
-{id:'activity_attendance',label:'Absensi Kegiatan',icon:'M5 8h14M5 8a2 2 0 110-4 h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4',roles:['admin','guru']},
-{id:'grades',label:'Penilaian',icon:'M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z',roles:['admin','guru','siswa']},
-{id:'assignments',label:'Tugas',icon:'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',roles:['admin','guru','siswa']},
-{id:'materi',label:'Materi Ajar',icon:'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253',roles:['admin','guru','siswa']},
-{id:'keuangan',label:'Keuangan SPP',icon:'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1V6m0 2c-1.11 0-2.08.402-2.599 1M3 12h18M12 18v-1m0 1v-1',roles:['admin','guru']},
-{id:'rapor',label:'Cetak Rapor',icon:'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',roles:['admin','guru','siswa']},
-{id:'settings',label:'Pengaturan',icon:'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z',roles:['admin','guru','siswa']}
-];
+var menus=[{id:'dashboard',label:'Dashboard',icon:'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',roles:['admin','guru','siswa']},{id:'ai',label:'Asisten AI Guru',icon:'M12 2a7 7 0 00-7 7v3a7 7 0 0014 0V9a7 7 0 00-7-7zm-4 18h8M9 22h6',roles:['admin','guru','siswa']},{id:'teachers',label:'Data Guru',icon:'M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-5a4 4 0 11-8 0 4 4 0 018 0zm6 0a4 4 0 11-8 0 4 4 0 018 0z',roles:['admin','guru']},{id:'students',label:'Data Siswa',icon:'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z',roles:['admin','guru']},{id:'classes',label:'Kelas',icon:'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4',roles:['admin','guru']},{id:'subjects',label:'Mata Pelajaran',icon:'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253',roles:['admin','guru','siswa']},{id:'schedules',label:'Jadwal',icon:'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',roles:['admin','guru','siswa']},{id:'attendance',label:'Absensi',icon:'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',roles:['admin','guru']},{id:'activity_attendance',label:'Absensi Kegiatan',icon:'M5 8h14M5 8a2 2 0 110-4 h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4',roles:['admin','guru']},{id:'grades',label:'Penilaian',icon:'M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z',roles:['admin','guru','siswa']},{id:'assignments',label:'Tugas',icon:'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',roles:['admin','guru','siswa']},{id:'materi',label:'Materi Ajar',icon:'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253',roles:['admin','guru','siswa']},{id:'keuangan',label:'Keuangan SPP',icon:'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1V6m0 2c-1.11 0-2.08.402-2.599 1M3 12h18M12 18v-1m0 1v-1',roles:['admin','guru']},{id:'rapor',label:'Cetak Rapor',icon:'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',roles:['admin','guru','siswa']},{id:'settings',label:'Pengaturan',icon:'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z',roles:['admin','guru','siswa']}];
 function renderMenu(){var n=document.getElementById('navMenu');n.innerHTML='';menus.filter(function(m){return m.roles.includes(currentUser.role);}).forEach(function(m){var a=currentPage===m.id?'bg-white/20 text-white font-semibold shadow-inner':'text-blue-100 hover:bg-white/10 hover:text-white';n.innerHTML+='<a href="#" onclick="navigate(\''+m.id+'\')" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg '+a+' transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="'+m.icon+'"></path></svg><span>'+m.label+'</span></a>';});}
 function navigate(page){currentPage=page;document.getElementById('pageTitle').innerText=menus.find(function(m){return m.id===page;})?.label||'Page';renderMenu();renderContent(page);if(window.innerWidth<1024)toggleSidebar();}
 async function renderContent(page){var c=document.getElementById('content');c.className='flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 lg:p-6 bg-slate-100 dark:bg-slate-900';if(page==='ai'){c.className='flex-1 min-h-0 flex flex-col overflow-hidden p-4 bg-slate-100 dark:bg-slate-900';}c.innerHTML='<div class="text-center py-10 text-slate-500 dark:text-slate-400">Memuat data...</div>';switch(page){case'dashboard':await renderDashboard();break;case'ai':await renderAI();break;case'teachers':await renderTeachers();break;case'students':await renderStudents();break;case'classes':await renderClasses();break;case'subjects':await renderSubjects();break;case'schedules':await renderSchedules();break;case'attendance':await renderAttendance();break;case'activity_attendance':await renderActivityAttendance();break;case'grades':await renderGrades();break;case'assignments':await renderAssignments();break;case'materi':await renderMateri();break;case'keuangan':await renderKeuangan();break;case'rapor':await renderRapor();break;case'settings':await renderSettings();break;}}
 function statCard(t,c,gradient,i,subtitle){return '<div class="stat-card relative bg-gradient-to-br '+gradient+' p-5 rounded-2xl shadow-lg text-white overflow-hidden slide-up"><div class="relative z-10 flex items-start justify-between"><div><p class="text-xs font-medium opacity-90 uppercase tracking-wider">'+t+'</p><h3 class="text-3xl font-extrabold mt-2 mb-1">'+c+'</h3><p class="text-xs opacity-80">'+subtitle+'</p></div><div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm"><svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="'+i+'"></path></svg></div></div></div>';}
 function initApp(){document.getElementById('authScreen').classList.add('hidden');document.getElementById('appScreen').classList.remove('hidden');document.getElementById('userName').innerText=currentUser.name;document.getElementById('userRole').innerText=currentUser.role;document.getElementById('userAvatar').src=currentUser.avatar_url||AI_IMG;navigate('dashboard');}
 window.onload=async function(){if(await checkSession()){initApp();}};
-</script><script>
-var kurikulumTypes=[
-{id:'cp',label:'Capaian Pembelajaran (CP)',desc:'Kompetensi yang harus dicapai peserta didik',color:'from-blue-500 to-cyan-600',icon:'M13 10V3L4 14h7v7l9-11h-7z'},
-{id:'tp',label:'Tujuan Pembelajaran (TP)',desc:'Tujuan spesifik dari setiap CP',color:'from-green-500 to-emerald-600',icon:'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z'},
-{id:'atp',label:'Alur Tujuan Pembelajaran (ATP)',desc:'Urutan logis tujuan pembelajaran',color:'from-purple-500 to-pink-600',icon:'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6'},
-{id:'modul',label:'Modul Ajar',desc:'Panduan lengkap untuk guru',color:'from-orange-500 to-red-600',icon:'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253'},
-{id:'rpp',label:'RPP (Rencana Pelaksanaan Pembelajaran)',desc:'Rencana kegiatan pembelajaran',color:'from-indigo-500 to-blue-700',icon:'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'},
-{id:'prota',label:'Program Tahunan',desc:'Program pembelajaran satu tahun',color:'from-teal-500 to-green-600',icon:'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'},
-{id:'lkpd',label:'LKPD (Lembar Kerja Peserta Didik)',desc:'Lembar kerja untuk siswa',color:'from-rose-500 to-pink-600',icon:'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'}
-];
-
+</script>
+<script>
+var kurikulumTypes=[{id:'cp',label:'Capaian Pembelajaran (CP)',desc:'Kompetensi yang harus dicapai peserta didik',color:'from-blue-500 to-cyan-600',icon:'M13 10V3L4 14h7v7l9-11h-7z'},{id:'tp',label:'Tujuan Pembelajaran (TP)',desc:'Tujuan spesifik dari setiap CP',color:'from-green-500 to-emerald-600',icon:'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z'},{id:'atp',label:'Alur Tujuan Pembelajaran (ATP)',desc:'Urutan logis tujuan pembelajaran',color:'from-purple-500 to-pink-600',icon:'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6'},{id:'modul',label:'Modul Ajar',desc:'Panduan lengkap untuk guru',color:'from-orange-500 to-red-600',icon:'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253'},{id:'rpp',label:'RPP (Rencana Pelaksanaan Pembelajaran)',desc:'Rencana kegiatan pembelajaran',color:'from-indigo-500 to-blue-700',icon:'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'},{id:'prota',label:'Program Tahunan',desc:'Program pembelajaran satu tahun',color:'from-teal-500 to-green-600',icon:'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'},{id:'lkpd',label:'LKPD (Lembar Kerja Peserta Didik)',desc:'Lembar kerja untuk siswa',color:'from-rose-500 to-pink-600',icon:'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'}];
 async function renderDashboard(){
 var results=await Promise.all([DB.get('students'),DB.get('teachers'),DB.get('classes'),DB.get('announcements'),DB.get('grades'),DB.get('keuangan')]);
 var st=results[0],tc=results[1],cl=results[2],an=results[3],gr=results[4],kn=results[5];
@@ -888,7 +873,7 @@ window.wbSetTool=function(tool){
   wbTool=tool;
   document.querySelectorAll('.wb-tool-btn').forEach(function(b){
     b.classList.remove('active','bg-blue-600','text-white');
-    b.classList.add('bg-slate-200','dark:bg-slate-600','textslate-700','dark:text-white');
+    b.classList.add('bg-slate-200','dark:bg-slate-600','text-slate-700','dark:text-white');
   });
   var btnMap={'pen':'wbToolPen','eraser':'wbToolEraser','line':'wbToolLine','rect':'wbToolRect','circle':'wbToolCircle'};
   var btn=document.getElementById(btnMap[tool]);
@@ -1101,30 +1086,117 @@ var aiChatHistory=[];
 function loadAIChat(){var b=document.getElementById('aiMessages');if(!b)return;if(aiChatHistory.length===0){var d=document.createElement('div');d.className='flex justify-start';d.innerHTML='<div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500 dark:text-slate-400">Asisten AI</div><div class="whitespace-pre-wrap text-gray-800 dark:text-white">Halo! 👋 Saya Asisten Guru SMART Anda...\nApa yang ingin Anda lakukan hari ini? 😊 Silahkan Tulis Perintah/Pertanyaan...</div></div>';b.appendChild(d);}}
 function escapeHTML(s){return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 
-function formatSoalHTML(rawText){
-  var text=rawText||'';
-  var svgRegex=/```svg\s*([\s\S]*?)```/gi;
-  var svgMatch;
-  while((svgMatch=svgRegex.exec(text))!==null){
-    var rawSvg=svgMatch[1].trim();
-    if(!rawSvg.startsWith('<svg')){
-      rawSvg='<svg '+rawSvg;
+function formatSoalHTML(rawText) {
+  var text = rawText || '';
+  
+  // 1. Ekstrak Kunci Jawaban dari bawah
+  var kunciSection = '';
+  var kunciMatch = text.match(/\n?\**(?:Kunci Jawaban|Jawaban)[*:]*\s*\n([\s\S]*?)$/i);
+  if (kunciMatch) {
+    var kt = kunciMatch[1].trim();
+    var kl = kt.split('\n').filter(function(l) { return l.trim(); });
+    var kh = '<div class="kunci-jawaban-section hide-on-print"><h3>📋 KUNCI JAWABAN</h3><div class="kunci-jawaban-grid">';
+    var kunciFound = false;
+    kl.forEach(function(line) {
+      var m = line.match(/(\d+)\s*[.):\s]\s*([A-D])/i);
+      if (m) {
+        kunciFound = true;
+        kh += '<span>' + m[1] + '. ' + m[2].toUpperCase() + '</span>';
+      }
+    });
+    kh += '</div></div>';
+    if (kunciFound) {
+      kunciSection = kh;
+      text = text.replace(kunciMatch[0], '');
     }
-    text=text.replace(svgMatch[0], rawSvg);
   }
-  var fh=marked.parse(text);
-  return fh;
+
+  // 2. Ekstrak Soal Pilihan Ganda
+  var sp = /(?:\*\*)?(\d+)[\.\)]\s*\*?\s*([\s\S]*?)(?=(?:\*\*)?\d+[\.\)]\s*\*?\s|$)/g;
+  var match;
+  var soalBlocks = [];
+  var hasQ = false;
+  
+  while ((match = sp.exec(text)) !== null) {
+    var num = match[1];
+    var block = match[2];
+    
+    var op = /(?:^|\n)\s*([A-D])[\.\)\s]\s*(.+?)(?=(?:\n\s*[A-D][\.\)\s])|(?:\n\s*(?:Jawaban|Kunci)[:\s])|$)/g;
+    var options = [];
+    var om;
+    while ((om = op.exec(block)) !== null) {
+      options.push({ label: om[1].toUpperCase(), text: om[2].trim() });
+    }
+    
+    if (options.length >= 2) {
+      hasQ = true;
+      var qt = block.substring(0, block.search(new RegExp('\\s*' + options[0].label + '[\\.\\)\\s]'))).trim();
+      
+      var ca = null;
+      var ap = [/(?:Jawaban|Kunci)[:\s]*\*?\*?\s*([A-D])/i, /\[BENAR[:\s]*([A-D])\]/i, /\(BENAR[:\s]*([A-D])\)/i, /\*([A-D])\s*\(BENAR\)/i, /([A-D])\s*\(BENAR\)/i, /([A-D])\s*\[BENAR\]/i, /✅\s*([A-D])/i, /([A-D])\s*✅/i];
+      for (var i = 0; i < ap.length; i++) {
+        var am = block.match(ap[i]);
+        if (am) { ca = am[1].toUpperCase(); break; }
+      }
+      
+      if (!ca && kunciMatch) {
+        var kl2 = kunciMatch[1].match(new RegExp(num + '\\s*[.):\\s]\\s*([A-D])', 'i'));
+        if (kl2) ca = kl2[1].toUpperCase();
+      }
+      
+      soalBlocks.push({ num: num, question: qt, options: options, correct: ca, fullMatch: match[0] });
+    }
+  }
+
+  if (hasQ && soalBlocks.length > 0) {
+    var sh = '<div class="soal-container">';
+    soalBlocks.forEach(function(sb) {
+      var qT = sb.question.replace(/^\*+|\*+$/g, '').replace(/_+/g, '').trim();
+      qT = qT.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      
+      sh += '<div class="soal-item"><div class="soal-header"><span class="soal-number">' + sb.num + '.</span><span class="soal-text">' + qT + '</span></div>';
+      
+      // Membagi 2 kolom (A,B di kiri, C,D di kanan)
+      sh += '<div class="soal-opts"><div class="opt-col">';
+      var half = Math.ceil(sb.options.length / 2);
+      sb.options.forEach(function(opt, index) {
+        if (index === half) sh += '</div><div class="opt-col">';
+        var isC = opt.label === sb.correct;
+        sh += '<div class="soal-opt ' + (isC ? 'correct' : '') + '"><span class="opt-label">' + opt.label + '.</span><span class="opt-text">' + opt.text + '</span></div>';
+      });
+      sh += '</div></div>';
+      sh += '</div>';
+    });
+    sh += '</div>';
+    
+    var tt = text;
+    soalBlocks.forEach(function(sb) {
+      var esc = sb.fullMatch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      tt = tt.replace(new RegExp(esc, 's'), '|||SOAL_MARKER|||');
+    });
+    
+    var nsp = tt.split('|||SOAL_MARKER|||').filter(function(p) { return p.trim(); });
+    var fh = '';
+    nsp.forEach(function(part) {
+      if (part.trim()) fh += marked.parse(part.trim());
+    });
+    
+    fh += sh + kunciSection;
+    return fh;
+  }
+
+  return marked.parse(text) + kunciSection;
 }
 
 var lastAIFormattedHTML='';
 async function sendAI(){var ip=document.getElementById('aiInput');if(!ip||!ip.value.trim())return;var prompt=ip.value.trim();ip.value='';if(aiChatHistory.length>10){aiChatHistory=aiChatHistory.slice(-10);}var btn=document.getElementById('aiSendBtn');btn.disabled=true;btn.innerText='Memproses...';['aiPrintBtn','aiWordBtn','aiPrintKeyBtn'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.add('hidden');});var box=document.getElementById('aiMessages');var ud=document.createElement('div');ud.className='flex justify-end fade-in';ud.innerHTML='<div class="max-w-[90%] rounded-xl px-4 py-3 bg-blue-600 text-white shadow-sm"><div class="text-xs opacity-70 mb-1">Anda</div><div class="whitespace-pre-wrap">'+escapeHTML(prompt)+'</div></div>';box.appendChild(ud);var td=document.createElement('div');td.id='typingIndicator';td.className='flex justify-start fade-in';td.innerHTML='<div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500 dark:text-slate-400">Asisten AI</div><div class="animate-pulse text-blue-600">Sedang mengetik...</div></div>';box.appendChild(td);box.scrollTop=box.scrollHeight;try{var ctx=await getSchoolContext();var isGreeting=/^(hai|halo|hello|hi|tes|test|selamat\s+(pagi|siang|sore|malam)|assalamualaikum|p|woi|woy|apa\s+kabar)\b/i.test(prompt.trim())&&prompt.trim().length<30&&!/(buat|buatkan|soal|pelajaran|materi|rpp|modul|latihan|ujian|ulangan|pertanyaan|essay|pilihan\s*ganda)/i.test(prompt);var sys=isGreeting?'Anda adalah Asisten AI Profesional yang ramah, sopan, dan berwawasan global.':'Anda adalah Asisten AI Profesional yang sangat cerdas, berwawasan internasional, dan ahli dalam bidang pendidikan. Anda menguasai Kurikulum Merdeka. Data sekolah: '+ctx+'. Saat user meminta soal pilihan ganda atau soal apapun, WAJIB gunakan format daftar bernomor (1., 2., 3.) tanpa tabel. Pilihan ganda (A., B., C., D.) WAJIB ditulis berurutan ke bawah (bukan menyamping). Untuk penulisan rumus matematika, gunakan notasi standar yang dipakai di Indonesia (misal: m^2 untuk meter persegi, m^3 untuk meter kubik, gunakan simbol ^ untuk pangkat). Selalu tambahkan nomor urut di setiap soal tanpa merubah instruksi format yang lain.';aiChatHistory.push({role:'user',content:prompt});var res=await callAIWithAutoUpgrade([{role:'system',content:sys}].concat(aiChatHistory));var ans=typeof res==='string'?res:(res?.message?.content||res?.text||'');if(!ans||ans.trim()===''){throw new Error("Respon AI kosong.");}aiChatHistory.push({role:'assistant',content:ans});document.getElementById('typingIndicator')?.remove();var fh=formatSoalHTML(ans);lastAIFormattedHTML=fh;var ad=document.createElement('div');ad.className='flex justify-start fade-in';ad.innerHTML='<div class="max-w-[95%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500 dark:text-slate-400">Asisten AI</div><div class="ai-output text-gray-800 dark:text-white">'+fh+'</div></div>';box.appendChild(ad);box.scrollTop=box.scrollHeight;['aiPrintBtn','aiWordBtn','aiPrintKeyBtn'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('hidden');});}catch(e){document.getElementById('typingIndicator')?.remove();showToast('Error: '+e.message,'error');}finally{btn.disabled=false;btn.innerText='Kirim';}}
 async function handleAIImageUpload(event){var file=event.target.files[0];if(!file)return;var btn=document.getElementById('aiSendBtn');btn.disabled=true;btn.innerText='Memproses Gambar...';var box=document.getElementById('aiMessages');var reader=new FileReader();reader.onload=async function(e){var iu=e.target.result;var ud=document.createElement('div');ud.className='flex justify-end fade-in';ud.innerHTML='<div class="max-w-[80%] rounded-xl px-2 py-2 bg-blue-600 text-white shadow-sm"><div class="text-xs opacity-70 mb-1 px-2">Anda (Gambar)</div><img src="'+iu+'" class="rounded-lg max-w-full h-auto"></div>';box.appendChild(ud);var td=document.createElement('div');td.id='typingIndicator';td.className='flex justify-start fade-in';td.innerHTML='<div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500 dark:text-slate-400">Asisten AI</div><div class="animate-pulse text-blue-600">Membaca teks (OCR)...</div></div>';box.appendChild(td);box.scrollTop=box.scrollHeight;try{var messages=[{role:'user',content:[{type:'text',text:"Baca semua teks di gambar ini."},{type:'image_url',image_url:{url:iu}}]}];var res=await puter.ai.chat(messages);var et=typeof res==='string'?res:(res?.message?.content||res?.text||'');document.getElementById('typingIndicator')?.remove();if(!et||!et.trim()){throw new Error("Tidak ada teks terdeteksi.");}var fh=formatSoalHTML(et);lastAIFormattedHTML=fh;var ad=document.createElement('div');ad.className='flex justify-start fade-in';ad.innerHTML='<div class="max-w-[95%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500 dark:text-slate-400">Asisten AI (Teks hasil Scan)</div><div class="ai-output text-gray-800 dark:text-white">'+fh+'</div></div>';box.appendChild(ad);box.scrollTop=box.scrollHeight;['aiPrintBtn','aiWordBtn'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('hidden');});showToast('Teks dipindai!','success');}catch(err){document.getElementById('typingIndicator')?.remove();showToast('Gagal: '+err.message,'error');}finally{btn.disabled=false;btn.innerText='Kirim';event.target.value='';}};reader.readAsDataURL(file);}
 
-async function openPrintPreview(htmlContent){var pw=window.open('','_blank');if(!pw){showToast('Pop-up diblokir.','error');document.getElementById('printArea').innerHTML=htmlContent;window.print();return;}pw.document.write('<html lang="id"><head><title>Cetak</title><script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"><\/script><style>body{font-family:Times New Roman,Georgia,serif;margin:20px;color:#000}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}table,th,td{border:1px solid #000!important;border-collapse:collapse!important}.rapor-info-table,.rapor-info-table td,.rapor-info-table tr{border:none!important;background:transparent!important}.card-info-table,.card-info-table td,.card-info-table tr{border:none!important;background:transparent!important}.ai-output h1,.ai-output h2,.ai-output h3{font-weight:bold;margin-top:12px;margin-bottom:6px}.ai-output p{margin-bottom:8px}.ai-output ul,.ai-output ol{margin-left:20px;margin-bottom:8px}.ai-output table{width:100%;border-collapse:collapse;margin-bottom:8px}.ai-output th,.ai-output td{border:1px solid #000;padding:6px;text-align:left}.ai-output img{max-width:100%;height:auto;border-radius:8px;margin:10px 0;box-shadow:0 2px 5px rgba(0,0,0,.1)}.ai-output svg{max-width:100%;height:auto;margin:10px 0}.ai-output ol{margin-left:0;padding-left:20px;list-style-position:outside;}.ai-output ol > li{font-family:Times New Roman,Georgia,serif;margin-bottom:18px;padding-bottom:15px;border-bottom:1px solid #eee;page-break-inside:avoid;line-height:1.7;}@media print{body{margin:0}.no-print{display:none}}</style></head><body><div class="no-print" style="text-align:center;margin-bottom:20px;position:fixed;bottom:10px;left:0;width:100%"><button onclick="window.print()" style="padding:10px 20px;font-size:16px;background:#2563eb;color:white;border:none;border-radius:8px;cursor:pointer">🖨️ Cetak / PDF</button></div><div id="contentArea">'+htmlContent+'</div><script>var ca=document.getElementById("contentArea");var rt=ca.textContent;if(rt.trim().startsWith("#")||rt.includes("**")){ca.innerHTML=marked.parse(rt);}<\/script></body></html>');pw.document.close();pw.focus();setTimeout(function(){pw.print();},500);}
+async function openPrintPreview(htmlContent){var pw=window.open('','_blank');if(!pw){showToast('Pop-up diblokir.','error');document.getElementById('printArea').innerHTML=htmlContent;window.print();return;}pw.document.write('<html lang="id"><head><title>Cetak</title><script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"><\/script><style>body{font-family:Times New Roman,Georgia,serif;margin:20px;color:#000}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}table,th,td{border:1px solid #000!important;border-collapse:collapse!important}.rapor-info-table,.rapor-info-table td,.rapor-info-table tr{border:none!important;background:transparent!important}.card-info-table,.card-info-table td,.card-info-table tr{border:none!important;background:transparent!important}.ai-output h1,.ai-output h2,.ai-output h3{font-weight:bold;margin-top:12px;margin-bottom:6px}.ai-output p{margin-bottom:8px}.ai-output ul,.ai-output ol{margin-left:20px;margin-bottom:8px}.ai-output table{width:100%;border-collapse:collapse;margin-bottom:8px}.ai-output th,.ai-output td{border:1px solid #000;padding:6px;text-align:left}.ai-output img{max-width:100%;height:auto;border-radius:8px;margin:10px 0;box-shadow:0 2px 5px rgba(0,0,0,.1)}.ai-output svg{max-width:100%;height:auto;margin:10px 0}.ai-output ol{margin-left:0;padding-left:20px;list-style-position:outside;}.ai-output ol > li{font-family:Times New Roman,Georgia,serif;margin-bottom:18px;padding-bottom:15px;border-bottom:1px solid #eee;page-break-inside:avoid;line-height:1.7;}.ai-output .soal-header{display:flex;align-items:flex-start;gap:6px;margin-bottom:8px}.ai-output .soal-number{font-weight:bold;min-width:28px}.ai-output .soal-text{font-size:14px;line-height:1.7;font-weight:500;flex:1}.ai-output .soal-opts{display:flex;gap:24px;margin:8px 0 8px 34px}.ai-output .opt-col{flex:1;display:flex;flex-direction:column;gap:4px}.ai-output .soal-opt{display:flex;align-items:flex-start;font-size:13px}.ai-output .soal-opt .opt-label{font-weight:bold;margin-right:6px;min-width:20px}.ai-output .kunci-jawaban-section{margin-top:20px;padding:12px 16px;background:#1e3a8a;border-radius:8px;color:white}.ai-output .kunci-jawaban-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:4px;margin-top:8px}.ai-output .kunci-jawaban-grid span{background:rgba(255,255,255,.15);padding:4px 8px;border-radius:4px;text-align:center}@media print{body{margin:0}.no-print{display:none}}</style></head><body><div class="no-print" style="text-align:center;margin-bottom:20px;position:fixed;bottom:10px;left:0;width:100%"><button onclick="window.print()" style="padding:10px 20px;font-size:16px;background:#2563eb;color:white;border:none;border-radius:8px;cursor:pointer">🖨️ Cetak / PDF</button></div><div id="contentArea">'+htmlContent+'</div><script>var ca=document.getElementById("contentArea");var rt=ca.textContent;if(rt.trim().startsWith("#")||rt.includes("**")){ca.innerHTML=marked.parse(rt);}<\/script></body></html>');pw.document.close();pw.focus();setTimeout(function(){pw.print();},500);}
 
 async function printAIResult(includeKey){if(!lastAIFormattedHTML)return;var ch=lastAIFormattedHTML;if(!includeKey){ch=ch.replace(/<div class="kunci-jawaban-section[^"]*"[^>]*>[\s\S]*?<\/div><\/div>/g,'');ch=ch.replace(/<div class="soal-answer[^"]*"[^>]*>[\s\S]*?<\/div>/g,'');ch=ch.replace(/class="soal-opt[^"]*correct[^"]*"/g,'class="soal-opt"');}else{ch=ch.replace(/hide-on-print/g,'');}var kh=await generateKopHTML();openPrintPreview('<div style="font-family:Times New Roman,Georgia,serif;color:#000;padding:0;margin:0;width:100%">'+kh+'<div class="ai-output" style="color:#000;margin:0;padding:0">'+ch+'</div></div>');}
 
-async function exportToWord(){if(!lastAIFormattedHTML){showToast('Tidak ada teks.','error');return;}var td=document.createElement('div');td.innerHTML=lastAIFormattedHTML;td.querySelectorAll('.kunci-jawaban-section,.soal-answer').forEach(function(el){el.remove();});td.querySelectorAll('.soal-opt.correct').forEach(function(el){el.classList.remove('correct');});var ch=td.innerHTML;var kh=await generateKopHTML();var htmlContent='<div style="font-family:Times New Roman,Georgia,serif;color:#000;padding:0;margin:0;width:100%">'+kh+'<div class="ai-output" style="color:#000;margin:0;padding:0">'+ch+'</div></div>';var header='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Soal - GURU SMART</title><style>@page{size:21cm 29.7cm;margin:2cm}body{font-family:Times New Roman,Georgia,serif;font-size:12pt;color:#000;line-height:1.5}h2{text-align:center;font-size:16pt;margin-bottom:5px}p{text-align:center;font-size:10pt;margin-top:0}img{max-width:100%;height:auto}.ai-output h1,.ai-output h2,.ai-output h3{font-weight:bold;margin-top:12px;margin-bottom:6px}.ai-output p{margin-bottom:8px}.ai-output ul,.ai-output ol{margin-left:20px;margin-bottom:8px}.ai-output table{width:100%;border-collapse:collapse;margin-bottom:8px}.ai-output th,.ai-output td{border:1px solid #000;padding:6px;text-align:left}.ai-output img{max-width:100%;height:auto;margin:10px 0}.ai-output svg{max-width:100%;height:auto;margin:10px 0}.ai-output ol{margin-left:0;padding-left:20px;list-style-position:outside;}.ai-output ol > li{font-family:Times New Roman,Georgia,serif;margin-bottom:18px;padding-bottom:15px;border-bottom:1px solid #eee;page-break-inside:avoid;line-height:1.7;}</style></head><body>'+htmlContent+'</body></html>';var blob=new Blob(['\ufeff',header],{type:'application/msword'});var url=URL.createObjectURL(blob);var fd=document.createElement("a");fd.href=url;fd.download='Soal_Guru_Smart.doc';document.body.appendChild(fd);fd.click();document.body.removeChild(fd);URL.revokeObjectURL(url);showToast('Diekspor ke Word!','success');}
+async function exportToWord(){if(!lastAIFormattedHTML){showToast('Tidak ada teks.','error');return;}var td=document.createElement('div');td.innerHTML=lastAIFormattedHTML;td.querySelectorAll('.kunci-jawaban-section,.soal-answer').forEach(function(el){el.remove();});td.querySelectorAll('.soal-opt.correct').forEach(function(el){el.classList.remove('correct');});td.querySelectorAll('.soal-item').forEach(function(item){item.style.marginBottom='18px';item.style.paddingBottom='15px';item.style.borderBottom='1px solid #eee';item.style.overflow='hidden';});td.querySelectorAll('.soal-header').forEach(function(h){h.style.marginBottom='8px';});td.querySelectorAll('.soal-number').forEach(function(n){n.style.fontWeight='bold';n.style.marginRight='8px';});td.querySelectorAll('.soal-text').forEach(function(t){t.style.fontWeight='600';t.style.lineHeight='1.6';});td.querySelectorAll('.soal-opts').forEach(function(od){od.style.display='block';od.style.width='100%';od.style.marginLeft='25px';od.style.marginTop='8px';var cols=od.querySelectorAll('.opt-col');cols.forEach(function(col){col.style.display='inline-block';col.style.width='48%';col.style.verticalAlign='top';col.style.styleFloat='left';col.style.cssFloat='left';col.style.marginRight='2%';});});var ch=td.innerHTML;var kh=await generateKopHTML();var htmlContent='<div style="font-family:Times New Roman,Georgia,serif;color:#000;padding:0;margin:0;width:100%">'+kh+'<div class="ai-output" style="color:#000;margin:0;padding:0">'+ch+'</div></div>';var header='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Soal - GURU SMART</title><style>@page{size:21cm 29.7cm;margin:2cm}body{font-family:Times New Roman,Georgia,serif;font-size:12pt;color:#000;line-height:1.5}h2{text-align:center;font-size:16pt;margin-bottom:5px}p{text-align:center;font-size:10pt;margin-top:0}img{max-width:100%;height:auto}.ai-output table{width:100%;border-collapse:collapse;margin-bottom:8px}.ai-output th,.ai-output td{border:1px solid #000;padding:6px;text-align:left}.ai-output img{max-width:100%;height:auto;border-radius:8px;margin:10px 0;box-shadow:0 2px 5px rgba(0,0,0,.1)}.ai-output ol{margin-left:0;padding-left:20px;list-style-position:outside;}.ai-output ol > li{font-family:Times New Roman,Georgia,serif;margin-bottom:18px;padding-bottom:15px;border-bottom:1px solid #eee;page-break-inside:avoid;line-height:1.7;}.ai-output .soal-header{display:flex;align-items:flex-start;gap:6px;margin-bottom:8px}.ai-output .soal-number{font-weight:bold;min-width:28px}.ai-output .soal-text{font-size:14px;line-height:1.7;font-weight:500;flex:1}.ai-output .soal-opts{display:flex;gap:24px;margin:8px 0 8px 34px}.ai-output .opt-col{flex:1;display:flex;flex-direction:column;gap:4px}.ai-output .soal-opt{display:flex;align-items:flex-start;font-size:13px}.ai-output .soal-opt .opt-label{font-weight:normal !important;margin-right:6px;min-width:20px}</style></head><body>'+htmlContent+'</body></html>';var blob=new Blob(['\ufeff',header],{type:'application/msword'});var url=URL.createObjectURL(blob);var fd=document.createElement("a");fd.href=url;fd.download='Soal_Guru_Smart.doc';document.body.appendChild(fd);fd.click();document.body.removeChild(fd);URL.revokeObjectURL(url);showToast('Diekspor ke Word!','success');}
 </script>
 </body>
 </html>
