@@ -351,79 +351,54 @@ try {
 
 function formatSoalHTML(rawText){
   var text=rawText||'';
-  
   var svgImages=[];
   var svgRegex=/```svg\s*([\s\S]*?)```|<svg[\s\S]*?<\/svg>/gi;
   var svgMatch;
   while((svgMatch=svgRegex.exec(text))!==null){
     var rawSvg=svgMatch[1]||svgMatch[0];
-    if(!rawSvg.trim().startsWith('<svg')){
-      rawSvg='<svg '+rawSvg;
-    }
+    if(!rawSvg.trim().startsWith('<svg')){ rawSvg='<svg '+rawSvg; }
     svgImages.push(rawSvg);
     text=text.replace(svgMatch[0],'|||SVG_MARKER_'+(svgImages.length-1)+'|||');
   }
-
   var kunciSection='';
   var kunciMatch=text.match(/\n?\**(?:Kunci Jawaban|Jawaban)[*:]*\s*\n([\s\S]*?)$/i);
   if(kunciMatch){
     var kt=kunciMatch[1].trim();
     var kl=kt.split('\n').filter(function(l){return l.trim();});
     var kh='<div class="kunci-jawaban-section hide-on-print"><h3>📋 KUNCI JAWABAN</h3><div class="kunci-jawaban-grid">';
-    kl.forEach(function(line){
-      var m=line.match(/(\d+)\s*[.):\s]\s*([A-D])/i);
-      if(m){kh+='<span>'+m[1]+'. '+m[2].toUpperCase()+'</span>';}
-    });
+    kl.forEach(function(line){ var m=line.match(/(\d+)\s*[.):\s]\s*([A-D])/i); if(m){kh+='<span>'+m[1]+'. '+m[2].toUpperCase()+'</span>';} });
     kh+='</div></div>';
     kunciSection=kh;
     text=text.replace(kunciMatch[0],'');
   }
-
   var sp=/(?:\*\*)?(\d+)[\.\)]\s*\*?\s*([\s\S]*?)(?=(?:\*\*)?\d+[\.\)]\s*\*?\s|$)/g;
   var match;
   var soalBlocks=[];
   var hasQ=false;
-  
   while((match=sp.exec(text))!==null){
     var num=match[1];
     var block=match[2];
     var op=/(?:^|\n)\s*([A-D])[\.\)\s]\s*(.+?)(?=(?:\n\s*[A-D][\.\)\s])|(?:\n\s*(?:Jawaban|Kunci)[:\s])|$)/g;
     var options=[];
     var om;
-    while((om=op.exec(block))!==null){
-      options.push({label:om[1].toUpperCase(),text:om[2].trim()});
-    }
-    
+    while((om=op.exec(block))!==null){ options.push({label:om[1].toUpperCase(),text:om[2].trim()}); }
     if(options.length>=2){
       hasQ=true;
       var qt=block.substring(0,block.search(new RegExp('\\s*'+options[0].label+'[\\.\\)\\s]'))).trim();
       var ca=null;
       var ap=[/(?:Jawaban|Kunci)[:\s]*\*?\*?\s*([A-D])/i,/\[BENAR[:\s]*([A-D])\]/i,/\(BENAR[:\s]*([A-D])\)/i,/\*([A-D])\s*\(BENAR\)/i,/([A-D])\s*\(BENAR\)/i,/([A-D])\s*\[BENAR\]/i,/✅\s*([A-D])/i,/([A-D])\s*✅/i];
-      for(var i=0;i<ap.length;i++){
-        var am=block.match(ap[i]);
-        if(am){ca=am[1].toUpperCase();break;}
-      }
-      if(!ca&&kunciMatch){
-        var kunciText=kunciMatch[1];
-        var kl2=kunciText.match(new RegExp(num+'\\s*[.):\\s]\\s*([A-D])','i'));
-        if(kl2)ca=kl2[1].toUpperCase();
-      }
+      for(var i=0;i<ap.length;i++){ var am=block.match(ap[i]); if(am){ca=am[1].toUpperCase();break;} }
+      if(!ca&&kunciMatch){ var kunciText=kunciMatch[1]; var kl2=kunciText.match(new RegExp(num+'\\s*[.):\\s]\\s*([A-D])','i')); if(kl2)ca=kl2[1].toUpperCase(); }
       soalBlocks.push({num:num,question:qt,options:options,correct:ca,fullMatch:match[0]});
     }
   }
-
   var fh='';
-
   if(hasQ&&soalBlocks.length>0){
     var sh='<div class="soal-container">';
     soalBlocks.forEach(function(sb){
       var qT=sb.question.replace(/^\*+|\*+$/g,'').replace(/_+/g,'').trim();
       qT=qT.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
-      
-      qT=qT.replace(/\|\|\|SVG_MARKER_(\d+)\|\|\|/g, function(_, idx){
-        return '<div style="text-align:center;margin:10px 0;">'+svgImages[parseInt(idx)]+'</div>';
-      });
-
+      qT=qT.replace(/\|\|\|SVG_MARKER_(\d+)\|\|\|/g, function(_, idx){ return '<div style="text-align:center;margin:10px 0;">'+svgImages[parseInt(idx)]+'</div>'; });
       sh+='<div class="soal-item"><div class="soal-header"><span class="soal-number">'+sb.num+'.</span><span class="soal-text">'+qT+'</span></div><div class="soal-opts"><div class="opt-col">';
       var half=Math.ceil(sb.options.length/2);
       sb.options.forEach(function(opt,index){
@@ -437,34 +412,16 @@ function formatSoalHTML(rawText){
       sh+='</div>';
     });
     sh+='</div>';
-    
     var tt=text;
-    soalBlocks.forEach(function(sb){
-      var esc=sb.fullMatch.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-      tt=tt.replace(new RegExp(esc,'s'),'|||SOAL_MARKER|||');
-    });
+    soalBlocks.forEach(function(sb){ var esc=sb.fullMatch.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); tt=tt.replace(new RegExp(esc,'s'),'|||SOAL_MARKER|||'); });
     var nsp=tt.split('|||SOAL_MARKER|||').filter(function(p){return p.trim();});
-    
-    nsp.forEach(function(part){
-      part=part.replace(/\|\|\|SVG_MARKER_(\d+)\|\|\|/g, function(_, idx){
-        return '<div style="text-align:center;margin:15px 0;">'+svgImages[parseInt(idx)]+'</div>';
-      });
-      if(part.trim()){fh+=marked.parse(part.trim());}
-    });
+    nsp.forEach(function(part){ part=part.replace(/\|\|\|SVG_MARKER_(\d+)\|\|\|/g, function(_, idx){ return '<div style="text-align:center;margin:15px 0;">'+svgImages[parseInt(idx)]+'</div>'; }); if(part.trim()){fh+=marked.parse(part.trim());} });
     fh+=sh+kunciSection;
   } else {
-    text=text.replace(/\|\|\|SVG_MARKER_(\d+)\|\|\|/g, function(_, idx){
-      return '<div style="text-align:center;margin:15px 0;">'+svgImages[parseInt(idx)]+'</div>';
-    });
+    text=text.replace(/\|\|\|SVG_MARKER_(\d+)\|\|\|/g, function(_, idx){ return '<div style="text-align:center;margin:15px 0;">'+svgImages[parseInt(idx)]+'</div>'; });
     fh=marked.parse(text)+kunciSection;
   }
-
-  if(svgImages.length>0 && fh.indexOf('<svg') === -1){
-    svgImages.forEach(function(svg){
-      fh+='<div style="text-align:center;margin:15px 0;">'+svg+'</div>';
-    });
-  }
-
+  if(svgImages.length>0 && fh.indexOf('<svg') === -1){ svgImages.forEach(function(svg){ fh+='<div style="text-align:center;margin:15px 0;">'+svg+'</div>'; }); }
   return fh;
 }
 
@@ -719,11 +676,34 @@ openModal(id?'Edit Kegiatan':'Buat Kegiatan','<form id="actForm" class="space-y-
 document.getElementById('actForm').onsubmit=async function(e){e.preventDefault();var p={title:document.getElementById('act_title').value,date:document.getElementById('act_date').value,description:document.getElementById('act_desc').value};await saveData('activity_attendance',p,id);closeModal();renderActivityAttendance();};
 }
 
+// === RENDER ACTIVITY ATTENDANCE LIST ===
+async function renderActivityAttendance(){
+var results=await Promise.all([DB.get('activity_attendance'),DB.get('students'),DB.get('classes')]);
+var acts=results[0],st=results[1],cl=results[2];
+currentActSelectedDate=null;
+
+if(acts.length === 0){
+    document.getElementById('content').innerHTML='<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm text-center py-10"><h3 class="font-bold text-slate-800 dark:text-white text-lg mb-2">Belum ada kegiatan</h3><p class="text-sm text-slate-500 mb-4">Silakan buat kegiatan baru untuk memulai absensi.</p><button onclick="activityForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Buat Kegiatan</button></div>';
+    return;
+}
+
+var firstAct = acts[0];
+await activityAttendanceForm(firstAct.id);
+}
+
+// === ACTIVITY FORM (Buat/Edit Kegiatan) ===
+async function activityForm(id){
+var a=null;if(id){a=(await DB.get('activity_attendance')).find(function(x){return x.id===id;});}
+openModal(id?'Edit Kegiatan':'Buat Kegiatan','<form id="actForm" class="space-y-4"><div><label class="block text-sm mb-1">Nama Kegiatan</label><input type="text" id="act_title" value="'+(a?.title||'')+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Tanggal</label><input type="date" id="act_date" value="'+(a?.date||'')+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" style="color-scheme:light;" required></div><div><label class="block text-sm mb-1">Deskripsi</label><textarea id="act_desc" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">'+(a?.description||'')+'</textarea></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>');
+document.getElementById('actForm').onsubmit=async function(e){e.preventDefault();var p={title:document.getElementById('act_title').value,date:document.getElementById('act_date').value,description:document.getElementById('act_desc').value};await saveData('activity_attendance',p,id);closeModal();renderActivityAttendance();};
+}
+
 // === ACTIVITY ATTENDANCE GRID (PERSIS SEPERTI ABSEN SISWA) ===
 async function activityAttendanceForm(actId){
 currentActId=actId;
 var act=(await DB.get('activity_attendance')).find(function(x){return x.id===actId;});
 if(!act)return;
+var allActs = await DB.get('activity_attendance');
 var results=await Promise.all([DB.get('students'),DB.get('classes')]);
 var allStudents=results[0],classes=results[1];
 var actDate=act.date||new Date().toISOString().split('T')[0];
@@ -734,9 +714,9 @@ currentActDaysInMonth=new Date(parseInt(dp[0]),parseInt(dp[1]),0).getDate();
 var dh='';
 for(var d=1;d<=currentActDaysInMonth;d++){dh+='<th class="act-day-header px-2 py-1 cursor-pointer hover:bg-blue-100 text-slate-700" data-day="'+d+'" style="font-size:10px;min-width:24px;">'+d+'</th>';}
 var html='<div class="bg-white dark:bg-slate-800 p-4 md:p-6 rounded-xl shadow-sm">';
-html+='<div class="mb-4"><button onclick="renderActivityAttendance()" class="text-sm text-blue-600 font-semibold hover:underline flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>Kembali ke Daftar Kegiatan</button></div>';
+html+='<div class="mb-4 flex justify-between items-center flex-wrap gap-3"><button onclick="renderActivityList()" class="text-sm text-blue-600 font-semibold hover:underline flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>Lihat Daftar Kegiatan</button><button onclick="activityForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Buat Kegiatan Baru</button></div>';
 html+='<div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-xl shadow-md mb-4"><div class="flex items-center gap-2 mb-1"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg><h3 class="text-xl font-bold">'+act.title+'</h3></div><p class="text-sm opacity-90">Tanggal Kegiatan: '+formatDateID(act.date)+'</p>'+(act.description?'<p class="text-xs opacity-75 mt-1">'+act.description+'</p>':'')+'</div>';
-html+='<div class="flex flex-col md:flex-row justify-between mb-4 gap-4"><div></div><div class="flex flex-wrap gap-2 items-center"><input type="date" id="act_att_date" value="'+selDate+'" onchange="currentActSelectedDate=this.value;activityAttendanceForm(\''+actId+'\')" class="px-3 py-2 border rounded-lg dark:bg-slate-700 text-slate-800 text-sm" style="color-scheme:light;"><button onclick="startActScanner(\''+actId+'\')" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-semibold">Scan QR</button><button onclick="exportActAttendanceExcel(\''+actId+'\')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-semibold">Export Excel</button><button onclick="printActAttendance(\''+actId+'\')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm font-semibold">Cetak</button></div></div>';
+html+='<div class="flex flex-col md:flex-row justify-between mb-4 gap-4"><div><select id="act_selector" onchange="if(this.value)activityAttendanceForm(this.value)" class="px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white text-slate-800 text-sm">'+allActs.map(function(a){return '<option value="'+a.id+'" '+(a.id===actId?'selected':'')+'>'+a.title+'</option>';}).join('')+'</select></div><div class="flex flex-wrap gap-2 items-center"><input type="date" id="act_att_date" value="'+selDate+'" onchange="currentActSelectedDate=this.value;activityAttendanceForm(\''+actId+'\')" class="px-3 py-2 border rounded-lg dark:bg-slate-700 text-slate-800 text-sm" style="color-scheme:light;"><button onclick="startActScanner(\''+actId+'\')" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-semibold">Scan QR</button><button onclick="exportActAttendanceExcel(\''+actId+'\')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-semibold">Export Excel</button><button onclick="printActAttendance(\''+actId+'\')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm font-semibold">Cetak</button></div></div>';
 html+='<div class="flex flex-col sm:flex-row gap-4 justify-between items-center bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg mb-4"><div class="flex items-center gap-3 text-xs"><span class="font-medium text-slate-700">Pilih Status:</span><select id="act_att_status_global" class="px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white text-slate-800 text-sm"><option value="Hadir">Hadir (H)</option><option value="Sakit">Sakit (S)</option><option value="Izin">Izin (I)</option><option value="Alpa">Alpa (A)</option><option value="">Hapus</option></select></div><button onclick="saveActivityAttendance(\''+actId+'\')" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-semibold">Simpan Absensi</button></div>';
 html+='<div class="overflow-x-auto pb-2"><table class="att-table border-collapse" style="width:100%;min-width:800px;"><thead><tr class="bg-slate-100 dark:bg-slate-700"><th rowspan="2" class="px-2 py-2 border dark:border-slate-600 text-xs">No</th><th rowspan="2" class="px-2 py-2 border dark:border-slate-600 text-xs text-left min-w-[150px]">Nama</th><th colspan="'+currentActDaysInMonth+'" class="px-2 py-2 border dark:border-slate-600 text-xs">Tanggal</th><th rowspan="2" class="px-2 py-2 border dark:border-slate-600 text-green-600 text-xs">H</th><th rowspan="2" class="px-2 py-2 border dark:border-slate-600 text-blue-600 text-xs">S</th><th rowspan="2" class="px-2 py-2 border dark:border-slate-600 text-yellow-600 text-xs">I</th><th rowspan="2" class="px-2 py-2 border dark:border-slate-600 text-red-600 text-xs">A</th></tr><tr class="bg-slate-50 dark:bg-slate-800">'+dh+'</tr></thead><tbody id="actAttTableBody"></tbody></table></div></div>';
 document.getElementById('content').innerHTML=html;
@@ -752,6 +732,12 @@ rh+='<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50"><td class="px-2 py
 tbody.innerHTML=rh;
 }else{tbody.innerHTML='<tr><td colspan="'+(currentActDaysInMonth+5)+'" class="text-center py-4 text-slate-500">Belum ada data siswa.</td></tr>';}
 await loadActAttendanceData(actId);
+}
+
+async function renderActivityList(){
+var results=await Promise.all([DB.get('activity_attendance'),DB.get('students')]);
+var acts=results[0],st=results[1];
+document.getElementById('content').innerHTML='<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex justify-between mb-4"><h3 class="font-bold text-slate-800 dark:text-white">Daftar Hadir Kegiatan</h3><button onclick="activityForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Buat Kegiatan</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4">'+(acts.length?acts.map(function(a){return '<div class="p-4 border dark:border-slate-700 rounded-lg"><h4 class="font-bold text-slate-800 dark:text-white">'+a.title+'</h4><p class="text-xs text-slate-500 mt-1">Tanggal: '+formatDateID(a.date)+'</p><p class="text-sm mt-2 text-slate-600 dark:text-slate-300">'+(a.description||'')+'</p><div class="mt-3 flex gap-2"><button onclick="activityAttendanceForm(\''+a.id+'\')" class="flex-1 text-xs bg-green-100 text-green-600 px-3 py-1 rounded">Buka Absensi</button><button onclick="activityForm(\''+a.id+'\')" class="text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded">Edit</button><button onclick="deleteData(\'activity_attendance\',\''+a.id+'\',renderActivityList)" class="text-xs bg-red-100 text-red-600 px-3 py-1 rounded">Hapus</button></div></div>';}).join(''):'<div class="col-span-3 text-center py-8 text-slate-500">Belum ada kegiatan.</div>')+'</div></div>';
 }
 
 // === LOAD ACTIVITY ATTENDANCE DATA ===
@@ -854,6 +840,41 @@ window.manualInputActNIS=async function(actId){
 var v=document.getElementById('manual-nis-input').value.trim();
 if(v){processActQRResult(actId,v);}else{showToast('NIS kosong!','error');}
 };
+
+// === PROCESS ACT QR RESULT (MODIFIED FOR GRID) ===
+async function processActQRResult(actId,text){
+var sts=await DB.get('students');
+var n=text;try{var p=JSON.parse(text);if(p.nis)n=p.nis;}catch(e){}
+var std=sts.find(function(s){return s.nis===n||s.nis===text;});
+if(std){
+playBeep();
+var dv=currentActSelectedDate||new Date().toISOString().split('T')[0];
+try{
+var recs=await sb.from('activity_records').select('*').eq('act_id',actId).eq('student_id',std.id).eq('user_id',currentUser.id).eq('date',dv).maybeSingle();
+if(recs.data){
+await sb.from('activity_records').update({status:'Hadir'}).eq('id',recs.data.id).eq('user_id',currentUser.id);
+}else{
+var insRes=await sb.from('activity_records').insert([{user_id:currentUser.id,act_id:actId,student_id:std.id,status:'Hadir',date:dv}]);
+if(insRes.error&&String(insRes.error.message).toLowerCase().includes('date')){
+await sb.from('activity_records').insert([{user_id:currentUser.id,act_id:actId,student_id:std.id,status:'Hadir'}]);
+}
+}
+var day=parseInt(dv.split('-')[2],10);
+var c=document.getElementById('act_att_'+std.id+'_'+day);
+if(c){c.innerText='H';c.classList.remove('bg-blue-100','bg-yellow-100','bg-red-100','text-blue-700','text-yellow-700','text-red-700');c.classList.add('bg-green-100','text-green-700');updateActRecap();}
+var result=document.getElementById('scan-result');
+if(result){result.innerHTML='<div class="bg-green-100 text-green-700 px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>✅ '+std.name+' berhasil absen!</div>';}
+setTimeout(function(){var r=document.getElementById('scan-result');if(r)r.innerHTML='';startScanCamera();},1500);
+}catch(e){
+console.error('Act Scan:',e);
+try{await sb.from('activity_records').insert([{user_id:currentUser.id,act_id:actId,student_id:std.id,status:'Hadir'}]);var day2=parseInt(dv.split('-')[2],10);var c2=document.getElementById('act_att_'+std.id+'_'+day2);if(c2){c2.innerText='H';c2.classList.add('bg-green-100','text-green-700');updateActRecap();}showToast(std.name+' berhasil absen!','success');}catch(e2){showToast('Gagal menyimpan absensi kegiatan.','error');}
+}
+}else{
+var result=document.getElementById('scan-result');
+if(result)result.innerHTML='<div class="bg-red-100 text-red-700 px-4 py-2.5 rounded-lg text-sm font-semibold">❌ QR tidak dikenal: '+text+'</div>';
+setTimeout(function(){var r=document.getElementById('scan-result');if(r)r.innerHTML='';startScanCamera();},2000);
+}
+}
 
 // === PROCESS ACT QR RESULT (MODIFIED FOR GRID) ===
 async function processActQRResult(actId,text){
@@ -1044,7 +1065,7 @@ async function renderAI(){
           '<button id="aiSendBtn" onclick="sendAI()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold flex items-center gap-1 text-sm flex-none"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9 2zm0 0v-8"/></svg><span class="hidden sm:inline">Kirim</span></button>'+
         '</div>'+
         '<div class="flex justify-end gap-2 mt-2 flex-wrap">'+
-          '<button onclick="openSoalCameraModal()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.072 4h3.856a2 2 0 011.664.89l.812-1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Foto Soal</button>'+
+          '<button onclick="openSoalCameraModal()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.072 4h3.856a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Foto Soal</button>'+
           '<button onclick="uploadSoalImage()" class="bg-teal-500 hover:bg-teal-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Galeri Soal</button>'+
           '<button id="aiWordBtn" onclick="exportToWord()" class="hidden bg-blue-500 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>Word</button>'+
           '<button id="aiPrintBtn" onclick="printAIResult(false)" class="hidden bg-slate-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>PDF</button>'+
