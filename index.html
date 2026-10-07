@@ -239,40 +239,15 @@ var kurikulumTypes=[
 function formatRupiahID(angka){if(angka===null||angka===undefined||angka==='')return '0';var number=Number(angka);if(isNaN(number))return angka;return number.toLocaleString('id-ID',{minimumFractionDigits:0,maximumFractionDigits:2});}
 function formatMatematikaID(teks){if(!teks)return '';return teks.replace(/(\d{1,3}(?:,\d{3})*(?:\.\d+)?|\d+(?:\.\d+)?)/g,function(match){if(!match.includes(',')&&!match.includes('.')){return Number(match).toLocaleString('id-ID');}var bagian;if(match.includes(',')){if(match.includes('.')){var parts=match.split(',');var intPart=parts[0].replace(/\./g,'');var decPart=parts[1];bagian=intPart+'.'+decPart;}else{bagian=match.replace(',','.');}}else{var parts=match.split('.');if(parts.length>2){bagian=parts.join('');}else{if(parts[0].length<=3&&parts[1]&&parts[1].length===3){bagian=parts.join('');}else if(parts[0].length>3){bagian=parts.join('');}else{bagian=match;}}}var num=Number(bagian);if(isNaN(num))return match;return num.toLocaleString('id-ID',{minimumFractionDigits:0,maximumFractionDigits:2});});}
 
-// === FUNGSI SVG VEKTOR UNTUK GAMBAR BENTUK MATEMATIKA ===
-window.getShapeSVG = function(shape) {
-    var svgs = {
-        'Kubus': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 200" width="200" height="180"><g stroke="#1e3a8a" stroke-width="2.5" stroke-linejoin="round"><polygon points="110,30 190,70 110,110 30,70" fill="#bfdbfe"/><polygon points="30,70 110,110 110,180 30,140" fill="#93c5fd"/><polygon points="190,70 110,110 110,180 190,140" fill="#60a5fa"/></g><text x="70" y="160" text-anchor="middle" font-size="14" fill="#1e3a8a" font-family="Arial" font-weight="bold">s</text></svg>',
-        'Balok': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200" width="220" height="180"><g stroke="#1e3a8a" stroke-width="2.5" stroke-linejoin="round"><polygon points="60,30 200,30 160,80 20,80" fill="#bfdbfe"/><polygon points="20,80 160,80 160,170 20,170" fill="#93c5fd"/><polygon points="200,30 160,80 160,170 200,120" fill="#60a5fa"/></g><text x="90" y="155" text-anchor="middle" font-size="13" fill="#1e3a8a" font-family="Arial" font-weight="bold">p</text><text x="40" y="60" text-anchor="middle" font-size="13" fill="#1e3a8a" font-family="Arial" font-weight="bold">t</text><text x="180" y="100" text-anchor="middle" font-size="13" fill="#1e3a8a" font-family="Arial" font-weight="bold">l</text></svg>',
-        'Prisma Segitiga': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" width="220" height="160"><g stroke="#1e3a8a" stroke-width="2.5" stroke-linejoin="round"><polygon points="60,30 120,140 0,140" fill="#bfdbfe"/><polygon points="180,30 240,140 120,140" fill="#93c5fd"/><polygon points="60,30 180,30 240,140 120,140" fill="none"/></g><text x="120" y="22" text-anchor="middle" font-size="12" fill="#1e3a8a" font-family="Arial" font-weight="bold">panjang prisma</text><text x="85" y="100" text-anchor="middle" font-size="13" fill="#dc2626" font-family="Arial" font-weight="bold">t</text><text x="60" y="160" text-anchor="middle" font-size="12" fill="#1e3a8a" font-family="Arial">alas</text></svg>',
-        'Tabung': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 220" width="140" height="200"><g stroke="#1e3a8a" stroke-width="2.5"><path d="M 30 30 L 30 180 A 50 15 0 0 0 130 180 L 130 30" fill="#93c5fd"/><ellipse cx="80" cy="30" rx="50" ry="15" fill="#bfdbfe"/><ellipse cx="80" cy="180" rx="50" ry="15" fill="none" stroke-dasharray="4,3"/></g><text x="80" y="105" text-anchor="middle" font-size="14" fill="#1e3a8a" font-family="Arial" font-weight="bold">t</text><text x="118" y="28" text-anchor="middle" font-size="13" fill="#dc2626" font-family="Arial" font-weight="bold">r</text></svg>',
-        'Segitiga': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 180" width="200" height="160"><polygon points="110,20 30,150 190,150" fill="#dbeafe" stroke="#1e3a8a" stroke-width="2.5"/><line x1="110" y1="20" x2="110" y2="150" stroke="#1e3a8a" stroke-width="1.5" stroke-dasharray="5,3"/><rect x="105" y="148" width="10" height="3" fill="#1e3a8a"/><text x="128" y="90" text-anchor="middle" font-size="14" fill="#1e3a8a" font-family="Arial" font-weight="bold">t</text><text x="110" y="170" text-anchor="middle" font-size="13" fill="#1e3a8a" font-family="Arial" font-weight="bold">alas</text></svg>',
-        'Lingkaran': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="180" height="180"><circle cx="100" cy="100" r="75" fill="#dbeafe" stroke="#1e3a8a" stroke-width="2.5"/><circle cx="100" cy="100" r="3.5" fill="#1e3a8a"/><line x1="100" y1="100" x2="175" y2="100" stroke="#dc2626" stroke-width="2"/><text x="137" y="92" text-anchor="middle" font-size="14" fill="#dc2626" font-family="Arial" font-weight="bold">r</text></svg>',
-        'Bangun Ruang Lainnya': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="180" height="180"><g stroke="#1e3a8a" stroke-width="2.5"><path d="M 40 160 L 100 20 L 160 160 Z" fill="#bfdbfe"/><ellipse cx="100" cy="160" rx="60" ry="15" fill="#93c5fd"/><line x1="100" y1="20" x2="100" y2="160" stroke-dasharray="5,3"/><line x1="100" y1="160" x2="140" y2="150" stroke-dasharray="4,3"/></g><text x="115" y="95" text-anchor="middle" font-size="14" fill="#1e3a8a" font-family="Arial" font-weight="bold">t</text><text x="128" y="175" text-anchor="middle" font-size="13" fill="#dc2626" font-family="Arial" font-weight="bold">r</text></svg>'
-    };
-    return svgs[shape] || svgs['Lingkaran'];
-};
-
-// === FUNGSI AI MATEMATIKA LANGSUNG MASUK CHAT DENGAN GAMBAR VEKTOR SVG ===
+// === FUNGSI AI MATEMATIKA LANGSUNG MASUK CHAT DENGAN GAMBAR ASLI ===
 window.generateMathSoal = async function(shape) {
     switchAITab('chat');
-    // Tampilkan gambar vektor SVG langsung di chat (bukan URL)
-    var svgHTML = window.getShapeSVG(shape);
-    var box = document.getElementById('aiMessages');
-    if (box) {
-        var imgMsg = document.createElement('div');
-        imgMsg.className = 'flex justify-center fade-in';
-        imgMsg.innerHTML = '<div class="max-w-[85%] rounded-xl px-4 py-3 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-700 dark:to-slate-800 shadow-sm border-2 border-blue-200 dark:border-slate-600"><div class="text-xs opacity-70 mb-2 text-center text-gray-600 dark:text-slate-300 font-semibold">📐 Gambar Vektor: ' + shape + '</div><div class="flex justify-center bg-white dark:bg-slate-900 rounded-lg p-3">' + svgHTML + '</div></div>';
-        box.appendChild(imgMsg);
-        box.scrollTop = box.scrollHeight;
-    }
-    // Set prompt untuk AI - minta soal tanpa permintaan gambar URL
     var ip = document.getElementById('aiInput');
-    var randVal = Math.floor(Math.random() * 8) + 2;
-    var promptText = 'Buatkan 1 soal matematika materi ' + shape + ' untuk siswa SD/SMP. Sertakan ukuran-ukuran yang jelas dan realistis pada soal (misalnya sisi = ' + randVal + ' cm, atau panjang/lebar/tinggi/jari-jari yang sesuai dengan bentuk ' + shape + ' yang ditampilkan di atas). Setelah soal, berikan pembahasan jawaban step by step yang lengkap beserta rumus yang digunakan. JANGAN sertakan gambar atau URL gambar dalam jawaban Anda, cukup teks soal dan pembahasan saja karena gambarnya sudah ditampilkan. Gunakan format markdown yang rapi.';
+    var promptText = 'Buatkan 1 soal matematika materi ' + shape + ' untuk siswa. WAJIB sertakan gambar asli (bukan kode SVG). Gunakan format markdown image: ![Gambar ' + shape + '](URL_GAMBAR). Pastikan URL gambar valid (diawali http). Jika tidak menemukan URL gambar nyata, WAJIB gunakan URL ini: https://loremflickr.com/400/300/' + encodeURIComponent(shape) + ' . Setelah gambar, berikan soalnya dan pembahasan jawabannya.';
     ip.value = promptText;
     await sendAI();
 };
+
 async function renderDashboard(){
 var results=await Promise.all([DB.get('students'),DB.get('teachers'),DB.get('classes'),DB.get('announcements'),DB.get('grades'),DB.get('keuangan')]);
 var st=results[0],tc=results[1],cl=results[2],an=results[3],gr=results[4],kn=results[5];
