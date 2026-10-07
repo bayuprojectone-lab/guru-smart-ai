@@ -210,7 +210,7 @@ var menus=[
 {id:'subjects',label:'Mata Pelajaran',icon:'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253',roles:['admin','guru','siswa']},
 {id:'schedules',label:'Jadwal',icon:'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',roles:['admin','guru','siswa']},
 {id:'attendance',label:'Absensi',icon:'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',roles:['admin','guru']},
-{id:'activity_attendance',label:'Absensi Kegiatan',icon:'M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4',roles:['admin','guru']},
+{id:'activity_attendance',label:'Absensi Kegiatan',icon:'M5 8h14M5 8a2 2 0 110-4 h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4',roles:['admin','guru']},
 {id:'grades',label:'Penilaian',icon:'M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z',roles:['admin','guru','siswa']},
 {id:'assignments',label:'Tugas',icon:'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',roles:['admin','guru','siswa']},
 {id:'materi',label:'Materi Ajar',icon:'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253',roles:['admin','guru','siswa']},
@@ -237,13 +237,87 @@ var kurikulumTypes=[
 ];
 
 function formatRupiahID(angka){if(angka===null||angka===undefined||angka==='')return '0';var number=Number(angka);if(isNaN(number))return angka;return number.toLocaleString('id-ID',{minimumFractionDigits:0,maximumFractionDigits:2});}
-function formatMatematikaID(teks){if(!teks)return '';return teks.replace(/(\d{1,3}(?:,\d{3})*(?:\.\d+)?|\d+(?:\.\d+)?)/g,function(match){if(!match.includes(',')&&!match.includes('.')){return Number(match).toLocaleString('id-ID');}var bagian;if(match.includes(',')){if(match.includes('.')){var parts=match.split(',');var intPart=parts[0].replace(/\./g,'');var decPart=parts[1];bagian=intPart+'.'+decPart;}else{bagian=match.replace(',','.');}}else{var parts=match.split('.');if(parts.length>2){bagian=parts.join('');}else{if(parts[0].length<=3&&parts[1]&&parts[1].length===3){bagian=parts.join('');}else if(parts[0].length>3){bagian=parts.join('');}else{bagian=match;}}}var num=Number(bagian);if(isNaN(num))return match;return num.toLocaleString('id-ID',{minimumFractionDigits:0,maximumFractionDigits:2});});}
 
-// === FUNGSI AI MATEMATIKA LANGSUNG MASUK CHAT DENGAN GAMBAR ASLI ===
+// === FUNGSI FORMAT ANGKA & RUMUS STANDAR INDONESIA ===
+function formatMatematikaID(teks){
+  if(!teks) return '';
+  // 1. Ubah notasi ilmiah (misal: 1.2x10^4) menjadi angka desimal biasa
+  teks = teks.replace(/(\d+(?:\.\d+)?)\s*[xX]\s*10\^(\d+)/g, function(m, base, exp) {
+    var b = parseFloat(base);
+    var e = parseInt(exp);
+    return (b * Math.pow(10, e)).toString();
+  });
+  // 2. Ubah simbol perkalian (x atau *) menjadi titik tengah (·)
+  teks = teks.replace(/(\d)\s*[xX*]\s*(\d)/g, '$1 · $2');
+  // 3. Format angka standar Indonesia (titik untuk ribuan, koma untuk desimal)
+  teks = teks.replace(/(\d{1,3}(?:,\d{3})*(?:\.\d+)?|\d+(?:\.\d+)?)/g, function(match){
+    if(!match.includes(',') && !match.includes('.')) {
+      return Number(match).toLocaleString('id-ID');
+    }
+    var bagian;
+    if(match.includes(',')) {
+      if(match.includes('.')) {
+        var parts = match.split(',');
+        var intPart = parts[0].replace(/\./g, '');
+        var decPart = parts[1];
+        bagian = intPart + '.' + decPart;
+      } else {
+        bagian = match.replace(',', '.');
+      }
+    } else {
+      var parts = match.split('.');
+      if(parts.length > 2) {
+        bagian = parts.join('');
+      } else {
+        if(parts[0].length <= 3 && parts[1] && parts[1].length === 3) {
+          bagian = parts.join('');
+        } else if(parts[0].length > 3) {
+          bagian = parts.join('');
+        } else {
+          bagian = match;
+        }
+      }
+    }
+    var num = Number(bagian);
+    if(isNaN(num)) return match;
+    return num.toLocaleString('id-ID', {minimumFractionDigits:0, maximumFractionDigits:2});
+  });
+  return teks;
+}
+
+// === FUNGSI SVG VEKTOR UNTUK GAMBAR BENTUK MATEMATIKA ===
+window.getShapeSVG = function(shape) {
+    var svgs = {
+        'Kubus': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 200" width="180" height="160"><g stroke="#1e3a8a" stroke-width="2.5" stroke-linejoin="round"><polygon points="110,30 190,70 110,110 30,70" fill="#bfdbfe"/><polygon points="30,70 110,110 110,180 30,140" fill="#93c5fd"/><polygon points="190,70 110,110 110,180 190,140" fill="#60a5fa"/></g></svg>',
+        'Balok': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200" width="200" height="160"><g stroke="#1e3a8a" stroke-width="2.5" stroke-linejoin="round"><polygon points="60,30 200,30 160,80 20,80" fill="#bfdbfe"/><polygon points="20,80 160,80 160,170 20,170" fill="#93c5fd"/><polygon points="200,30 160,80 160,170 200,120" fill="#60a5fa"/></g></svg>',
+        'Prisma Segitiga': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" width="200" height="150"><g stroke="#1e3a8a" stroke-width="2.5" stroke-linejoin="round"><polygon points="60,30 120,140 0,140" fill="#bfdbfe"/><polygon points="180,30 240,140 120,140" fill="#93c5fd"/><polygon points="60,30 180,30 240,140 120,140" fill="none"/></g></svg>',
+        'Tabung': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 220" width="120" height="160"><g stroke="#1e3a8a" stroke-width="2.5"><path d="M 30 30 L 30 180 A 50 15 0 0 0 130 180 L 130 30" fill="#93c5fd"/><ellipse cx="80" cy="30" rx="50" ry="15" fill="#bfdbfe"/><ellipse cx="80" cy="180" rx="50" ry="15" fill="none" stroke-dasharray="4,3"/></g></svg>',
+        'Segitiga': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 180" width="180" height="150"><polygon points="110,20 30,150 190,150" fill="#dbeafe" stroke="#1e3a8a" stroke-width="2.5"/></svg>',
+        'Lingkaran': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="160" height="160"><circle cx="100" cy="100" r="75" fill="#dbeafe" stroke="#1e3a8a" stroke-width="2.5"/></svg>',
+        'Bangun Ruang Lainnya': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="160" height="160"><g stroke="#1e3a8a" stroke-width="2.5"><path d="M 40 160 L 100 20 L 160 160 Z" fill="#bfdbfe"/><ellipse cx="100" cy="160" rx="60" ry="15" fill="#93c5fd"/></g></svg>'
+    };
+    return svgs[shape] || svgs['Lingkaran'];
+};
+
+// === FUNGSI AI MATEMATIKA LANGSUNG MASUK CHAT DENGAN GAMBAR VEKTOR SVG ===
 window.generateMathSoal = async function(shape) {
     switchAITab('chat');
+    var svgHTML = window.getShapeSVG(shape);
+    var box = document.getElementById('aiMessages');
+    
+    // Tampilkan gambar vektor SVG langsung di layar chat
+    if (box) {
+        var imgMsg = document.createElement('div');
+        imgMsg.className = 'flex justify-center fade-in mb-4';
+        imgMsg.innerHTML = '<div class="max-w-[85%] rounded-xl px-4 py-3 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-700 dark:to-slate-800 shadow-sm border-2 border-blue-200 dark:border-slate-600"><div class="text-xs opacity-70 mb-2 text-center text-gray-600 dark:text-slate-300 font-semibold">📐 Gambar Vektor: ' + shape + '</div><div class="flex justify-center bg-white dark:bg-slate-900 rounded-lg p-3">' + svgHTML + '</div></div>';
+        box.appendChild(imgMsg);
+        box.scrollTop = box.scrollHeight;
+    }
+    
+    // Set prompt untuk AI - minta soal tanpa permintaan gambar URL
     var ip = document.getElementById('aiInput');
-    var promptText = 'Buatkan 1 soal matematika materi ' + shape + ' untuk siswa. WAJIB sertakan gambar asli (bukan kode SVG). Gunakan format markdown image: ![Gambar ' + shape + '](URL_GAMBAR). Pastikan URL gambar valid (diawali http). Jika tidak menemukan URL gambar nyata, WAJIB gunakan URL ini: https://loremflickr.com/400/300/' + encodeURIComponent(shape) + ' . Setelah gambar, berikan soalnya dan pembahasan jawabannya.';
+    var randVal = Math.floor(Math.random() * 8) + 2;
+    var promptText = 'Buatkan 1 soal matematika materi ' + shape + ' untuk siswa SD/SMP. Sertakan ukuran-ukuran yang jelas dan realistis pada soal (misalnya sisi = ' + randVal + ' cm, atau panjang/lebar/tinggi/jari-jari yang sesuai dengan bentuk ' + shape + ' yang ditampilkan di atas). Setelah soal, berikan pembahasan jawaban step by step yang lengkap beserta rumus yang digunakan. JANGAN sertakan gambar atau URL gambar dalam jawaban Anda, cukup teks soal dan pembahasan saja karena gambarnya sudah ditampilkan. Gunakan format markdown yang rapi. Gunakan penulisan angka dan rumus standar Indonesia (titik untuk pembulatan ribuan, koma untuk desimal).';
     ip.value = promptText;
     await sendAI();
 };
@@ -615,7 +689,6 @@ if(e.target&&e.target.classList&&e.target.classList.contains('day-header')){
         loadAttendanceData();
     }
 }
-// === TAMBAHAN UNTUK ACTIVITY ATTENDANCE ===
 if(e.target&&e.target.classList&&e.target.classList.contains('act-att-cell')){
     var sid=e.target.getAttribute('data-student');
     var day=parseInt(e.target.getAttribute('data-day'));
@@ -658,12 +731,10 @@ async function startNativeScanner(){var d=document.getElementById('att_date')?.v
 window.manualInputNIS=function(){var v=document.getElementById('manual-nis-input').value.trim();if(v){processQRResult(v);}else{showToast('NIS kosong!','error');}};
 async function processQRResult(t){var sts=await DB.get('students');var n=t;try{var p=JSON.parse(t);if(p.nis)n=p.nis;}catch(e){}var std=sts.find(function(s){return s.nis===n||s.nis===t;});if(std){playBeep();var dv=document.getElementById('att_date').value;var day=new Date(dv).getDate();var c=document.getElementById('att_'+std.id+'_'+day);if(c){c.innerText='H';c.classList.remove('bg-blue-100','bg-yellow-100','bg-red-100','text-blue-700','text-yellow-700','text-red-700');c.classList.add('bg-green-100','text-green-700');updateRecap();var result=document.getElementById('scan-result');if(result){result.innerHTML='<div class="bg-green-100 text-green-700 px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>✅ '+std.name+' berhasil absen!</div>';}try{var er=await sb.from('attendance').select('id').eq('student_id',std.id).eq('date',dv).eq('user_id',currentUser.id).maybeSingle();if(er.data)await sb.from('attendance').update({status:'H'}).eq('id',er.data.id).eq('user_id',currentUser.id);else await sb.from('attendance').insert([{user_id:currentUser.id,student_id:std.id,date:dv,status:'H',subject:'Umum'}]);}catch(e){console.error('Scan:',e);}setTimeout(function(){var r=document.getElementById('scan-result');if(r)r.innerHTML='';startScanCamera();},1500);}else{var result=document.getElementById('scan-result');if(result)result.innerHTML='<div class="bg-red-100 text-red-700 px-4 py-2.5 rounded-lg text-sm font-semibold">❌ Siswa tidak ada di tabel kelas.</div>';setTimeout(function(){var r=document.getElementById('scan-result');if(r)r.innerHTML='';startScanCamera();},2000);}}else{var result=document.getElementById('scan-result');if(result)result.innerHTML='<div class="bg-red-100 text-red-700 px-4 py-2.5 rounded-lg text-sm font-semibold">❌ QR tidak dikenal: '+t+'</div>';setTimeout(function(){var r=document.getElementById('scan-result');if(r)r.innerHTML='';startScanCamera();},2000);}}
 
-// === ACTIVITY ATTENDANCE VARIABLES ===
 var currentActId=null;
 var currentActDaysInMonth=31;
 var currentActSelectedDate=null;
 
-// === RENDER ACTIVITY ATTENDANCE LIST (OPTIMIZED LOADING) ===
 async function renderActivityAttendance(){
 var results=await Promise.all([DB.get('activity_attendance'),DB.get('students'),DB.get('classes')]);
 var acts=results[0],st=results[1],cl=results[2];
@@ -678,14 +749,12 @@ var firstAct = acts[0];
 await activityAttendanceForm(firstAct.id, acts, st, cl);
 }
 
-// === ACTIVITY FORM (Buat/Edit Kegiatan) ===
 async function activityForm(id){
 var a=null;if(id){a=(await DB.get('activity_attendance')).find(function(x){return x.id===id;});}
 openModal(id?'Edit Kegiatan':'Buat Kegiatan','<form id="actForm" class="space-y-4"><div><label class="block text-sm mb-1">Nama Kegiatan</label><input type="text" id="act_title" value="'+(a?.title||'')+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Tanggal</label><input type="date" id="act_date" value="'+(a?.date||'')+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" style="color-scheme:light;" required></div><div><label class="block text-sm mb-1">Deskripsi</label><textarea id="act_desc" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">'+(a?.description||'')+'</textarea></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>');
 document.getElementById('actForm').onsubmit=async function(e){e.preventDefault();var p={title:document.getElementById('act_title').value,date:document.getElementById('act_date').value,description:document.getElementById('act_desc').value};await saveData('activity_attendance',p,id);closeModal();renderActivityAttendance();};
 }
 
-// === ACTIVITY ATTENDANCE GRID (PERSIS SEPERTI ABSEN SISWA) ===
 async function activityAttendanceForm(actId, preloadedActs, preloadedStudents, preloadedClasses){
 currentActId=actId;
 var act = preloadedActs ? preloadedActs.find(x => x.id === actId) : (await DB.get('activity_attendance')).find(x => x.id === actId);
@@ -709,7 +778,7 @@ var dh='';
 for(var d=1;d<=currentActDaysInMonth;d++){dh+='<th class="act-day-header px-2 py-1 cursor-pointer hover:bg-blue-100 text-slate-700" data-day="'+d+'" style="font-size:10px;min-width:24px;">'+d+'</th>';}
 var html='<div class="bg-white dark:bg-slate-800 p-4 md:p-6 rounded-xl shadow-sm">';
 html+='<div class="mb-4 flex justify-between items-center flex-wrap gap-3"><button onclick="renderActivityList()" class="text-sm text-blue-600 font-semibold hover:underline flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>Lihat Daftar Kegiatan</button><button onclick="activityForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Buat Kegiatan Baru</button></div>';
-html+='<div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-xl shadow-md mb-4"><div class="flex items-center gap-2 mb-1"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg><h3 class="text-xl font-bold">'+act.title+'</h3></div><p class="text-sm opacity-90">Tanggal Kegiatan: '+formatDateID(act.date)+'</p>'+(act.description?'<p class="text-xs opacity-75 mt-1">'+act.description+'</p>':'')+'</div>';
+html+='<div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-xl shadow-md mb-4"><div class="flex items-center gap-2 mb-1"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4 h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg><h3 class="text-xl font-bold">'+act.title+'</h3></div><p class="text-sm opacity-90">Tanggal Kegiatan: '+formatDateID(act.date)+'</p>'+(act.description?'<p class="text-xs opacity-75 mt-1">'+act.description+'</p>':'')+'</div>';
 html+='<div class="flex flex-col md:flex-row justify-between mb-4 gap-4"><div><select id="act_selector" onchange="if(this.value)activityAttendanceForm(this.value)" class="px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white text-slate-800 text-sm">'+allActs.map(function(a){return '<option value="'+a.id+'" '+(a.id===actId?'selected':'')+'>'+a.title+'</option>';}).join('')+'</select></div><div class="flex flex-wrap gap-2 items-center"><input type="date" id="act_att_date" value="'+selDate+'" onchange="currentActSelectedDate=this.value;activityAttendanceForm(\''+actId+'\')" class="px-3 py-2 border rounded-lg dark:bg-slate-700 text-slate-800 text-sm" style="color-scheme:light;"><button onclick="startActScanner(\''+actId+'\')" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-semibold">Scan QR</button><button onclick="exportActAttendanceExcel(\''+actId+'\')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-semibold">Export Excel</button><button onclick="printActAttendance(\''+actId+'\')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm font-semibold">Cetak</button></div></div>';
 html+='<div class="flex flex-col sm:flex-row gap-4 justify-between items-center bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg mb-4"><div class="flex items-center gap-3 text-xs"><span class="font-medium text-slate-700">Pilih Status:</span><select id="act_att_status_global" class="px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white text-slate-800 text-sm"><option value="Hadir">Hadir (H)</option><option value="Sakit">Sakit (S)</option><option value="Izin">Izin (I)</option><option value="Alpa">Alpa (A)</option><option value="">Hapus</option></select></div><button onclick="saveActivityAttendance(\''+actId+'\')" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-semibold">Simpan Absensi</button></div>';
 html+='<div class="overflow-x-auto pb-2"><table class="att-table border-collapse" style="width:100%;min-width:800px;"><thead><tr class="bg-slate-100 dark:bg-slate-700"><th rowspan="2" class="px-2 py-2 border dark:border-slate-600 text-xs">No</th><th rowspan="2" class="px-2 py-2 border dark:border-slate-600 text-xs text-left min-w-[150px]">Nama</th><th colspan="'+currentActDaysInMonth+'" class="px-2 py-2 border dark:border-slate-600 text-xs">Tanggal</th><th rowspan="2" class="px-2 py-2 border dark:border-slate-600 text-green-600 text-xs">H</th><th rowspan="2" class="px-2 py-2 border dark:border-slate-600 text-blue-600 text-xs">S</th><th rowspan="2" class="px-2 py-2 border dark:border-slate-600 text-yellow-600 text-xs">I</th><th rowspan="2" class="px-2 py-2 border dark:border-slate-600 text-red-600 text-xs">A</th></tr><tr class="bg-slate-50 dark:bg-slate-800">'+dh+'</tr></thead><tbody id="actAttTableBody"></tbody></table></div></div>';
@@ -734,7 +803,6 @@ var acts=results[0],st=results[1];
 document.getElementById('content').innerHTML='<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm"><div class="flex justify-between mb-4"><h3 class="font-bold text-slate-800 dark:text-white">Daftar Hadir Kegiatan</h3><button onclick="activityForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Buat Kegiatan</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4">'+(acts.length?acts.map(function(a){return '<div class="p-4 border dark:border-slate-700 rounded-lg"><h4 class="font-bold text-slate-800 dark:text-white">'+a.title+'</h4><p class="text-xs text-slate-500 mt-1">Tanggal: '+formatDateID(a.date)+'</p><p class="text-sm mt-2 text-slate-600 dark:text-slate-300">'+(a.description||'')+'</p><div class="mt-3 flex gap-2"><button onclick="activityAttendanceForm(\''+a.id+'\')" class="flex-1 text-xs bg-green-100 text-green-600 px-3 py-1 rounded">Buka Absensi</button><button onclick="activityForm(\''+a.id+'\')" class="text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded">Edit</button><button onclick="deleteData(\'activity_attendance\',\''+a.id+'\',renderActivityList)" class="text-xs bg-red-100 text-red-600 px-3 py-1 rounded">Hapus</button></div></div>';}).join(''):'<div class="col-span-3 text-center py-8 text-slate-500">Belum ada kegiatan.</div>')+'</div></div>';
 }
 
-// === LOAD ACTIVITY ATTENDANCE DATA ===
 async function loadActAttendanceData(actId){
 var di=document.getElementById('act_att_date');
 if(!di)return;
@@ -764,7 +832,6 @@ r.data.forEach(function(a){if(!a.date)return;var d=parseInt(a.date.split('-')[2]
 updateActRecap();
 }
 
-// === UPDATE ACTIVITY RECAP ===
 function updateActRecap(){
 document.querySelectorAll('#actAttTableBody tr').forEach(function(r){
 var firstCell=r.querySelector('td[id^="act_att_"]');
@@ -781,7 +848,6 @@ var ra=document.getElementById('act_recap_a_'+sid);if(ra)ra.innerText=a;
 });
 }
 
-// === SAVE ACTIVITY ATTENDANCE ===
 async function saveActivityAttendance(actId){
 var di=document.getElementById('act_att_date');
 if(!di){showToast('Pilih tanggal!','error');return;}
@@ -821,7 +887,6 @@ showToast('Absensi tersimpan!','success');
 await loadActAttendanceData(actId);
 }
 
-// === START ACT SCANNER ===
 async function startActScanner(actId){
 var allStudents=await DB.get('students');
 openModal('Scan QR Kegiatan',`<div class="flex flex-col items-center space-y-4"><div class="w-full max-w-md p-1.5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg"><div id="qr-reader" class="relative w-full aspect-square bg-slate-900 rounded-xl overflow-hidden flex items-center justify-center"><div class="absolute top-0 left-0 w-16 h-16 border-t-4 border-l-4 border-white rounded-tl-lg m-2 z-10"></div><div class="absolute top-0 right-0 w-16 h-16 border-t-4 border-r-4 border-white rounded-tr-lg m-2 z-10"></div><div class="absolute bottom-0 left-0 w-16 h-16 border-b-4 border-l-4 border-white rounded-bl-lg m-2 z-10"></div><div class="absolute bottom-0 right-0 w-16 h-16 border-b-4 border-r-4 border-white rounded-br-lg m-2 z-10"></div><div class="text-center text-slate-500 text-sm z-0"><svg class="animate-pulse w-16 h-16 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg><span id="qr-status">Memulai kamera...</span></div></div></div><div id="scan-result" class="w-full text-center min-h-[40px]"></div><div class="w-full border-t dark:border-slate-700 pt-4"><p class="text-xs text-slate-500 text-center mb-2">Atau input NIS manual:</p><div class="flex gap-2"><input type="text" id="manual-nis-input" placeholder="Masukkan NIS Siswa" class="flex-1 px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white text-sm"><button onclick="manualInputActNIS('`+actId+`')" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Cari</button></div></div><button onclick="closeScannerModal()" class="w-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-white px-6 py-2.5 rounded-lg text-sm font-semibold">Tutup Scanner</button></div>`);
@@ -829,13 +894,11 @@ window.currentActId=actId;
 startScanCamera();
 }
 
-// === MANUAL INPUT ACT NIS ===
 window.manualInputActNIS=async function(actId){
 var v=document.getElementById('manual-nis-input').value.trim();
 if(v){processActQRResult(actId,v);}else{showToast('NIS kosong!','error');}
 };
 
-// === PROCESS ACT QR RESULT (MODIFIED FOR GRID) ===
 async function processActQRResult(actId,text){
 var sts=await DB.get('students');
 var n=text;try{var p=JSON.parse(text);if(p.nis)n=p.nis;}catch(e){}
@@ -870,7 +933,6 @@ setTimeout(function(){var r=document.getElementById('scan-result');if(r)r.innerH
 }
 }
 
-// === EXPORT ACT ATTENDANCE EXCEL (GRID FORMAT) ===
 async function exportActAttendanceExcel(actId){
 var results=await Promise.all([DB.get('activity_attendance'),DB.get('students'),DB.get('classes'),DB.get('school_profile')]);
 var act=results[0].find(function(a){return a.id===actId;});
@@ -915,7 +977,6 @@ ws['!cols']=[{wch:5},{wch:15},{wch:25}];for(var d=1;d<=daysInMonth;d++)ws['!cols
 var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Absensi Kegiatan');XLSX.writeFile(wb,'Absensi_Kegiatan_'+(act?.title||'')+'.xlsx');showToast('File Excel berhasil diunduh!','success');
 }
 
-// === PRINT ACT ATTENDANCE (GRID FORMAT) ===
 async function printActAttendance(actId){
 var results=await Promise.all([DB.get('activity_attendance'),DB.get('students'),DB.get('classes'),DB.get('school_profile')]);
 var act=results[0].find(function(a){return a.id===actId;});
@@ -1085,8 +1146,7 @@ async function renderAI(){
       '<div class="p-3 flex-none border-t dark:border-slate-700 bg-white dark:bg-slate-800">'+
         '<div class="flex gap-2 items-end">'+
           '<input type="file" id="aiImageInput" accept="image/*" class="hidden" onchange="handleAIImageUpload(event)">'+
-          '<button onclick="document.getElementById(\'aiImageInput\').click()" class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-white p-2.5 rounded-xl flex-none" title="Upload Gambar"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></button>'+
-          '<button id="aiMicBtn" onclick="toggleVoiceInput()" class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-white p-2.5 rounded-xl flex-none" title="Voice Input"><svg id="micIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5"fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg></button>'+
+          '<button onclick="document.getElementById(\'aiImageInput\').click()" class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-white p-2.5 rounded-xl flex-none" title="Upload Gambar"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></button>'+          '<button id="aiMicBtn" onclick="toggleVoiceInput()" class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-white p-2.5 rounded-xl flex-none" title="Voice Input"><svg id="micIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5"fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg></button>'+
           '<textarea id="aiInput" rows="2" placeholder="Tulis perintah..." class="flex-1 px-4 py-2 rounded-xl border dark:bg-slate-700 dark:text-white resize-none focus:ring-2 focus:ring-blue-500 outline-none text-sm"></textarea>'+
           '<button id="aiSendBtn" onclick="sendAI()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold flex items-center gap-1 text-sm flex-none"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9 2zm0 0v-8"/></svg><span class="hidden sm:inline">Kirim</span></button>'+
         '</div>'+
@@ -1112,7 +1172,7 @@ async function renderAI(){
         '</div>'+
         '<div class="bg-blue-50 dark:bg-slate-800 p-4 rounded-xl text-sm text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-slate-700">'+
           '<p class="font-semibold mb-1">💡 Tips Penggunaan:</p>'+
-          '<p>Klik salah satu bentuk di atas, AI akan langsung membuatkan soal matematika yang sesuai di panel chat, lengkap dengan gambar nyata (bukan gambar SVG) dari internet dan pembahasan jawaban.</p>'+
+          '<p>Klik salah satu bentuk di atas, AI akan langsung membuatkan soal matematika yang sesuai di panel chat, lengkap dengan gambar vektor (bukan gambar SVG) dari internet dan pembahasan jawaban.</p>'+
         '</div>'+
       '</div>'+
     '</div>'+
