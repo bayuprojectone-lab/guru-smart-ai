@@ -201,9 +201,11 @@ if(localStorage.getItem('gs_darkMode')==='true'){document.documentElement.classL
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('-translate-x-full');document.getElementById('sidebarOverlay').classList.toggle('hidden');}
 function openModal(title,html){document.getElementById('modalTitle').innerText=title;document.getElementById('modalContent').innerHTML=html;document.getElementById('modalContainer').classList.remove('hidden');}
 function closeModal(){if(typeof stopCameraStream==='function')stopCameraStream();if(typeof stopSoalCameraStream==='function')stopSoalCameraStream();document.getElementById('modalContainer').classList.add('hidden');}
+// 1. Ganti array menus menjadi seperti ini (tambahkan baris kuis_kelas):
 var menus=[
 {id:'dashboard',label:'Dashboard',icon:'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',roles:['admin','guru','siswa']},
 {id:'ai',label:'Asisten AI Guru',icon:'M12 2a7 7 0 00-7 7v3a7 7 0 0014 0V9a7 7 0 00-7-7zm-4 18h8M9 22h6',roles:['admin','guru','siswa']},
+{id:'kuis_kelas',label:'Kuis Kelas',icon:'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',roles:['admin','guru']},
 {id:'teachers',label:'Data Guru',icon:'M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-5a4 4 0 11-8 0 4 4 0 018 0zm6 0a4 4 0 11-8 0 4 4 0 018 0z',roles:['admin','guru']},
 {id:'students',label:'Data Siswa',icon:'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z',roles:['admin','guru']},
 {id:'classes',label:'Kelas',icon:'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4',roles:['admin','guru']},
@@ -218,6 +220,9 @@ var menus=[
 {id:'rapor',label:'Cetak Rapor',icon:'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',roles:['admin','guru','siswa']},
 {id:'settings',label:'Pengaturan',icon:'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z',roles:['admin','guru','siswa']}
 ];
+
+async function renderContent(page){var c=document.getElementById('content');c.className='flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 lg:p-6 bg-slate-100 dark:bg-slate-900';if(page==='ai'){c.className='flex-1 min-h-0 flex flex-col overflow-hidden p-4 bg-slate-100 dark:bg-slate-900';}c.innerHTML='<div class="text-center py-10 text-slate-500 dark:text-slate-400">Memuat data...</div>';switch(page){case'dashboard':await renderDashboard();break;case'ai':await renderAI();break;case'kuis_kelas':await renderKuisKelas();break;case'teachers':await renderTeachers();break;case'students':await renderStudents();break;case'classes':await renderClasses();break;case'subjects':await renderSubjects();break;case'schedules':await renderSchedules();break;case'attendance':await renderAttendance();break;case'activity_attendance':await renderActivityAttendance();break;case'grades':await renderGrades();break;case'assignments':await renderAssignments();break;case'materi':await renderMateri();break;case'keuangan':await renderKeuangan();break;case'rapor':await renderRapor();break;case'settings':await renderSettings();break;}}
+
 function renderMenu(){var n=document.getElementById('navMenu');n.innerHTML='';menus.filter(function(m){return m.roles.includes(currentUser.role);}).forEach(function(m){var a=currentPage===m.id?'bg-white/20 text-white font-semibold shadow-inner':'text-blue-100 hover:bg-white/10 hover:text-white';n.innerHTML+='<a href="#" onclick="navigate(\''+m.id+'\')" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg '+a+' transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="'+m.icon+'"></path></svg><span>'+m.label+'</span></a>';});}
 function navigate(page){currentPage=page;document.getElementById('pageTitle').innerText=menus.find(function(m){return m.id===page;})?.label||'Page';renderMenu();renderContent(page);if(window.innerWidth<1024)toggleSidebar();}
 async function renderContent(page){var c=document.getElementById('content');c.className='flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 lg:p-6 bg-slate-100 dark:bg-slate-900';if(page==='ai'){c.className='flex-1 min-h-0 flex flex-col overflow-hidden p-4 bg-slate-100 dark:bg-slate-900';}c.innerHTML='<div class="text-center py-10 text-slate-500 dark:text-slate-400">Memuat data...</div>';switch(page){case'dashboard':await renderDashboard();break;case'ai':await renderAI();break;case'teachers':await renderTeachers();break;case'students':await renderStudents();break;case'classes':await renderClasses();break;case'subjects':await renderSubjects();break;case'schedules':await renderSchedules();break;case'attendance':await renderAttendance();break;case'activity_attendance':await renderActivityAttendance();break;case'grades':await renderGrades();break;case'assignments':await renderAssignments();break;case'materi':await renderMateri();break;case'keuangan':await renderKeuangan();break;case'rapor':await renderRapor();break;case'settings':await renderSettings();break;}}
@@ -533,74 +538,18 @@ document.getElementById('kuisForm').onsubmit=async function(e){e.preventDefault(
 }
 
 window.generateKuisAI=async function(){
-var promptText=document.getElementById('k_ai_prompt').value.trim();
-if(!promptText){
-  showToast('Masukkan perintah AI terlebih dahulu.','error');
-  return;
-}
-
-var btn=event.target;
-btn.disabled=true;
-btn.innerText='AI Berpikir...';
-
+var promptText=document.getElementById('k_ai_prompt').value.trim();if(!promptText){showToast('Masukkan perintah AI terlebih dahulu.','error');return;}
+var btn=event.target;btn.disabled=true;btn.innerText='AI Berpikir...';
 try{
-
-var sysPrompt='Anda adalah generator soal kuis untuk siswa SD/MI di Indonesia. '+
-'Buatkan soal pilihan ganda berdasarkan perintah user. '+
-'WAJIB menggunakan Bahasa Indonesia yang baik dan mudah dipahami siswa. '+
-'Jika mata pelajaran adalah MATEMATIKA, WAJIB menggunakan penulisan dan notasi matematika yang lazim digunakan di Indonesia. '+
-'Gunakan simbol + untuk penjumlahan, − untuk pengurangan, × untuk perkalian, ÷ untuk pembagian, = untuk sama dengan, √ untuk akar, dan gunakan superscript seperti ² dan ³ untuk pangkat. '+
-'Gunakan pecahan dengan penulisan matematika yang benar, misalnya ½, ¼, ¾, ⅓, atau bentuk pecahan yang sesuai. '+
-'Jangan menggunakan tanda * sebagai simbol perkalian jika dapat menggunakan ×. '+
-'Jangan menggunakan x sebagai simbol perkalian jika yang dimaksud adalah tanda perkalian; gunakan ×. '+
-'Untuk rumus gunakan notasi yang benar, misalnya L = p × l, K = 2 × (p + l), V = p × l × t, dan v = s ÷ t. '+
-'Untuk soal cerita, gunakan angka dan satuan yang sesuai dengan kaidah pembelajaran di Indonesia. '+
-'Jika membutuhkan langkah penyelesaian, tampilkan perhitungan secara runtut dan mudah dipahami. '+
-'WAJIB balas dengan format JSON Array murni tanpa teks pembuka atau penutup. '+
-'Format: [{\"text\":\"Pertanyaan...\",\"options\":[\"A. Opsi1\",\"B. Opsi2\",\"C. Opsi3\",\"D. Opsi4\"],\"answer\":\"A\"}]';
-
-var res=await callAIWithAutoUpgrade([
-  {role:'system',content:sysPrompt},
-  {role:'user',content:promptText}
-]);
-
-var content=typeof res==='string'
-  ?res
-  :(res?.message?.content||res?.text||'');
-
-var jsonStr=content
-  .replace(/```json/g,'')
-  .replace(/```/g,'')
-  .trim();
-
-var qsArr=JSON.parse(jsonStr);
-
-var c=document.getElementById('questionsContainer');
-c.innerHTML='';
-
-qsArr.forEach(function(q){
-  var opts=q.options.map(function(o){
-    return o.replace(/^[A-D]\.\s*/i,'');
-  });
-
-  window.addQuestionBlock();
-
-  var lastBlock=c.lastChild;
-  lastBlock.querySelector('.q-text').value=q.text;
-  lastBlock.querySelector('.q-opt').value=opts.join(',');
-  lastBlock.querySelector('.q-ans').value=q.answer.toUpperCase();
-});
-
+var sysPrompt='Anda adalah generator soal kuis. Buatkan soal pilihan ganda berdasarkan perintah user. WAJIB balas dengan format JSON Array murni tanpa teks pembuka atau penutup. Format: [{"text":"Pertanyaan...","options":["A. Opsi1","B. Opsi2","C. Opsi3","D. Opsi4"],"answer":"A"}]';
+var res=await callAIWithAutoUpgrade([{role:'system',content:sysPrompt},{role:'user',content:promptText}]);
+var content=typeof res==='string'?res:(res?.message?.content||res?.text||'');
+var jsonStr=content.replace(/```json/g,'').replace(/```/g,'').trim();var qsArr=JSON.parse(jsonStr);
+var c=document.getElementById('questionsContainer');c.innerHTML='';
+qsArr.forEach(function(q){var opts=q.options.map(function(o){return o.replace(/^[A-D]\.\s*/i,'');});window.addQuestionBlock();var lastBlock=c.lastChild;lastBlock.querySelector('.q-text').value=q.text;lastBlock.querySelector('.q-opt').value=opts.join(',');lastBlock.querySelector('.q-ans').value=q.answer.toUpperCase();});
 showToast('Soal berhasil dibuat oleh AI!','success');
-
-}catch(err){
-  console.error('AI Kuis Error:',err);
-  showToast('Gagal generate via AI. Coba lagi.','error');
-}
-finally{
-  btn.disabled=false;
-  btn.innerText='⚡ Generate AI';
-}
+}catch(err){console.error('AI Kuis Error:',err);showToast('Gagal generate via AI. Coba lagi.','error');}
+finally{btn.disabled=false;btn.innerText='⚡ Generate AI';}
 };
 
 window.addQuestionBlock=function(){
@@ -1679,6 +1628,320 @@ async function handleAIImageUpload(event){var file=event.target.files[0];if(!fil
 async function openPrintPreview(htmlContent){var pw=window.open('','_blank');if(!pw){showToast('Pop-up diblokir.','error');document.getElementById('printArea').innerHTML=htmlContent;window.print();return;}pw.document.write('<html lang="id"><head><title>Cetak</title><script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"><\/script><style>body{font-family:Times New Roman,Georgia,serif;margin:20px;color:#000}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}table,th,td{border:1px solid #000!important;border-collapse:collapse!important}.rapor-info-table,.rapor-info-table td,.rapor-info-table tr{border:none!important;background:transparent!important}.card-info-table,.card-info-table td,.card-info-table tr{border:none!important;background:transparent!important}.ai-output h1,.ai-output h2,.ai-output h3{font-weight:bold;margin-top:12px;margin-bottom:6px}.ai-output p{margin-bottom:8px}.ai-output ul,.ai-output ol{margin-left:20px;margin-bottom:8px}.ai-output table{width:100%;border-collapse:collapse;margin-bottom:8px}.ai-output th,.ai-output td{border:1px solid #000;padding:6px;text-align:left}.ai-output img{max-width:100%;height:auto;border-radius:8px;margin:10px 0;box-shadow:0 2px 5px rgba(0,0,0,.1)}.ai-output .soal-item{margin-bottom:18px;padding-bottom:15px;border-bottom:1px solid #eee;page-break-inside:avoid}.ai-output .soal-header{display:flex;align-items:flex-start;gap:6px;margin-bottom:8px}.ai-output .soal-number{font-weight:bold;min-width:28px}.ai-output .soal-text{font-size:14px;line-height:1.7;font-weight:500;flex:1}.ai-output .soal-opts{display:flex;gap:24px;margin:8px 0 8px 34px}.ai-output .opt-col{flex:1;display:flex;flex-direction:column;gap:4px}.ai-output .soal-opt{display:flex;align-items:flex-start;font-size:13px}.ai-output .soal-opt .opt-label{font-weight:bold;margin-right:6px;min-width:20px}@media print{body{margin:0}.no-print{display:none}}</style></head><body><div class="no-print" style="text-align:center;margin-bottom:20px;position:fixed;bottom:10px;left:0;width:100%"><button onclick="window.print()" style="padding:10px 20px;font-size:16px;background:#2563eb;color:white;border:none;border-radius:8px;cursor:pointer">🖨️ Cetak / PDF</button></div><div id="contentArea">'+htmlContent+'</div><script>var ca=document.getElementById("contentArea");var rt=ca.textContent;if(rt.trim().startsWith("#")||rt.includes("**")){ca.innerHTML=marked.parse(rt);}<\/script></body></html>');pw.document.close();pw.focus();setTimeout(function(){pw.print();},500);}
 async function printAIResult(includeKey){if(!lastAIFormattedHTML)return;var ch=lastAIFormattedHTML;if(!includeKey){ch=ch.replace(/<div class="kunci-jawaban-section[^"]*"[^>]*>[\s\S]*?<\/div><\/div>/g,'');ch=ch.replace(/<div class="soal-answer[^"]*"[^>]*>[\s\S]*?<\/div>/g,'');ch=ch.replace(/class="soal-opt[^"]*correct[^"]*"/g,'class="soal-opt"');}else{ch=ch.replace(/hide-on-print/g,'');}var kh=await generateKopHTML();openPrintPreview('<div style="font-family:Times New Roman,Georgia,serif;color:#000;padding:0;margin:0;width:100%">'+kh+'<div class="ai-output" style="color:#000;margin:0;padding:0">'+ch+'</div></div>');}
 async function exportToWord(){if(!lastAIFormattedHTML){showToast('Tidak ada teks.','error');return;}var td=document.createElement('div');td.innerHTML=lastAIFormattedHTML;td.querySelectorAll('.kunci-jawaban-section,.soal-answer').forEach(function(el){el.remove();});td.querySelectorAll('.soal-opt.correct').forEach(function(el){el.classList.remove('correct');});td.querySelectorAll('.soal-item').forEach(function(item){item.style.marginBottom='18px';item.style.paddingBottom='15px';item.style.borderBottom='1px solid #eee';item.style.overflow='hidden';});td.querySelectorAll('.soal-header').forEach(function(h){h.style.marginBottom='8px';});td.querySelectorAll('.soal-number').forEach(function(n){n.style.fontWeight='bold';n.style.marginRight='8px';});td.querySelectorAll('.soal-text').forEach(function(t){t.style.fontWeight='600';t.style.lineHeight='1.6';});td.querySelectorAll('.soal-opts').forEach(function(od){od.style.display='block';od.style.width='100%';od.style.marginLeft='25px';od.style.marginTop='8px';var cols=od.querySelectorAll('.opt-col');cols.forEach(function(col){col.style.display='inline-block';col.style.width='48%';col.style.verticalAlign='top';col.style.styleFloat='left';col.style.cssFloat='left';col.style.marginRight='2%';});});var ch=td.innerHTML;var kh=await generateKopHTML();var htmlContent='<div style="font-family:Times New Roman,Georgia,serif;color:#000;padding:0;margin:0;width:100%">'+kh+'<div class="ai-output" style="color:#000;margin:0;padding:0">'+ch+'</div></div>';var header='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Soal - GURU SMART</title><style>@page{size:21cm 29.7cm;margin:2cm}body{font-family:Times New Roman,Georgia,serif;font-size:12pt;color:#000;line-height:1.5}h2{text-align:center;font-size:16pt;margin-bottom:5px}p{text-align:center;font-size:10pt;margin-top:0}img{max-width:100%;height:auto}.ai-output table{width:100%;border-collapse:collapse;margin-bottom:8px}.ai-output th,.ai-output td{border:1px solid #000;padding:6px;text-align:left}.ai-output img{max-width:100%;height:auto;border-radius:8px;margin:10px 0;box-shadow:0 2px 5px rgba(0,0,0,.1)}.ai-output .soal-item{margin-bottom:18px;padding-bottom:15px;border-bottom:1px solid #eee;page-break-inside:avoid}.ai-output .soal-header{display:flex;align-items:flex-start;gap:6px;margin-bottom:8px}.ai-output .soal-number{font-weight:bold;min-width:28px}.ai-output .soal-text{font-size:14px;line-height:1.7;font-weight:500;flex:1}.ai-output .soal-opts{display:flex;gap:24px;margin:8px 0 8px 34px}.ai-output .opt-col{flex:1;display:flex;flex-direction:column;gap:4px}.ai-output .soal-opt{display:flex;align-items:flex-start;font-size:13px}.ai-output .soal-opt .opt-label{font-weight:normal !important;margin-right:6px;min-width:20px}</style></head><body>'+htmlContent+'</body></html>';var blob=new Blob(['\ufeff',header],{type:'application/msword'});var url=URL.createObjectURL(blob);var fd=document.createElement("a");fd.href=url;fd.download='Soal_Guru_Smart.doc';document.body.appendChild(fd);fd.click();document.body.removeChild(fd);URL.revokeObjectURL(url);showToast('Diekspor ke Word!','success');}
+var kls_data = { soal: [], kelompok: [], skor: [], soalIndex: 0, mode: 'Rebutan', timer: 15, intervalId: null, currentTeam: null, poin: 100 };
+
+async function renderKuisKelas() {
+    var html = '';
+    html += '<div class="space-y-6">';
+    html += '  <div class="bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-6 rounded-2xl shadow-lg flex justify-between items-center flex-wrap gap-4">';
+    html += '    <div>';
+    html += '      <h2 class="text-2xl font-bold">🎯 Modul Kuis Kelas</h2>';
+    html += '      <p class="text-blue-100 text-sm mt-1">Buat kuis interaktif dengan mode Buzzer & Papan Skor Real-time!</p>';
+    html += '    </div>';
+    html += '    <button onclick="kls_form()" class="bg-white text-blue-600 font-bold px-5 py-2.5 rounded-lg shadow hover:bg-blue-50 transition">+ Buat Kuis Baru</button>';
+    html += '  </div>';
+    html += '  <div id="kls_live_container" class="hidden"></div>';
+    html += '  <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border dark:border-slate-700">';
+    html += '    <h3 class="font-bold text-lg text-slate-800 dark:text-white mb-4">Daftar Kuis Tersimpan</h3>';
+    html += '    <div id="kls_list" class="grid grid-cols-1 md:grid-cols-3 gap-4">Memuat data...</div>';
+    html += '  </div>';
+    html += '</div>';
+    
+    document.getElementById('content').innerHTML = html;
+    kls_loadList();
+}
+
+async function kls_loadList() {
+    try {
+        var list = await DB.get('kuis_kelas');
+        var box = document.getElementById('kls_list');
+        if (!list || list.length === 0) {
+            box.innerHTML = '<div class="col-span-3 text-center py-8 text-slate-500">Belum ada kuis. Klik "Buat Kuis Baru".</div>';
+            return;
+        }
+        
+        var html = '';
+        list.forEach(function(k) {
+            var qs = k.soal ? JSON.parse(k.soal) : [];
+            html += '<div class="p-4 border dark:border-slate-600 rounded-lg flex flex-col justify-between">';
+            html += '  <div><h4 class="font-bold text-slate-800 dark:text-white">'+k.title+'</h4>';
+            html += '  <p class="text-xs text-slate-500 mt-1">'+qs.length+' Soal | Mode: '+(k.mode || 'Rebutan')+'</p></div>';
+            html += '  <div class="mt-4 flex gap-2">';
+            html += '    <button onclick="kls_start(\''+k.id+'\')" class="flex-1 bg-green-600 text-white text-xs px-3 py-2 rounded">▶ Mulai</button>';
+            html += '    <button onclick="kls_form(\''+k.id+'\')" class="bg-blue-100 text-blue-600 text-xs px-3 py-2 rounded">Edit</button>';
+            html += '    <button onclick="deleteData(\'kuis_kelas\',\''+k.id+'\',\'kls_loadList\')" class="bg-red-100 text-red-600 text-xs px-3 py-2 rounded">Hapus</button>';
+            html += '  </div>';
+            html += '</div>';
+        });
+        box.innerHTML = html;
+    } catch(e) {
+        console.error('Error Kls LoadList:', e);
+    }
+}
+
+async function kls_form(id) {
+    var k = null;
+    var sub = await DB.get('subjects');
+    var cls = await DB.get('classes');
+    if (id) {
+        k = (await DB.get('kuis_kelas')).find(function(x) { return x.id === id; });
+    }
+    
+    var subOpts = sub.map(function(s) { return '<option value="'+s.id+'" '+(k?.subject_id==s.id?'selected':'')+'>'+s.name+'</option>'; }).join('');
+    var clsOpts = cls.map(function(c) { return '<option value="'+c.id+'" '+(k?.class_id==c.id?'selected':'')+'>'+c.name+'</option>'; }).join('');
+    
+    var formHtml = '<form id="kls_form_html" class="space-y-4">';
+    formHtml += '<div class="bg-indigo-50 dark:bg-slate-700 p-3 rounded-lg text-sm text-indigo-600 dark:text-indigo-300">💡 Isi judul/materi, lalu AI akan membuatkan soal otomatis.</div>';
+    formHtml += '<div><label class="block text-sm mb-1">Nama Kuis / Materi</label><input type="text" id="kls_title" value="'+(k?.title||'')+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div>';
+    formHtml += '<div class="grid grid-cols-2 gap-4">';
+    formHtml += '<div><label class="block text-sm mb-1">Mapel</label><select id="kls_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">'+subOpts+'</select></div>';
+    formHtml += '<div><label class="block text-sm mb-1">Kelas</label><select id="kls_class" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">'+clsOpts+'</select></div>';
+    formHtml += '</div>';
+    formHtml += '<div><label class="block text-sm mb-1">Jumlah Soal</label><input type="number" id="kls_jumlah" value="'+(k?.jumlah||5)+'" min="1" max="20" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div>';
+    formHtml += '<div><label class="block text-sm mb-1">Buat Kelompok (Pisahkan dengan koma)</label><input type="text" id="kls_kelompok" value="'+(k?.kelompok||'GARUDA, ELANG, RAJAWALI, MERPATI')+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>';
+    formHtml += '<div><label class="block text-sm mb-1">Mode Permainan</label>';
+    formHtml += '<select id="kls_mode" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">';
+    formHtml += '<option '+(k?.mode=='Rebutan'?'selected':'')+'>🔔 Rebutan/Buzzer</option>';
+    formHtml += '<option '+(k?.mode=='Cepat Tepat'?'selected':'')+'>⚡ Cepat Tepat</option>';
+    formHtml += '<option '+(k?.mode=='Kelompok'?'selected':'')+'>👥 Kelompok</option>';
+    formHtml += '<option '+(k?.mode=='Final'?'selected':'')+'>🏆 Final</option>';
+    formHtml += '</select></div>';
+    formHtml += '<div class="grid grid-cols-2 gap-4">';
+    formHtml += '<div><label class="block text-sm mb-1">Waktu / Soal (detik)</label><input type="number" id="kls_waktu" value="'+(k?.waktu||15)+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>';
+    formHtml += '<div><label class="block text-sm mb-1">Poin / Soal</label><input type="number" id="kls_poin" value="'+(k?.poin||100)+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>';
+    formHtml += '</div>';
+    formHtml += '<button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 rounded-lg font-semibold">⚡ Generate & Simpan Kuis</button>';
+    formHtml += '</form>';
+        
+    openModal(id ? 'Edit Kuis' : 'Buat Kuis Baru', formHtml);
+    
+    document.getElementById('kls_form_html').onsubmit = async function(e) {
+        e.preventDefault();
+        var btn = this.querySelector('button[type="submit"]');
+        btn.disabled = true; 
+        btn.innerText = 'AI Membuat Soal...';
+        
+        var title = document.getElementById('kls_title').value;
+        var subId = document.getElementById('kls_subject').value;
+        var clsId = document.getElementById('kls_class').value;
+        var jumlah = document.getElementById('kls_jumlah').value;
+        var kelompok = document.getElementById('kls_kelompok').value;
+        var mode = document.getElementById('kls_mode').value;
+        var waktu = document.getElementById('kls_waktu').value;
+        var poin = document.getElementById('kls_poin').value;
+        
+        var subName = sub.find(function(x){ return x.id === subId; })?.name || '';
+        
+        try {
+            var sysPrompt = 'Anda adalah generator soal pilihan ganda. Buatkan soal berdasarkan materi. WAJIB balas dengan format JSON Array murni tanpa teks pembuka. Format: [{"text":"Pertanyaan...","options":["A. Opsi1","B. Opsi2","C. Opsi3","D. Opsi4"],"answer":"A"}]';
+            var res = await callAIWithAutoUpgrade([{role:'system',content:sysPrompt},{role:'user',content:'Buatkan '+jumlah+' soal pilihan ganda tentang '+title+' mapel '+subName}]);
+            var content = typeof res === 'string' ? res : (res?.message?.content || res?.text || '');
+            var jsonStr = content.replace(/```json/g, '').replace(/```/g, '').trim();
+            var soalArr = JSON.parse(jsonStr);
+            
+            var dataToSave = {
+                title: title, subject_id: subId, class_id: clsId, jumlah: parseInt(jumlah),
+                kelompok: kelompok, mode: mode, waktu: parseInt(waktu), poin: parseInt(poin),
+                soal: JSON.stringify(soalArr)
+            };
+            
+            await saveData('kuis_kelas', dataToSave, id);
+            closeModal();
+            kls_loadList();
+            showToast('Kuis berhasil dibuat!', 'success');
+        } catch(err) {
+            showToast('Gagal generate soal: ' + err.message, 'error');
+            btn.disabled = false; 
+            btn.innerText = '⚡ Generate & Simpan Kuis';
+        }
+    };
+}
+
+async function kls_start(id) {
+    var k = (await DB.get('kuis_kelas')).find(function(x) { return x.id === id; });
+    if (!k) return;
+    
+    kls_data.soal = JSON.parse(k.soal);
+    kls_data.kelompok = k.kelompok.split(',').map(function(x){ return x.trim(); });
+    kls_data.skor = {};
+    kls_data.kelompok.forEach(function(t){ kls_data.skor[t] = 0; });
+    kls_data.soalIndex = 0;
+    kls_data.mode = k.mode;
+    kls_data.timer = k.waktu;
+    kls_data.poin = k.poin;
+    kls_data.currentTeam = null;
+    
+    kls_renderLive();
+}
+
+function kls_renderLive() {
+    var c = document.getElementById('kls_live_container');
+    if(!c) return;
+    c.classList.remove('hidden');
+    c.scrollIntoView({behavior:'smooth'});
+    
+    var q = kls_data.soal[kls_data.soalIndex];
+    var total = kls_data.soal.length;
+    
+    var html = '';
+    html += '<div class="bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border-4 border-indigo-600">';
+    html += '  <div class="bg-indigo-600 p-4 flex justify-between items-center text-white">';
+    html += '    <h3 class="font-bold text-xl">PERTANYAAN '+(kls_data.soalIndex + 1)+' / '+total+'</h3>';
+    html += '    <div class="flex gap-3"><span class="bg-white/20 px-3 py-1 rounded text-sm">Mode: '+kls_data.mode+'</span>';
+    html += '    <button onclick="kls_stop()" class="bg-red-500 px-3 py-1 rounded text-sm font-bold">Akhiri Kuis</button></div>';
+    html += '  </div>';
+    
+    html += '  <div class="p-8 text-center text-white min-h-[300px] flex flex-col justify-center">';
+    html += '    <p class="text-2xl font-bold mb-6">'+q.text+'</p>';
+    html += '    <div class="grid grid-cols-2 gap-4 max-w-xl mx-auto">';
+    q.options.forEach(function(opt) {
+        var safeOpt = opt.replace(/'/g, "\\'");
+        html += '      <div class="bg-slate-700 p-4 rounded-xl text-lg font-medium hover:bg-slate-600 transition cursor-pointer" onclick="kls_answer(\''+safeOpt+'\')">'+opt+'</div>';
+    });
+    html += '    </div>';
+    html += '  </div>';
+    
+    html += '  <div class="bg-slate-800 p-6 flex flex-col items-center">';
+    html += '    <h4 class="text-white font-bold mb-4 text-center text-xl">🔔 Tekan BUZZ untuk menjawab!</h4>';
+    html += '    <div class="flex flex-wrap justify-center gap-4 mb-6">';
+    
+    var colors = ['from-red-500 to-rose-600','from-blue-500 to-indigo-600','from-green-500 to-emerald-600','from-yellow-500 to-amber-600'];
+    kls_data.kelompok.forEach(function(t, i) {
+        var col = colors[i % 4];
+        var dis = kls_data.currentTeam ? 'disabled' : '';
+        html += '      <button onclick="kls_buzz(\''+t+'\')" class="bg-gradient-to-br '+col+' text-white font-bold py-4 px-6 rounded-2xl shadow-lg hover:scale-105 transition transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed" '+dis+'>';
+        html += '        <span class="block text-2xl">🔔</span>'+t;
+        html += '      </button>';
+    });
+    
+    html += '    </div>';
+    
+    if (kls_data.currentTeam) {
+        html += '    <div class="bg-green-500 text-white px-6 py-3 rounded-lg font-bold animate-pulse">Giliran: '+kls_data.currentTeam+'! Pilih jawaban di atas.</div>';
+    }
+    
+    html += '    <div class="mt-6 flex items-center gap-4 text-white"><div class="text-4xl font-mono font-bold bg-black/50 px-4 py-2 rounded-lg">⏱️ <span id="kls_timer">--</span> detik</div></div>';
+    html += '  </div>';
+    
+    html += '  <div class="bg-gradient-to-r from-indigo-900 to-slate-900 p-6">';
+    html += '    <h4 class="text-center text-white font-bold text-lg mb-4">🏆 PAPAN SKOR REAL-TIME</h4>';
+    html += '    <div class="max-w-2xl mx-auto space-y-2" id="kls_scoreboard">'+kls_renderScore()+'</div>';
+    html += '  </div>';
+    html += '</div>';
+    
+    c.innerHTML = html;
+    kls_startTimer();
+}
+
+function kls_renderScore() {
+    var sorted = Object.entries(kls_data.skor).sort(function(a, b) { return b[1] - a[1]; });
+    var medals = ['🥇', '🥈', '🥉', '   '];
+    var html = '';
+    sorted.forEach(function(s, i) {
+        var ring = i===0 ? 'ring-2 ring-yellow-400' : '';
+        html += '<div class="flex justify-between items-center bg-white/10 text-white p-3 rounded-lg '+ring+'">';
+        html += '  <span class="font-bold text-lg flex items-center gap-2"><span class="text-2xl">'+medals[i]+'</span> '+s[0]+'</span>';
+        html += '  <span class="font-bold text-2xl">'+s[1]+'</span>';
+        html += '</div>';
+    });
+    return html;
+}
+
+function kls_buzz(team) {
+    if (kls_data.currentTeam) return;
+    kls_data.currentTeam = team;
+    playBeep();
+    kls_renderLive();
+}
+
+function kls_answer(opt) {
+    if (!kls_data.currentTeam) {
+        showToast('Tekan buzzer dulu!', 'error');
+        return;
+    }
+    
+    clearInterval(kls_data.intervalId);
+    var q = kls_data.soal[kls_data.soalIndex];
+    var correct = q.answer;
+    var isCorrect = opt.indexOf(correct + '.') === 0 || opt.startsWith(correct + '.');
+    
+    if (isCorrect) {
+        kls_data.skor[kls_data.currentTeam] += kls_data.poin;
+        showToast('🎉 BENAR! '+kls_data.currentTeam+' +'+kls_data.poin+' POIN', 'success');
+    } else {
+        kls_data.skor[kls_data.currentTeam] -= Math.floor(kls_data.poin / 2);
+        showToast('❌ SALAH! '+kls_data.currentTeam+' -'+Math.floor(kls_data.poin / 2)+' POIN', 'error');
+    }
+    
+    kls_updateScore();
+    
+    setTimeout(function() {
+        kls_data.soalIndex++;
+        kls_data.currentTeam = null;
+        if (kls_data.soalIndex < kls_data.soal.length) {
+            kls_renderLive();
+        } else {
+            kls_end();
+        }
+    }, 2000);
+}
+
+function kls_startTimer() {
+    var timer = kls_data.timer;
+    var timerEl = document.getElementById('kls_timer');
+    if(timerEl) timerEl.innerText = timer;
+    
+    kls_data.intervalId = setInterval(function() {
+        timer--;
+        var el = document.getElementById('kls_timer');
+        if (el) el.innerText = timer;
+        if (timer <= 0) {
+            clearInterval(kls_data.intervalId);
+            showToast('Waktu habis!', 'error');
+            kls_data.soalIndex++;
+            kls_data.currentTeam = null;
+            if (kls_data.soalIndex < kls_data.soal.length) kls_renderLive();
+            else kls_end();
+        }
+    }, 1000);
+}
+
+function kls_updateScore() {
+    var el = document.getElementById('kls_scoreboard');
+    if (el) {
+        el.innerHTML = kls_renderScore();
+        var divs = el.querySelectorAll('div');
+        divs.forEach(function(d) {
+            d.style.transition = 'all 0.5s ease';
+            d.style.transform = 'scale(1.05)';
+            setTimeout(function() { d.style.transform = 'scale(1)'; }, 500);
+        });
+    }
+}
+
+function kls_end() {
+    var sorted = Object.entries(kls_data.skor).sort(function(a, b) { return b[1] - a[1]; });
+    var html = '<div class="bg-white dark:bg-slate-800 p-8 rounded-2xl text-center shadow-2xl">';
+    html += '  <h2 class="text-3xl font-extrabold text-indigo-600 mb-6">🎉 KUIS SELESAI 🎉</h2>';
+    html += '  <div class="space-y-4 max-w-md mx-auto">';
+    sorted.forEach(function(s, i) {
+        var bg = i===0 ? 'bg-yellow-100' : 'bg-slate-100 dark:bg-slate-700';
+        var medal = ['🥇','🥈','🥉'][i] || '   ';
+        html += '    <div class="flex justify-between items-center p-4 rounded-xl '+bg+'"><span class="font-bold text-xl">'+medal+' '+s[0]+'</span><span class="font-bold text-2xl">'+s[1]+'</span></div>';
+    });
+    html += '  </div>';
+    html += '  <button onclick="document.getElementById(\'kls_live_container\').classList.add(\'hidden\')" class="mt-8 bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold">Selesai</button>';
+    html += '</div>';
+    
+    document.getElementById('kls_live_container').innerHTML = html;
+}
+
+function kls_stop() {
+    if (confirm('Akhiri kuis sekarang?')) {
+        clearInterval(kls_data.intervalId);
+        kls_end();
+    }
+}
 </script>
 </body>
 </html>
