@@ -398,7 +398,7 @@ window.printAllStudentCards=async function(){var results=await Promise.all([DB.g
 </script>
 <script>
 async function callAIWithAutoUpgrade(messages,retryCount){try{var res=await puter.ai.chat(messages);return res;}catch(error){console.error('AI Error:',error);var errMsg=String(error?.message||error||'').toLowerCase();var isLimit=errMsg.includes('limit')||errMsg.includes('quota')||errMsg.includes('exceeded')||errMsg.includes('usage')||errMsg.includes('rate')||errMsg.includes('capacity')||errMsg.includes('too many')||errMsg.includes('upgrade')||errMsg.includes('plan');if(isLimit&&retryCount<2){showToast('⚠️ Limit AI tercapai.','info');try{if(puter.auth&&typeof puter.auth.upgrade==='function'){await puter.auth.upgrade();}else{window.open('https://puter.com/settings/subscription','_blank');}}catch(e){window.open('https://puter.com/settings/subscription','_blank');}showToast('Silakan upgrade (GRATIS), lalu klik OK','info');await new Promise(function(resolve){var modal=document.createElement('div');modal.className='fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4';modal.innerHTML='<div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 max-w-md w-full text-center fade-in"><div class="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl">⬆️</div><h3 class="text-xl font-bold text-slate-800 dark:text-white mb-2">Upgrade Akun Puter</h3><p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Selesaikan upgrade (GRATIS) lalu klik tombol di bawah.</p><button id="retryAIBtn" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold py-3 rounded-lg">✅ Saya Sudah Upgrade</button></div>';document.body.appendChild(modal);modal.querySelector('#retryAIBtn').onclick=function(){document.body.removeChild(modal);resolve();};});try{await puter.auth.signIn();}catch(e){}showToast('Mencoba ulang...','info');return callAIWithAutoUpgrade(messages,retryCount+1);}throw error;}}
-async function renderAI(){var isSignedIn=false;var ud=await sb.from('users').select('*').eq('id',currentUser.id).maybeSingle();if(ud.data){currentUser.is_premium=ud.data.is_premium;currentUser.payment_status=ud.data.payment_status;currentUser.payment_sender=ud.data.payment_sender;}var isPremium=currentUser.is_premium||false;try{isSignedIn=puter.auth.isSignedIn();}catch(e){isSignedIn=false;}if(!isPremium){var info='';if(currentUser.payment_status==='Menunggu Verifikasi'){info='<div class="mt-4 bg-yellow-50 border border-yellow-200 text-yellow-800 p-4 rounded-lg text-sm"><strong>Menunggu Verifikasi</strong><br>Pembayaran Rp 25.000 atas nama <strong>'+(currentUser.payment_sender||'-')+'</strong> sedang ditinjau.</div>';}document.getElementById('content').innerHTML='<div class="flex items-center justify-center min-h-[80vh] p-4"><div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl text-center max-w-md w-full border border-slate-100 dark:border-slate-700"><img src="'+AI_IMG+'" onerror="imgFallback(this)" class="w-24 h-24 rounded-2xl mx-auto mb-5 object-cover shadow-md"><h3 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Aktifkan Asisten AI</h3><p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Dapatkan akses <strong>AI GRATIS</strong> ke semua fitur AI & Papan Tulis.</p><div class="bg-slate-50 dark:bg-slate-700 p-4 rounded-xl mb-6 border border-slate-100 dark:border-slate-600"><p class="text-sm text-slate-600 dark:text-slate-300 mb-1">Biaya Aktivasi:</p><p class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-emerald-600 mb-4">Rp 25.000</p><div class="border-t border-slate-200 dark:border-slate-600 pt-3 mt-3"><p class="text-sm font-semibold text-slate-700 dark:text-slate-200">Via DANA:</p><p class="text-2xl font-mono font-bold text-blue-600 dark:text-blue-400 tracking-wider mt-1">081212514747</p><p class="text-xs font-semibold text-slate-500 mt-1">a.n BAYU PRATAMA</p></div></div>'+(currentUser.payment_status!=='Menunggu Verifikasi'?'<button onclick="confirmPaymentAI()" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 rounded-lg shadow-md flex items-center justify-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Saya Sudah Bayar</button><p class="text-xs text-slate-400 mt-4">Transfer Rp 25.000 ke DANA di atas.</p>':'')+info+'</div></div>';return;}if(!isSignedIn){try{await puter.auth.signIn();renderAI();}catch(e){showToast('Gagal hubungkan AI.','error');}return;}document.getElementById('content').innerHTML='<div class="flex flex-col flex-1 min-h-0 max-w-6xl w-full mx-auto bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden"><div class="p-3 flex-none border-b dark:border-slate-700 flex justify-between items-center bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700 flex-wrap gap-2"><div class="flex items-center gap-3"><img src="'+AI_IMG+'" onerror="imgFallback(this)" alt="GURU SMART AI" class="w-10 h-10 rounded-xl object-cover shadow-sm bg-slate-200"><div><h3 class="font-bold text-slate-800 dark:text-white">Asisten AI Guru</h3><p class="text-xs text-slate-500 dark:text-slate-400">Chat AI + Papan Tulis 😊</p></div></div><div class="flex gap-1 bg-slate-100 dark:bg-slate-700 rounded-lg p-1 flex-wrap"><button id="tabChatAI" onclick="switchAITab(\'chat\')" class="px-3 py-1.5 text-xs font-semibold rounded-md bg-blue-600 text-white">💬 Chat</button><button id="tabPapanAI" onclick="switchAITab(\'papan\')" class="px-3 py-1.5 text-xs font-semibold rounded-md text-slate-600 dark:text-slate-300">🖌️ Papan Tulis</button></div></div><div id="aiChatPanel" class="flex flex-col flex-1 min-h-0"><div id="aiMessages" class="flex-1 min-h-0 overflow-y-auto overscroll-contain p-5 space-y-4 bg-slate-50 dark:bg-slate-900"></div><div class="p-3 flex-none border-t dark:border-slate-700 bg-white dark:bg-slate-800"><div class="flex gap-2 items-end"><input type="file" id="aiImageInput" accept="image/*" class="hidden" onchange="handleAIImageUpload(event)"><button onclick="document.getElementById(\'aiImageInput\').click()" class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-white p-2.5 rounded-xl flex-none" title="Upload Gambar"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></button><button id="aiMicBtn" onclick="toggleVoiceInput()" class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-white p-2.5 rounded-xl flex-none" title="Voice Input"><svg id="micIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg></button><textarea id="aiInput" rows="2" placeholder="Tulis perintah..." class="flex-1 px-4 py-2 rounded-xl border dark:bg-slate-700 dark:text-white resize-none focus:ring-2 focus:ring-blue-500 outline-none text-sm"></textarea><button id="aiSendBtn" onclick="sendAI()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold flex items-center gap-1 text-sm flex-none"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9 2zm0 0v-8"/></svg><span class="hidden sm:inline">Kirim</span></button></div><div class="flex justify-end gap-2 mt-2 flex-wrap"><button onclick="openSoalCameraModal()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.072 4h3.856a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Foto Soal</button><button onclick="uploadSoalImage()" class="bg-teal-500 hover:bg-teal-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Galeri Soal</button><button id="aiWordBtn" onclick="exportToWord()" class="hidden bg-blue-500 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>Word</button><button id="aiPrintBtn" onclick="printAIResult(false)" class="hidden bg-slate-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>PDF</button><button id="aiPrintKeyBtn" onclick="printAIResult(true)" class="hidden bg-green-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>Kunci</button></div></div></div><div id="aiPapanPanel" class="hidden flex-1 min-h-0 flex flex-col overflow-hidden p-3 bg-slate-100 dark:bg-slate-900"><div class="flex-none p-2 mb-2 bg-white dark:bg-slate-800 rounded-lg shadow-sm border dark:border-slate-700 flex flex-wrap items-center gap-3"><div class="flex gap-1"><button onclick="wbSetTool(\'pen\')" id="wbToolPen" class="wb-tool-btn active bg-blue-600 text-white p-2 rounded-lg" title="Pena"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m0 0l-3.536 3.536m3.536-3.536L5 19V5h14z"/></svg></button><button onclick="wbSetTool(\'eraser\')" id="wbToolEraser" class="wb-tool-btn bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-white p-2 rounded-lg" title="Penghapus"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg></button><button onclick="wbSetTool(\'line\')" id="wbToolLine" class="wb-tool-btn bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-white p-2 rounded-lg" title="Garis"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19l14-14"/></svg></button><button onclick="wbSetTool(\'rect\')" id="wbToolRect" class="wb-tool-btn bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-white p-2 rounded-lg" title="Kotak"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4h16v16H4z"/></svg></button><button onclick="wbSetTool(\'circle\')" id="wbToolCircle" class="wb-tool-btn bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-white p-2 rounded-lg" title="Lingkaran"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="2"/></svg></button></div><div class="w-px h-8 bg-slate-300 dark:bg-slate-600"></div><div class="flex gap-1 items-center"><span class="text-xs text-slate-500 mr-1">Warna:</span><button onclick="wbSetColor(\'#1e3a8a\')" class="w-7 h-7 rounded-full border-2 border-white shadow" style="background:#1e3a8a"></button><button onclick="wbSetColor(\'#dc2626\')" class="w-7 h-7 rounded-full border-2 border-white shadow" style="background:#dc2626"></button><button onclick="wbSetColor(\'#16a34a\')" class="w-7 h-7 rounded-full border-2 border-white shadow" style="background:#16a34a"></button><button onclick="wbSetColor(\'#000000\')" class="w-7 h-7 rounded-full border-2 border-white shadow" style="background:#000000"></button><input type="color" id="wbColorPicker" value="#1e3a8a" onchange="wbSetColor(this.value)" class="w-8 h-8 rounded cursor-pointer border-0"></div><div class="w-px h-8 bg-slate-300 dark:bg-slate-600"></div><div class="flex gap-2 items-center"><span class="text-xs text-slate-500">Ukuran:</span><input type="range" id="wbSizeRange" min="1" max="30" value="3" onchange="wbSetSize(parseInt(this.value))" class="w-20 cursor-pointer"><span id="wbSizeLabel" class="text-xs font-bold text-slate-700 dark:text-white w-6">3</span></div><div class="w-px h-8 bg-slate-300 dark:bg-slate-600"></div><button onclick="wbUndo()" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-1" title="Undo"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg></button><button onclick="wbClear()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-semibold">🗑️ Hapus</button><button onclick="wbSaveImage()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-semibold">💾 Simpan</button><button onclick="wbAskAI()" class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-1.5 shadow-md ml-auto">🤖 Tanya AI</button></div><div class="flex-1 min-h-0 overflow-auto flex justify-center items-start"><canvas id="whiteboardCanvas" style="width:100%;max-width:1000px;height:auto;aspect-ratio:5/3;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.08);touch-action:none;"></canvas></div><div id="wbAIResponse" class="hidden mt-2 bg-white dark:bg-slate-800 rounded-lg border border-green-300 dark:border-green-700 p-4 max-h-[30vh] overflow-y-auto modal-scroll shadow-md"><div class="flex justify-between items-center mb-2"><h4 class="font-bold text-sm text-green-700 dark:text-green-400 flex items-center gap-2">🤖 Jawaban AI</h4><button onclick="document.getElementById(\'wbAIResponse\').classList.add(\'hidden\')" class="text-slate-400 hover:text-red-500 text-xs">✕ Tutup</button></div><div id="wbAIContent" class="ai-output text-gray-800 dark:text-white text-sm"></div></div></div></div>';loadAIChat();setupEnterKey();}
+async function renderAI(){var isSignedIn=false;var ud=await sb.from('users').select('*').eq('id',currentUser.id).maybeSingle();if(ud.data){currentUser.is_premium=ud.data.is_premium;currentUser.payment_status=ud.data.payment_status;currentUser.payment_sender=ud.data.payment_sender;}var isPremium=currentUser.is_premium||false;try{isSignedIn=puter.auth.isSignedIn();}catch(e){isSignedIn=false;}if(!isPremium){var info='';if(currentUser.payment_status==='Menunggu Verifikasi'){info='<div class="mt-4 bg-yellow-50 border border-yellow-200 text-yellow-800 p-4 rounded-lg text-sm"><strong>Menunggu Verifikasi</strong><br>Pembayaran Rp 25.000 atas nama <strong>'+(currentUser.payment_sender||'-')+'</strong> sedang ditinjau.</div>';}document.getElementById('content').innerHTML='<div class="flex items-center justify-center min-h-[80vh] p-4"><div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl text-center max-w-md w-full border border-slate-100 dark:border-slate-700"><img src="'+AI_IMG+'" onerror="imgFallback(this)" class="w-24 h-24 rounded-2xl mx-auto mb-5 object-cover shadow-md"><h3 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Aktifkan Asisten AI</h3><p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Dapatkan akses <strong>AI GRATIS</strong> ke semua fitur AI, Chat AI & Kuis Kelas.</p><div class="bg-slate-50 dark:bg-slate-700 p-4 rounded-xl mb-6 border border-slate-100 dark:border-slate-600"><p class="text-sm text-slate-600 dark:text-slate-300 mb-1">Biaya Aktivasi:</p><p class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-emerald-600 mb-4">Rp 25.000</p><div class="border-t border-slate-200 dark:border-slate-600 pt-3 mt-3"><p class="text-sm font-semibold text-slate-700 dark:text-slate-200">Via DANA:</p><p class="text-2xl font-mono font-bold text-blue-600 dark:text-blue-400 tracking-wider mt-1">081212514747</p><p class="text-xs font-semibold text-slate-500 mt-1">a.n BAYU PRATAMA</p></div></div>'+(currentUser.payment_status!=='Menunggu Verifikasi'?'<button onclick="confirmPaymentAI()" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 rounded-lg shadow-md flex items-center justify-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Saya Sudah Bayar</button><p class="text-xs text-slate-400 mt-4">Transfer Rp 25.000 ke DANA di atas.</p>':'')+info+'</div></div>';return;}if(!isSignedIn){try{await puter.auth.signIn();renderAI();}catch(e){showToast('Gagal hubungkan AI.','error');}return;}document.getElementById('content').innerHTML='<div class="flex flex-col flex-1 min-h-0 max-w-6xl w-full mx-auto bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden"><div class="p-3 flex-none border-b dark:border-slate-700 flex justify-between items-center bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700 flex-wrap gap-2"><div class="flex items-center gap-3"><img src="'+AI_IMG+'" onerror="imgFallback(this)" alt="GURU SMART AI" class="w-10 h-10 rounded-xl object-cover shadow-sm bg-slate-200"><div><h3 class="font-bold text-slate-800 dark:text-white">Asisten AI Guru</h3><p class="text-xs text-slate-500 dark:text-slate-400">Chat AI + Papan Tulis 😊</p></div></div><div class="flex gap-1 bg-slate-100 dark:bg-slate-700 rounded-lg p-1 flex-wrap"><button id="tabChatAI" onclick="switchAITab(\'chat\')" class="px-3 py-1.5 text-xs font-semibold rounded-md bg-blue-600 text-white">💬 Chat</button><button id="tabPapanAI" onclick="switchAITab(\'papan\')" class="px-3 py-1.5 text-xs font-semibold rounded-md text-slate-600 dark:text-slate-300">🖌️ Papan Tulis</button></div></div><div id="aiChatPanel" class="flex flex-col flex-1 min-h-0"><div id="aiMessages" class="flex-1 min-h-0 overflow-y-auto overscroll-contain p-5 space-y-4 bg-slate-50 dark:bg-slate-900"></div><div class="p-3 flex-none border-t dark:border-slate-700 bg-white dark:bg-slate-800"><div class="flex gap-2 items-end"><input type="file" id="aiImageInput" accept="image/*" class="hidden" onchange="handleAIImageUpload(event)"><button onclick="document.getElementById(\'aiImageInput\').click()" class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-white p-2.5 rounded-xl flex-none" title="Upload Gambar"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></button><button id="aiMicBtn" onclick="toggleVoiceInput()" class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-white p-2.5 rounded-xl flex-none" title="Voice Input"><svg id="micIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg></button><textarea id="aiInput" rows="2" placeholder="Tulis perintah..." class="flex-1 px-4 py-2 rounded-xl border dark:bg-slate-700 dark:text-white resize-none focus:ring-2 focus:ring-blue-500 outline-none text-sm"></textarea><button id="aiSendBtn" onclick="sendAI()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold flex items-center gap-1 text-sm flex-none"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9 2zm0 0v-8"/></svg><span class="hidden sm:inline">Kirim</span></button></div><div class="flex justify-end gap-2 mt-2 flex-wrap"><button onclick="openSoalCameraModal()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.072 4h3.856a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Foto Soal</button><button onclick="uploadSoalImage()" class="bg-teal-500 hover:bg-teal-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Galeri Soal</button><button id="aiWordBtn" onclick="exportToWord()" class="hidden bg-blue-500 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>Word</button><button id="aiPrintBtn" onclick="printAIResult(false)" class="hidden bg-slate-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>PDF</button><button id="aiPrintKeyBtn" onclick="printAIResult(true)" class="hidden bg-green-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>Kunci</button></div></div></div><div id="aiPapanPanel" class="hidden flex-1 min-h-0 flex flex-col overflow-hidden p-3 bg-slate-100 dark:bg-slate-900"><div class="flex-none p-2 mb-2 bg-white dark:bg-slate-800 rounded-lg shadow-sm border dark:border-slate-700 flex flex-wrap items-center gap-3"><div class="flex gap-1"><button onclick="wbSetTool(\'pen\')" id="wbToolPen" class="wb-tool-btn active bg-blue-600 text-white p-2 rounded-lg" title="Pena"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m0 0l-3.536 3.536m3.536-3.536L5 19V5h14z"/></svg></button><button onclick="wbSetTool(\'eraser\')" id="wbToolEraser" class="wb-tool-btn bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-white p-2 rounded-lg" title="Penghapus"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg></button><button onclick="wbSetTool(\'line\')" id="wbToolLine" class="wb-tool-btn bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-white p-2 rounded-lg" title="Garis"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19l14-14"/></svg></button><button onclick="wbSetTool(\'rect\')" id="wbToolRect" class="wb-tool-btn bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-white p-2 rounded-lg" title="Kotak"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4h16v16H4z"/></svg></button><button onclick="wbSetTool(\'circle\')" id="wbToolCircle" class="wb-tool-btn bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-white p-2 rounded-lg" title="Lingkaran"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="2"/></svg></button></div><div class="w-px h-8 bg-slate-300 dark:bg-slate-600"></div><div class="flex gap-1 items-center"><span class="text-xs text-slate-500 mr-1">Warna:</span><button onclick="wbSetColor(\'#1e3a8a\')" class="w-7 h-7 rounded-full border-2 border-white shadow" style="background:#1e3a8a"></button><button onclick="wbSetColor(\'#dc2626\')" class="w-7 h-7 rounded-full border-2 border-white shadow" style="background:#dc2626"></button><button onclick="wbSetColor(\'#16a34a\')" class="w-7 h-7 rounded-full border-2 border-white shadow" style="background:#16a34a"></button><button onclick="wbSetColor(\'#000000\')" class="w-7 h-7 rounded-full border-2 border-white shadow" style="background:#000000"></button><input type="color" id="wbColorPicker" value="#1e3a8a" onchange="wbSetColor(this.value)" class="w-8 h-8 rounded cursor-pointer border-0"></div><div class="w-px h-8 bg-slate-300 dark:bg-slate-600"></div><div class="flex gap-2 items-center"><span class="text-xs text-slate-500">Ukuran:</span><input type="range" id="wbSizeRange" min="1" max="30" value="3" onchange="wbSetSize(parseInt(this.value))" class="w-20 cursor-pointer"><span id="wbSizeLabel" class="text-xs font-bold text-slate-700 dark:text-white w-6">3</span></div><div class="w-px h-8 bg-slate-300 dark:bg-slate-600"></div><button onclick="wbUndo()" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-1" title="Undo"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg></button><button onclick="wbClear()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-semibold">🗑️ Hapus</button><button onclick="wbSaveImage()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-semibold">💾 Simpan</button><button onclick="wbAskAI()" class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-1.5 shadow-md ml-auto">🤖 Tanya AI</button></div><div class="flex-1 min-h-0 overflow-auto flex justify-center items-start"><canvas id="whiteboardCanvas" style="width:100%;max-width:1000px;height:auto;aspect-ratio:5/3;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.08);touch-action:none;"></canvas></div><div id="wbAIResponse" class="hidden mt-2 bg-white dark:bg-slate-800 rounded-lg border border-green-300 dark:border-green-700 p-4 max-h-[30vh] overflow-y-auto modal-scroll shadow-md"><div class="flex justify-between items-center mb-2"><h4 class="font-bold text-sm text-green-700 dark:text-green-400 flex items-center gap-2">🤖 Jawaban AI</h4><button onclick="document.getElementById(\'wbAIResponse\').classList.add(\'hidden\')" class="text-slate-400 hover:text-red-500 text-xs">✕ Tutup</button></div><div id="wbAIContent" class="ai-output text-gray-800 dark:text-white text-sm"></div></div></div></div>';loadAIChat();setupEnterKey();}
 window.switchAITab=function(tab){var tabs={chat:'tabChatAI',papan:'tabPapanAI'};var panels={chat:'aiChatPanel',papan:'aiPapanPanel'};Object.keys(tabs).forEach(function(k){var btn=document.getElementById(tabs[k]);if(btn){btn.className='px-3 py-1.5 text-xs font-semibold rounded-md text-slate-600 dark:text-slate-300';}var panel=document.getElementById(panels[k]);if(panel){panel.classList.add('hidden');panel.classList.remove('flex');}});var activeBtn=document.getElementById(tabs[tab]);if(activeBtn){activeBtn.className='px-3 py-1.5 text-xs font-semibold rounded-md bg-blue-600 text-white';}var activePanel=document.getElementById(panels[tab]);if(activePanel){activePanel.classList.remove('hidden');activePanel.classList.add('flex');}if(tab==='papan'){setTimeout(function(){initWhiteboard();},200);}};
 var wbCanvas=null,wbCtx=null,wbDrawing=false,wbLastX=0,wbLastY=0,wbStartX=0,wbStartY=0;var wbColor='#1e3a8a',wbSize=3,wbTool='pen',wbHistory=[],wbSnapshot=null;
 function initWhiteboard(){wbCanvas=document.getElementById('whiteboardCanvas');if(!wbCanvas)return;var newCanvas=wbCanvas.cloneNode(false);wbCanvas.parentNode.replaceChild(newCanvas,wbCanvas);wbCanvas=newCanvas;wbCanvas.width=1000;wbCanvas.height=600;wbCtx=wbCanvas.getContext('2d');wbCtx.fillStyle='#ffffff';wbCtx.fillRect(0,0,1000,600);wbCtx.lineCap='round';wbCtx.lineJoin='round';wbSnapshot=wbCanvas.toDataURL();wbHistory=[];wbCanvas.addEventListener('mousedown',function(e){e.preventDefault();var p=wbGetPos(e);wbStartDraw(p.x,p.y);});wbCanvas.addEventListener('mousemove',function(e){var p=wbGetPos(e);wbDraw(p.x,p.y);});wbCanvas.addEventListener('mouseup',function(){wbStopDraw();});wbCanvas.addEventListener('mouseleave',function(){wbStopDraw();});wbCanvas.addEventListener('touchstart',function(e){e.preventDefault();var t=e.touches[0];var p=wbGetPosTouch(t);wbStartDraw(p.x,p.y);},{passive:false});wbCanvas.addEventListener('touchmove',function(e){e.preventDefault();var t=e.touches[0];var p=wbGetPosTouch(t);wbDraw(p.x,p.y);},{passive:false});wbCanvas.addEventListener('touchend',function(e){e.preventDefault();wbStopDraw();},{passive:false});}
@@ -430,7 +430,7 @@ function stopSoalCameraStream(){if(soalCameraStream){soalCameraStream.getTracks(
 window.uploadSoalImage=function(){var fileInput=document.createElement('input');fileInput.type='file';fileInput.accept='image/*';fileInput.className='hidden';document.body.appendChild(fileInput);fileInput.click();fileInput.onchange=async function(event){var file=event.target.files[0];if(!file)return;document.body.removeChild(fileInput);var btn=document.getElementById('aiSendBtn');btn.disabled=true;btn.innerText='Mengoreksi...';var box=document.getElementById('aiMessages');var reader=new FileReader();reader.onload=async function(e){var imgUrl=e.target.result;var ud=document.createElement('div');ud.className='flex justify-end fade-in';ud.innerHTML='<div class="max-w-[80%] rounded-xl px-2 py-2 bg-blue-600 text-white shadow-sm"><div class="text-xs opacity-70 mb-1 px-2">Foto Soal (Galeri)</div><img src="'+imgUrl+'" class="rounded-lg max-w-full h-auto"></div>';box.appendChild(ud);var td=document.createElement('div');td.id='typingIndicator';td.className='flex justify-start fade-in';td.innerHTML='<div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500 dark:text-slate-400">Asisten AI</div><div class="animate-pulse text-emerald-600">🔍 AI sedang membaca & mengoreksi soal...</div></div>';box.appendChild(td);box.scrollTop=box.scrollHeight;try{var messages=[{role:'user',content:[{type:'text',text:"Ini adalah foto soal / lembar jawaban siswa. Tolong: 1) Baca seluruh isi soal dengan akurat. 2) Jika pilihan ganda, koreksi jawaban dan beri nilai. 3) Jika essay, berikan jawaban/pembahasan. 4) Tampilkan kunci jawaban di akhir. Format output markdown rapi."},{type:'image_url',image_url:{url:imgUrl}}]}];var res=await callAIWithAutoUpgrade(messages);var extractedText=typeof res==='string'?res:(res?.message?.content||res?.text||'');document.getElementById('typingIndicator')?.remove();if(!extractedText||!extractedText.trim()){throw new Error("AI tidak dapat membaca jawaban.");}var formattedHTML=formatSoalHTML(extractedText);lastAIFormattedHTML=formattedHTML;var ad=document.createElement('div');ad.className='flex justify-start fade-in';ad.innerHTML='<div class="max-w-[95%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500 dark:text-slate-400">📋 Hasil Koreksi & Pembahasan AI</div><div class="ai-output text-gray-800 dark:text-white">'+formattedHTML+'</div></div>';box.appendChild(ad);box.scrollTop=box.scrollHeight;['aiPrintBtn','aiWordBtn','aiPrintKeyBtn'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('hidden');});showToast('Soal berhasil dikoreksi!','success');}catch(err){document.getElementById('typingIndicator')?.remove();showToast('Gagal mengoreksi: '+err.message,'error');}finally{btn.disabled=false;btn.innerText='Kirim';}};reader.readAsDataURL(file);};};
 var recognition=null;
 function toggleVoiceInput(){var SR=window.SpeechRecognition||window.webkitSpeechRecognition;var mb=document.getElementById('aiMicBtn');var ip=document.getElementById('aiInput');if(!SR){showToast('Browser tidak mendukung Voice.','error');return;}if(recognition&&recognition.isListening){recognition.stop();recognition.isListening=false;mb.classList.remove('bg-red-500','text-white','animate-pulse');mb.classList.add('bg-slate-200','dark:bg-slate-700','text-slate-600','dark:text-white');return;}recognition=new SR();recognition.lang='id-ID';recognition.interimResults=true;recognition.isListening=true;var ft='';var bt=ip.value?ip.value+' ':'';recognition.onstart=function(){mb.classList.add('bg-red-500','text-white','animate-pulse');mb.classList.remove('bg-slate-200','dark:bg-slate-700','text-slate-600','dark:text-white');showToast('Mendengarkan...','info');};recognition.onresult=function(e){var it='';for(var i=e.resultIndex;i<e.results.length;++i){if(e.results[i].isFinal){ft+=e.results[i][0].transcript;}else{it+=e.results[i][0].transcript;}}ip.value=bt+ft+it;ip.scrollTop=ip.scrollHeight;};recognition.onerror=function(e){showToast('Error: '+e.error,'error');recognition.isListening=false;mb.classList.remove('bg-red-500','text-white','animate-pulse');mb.classList.add('bg-slate-200','dark:bg-slate-700','text-slate-600','dark:text-white');};recognition.onend=function(){if(recognition.isListening){recognition.isListening=false;mb.classList.remove('bg-red-500','text-white','animate-pulse');mb.classList.add('bg-slate-200','dark:bg-slate-700','text-slate-600','dark:text-white');if(ip.value.trim()!==''){sendAI();}}};try{recognition.start();}catch(e){}}
-async function confirmPaymentAI(){openModal('Konfirmasi Aktivasi AI','<form id="paymentConfirmForm" class="space-y-4"><div class="bg-yellow-50 dark:bg-slate-700 p-3 rounded-lg text-sm text-yellow-700 dark:text-yellow-300 text-center border border-yellow-200"><strong>Perhatian:</strong> Transfer Rp 25.000 ke DANA <br><strong>081212514747 (BAYU PRATAMA)</strong>.<br>Masukkan nama pengirim di bawah ini.</div><div><label class="block text-sm mb-1">Nama Pengirim DANA</label><input type="text" id="dana_sender" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" placeholder="Nama Anda" required></div><button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 rounded-lg font-semibold">Kirim Bukti Transfer</button></form>');document.getElementById('paymentConfirmForm').onsubmit=async function(e){e.preventDefault();var btn=document.querySelector('#paymentConfirmForm button[type="submit"]');btn.disabled=true;btn.innerText='Mengirim...';try{var sn=document.getElementById('dana_sender').value;await sb.from('users').update({is_premium:false,payment_sender:sn,payment_status:'Menunggu Verifikasi'}).eq('id',currentUser.id);currentUser.payment_sender=sn;currentUser.payment_status='Menunggu Verifikasi';showToast('Bukti terkirim! Tunggu verifikasi 1x24 Jam.','success');closeModal();renderAI();}catch(err){showToast('Gagal.','error');btn.disabled=false;btn.innerText='Kirim Bukti Transfer';}};}
+async function confirmPaymentAI(){openModal('Konfirmasi Aktivasi AI','<form id="paymentConfirmForm" class="space-y-4"><div class="bg-yellow-50 dark:bg-slate-700 p-3 rounded-lg text-sm text-yellow-700 dark:text-yellow-300 text-center border border-yellow-200"><strong>Perhatian:</strong> Transfer Rp 25.000 ke DANA <br><strong>081212514747 (BAYU PRATAMA)</strong>.<br>Masukkan nama pengirim di bawah ini & KIRIM Bukti Transfer Ke WhatsApp 0812 1251 4747.</div><div><label class="block text-sm mb-1">Nama Pengirim DANA</label><input type="text" id="dana_sender" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" placeholder="Nama Anda" required></div><button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 rounded-lg font-semibold">Kirim Bukti Transfer</button></form>');document.getElementById('paymentConfirmForm').onsubmit=async function(e){e.preventDefault();var btn=document.querySelector('#paymentConfirmForm button[type="submit"]');btn.disabled=true;btn.innerText='Mengirim...';try{var sn=document.getElementById('dana_sender').value;await sb.from('users').update({is_premium:false,payment_sender:sn,payment_status:'Menunggu Verifikasi'}).eq('id',currentUser.id);currentUser.payment_sender=sn;currentUser.payment_status='Menunggu Verifikasi';showToast('Bukti terkirim! Tunggu verifikasi 1x24 Jam.','success');closeModal();renderAI();}catch(err){showToast('Gagal.','error');btn.disabled=false;btn.innerText='Kirim Bukti Transfer';}};}
 function setupEnterKey(){var ip=document.getElementById('aiInput');if(!ip)return;ip.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendAI();}});}
 async function getSchoolContext(){try{var st=await DB.get('students');var tc=await DB.get('teachers');var su=await DB.get('subjects');return'Total Siswa: '+st.length+', Total Guru: '+tc.length+', Mapel: '+(su.map(function(s){return s.name;}).join(', ')||'Belum ada');}catch(e){return"Data sekolah tidak dapat dibaca.";}}
 var aiChatHistory=[];
@@ -444,21 +444,80 @@ async function printAIResult(includeKey){if(!lastAIFormattedHTML)return;var ch=l
 async function exportToWord(){if(!lastAIFormattedHTML){showToast('Tidak ada teks.','error');return;}var td=document.createElement('div');td.innerHTML=lastAIFormattedHTML;td.querySelectorAll('.kunci-jawaban-section,.soal-answer').forEach(function(el){el.remove();});td.querySelectorAll('.soal-opt.correct').forEach(function(el){el.classList.remove('correct');});td.querySelectorAll('.soal-item').forEach(function(item){item.style.marginBottom='18px';item.style.paddingBottom='15px';item.style.borderBottom='1px solid #eee';item.style.overflow='hidden';});td.querySelectorAll('.soal-header').forEach(function(h){h.style.marginBottom='8px';});td.querySelectorAll('.soal-number').forEach(function(n){n.style.fontWeight='bold';n.style.marginRight='8px';});td.querySelectorAll('.soal-text').forEach(function(t){t.style.fontWeight='600';t.style.lineHeight='1.6';});td.querySelectorAll('.soal-opts').forEach(function(od){od.style.display='block';od.style.width='100%';od.style.marginLeft='25px';od.style.marginTop='8px';var cols=od.querySelectorAll('.opt-col');cols.forEach(function(col){col.style.display='inline-block';col.style.width='48%';col.style.verticalAlign='top';col.style.styleFloat='left';col.style.cssFloat='left';col.style.marginRight='2%';});});var ch=td.innerHTML;var kh=await generateKopHTML();var htmlContent='<div style="font-family:Times New Roman,Georgia,serif;color:#000;padding:0;margin:0;width:100%">'+kh+'<div class="ai-output" style="color:#000;margin:0;padding:0">'+ch+'</div></div>';var header='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Soal - GURU SMART</title><style>@page{size:21cm 29.7cm;margin:2cm}body{font-family:Times New Roman,Georgia,serif;font-size:12pt;color:#000;line-height:1.5}h2{text-align:center;font-size:16pt;margin-bottom:5px}p{text-align:center;font-size:10pt;margin-top:0}img{max-width:100%;height:auto}.ai-output table{width:100%;border-collapse:collapse;margin-bottom:8px}.ai-output th,.ai-output td{border:1px solid #000;padding:6px;text-align:left}.ai-output img{max-width:100%;height:auto;border-radius:8px;margin:10px 0;box-shadow:0 2px 5px rgba(0,0,0,.1)}.ai-output .soal-item{margin-bottom:18px;padding-bottom:15px;border-bottom:1px solid #eee;page-break-inside:avoid}.ai-output .soal-header{display:flex;align-items:flex-start;gap:6px;margin-bottom:8px}.ai-output .soal-number{font-weight:bold;min-width:28px}.ai-output .soal-text{font-size:14px;line-height:1.7;font-weight:500;flex:1}.ai-output .soal-opts{display:flex;gap:24px;margin:8px 0 8px 34px}.ai-output .opt-col{flex:1;display:flex;flex-direction:column;gap:4px}.ai-output .soal-opt{display:flex;align-items:flex-start;font-size:13px}.ai-output .soal-opt .opt-label{font-weight:normal !important;margin-right:6px;min-width:20px}</style></head><body>'+htmlContent+'</body></html>';var blob=new Blob(['\ufeff',header],{type:'application/msword'});var url=URL.createObjectURL(blob);var fd=document.createElement("a");fd.href=url;fd.download='Soal_Guru_Smart.doc';document.body.appendChild(fd);fd.click();document.body.removeChild(fd);URL.revokeObjectURL(url);showToast('Diekspor ke Word!','success');}
 </script>
 <script>
-var kls_data = { soal: [], kelompok: [], skor: [], soalIndex: 0, mode: 'Rebutan', timer: 15, intervalId: null, currentTeam: null, poin: 100 };
+// Efek Confetti Bintang saat Benar / Juara
+function kls_confetti() {
+    var colors = ['#f87171', '#fbbf24', '#34d399', '#60a5fa', '#a78bfa', '#f472b6'];
+    for (var i = 0; i < 50; i++) {
+        var conf = document.createElement('div');
+        conf.style.position = 'fixed';
+        conf.style.zIndex = '9999';
+        conf.style.left = Math.random() * 100 + 'vw';
+        conf.style.top = '-20px';
+        conf.style.width = '12px';
+        conf.style.height = '12px';
+        conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        conf.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+        conf.style.boxShadow = '0 0 10px ' + conf.style.backgroundColor;
+        conf.style.transform = 'rotate(' + Math.random() * 360 + 'deg)';
+        conf.style.transition = 'top 2.5s ease-out, transform 2.5s ease-out, opacity 2.5s ease-out';
+        document.body.appendChild(conf);
+        setTimeout(function() {
+            conf.style.top = '100vh';
+            conf.style.transform = 'rotate(720deg) translateX(50px)';
+            conf.style.opacity = '0';
+        }, 50);
+        setTimeout(function() { conf.remove(); }, 3000);
+    }
+}
+
+var kls_data = { soal: [], kelompok: [], skor: [], soalIndex: 0, mode: 'Rebutan', timer: 15, intervalId: null, currentTeam: null, poin: 100, isBuzzed: false, isLocked: false };
+
+// Warna A, B, C, D yang sangat cerah dan penuh warna
+var kls_opt_colors = [
+    { grad: 'from-red-500 to-rose-600', glow: 'shadow-[0_0_20px_rgba(244,63,94,0.7)]', text: 'text-red-400', border: 'border-red-400' },
+    { grad: 'from-blue-500 to-indigo-600', glow: 'shadow-[0_0_20px_rgba(59,130,246,0.7)]', text: 'text-blue-400', border: 'border-blue-400' },
+    { grad: 'from-amber-400 to-yellow-500', glow: 'shadow-[0_0_20px_rgba(251,191,36,0.7)]', text: 'text-amber-400', border: 'border-amber-400' },
+    { grad: 'from-green-400 to-emerald-500', glow: 'shadow-[0_0_20px_rgba(16,185,129,0.7)]', text: 'text-green-400', border: 'border-green-400' }
+];
+
+// Warna per Tim
+var kls_team_colors = [
+    { grad: 'from-pink-500 to-rose-600', glow: 'shadow-[0_0_15px_rgba(236,72,153,0.6)]', text: 'text-pink-400' },
+    { grad: 'from-cyan-400 to-blue-500', glow: 'shadow-[0_0_15px_rgba(34,211,238,0.6)]', text: 'text-cyan-400' },
+    { grad: 'from-purple-500 to-fuchsia-600', glow: 'shadow-[0_0_15px_rgba(168,85,247,0.6)]', text: 'text-purple-400' },
+    { grad: 'from-orange-400 to-red-500', glow: 'shadow-[0_0_15px_rgba(249,115,22,0.6)]', text: 'text-orange-400' }
+];
 
 async function renderKuisKelas() {
     var html = '';
     html += '<div class="space-y-6">';
-    html += '  <div class="bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-6 rounded-2xl shadow-lg flex justify-between items-center flex-wrap gap-4">';
-    html += '    <div>';
-    html += '      <h2 class="text-2xl font-bold">🎯 Modul Kuis Kelas</h2>';
-    html += '      <p class="text-blue-100 text-sm mt-1">Buat kuis interaktif dengan mode Buzzer & Papan Skor Real-time!</p>';
+    
+    // Header Elegan
+    html += '<div class="relative bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 p-6 rounded-2xl shadow-lg overflow-hidden">';
+    html += '  <div class="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-16 -mt-16 pointer-events-none"></div>';
+    html += '  <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 pointer-events-none"></div>';
+    html += '  <div class="relative flex flex-col md:flex-row justify-between items-center gap-4 text-white">';
+    html += '    <div class="flex items-center gap-4">';
+    html += '      <div class="bg-white/20 backdrop-blur-sm p-3 rounded-xl shadow-md">';
+    html += '        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>';
+    html += '      </div>';
+    html += '      <div>';
+    html += '        <h2 class="text-xl font-bold tracking-wide">Modul Kuis Kelas</h2>';
+    html += '        <p class="text-blue-100 text-sm">Buat kuis interaktif dengan mode Buzzer & Papan Skor Real-time!</p>';
+    html += '      </div>';
     html += '    </div>';
-    html += '    <button onclick="kls_form()" class="bg-white text-blue-600 font-bold px-5 py-2.5 rounded-lg shadow hover:bg-blue-50 transition">+ Buat Kuis Baru</button>';
+    html += '    <button onclick="kls_form()" class="bg-white text-blue-700 font-bold px-5 py-2.5 rounded-lg shadow hover:bg-blue-50 transition flex items-center gap-2">';
+    html += '      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>';
+    html += '      Buat Kuis Baru';
+    html += '    </button>';
     html += '  </div>';
+    html += '</div>';
+
     html += '  <div id="kls_live_container" class="hidden"></div>';
-    html += '  <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border dark:border-slate-700">';
-    html += '    <h3 class="font-bold text-lg text-slate-800 dark:text-white mb-4">Daftar Kuis Tersimpan</h3>';
+    
+    // Daftar Kuis
+    html += '  <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">';
+    html += '    <h3 class="font-bold text-lg text-slate-800 dark:text-white mb-4 flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg> Daftar Kuis Tersimpan</h3>';
     html += '    <div id="kls_list" class="grid grid-cols-1 md:grid-cols-3 gap-4">Memuat data...</div>';
     html += '  </div>';
     html += '</div>';
@@ -472,27 +531,31 @@ async function kls_loadList() {
         var list = await DB.get('kuis_kelas');
         var box = document.getElementById('kls_list');
         if (!list || list.length === 0) {
-            box.innerHTML = '<div class="col-span-3 text-center py-8 text-slate-500">Belum ada kuis. Klik "Buat Kuis Baru".</div>';
+            box.innerHTML = '<div class="col-span-3 text-center py-12 bg-slate-50 dark:bg-slate-700/50 rounded-xl"><svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-slate-300 dark:text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg><p class="mt-2 text-slate-500">Belum ada kuis. Klik "Buat Kuis Baru" untuk memulai.</p></div>';
             return;
         }
         
         var html = '';
         list.forEach(function(k) {
             var qs = k.soal ? JSON.parse(k.soal) : [];
-            html += '<div class="p-4 border dark:border-slate-600 rounded-lg flex flex-col justify-between">';
-            html += '  <div><h4 class="font-bold text-slate-800 dark:text-white">'+k.title+'</h4>';
-            html += '  <p class="text-xs text-slate-500 mt-1">'+qs.length+' Soal | Mode: '+(k.mode || 'Rebutan')+'</p></div>';
-            html += '  <div class="mt-4 flex gap-2">';
-            html += '    <button onclick="kls_start(\''+k.id+'\')" class="flex-1 bg-green-600 text-white text-xs px-3 py-2 rounded">▶ Mulai</button>';
-            html += '    <button onclick="kls_form(\''+k.id+'\')" class="bg-blue-100 text-blue-600 text-xs px-3 py-2 rounded">Edit</button>';
-            html += '    <button onclick="deleteData(\'kuis_kelas\',\''+k.id+'\',\'kls_loadList\')" class="bg-red-100 text-red-600 text-xs px-3 py-2 rounded">Hapus</button>';
+            html += '<div class="group relative bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl p-5 flex flex-col justify-between transition-all hover:shadow-xl hover:-translate-y-1 hover:border-blue-300 dark:hover:border-blue-700 overflow-hidden">';
+            html += '  <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-700 dark:to-slate-700 rounded-full -mr-12 -mt-12 group-hover:scale-150 transition-transform duration-500"></div>';
+            html += '  <div class="relative z-10">';
+            html += '    <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 px-2 py-1 rounded-md inline-block mb-3">'+(k.mode || 'Rebutan')+'</span>';
+            html += '    <h4 class="font-bold text-slate-800 dark:text-white text-lg">'+k.title+'</h4>';
+            html += '    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg> '+qs.length+' Soal</p>';
+            html += '  </div>';
+            html += '  <div class="relative z-10 mt-5 flex gap-2">';
+            html += '    <button onclick="kls_start(\''+k.id+'\')" class="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-sm font-bold px-3 py-2.5 rounded-lg flex items-center justify-center gap-1 transition shadow-md hover:shadow-lg hover:from-green-600 hover:to-emerald-700"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Mulai</button>';
+            html += '    <button onclick="kls_form(\''+k.id+'\')" class="bg-slate-100 dark:bg-slate-600 hover:bg-slate-200 dark:hover:bg-slate-500 text-slate-700 dark:text-white text-sm font-semibold px-3 py-2 rounded-lg transition"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></button>';
+            html += '    <button onclick="deleteData(\'kuis_kelas\',\''+k.id+'\',\'kls_loadList\')" class="bg-red-50 hover:bg-red-100 text-red-600 text-sm font-semibold px-3 py-2 rounded-lg transition"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" /></svg></button>';
             html += '  </div>';
             html += '</div>';
         });
         box.innerHTML = html;
     } catch(e) {
         console.error('Error Kls LoadList:', e);
-        document.getElementById('kls_list').innerHTML = '<div class="col-span-3 text-center py-8 text-red-500">Gagal memuat data. Pastikan tabel kuis_kelas sudah dibuat di database.</div>';
+        document.getElementById('kls_list').innerHTML = '<div class="col-span-3 text-center py-8 text-red-500 bg-red-50 dark:bg-red-900/20 rounded-xl">Gagal memuat data. Pastikan tabel kuis_kelas sudah dibuat di database.</div>';
     }
 }
 
@@ -508,29 +571,25 @@ async function kls_form(id) {
     var clsOpts = cls.map(function(c) { return '<option value="'+c.id+'" '+(k?.class_id==c.id?'selected':'')+'>'+c.name+'</option>'; }).join('');
     
     var formHtml = '<form id="kls_form_html" class="space-y-4">';
-    formHtml += '<div class="bg-indigo-50 dark:bg-slate-700 p-3 rounded-lg text-sm text-indigo-600 dark:text-indigo-300">💡 Isi judul/materi, lalu AI akan membuatkan soal otomatis.</div>';
-    formHtml += '<div><label class="block text-sm mb-1">Nama Kuis / Materi</label><input type="text" id="kls_title" value="'+(k?.title||'')+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div>';
+    formHtml += '<div class="bg-indigo-50 dark:bg-slate-700 p-3 rounded-lg text-sm text-indigo-600 dark:text-indigo-300 flex items-start gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-none mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><span>Isi judul/materi, lalu AI akan membuatkan soal pilihan ganda secara otomatis sesuai jumlah yang diminta.</span></div>';
+    formHtml += '<div><label class="block text-sm mb-1 font-medium text-slate-700 dark:text-slate-300">Nama Kuis / Materi</label><input type="text" id="kls_title" value="'+(k?.title||'')+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" required></div>';
     formHtml += '<div class="grid grid-cols-2 gap-4">';
-    formHtml += '<div><label class="block text-sm mb-1">Mapel</label><select id="kls_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">'+subOpts+'</select></div>';
-    formHtml += '<div><label class="block text-sm mb-1">Kelas</label><select id="kls_class" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">'+clsOpts+'</select></div>';
+    formHtml += '<div><label class="block text-sm mb-1 font-medium text-slate-700 dark:text-slate-300">Mapel</label><select id="kls_subject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">'+subOpts+'</select></div>';
+    formHtml += '<div><label class="block text-sm mb-1 font-medium text-slate-700 dark:text-slate-300">Kelas</label><select id="kls_class" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">'+clsOpts+'</select></div>';
     formHtml += '</div>';
-    formHtml += '<div><label class="block text-sm mb-1">Jumlah Soal</label><input type="number" id="kls_jumlah" value="'+(k?.jumlah||5)+'" min="1" max="20" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div>';
-    formHtml += '<div><label class="block text-sm mb-1">Buat Kelompok (Pisahkan dengan koma)</label><input type="text" id="kls_kelompok" value="'+(k?.kelompok||'GARUDA, ELANG, RAJAWALI, MERPATI')+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>';
-    formHtml += '<div><label class="block text-sm mb-1">Mode Permainan</label>';
-    formHtml += '<select id="kls_mode" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">';
-    formHtml += '<option '+(k?.mode=='Rebutan'?'selected':'')+'>🔔 Rebutan/Buzzer</option>';
-    formHtml += '<option '+(k?.mode=='Cepat Tepat'?'selected':'')+'>⚡ Cepat Tepat</option>';
-    formHtml += '<option '+(k?.mode=='Kelompok'?'selected':'')+'>👥 Kelompok</option>';
-    formHtml += '<option '+(k?.mode=='Final'?'selected':'')+'>🏆 Final</option>';
-    formHtml += '</select></div>';
     formHtml += '<div class="grid grid-cols-2 gap-4">';
-    formHtml += '<div><label class="block text-sm mb-1">Waktu / Soal (detik)</label><input type="number" id="kls_waktu" value="'+(k?.waktu||15)+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>';
-    formHtml += '<div><label class="block text-sm mb-1">Poin / Soal</label><input type="number" id="kls_poin" value="'+(k?.poin||100)+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>';
+    formHtml += '<div><label class="block text-sm mb-1 font-medium text-slate-700 dark:text-slate-300">Jumlah Soal</label><input type="number" id="kls_jumlah" value="'+(k?.jumlah||5)+'" min="1" max="20" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" required></div>';
+    formHtml += '<div><label class="block text-sm mb-1 font-medium text-slate-700 dark:text-slate-300">Poin / Soal</label><input type="number" id="kls_poin" value="'+(k?.poin||100)+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"></div>';
     formHtml += '</div>';
-    formHtml += '<button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 rounded-lg font-semibold">⚡ Generate & Simpan Kuis</button>';
+    formHtml += '<div><label class="block text-sm mb-1 font-medium text-slate-700 dark:text-slate-300">Nama Kelompok (Pisahkan dengan koma)</label><input type="text" id="kls_kelompok" value="'+(k?.kelompok||'GARUDA, ELANG, RAJAWALI, MERPATI')+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"></div>';
+    formHtml += '<div class="grid grid-cols-2 gap-4">';
+    formHtml += '<div><label class="block text-sm mb-1 font-medium text-slate-700 dark:text-slate-300">Mode Permainan</label><select id="kls_mode" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"><option '+(k?.mode=='Rebutan'?'selected':'')+'>🔔 Rebutan/Buzzer</option><option '+(k?.mode=='Cepat Tepat'?'selected':'')+'>⚡ Cepat Tepat</option><option '+(k?.mode=='Kelompok'?'selected':'')+'>👥 Kelompok</option><option '+(k?.mode=='Final'?'selected':'')+'>🏆 Final</option></select></div>';
+    formHtml += '<div><label class="block text-sm mb-1 font-medium text-slate-700 dark:text-slate-300">Waktu / Soal (detik)</label><input type="number" id="kls_waktu" value="'+(k?.waktu||15)+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"></div>';
+    formHtml += '</div>';
+    formHtml += '<button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 rounded-lg font-semibold flex items-center justify-center gap-2 shadow-md hover:from-blue-700 hover:to-indigo-700 transition"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg> Generate & Simpan Kuis</button>';
     formHtml += '</form>';
         
-    openModal(id ? 'Edit Kuis' : 'Buat Kuis Baru', formHtml);
+    openModal(id ? 'Edit Kuis Kelas' : 'Buat Kuis Baru', formHtml);
     
     document.getElementById('kls_form_html').onsubmit = async function(e) {
         e.preventDefault();
@@ -587,6 +646,9 @@ async function kls_start(id) {
     kls_data.timer = k.waktu;
     kls_data.poin = k.poin;
     kls_data.currentTeam = null;
+    kls_data.isBuzzed = false;
+    kls_data.isLocked = false;
+    if(kls_data.intervalId) clearInterval(kls_data.intervalId); 
     
     kls_renderLive();
 }
@@ -595,115 +657,248 @@ function kls_renderLive() {
     var c = document.getElementById('kls_live_container');
     if(!c) return;
     c.classList.remove('hidden');
-    c.scrollIntoView({behavior:'smooth'});
+    c.scrollIntoView({behavior:'smooth', block: 'start'});
     
     var q = kls_data.soal[kls_data.soalIndex];
     var total = kls_data.soal.length;
+    var progress = ((kls_data.soalIndex + 1) / total) * 100;
+    var timer = kls_data.timer;
+    
+    var teamStyleMap = {};
+    kls_data.kelompok.forEach(function(t, i){ teamStyleMap[t] = kls_team_colors[i % kls_team_colors.length]; });
     
     var html = '';
-    html += '<div class="bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border-4 border-indigo-600">';
-    html += '  <div class="bg-indigo-600 p-4 flex justify-between items-center text-white">';
-    html += '    <h3 class="font-bold text-xl">PERTANYAAN '+(kls_data.soalIndex + 1)+' / '+total+'</h3>';
-    html += '    <div class="flex gap-3"><span class="bg-white/20 px-3 py-1 rounded text-sm">Mode: '+kls_data.mode+'</span>';
-    html += '    <button onclick="kls_stop()" class="bg-red-500 px-3 py-1 rounded text-sm font-bold">Akhiri Kuis</button></div>';
+    // Style keyframe lokal
+    html += '<style>@keyframes kls_shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } } @keyframes kls_bounce { 0% { transform: scale(0.5); opacity: 0; } 50% { transform: scale(1.2); } 100% { transform: scale(1); opacity: 1; } }</style>';
+    
+    // Main Board Container
+    html += '<div class="bg-slate-950 rounded-3xl shadow-2xl overflow-hidden border border-slate-700">';
+    
+    // Header Live
+    html += '  <div class="bg-slate-900 p-4 flex flex-col md:flex-row justify-between items-center text-white gap-3 border-b border-slate-800">';
+    html += '    <div class="flex items-center gap-3">';
+    html += '      <div class="bg-white/10 p-2 rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="filter: drop-shadow(0 0 5px rgba(251,191,36,0.7));"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19c0 1.1-.9 2-2 2H5a2 2 0 01-2-2v-7a2 2 0 012-2h1.882a1 1 0 00.941-.665l3.47-9.353a1 1 0 011.4-.538l1.27.635a1 1 0 01.53.53v3.47a1 1 0 00.293.707l.707.707a1 1 0 001.414 0l1-1a1 1 0 011.414 0l1 1a1 1 0 00.707.293h.118a1 1 0 01.998.898l.011.102a1 1 0 01-.998 1.102H21a2 2 0 01-2-2v-7a2 2 0 00-2-2h-1.882a1 1 0 01-.941-.665l-1.47-3.97a1 1 0 00-.4-.538l-1.27-.635a1 1 0 00-1.4.538l-3.47 9.353z" /></svg></div>';
+    html += '      <div>';
+    html += '        <p class="text-[10px] uppercase tracking-widest text-slate-400">Pertanyaan Ke</p>';
+    html += '        <h3 class="font-bold text-xl text-white">'+(kls_data.soalIndex + 1)+' / '+total+'</h3>';
+    html += '      </div>';
+    html += '    </div>';
+    html += '    <div class="flex items-center gap-2">';
+    html += '      <span class="bg-indigo-500/80 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-6V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15v-3.75m18 0V5.25A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25v3.75m18 0h-18" /></svg> Mode: '+kls_data.mode+'</span>';
+    html += '      <button onclick="kls_stop()" class="bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg text-xs font-bold transition">Akhiri Kuis</button>';
+    html += '    </div>';
     html += '  </div>';
     
-    html += '  <div class="p-8 text-center text-white min-h-[300px] flex flex-col justify-center">';
-    html += '    <p class="text-2xl font-bold mb-6">'+q.text+'</p>';
-    html += '    <div class="grid grid-cols-2 gap-4 max-w-xl mx-auto">';
-    q.options.forEach(function(opt) {
-        var safeOpt = opt.replace(/'/g, "\\'");
-        html += '      <div class="bg-slate-700 p-4 rounded-xl text-lg font-medium hover:bg-slate-600 transition cursor-pointer" onclick="kls_answer(\''+safeOpt+'\')">'+opt+'</div>';
+    // Progress Bar Neon
+    html += '  <div class="bg-slate-800 h-2 w-full"><div class="bg-gradient-to-r from-cyan-400 to-blue-500 h-2 transition-all duration-500" style="width:'+progress+'%; box-shadow: 0 0 10px rgba(59,130,246,0.8);"></div></div>';
+    
+    // Soal & Pilihan dengan 4 Warna Utama yang Penuh Warna
+    html += '  <div class="p-6 md:p-8 text-center bg-slate-900 min-h-[200px] flex flex-col justify-center">';
+    html += '    <p class="text-xl md:text-2xl font-bold text-white mb-6" style="text-shadow: 0 0 10px rgba(255,255,255,0.3);">'+q.text+'</p>';
+    html += '    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-2xl mx-auto">';
+    
+    q.options.forEach(function(opt, index) {
+        var safeOpt = encodeURIComponent(opt);
+        var col = kls_opt_colors[index % 4]; // Ambil warna A,B,C,D
+        var cursorStyle = kls_data.isBuzzed ? 'cursor-pointer hover:scale-105 hover:brightness-110' : 'cursor-not-allowed opacity-50';
+        
+        // Saat idle, backgroundnya gelap namun border & teksnya menyala warnanya. Saat hover, background penuh.
+        var bgIdle = 'bg-slate-800/50';
+        if(kls_data.isBuzzed) bgIdle = 'bg-slate-800';
+        
+        html += '      <div class="opt-card '+bgIdle+' p-4 rounded-xl border-2 '+col.border+' text-white text-left font-bold transition-all shadow-sm flex items-center gap-3 '+cursorStyle+' '+col.glow+'" data-opt="'+safeOpt+'" onclick="kls_answer(decodeURIComponent(this.dataset.opt))">';
+        html += '        <span class="w-10 h-10 bg-gradient-to-br '+col.grad+' text-white flex items-center justify-center rounded-lg text-lg shadow-md">'+opt.substring(0,1)+'</span>';
+        html += '        <span class="flex-1">'+opt.substring(3)+'</span>';
+        html += '      </div>';
     });
     html += '    </div>';
     html += '  </div>';
     
-    html += '  <div class="bg-slate-800 p-6 flex flex-col items-center">';
-    html += '    <h4 class="text-white font-bold mb-4 text-center text-xl">🔔 Tekan BUZZ untuk menjawab!</h4>';
-    html += '    <div class="flex flex-wrap justify-center gap-4 mb-6">';
+    // Buzzer & Timer
+    html += '  <div class="bg-slate-950 p-6 border-t border-slate-800 flex flex-col items-center">';
     
-    var colors = ['from-red-500 to-rose-600','from-blue-500 to-indigo-600','from-green-500 to-emerald-600','from-yellow-500 to-amber-600'];
-    kls_data.kelompok.forEach(function(t, i) {
-        var col = colors[i % 4];
-        var dis = kls_data.currentTeam ? 'disabled' : '';
-        html += '      <button onclick="kls_buzz(\''+t+'\')" class="bg-gradient-to-br '+col+' text-white font-bold py-4 px-6 rounded-2xl shadow-lg hover:scale-105 transition transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed" '+dis+'>';
-        html += '        <span class="block text-2xl">🔔</span>'+t;
-        html += '      </button>';
-    });
-    
-    html += '    </div>';
-    
-    if (kls_data.currentTeam) {
-        html += '    <div class="bg-green-500 text-white px-6 py-3 rounded-lg font-bold animate-pulse">Giliran: '+kls_data.currentTeam+'! Pilih jawaban di atas.</div>';
+    if (!kls_data.isBuzzed && !kls_data.isLocked) {
+        html += '    <h4 class="text-slate-300 font-bold mb-4 text-lg text-center">🔔 Tekan Buzzer Untuk Menjawab!</h4>';
+        html += '    <div class="flex flex-wrap justify-center gap-4 mb-2">';
+        
+        kls_data.kelompok.forEach(function(t, i) {
+            var style = teamStyleMap[t];
+            html += '      <button onclick="kls_buzz(\''+t+'\')" class="bg-gradient-to-br '+style.grad+' text-white font-bold py-4 px-6 rounded-2xl transition transform hover:scale-110 active:scale-95 '+style.glow+'">';
+            html += '        <span class="block text-2xl mb-1">🔔</span>'+t;
+            html += '      </button>';
+        });
+    } else if (kls_data.isBuzzed && !kls_data.isLocked) {
+        var style = teamStyleMap[kls_data.currentTeam];
+        html += '    <div class="bg-gradient-to-r '+style.grad+' border border-white/20 text-white px-6 py-3 rounded-lg font-bold text-lg flex items-center gap-2 animate-pulse '+style.glow+'">';
+        html += '      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
+        html += '      Giliran: '+kls_data.currentTeam+'! Pilih jawaban di atas.';
+        html += '    </div>';
+    } else {
+         html += '    <div class="bg-slate-800 border border-slate-700 text-slate-300 px-6 py-3 rounded-lg font-bold text-lg flex items-center gap-2">';
+         html += '      ⏳ Menunggu soal berikutnya...';
+         html += '    </div>';
     }
     
-    html += '    <div class="mt-6 flex items-center gap-4 text-white"><div class="text-4xl font-mono font-bold bg-black/50 px-4 py-2 rounded-lg">⏱️ <span id="kls_timer">--</span> detik</div></div>';
+    // Tombol Skip
+    html += '    <button onclick="kls_skip()" class="mt-4 text-xs text-slate-400 hover:text-red-500 underline">Lewati Soal Ini</button>';
+    
+    // Timer
+    html += '    <div class="mt-6 flex items-center gap-3 text-white">';
+    html += '      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="filter: drop-shadow(0 0 5px rgba(239,68,68,0.7));"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
+    html += '      <div class="text-4xl font-mono font-bold bg-slate-800 px-4 py-1 rounded-xl text-white border border-slate-700" style="text-shadow: 0 0 10px rgba(255,255,255,0.3);"><span id="kls_timer">'+timer+'</span> <span class="text-sm">detik</span></div>';
+    html += '    </div>';
     html += '  </div>';
     
-    html += '  <div class="bg-gradient-to-r from-indigo-900 to-slate-900 p-6">';
-    html += '    <h4 class="text-center text-white font-bold text-lg mb-4">🏆 PAPAN SKOR REAL-TIME</h4>';
+    // Scoreboard Live ala Leaderboard Game
+    html += '  <div class="bg-slate-900 p-6 border-t border-slate-800">';
+    html += '    <h4 class="text-center text-white font-bold text-lg mb-4 flex items-center justify-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="filter: drop-shadow(0 0 5px rgba(251,191,36,0.7));"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg> PAPAN SKOR REAL-TIME</h4>';
     html += '    <div class="max-w-2xl mx-auto space-y-2" id="kls_scoreboard">'+kls_renderScore()+'</div>';
     html += '  </div>';
     html += '</div>';
     
     c.innerHTML = html;
-    kls_startTimer();
+    
+    if (!kls_data.isBuzzed && !kls_data.isLocked) {
+        kls_startTimer();
+    }
 }
 
 function kls_renderScore() {
     var sorted = Object.entries(kls_data.skor).sort(function(a, b) { return b[1] - a[1]; });
-    var medals = ['🥇', '🥈', '🥉', '   '];
+    var medals = ['🥇', '🥈', '🥉', '4️⃣'];
+    var teamStyleMap = {};
+    kls_data.kelompok.forEach(function(t, i){ teamStyleMap[t] = kls_team_colors[i % kls_team_colors.length]; });
+    
     var html = '';
     sorted.forEach(function(s, i) {
-        var ring = i===0 ? 'ring-2 ring-yellow-400' : '';
-        html += '<div class="flex justify-between items-center bg-white/10 text-white p-3 rounded-lg '+ring+'">';
-        html += '  <span class="font-bold text-lg flex items-center gap-2"><span class="text-2xl">'+medals[i]+'</span> '+s[0]+'</span>';
-        html += '  <span class="font-bold text-2xl">'+s[1]+'</span>';
+        var style = teamStyleMap[s[0]] || { grad: 'from-slate-500 to-slate-600', glow: '' };
+        var scaleUp = i===0 ? 'scale-105 shadow-[0_0_15px_rgba(251,191,36,0.3)]' : '';
+        html += '<div class="flex justify-between items-center border-2 border-slate-700 p-3 rounded-lg transition-all bg-slate-800 '+scaleUp+'">';
+        html += '  <span class="font-bold text-white flex items-center gap-3">';
+        html += '    <span class="text-2xl">'+medals[i]+'</span> '+s[0];
+        html += '  </span>';
+        html += '  <div class="flex items-center gap-2">';
+        html += '    <div class="bg-gradient-to-r '+style.grad+' text-white px-3 py-1 rounded-lg font-bold text-xl '+style.glow+'">'+s[1]+'</div>';
+        html += '  </div>';
         html += '</div>';
     });
     return html;
 }
 
 function kls_buzz(team) {
-    if (kls_data.currentTeam) return;
+    if (kls_data.isLocked) return; 
+    if (kls_data.isBuzzed) return; 
+    if(kls_data.intervalId) clearInterval(kls_data.intervalId); 
     kls_data.currentTeam = team;
+    kls_data.isBuzzed = true;
     playBeep();
     kls_renderLive();
 }
 
 function kls_answer(opt) {
-    if (!kls_data.currentTeam) {
-        showToast('Tekan buzzer dulu!', 'error');
+    if (!kls_data.isBuzzed) {
+        showToast('Tekan Buzzer dulu!', 'error');
         return;
     }
+    if (kls_data.isLocked) return; 
     
-    clearInterval(kls_data.intervalId);
+    kls_data.isLocked = true; // Kunci agar tidak dobel klik
+    if(kls_data.intervalId) clearInterval(kls_data.intervalId);
+    
     var q = kls_data.soal[kls_data.soalIndex];
     var correct = q.answer;
     var isCorrect = opt.indexOf(correct + '.') === 0 || opt.startsWith(correct + '.');
     
+    var teamStyleMap = {};
+    kls_data.kelompok.forEach(function(t, i){ teamStyleMap[t] = kls_team_colors[i % kls_team_colors.length]; });
+    
+    // Animasi pilihan: Mencerahkan jawaban benar (hijau) & jawaban salah (merah)
+    document.querySelectorAll('#kls_live_container .opt-card').forEach(function(el) {
+        var optText = decodeURIComponent(el.dataset.opt);
+        var isThisCorrect = optText.indexOf(correct + '.') === 0 || optText.startsWith(correct + '.');
+        
+        el.removeAttribute('onclick'); // Hapus fungsi klik
+        el.classList.remove('cursor-pointer', 'hover:scale-105', 'hover:brightness-110', 'opacity-50');
+        el.classList.add('cursor-not-allowed');
+        
+        if(isThisCorrect) {
+            el.className = 'opt-card bg-gradient-to-r from-green-400 to-emerald-500 p-4 rounded-xl border-2 border-green-300 text-white font-bold flex items-center gap-3 shadow-[0_0_20px_rgba(16,185,129,0.7)]';
+            el.style.transform = 'scale(1.05)';
+            // Tambah ikon centang
+            el.innerHTML += '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>';
+        } else if (optText === opt) {
+            el.className = 'opt-card bg-gradient-to-r from-red-500 to-rose-600 p-4 rounded-xl border-2 border-red-300 text-white font-bold flex items-center gap-3 shadow-[0_0_20px_rgba(239,68,68,0.7)]';
+            el.style.animation = 'kls_shake 0.4s ease-in-out';
+            // Tambah ikon silang
+            el.innerHTML += '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" /></svg>';
+        } else {
+            el.className = 'opt-card bg-slate-800 p-4 rounded-xl border-2 border-slate-700 text-slate-500 opacity-50 flex items-center gap-3';
+        }
+    });
+    
+    var badgeStyle = teamStyleMap[kls_data.currentTeam] || { grad: 'from-slate-700 to-slate-800', glow: '' };
+    var scoreBadge = document.createElement('div');
+    scoreBadge.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[100] text-white text-4xl font-extrabold py-4 px-8 rounded-2xl flex items-center gap-2 bg-gradient-to-br '+badgeStyle.grad+' '+badgeStyle.glow;
+    
     if (isCorrect) {
         kls_data.skor[kls_data.currentTeam] += kls_data.poin;
+        scoreBadge.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg> +'+kls_data.poin;
+        scoreBadge.style.animation = 'kls_bounce 0.5s ease-out';
+        document.body.appendChild(scoreBadge);
+        kls_confetti();
         showToast('🎉 BENAR! '+kls_data.currentTeam+' +'+kls_data.poin+' POIN', 'success');
     } else {
         kls_data.skor[kls_data.currentTeam] -= Math.floor(kls_data.poin / 2);
-        showToast('❌ SALAH! '+kls_data.currentTeam+' -'+Math.floor(kls_data.poin / 2)+' POIN', 'error');
+        scoreBadge.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" /></svg> -'+Math.floor(kls_data.poin / 2);
+        scoreBadge.style.animation = 'kls_shake 0.4s ease-in-out';
+        document.body.appendChild(scoreBadge);
+        showToast('❌ SALAH! Jawaban benar ditandai hijau.', 'error');
     }
+    
+    setTimeout(function() {
+        scoreBadge.style.transition = 'opacity 0.5s, transform 0.5s';
+        scoreBadge.style.opacity = '0';
+        if(isCorrect) scoreBadge.style.transform = 'translate(-50%, -150%) scale(0.8)';
+        else scoreBadge.style.transform = 'translate(-50%, 50%) scale(0.8)';
+        setTimeout(function() { scoreBadge.remove(); }, 500);
+    }, 1500);
     
     kls_updateScore();
     
     setTimeout(function() {
         kls_data.soalIndex++;
         kls_data.currentTeam = null;
+        kls_data.isBuzzed = false;
+        kls_data.isLocked = false;
         if (kls_data.soalIndex < kls_data.soal.length) {
             kls_renderLive();
         } else {
             kls_end();
         }
-    }, 2000);
+    }, 2500); // Beri waktu 2.5 detik untuk melihat jawaban benar
+}
+
+function kls_skip() {
+    if (confirm('Lewati soal ini? Tidak ada poin yang ditambahkan.')) {
+        if(kls_data.intervalId) clearInterval(kls_data.intervalId);
+        kls_data.isLocked = true;
+        showToast('Soal dilewati.', 'info');
+        setTimeout(function() {
+            kls_data.soalIndex++;
+            kls_data.currentTeam = null;
+            kls_data.isBuzzed = false;
+            kls_data.isLocked = false;
+            if (kls_data.soalIndex < kls_data.soal.length) {
+                kls_renderLive();
+            } else {
+                kls_end();
+            }
+        }, 500);
+    }
 }
 
 function kls_startTimer() {
+    if(kls_data.intervalId) clearInterval(kls_data.intervalId); 
     var timer = kls_data.timer;
     var timerEl = document.getElementById('kls_timer');
     if(timerEl) timerEl.innerText = timer;
@@ -712,13 +907,25 @@ function kls_startTimer() {
         timer--;
         var el = document.getElementById('kls_timer');
         if (el) el.innerText = timer;
+        
         if (timer <= 0) {
             clearInterval(kls_data.intervalId);
-            showToast('Waktu habis!', 'error');
-            kls_data.soalIndex++;
-            kls_data.currentTeam = null;
-            if (kls_data.soalIndex < kls_data.soal.length) kls_renderLive();
-            else kls_end();
+            kls_data.intervalId = null;
+            showToast('⏳ Waktu habis!', 'error');
+            kls_data.isLocked = true; 
+            
+            setTimeout(function() {
+                kls_data.soalIndex++;
+                kls_data.currentTeam = null;
+                kls_data.isBuzzed = false;
+                kls_data.isLocked = false;
+                
+                if (kls_data.soalIndex < kls_data.soal.length) {
+                    kls_renderLive();
+                } else {
+                    kls_end();
+                }
+            }, 500);
         }
     }, 1000);
 }
@@ -737,25 +944,49 @@ function kls_updateScore() {
 }
 
 function kls_end() {
+    if(kls_data.intervalId) clearInterval(kls_data.intervalId);
+    kls_data.intervalId = null;
+    kls_data.isLocked = false;
+    kls_data.isBuzzed = false;
+    
+    for(var i=0; i<5; i++) {
+        setTimeout(kls_confetti, i * 300);
+    }
+    
     var sorted = Object.entries(kls_data.skor).sort(function(a, b) { return b[1] - a[1]; });
-    var html = '<div class="bg-white dark:bg-slate-800 p-8 rounded-2xl text-center shadow-2xl">';
-    html += '  <h2 class="text-3xl font-extrabold text-indigo-600 mb-6">🎉 KUIS SELESAI 🎉</h2>';
+    var html = '<div class="bg-slate-950 p-8 rounded-3xl text-center shadow-2xl border border-slate-700 overflow-hidden relative">';
+    html += '  <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-400 via-blue-500 to-purple-600" style="box-shadow: 0 0 10px rgba(59,130,246,0.8);"></div>';
+    html += '  <div class="mb-6 mt-4">';
+    html += '    <div class="inline-block p-4 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full shadow-xl mb-4" style="box-shadow: 0 0 25px rgba(251,191,36,0.6);"><svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg></div>';
+    html += '    <h2 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-yellow-400 to-orange-500 mt-2 tracking-wider" style="text-shadow: 0 0 20px rgba(251,191,36,0.4);">JUARA HARI INI</h2>';
+    html += '    <p class="text-slate-300 mt-2 text-lg">Selamat kepada pemenang! 🎉</p>';
+    html += '  </div>';
     html += '  <div class="space-y-4 max-w-md mx-auto">';
+    
+    var gold = 'border-yellow-400 bg-gradient-to-r from-yellow-500/20 to-amber-500/20';
+    var silver = 'border-slate-300 bg-gradient-to-r from-slate-400/20 to-slate-300/20';
+    var bronze = 'border-orange-300 bg-gradient-to-r from-orange-400/20 to-red-400/20';
+    
     sorted.forEach(function(s, i) {
-        var bg = i===0 ? 'bg-yellow-100' : 'bg-slate-100 dark:bg-slate-700';
-        var medal = ['🥇','🥈','🥉'][i] || '   ';
-        html += '    <div class="flex justify-between items-center p-4 rounded-xl '+bg+'"><span class="font-bold text-xl">'+medal+' '+s[0]+'</span><span class="font-bold text-2xl">'+s[1]+'</span></div>';
+        var bg = i===0 ? gold : (i===1 ? silver : bronze);
+        var medal = ['🥇','🥈','🥉'][i] || (i+1)+'️⃣';
+        var scale = i===0 ? 'scale-105 shadow-[0_0_20px_rgba(251,191,36,0.3)]' : '';
+        var textGlow = i===0 ? 'text-yellow-400' : i===1 ? 'text-slate-200' : 'text-orange-400';
+        html += '    <div class="flex justify-between items-center p-5 rounded-2xl border-2 '+bg+' '+scale+' transition-all">';
+        html += '      <span class="font-bold text-xl text-white flex items-center gap-4"><span class="text-3xl">'+medal+'</span> '+s[0]+'</span>';
+        html += '      <span class="font-bold text-3xl '+textGlow+'" style="text-shadow: 0 0 10px rgba(255,255,255,0.3);">'+s[1]+'</span>';
+        html += '    </div>';
     });
     html += '  </div>';
-    html += '  <button onclick="document.getElementById(\'kls_live_container\').classList.add(\'hidden\')" class="mt-8 bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold">Selesai</button>';
+    html += '  <button onclick="document.getElementById(\'kls_live_container\').classList.add(\'hidden\')" class="mt-8 bg-slate-700 hover:bg-slate-600 text-white px-6 py-2.5 rounded-lg font-semibold transition flex items-center gap-2 mx-auto"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg> Kembali ke Daftar Kuis</button>';
     html += '</div>';
     
     document.getElementById('kls_live_container').innerHTML = html;
 }
 
 function kls_stop() {
-    if (confirm('Akhiri kuis sekarang?')) {
-        clearInterval(kls_data.intervalId);
+    if (confirm('Akhiri kuis sekarang? Skor akan langsung dihitung.')) {
+        if(kls_data.intervalId) clearInterval(kls_data.intervalId);
         kls_end();
     }
 }
