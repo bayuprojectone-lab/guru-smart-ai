@@ -502,7 +502,7 @@ function playBuzzerHorn() {
     } catch(e) { console.error('Audio Error:', e); }
 }
 
-var kls_data = { soal: [], kelompok: [], skor: [], soalIndex: 0, mode: 'Rebutan', timer: 15, intervalId: null, currentTeam: null, poin: 100, isBuzzed: false, isLocked: false, currentRoom: null, realtimeChannel: null };
+var kls_data = { soal: [], kelompok: [], skor: [], soalIndex: 0, mode: 'Rebutan', timer: 15, intervalId: null, currentTeam: null, poin: 100, isBuzzed: false, isLocked: false, currentRoom: null, realtimeChannel: null, fallbackInterval: null };
 
 var kls_opt_colors = [
     { grad: 'from-red-500 to-rose-600', glow: 'shadow-[0_0_20px_rgba(244,63,94,0.7)]', border: 'border-red-400' },
@@ -519,6 +519,10 @@ var kls_team_colors = [
 ];
 
 async function renderKuisKelas() {
+    // Bersihkan listener fallback jika ada
+    if (kls_data.fallbackInterval) clearInterval(kls_data.fallbackInterval);
+    if (kls_data.realtimeChannel) kls_data.realtimeChannel.unsubscribe();
+
     var html = '';
     html += '<div class="space-y-6">';
     
@@ -678,15 +682,22 @@ async function kls_start(id) {
     kls_data.isLocked = false;
     if(kls_data.intervalId) clearInterval(kls_data.intervalId); 
     
-    // Generate Room Code Unik & Setup Realtime Channel
+    // Generate Room Code Unik
     kls_data.currentRoom = 'kls-' + Math.random().toString(36).substr(2, 6);
+    
+    // Hapus sinyal buzzer lama di database
+    await sb.from('kuis_buzzer').delete().eq('room', kls_data.currentRoom);
+    
     if (kls_data.realtimeChannel) kls_data.realtimeChannel.unsubscribe();
     
+    // SISTEM DUAL CORE (REALTIME + FALLBACK DB)
+    
+    // 1. Jalur Realtime (Jika diaktifkan di Supabase)
     kls_data.realtimeChannel = sb.channel(kls_data.currentRoom)
       .on('broadcast', { event: 'buzz' }, function(payload) {
           if (payload && payload.message && payload.message.team) {
               if (kls_data.kelompok.includes(payload.message.team)) {
-                  kls_buzz(payload.message.team); // OTOMATIS TERANGKAP DI PC GURU
+                  kls_buzz(payload.message.team);
               }
           }
       })
@@ -700,6 +711,23 @@ async function kls_start(id) {
           }
       })
       .subscribe();
+      
+    // 2. Jalur Fallback (Auto-check Database tiap 1 detik)
+    if (kls_data.fallbackInterval) clearInterval(kls_data.fallbackInterval);
+    kls_data.fallbackInterval = setInterval(async function() {
+        if (kls_data.isLocked || kls_data.isBuzzed || !kls_data.currentRoom) return;
+        
+        try {
+            var res = await sb.from('kuis_buzzer').select('*').eq('room', kls_data.currentRoom).limit(1);
+            if (res.data && res.data.length > 0) {
+                var team = res.data[0].team;
+                if (kls_data.kelompok.includes(team)) {
+                    kls_buzz(team); // Langsung eksekusi bunyi di PC Guru
+                    await sb.from('kuis_buzzer').delete().eq('room', kls_data.currentRoom); // Bersihkan
+                }
+            }
+        } catch(e) {}
+    }, 1000);
       
     kls_showJoinQR();
 }
@@ -800,20 +828,19 @@ function kls_renderLive() {
     html += '  <div class="bg-slate-950 p-6 border-t border-slate-800 flex flex-col items-center">';
     
     if (!kls_data.isBuzzed && !kls_data.isLocked) {
-        // SISTEM TIDAK PERLU TOMBOL BUZZER MANUAL DI PC
+        // TIDAK ADA TOMBOL MANUAL, CUMA MENUNGGU REMOTE DARI HP
         html += '    <h4 class="text-slate-300 font-bold mb-4 text-lg text-center">🔔 Menunggu Regu menekan Buzzer dari HP...</h4>';
         html += '    <div class="flex flex-wrap justify-center gap-4 mb-2">';
         
         kls_data.kelompok.forEach(function(t, i) {
             var style = teamStyleMap[t];
-            // MENAMPILKAN STATUS NAMA REGU (HANYA INDIKATOR)
             html += '      <div class="bg-slate-800 border border-slate-700 text-slate-400 font-bold py-4 px-6 rounded-2xl flex items-center gap-2">';
             html += '        <span class="text-2xl">⏳</span>'+t;
             html += '      </div>';
         });
     } else if (kls_data.isBuzzed && !kls_data.isLocked) {
         var style = teamStyleMap[kls_data.currentTeam];
-        // OTOMATIS MENAMPILKAN NAMA REGU YANG MENGEKAN BUZZER DARI HP (REMOT)
+        // OTOMATIS MENAMPILKAN REGU YANG NGEKLIK DI HP
         html += '    <div class="bg-gradient-to-r '+style.grad+' border border-white/20 text-white px-8 py-4 rounded-lg font-bold text-2xl flex items-center gap-2 animate-pulse '+style.glow+'">';
         html += '      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
         html += '      GILIRAN REGU: '+kls_data.currentTeam+' ! Pilih jawaban di atas.';
@@ -840,24 +867,9 @@ function kls_renderLive() {
     
     c.innerHTML = html;
     
-    // TIMER OTOMATIS MENYALA SAAT SOAL MUNCUL
+    // TIMER JALAN OTOMATIS
     if (!kls_data.isBuzzed && !kls_data.isLocked) {
         kls_startTimer();
-    }
-    
-    // CEK URL PARAMETER FALLBACK
-    kls_checkUrlBuzz();
-}
-
-function kls_checkUrlBuzz() {
-    var hash = window.location.hash;
-    var match = hash.match(/#buzz-([^&]+)/);
-    if (match && match[1]) {
-        var team = decodeURIComponent(match[1].replace(/\+/g, ' '));
-        if (kls_data.kelompok.includes(team)) {
-            kls_buzz(team); // OTOMATIS BUNYI & KUNCI DI PC GURU
-        }
-        history.replaceState(null, null, window.location.pathname + window.location.search); // hapus url
     }
 }
 
@@ -889,8 +901,8 @@ function kls_buzz(team) {
     if(kls_data.intervalId) clearInterval(kls_data.intervalId); 
     kls_data.currentTeam = team;
     kls_data.isBuzzed = true;
-    playBuzzerHorn(); // OTOMATIS BUNYI TEROMPET DI PC GURU
-    kls_renderLive(); // OTOMATIS RE-RENDER UI PC GURU
+    playBuzzerHorn(); // BUNYI TEROMPET OTOMATIS DI PC
+    kls_renderLive();
 }
 
 function kls_answer(opt) {
@@ -960,7 +972,7 @@ function kls_answer(opt) {
     
     kls_updateScore();
     
-    // OTOMATIS PINDAH KE SOAL SELANJUTNYA TANPA KLIK "MULAI"
+    // OTOMATIS PINDAH KE SOAL SELANJUTNYA
     setTimeout(function() {
         kls_data.soalIndex++;
         kls_data.currentTeam = null;
@@ -1010,7 +1022,6 @@ function kls_startTimer() {
             showToast('⏳ Waktu habis!', 'error');
             kls_data.isLocked = true; 
             
-            // OTOMATIS PINDAH SOAL JIKA WAKTU HABIS
             setTimeout(function() {
                 kls_data.soalIndex++;
                 kls_data.currentTeam = null;
@@ -1042,6 +1053,7 @@ function kls_updateScore() {
 
 function kls_end() {
     if(kls_data.intervalId) clearInterval(kls_data.intervalId);
+    if(kls_data.fallbackInterval) clearInterval(kls_data.fallbackInterval);
     kls_data.intervalId = null;
     kls_data.isLocked = false;
     kls_data.isBuzzed = false;
@@ -1085,6 +1097,7 @@ function kls_end() {
 function kls_stop() {
     if (confirm('Akhiri kuis sekarang? Skor akan langsung dihitung.')) {
         if(kls_data.intervalId) clearInterval(kls_data.intervalId);
+        if(kls_data.fallbackInterval) clearInterval(kls_data.fallbackInterval);
         kls_end();
     }
 }
@@ -1105,10 +1118,8 @@ window.addEventListener('load', function() {
           })
           .subscribe(function(status) {
               if (status === 'SUBSCRIBED') {
-                  // Minta daftar kelompok ke guru
                   studentChannel.send({ type: 'broadcast', event: 'request_sync', payload: {} });
                   
-                  // Jika dalam 3 detik tidak ada respon, gunakan default
                   setTimeout(function() {
                       if (document.getElementById('studentBuzzerList').children.length === 0) {
                           renderStudentBuzzer(['GARUDA', 'ELANG', 'RAJAWALI', 'MERPATI']);
@@ -1146,16 +1157,18 @@ window.addEventListener('load', function() {
                           setTimeout(function() { status.innerHTML = ''; }, 2000);
                       }
                       
-                      // Kirim sinyal ke layar guru via Realtime (REMOTE)
-                      studentChannel.send({ type: 'broadcast', event: 'buzz', payload: { team: t } });
+                      // KIRIM SINYAL KE DATABASE SUPABASE (FALLBACK UTAMA)
+                      // Ini akan ditangkap otomatis oleh PC Guru yang auto-check tiap 1 detik
+                      sb.from('kuis_buzzer').insert([
+                          { room: room, team: t, created_at: new Date().toISOString() }
+                      ]).then(function(res) {
+                          console.log('Sinyal buzzer terkirim ke DB!', res);
+                      }).catch(function(err) {
+                          console.error('Gagal kirim sinyal DB:', err);
+                      });
                       
-                      // FALLBACK: Jika Realtime bermasalah, paksa buka halaman guru dengan tag URL
-                      // Ini akan otomatis terdeteksi oleh PC guru dan membunyikan terompet
-                      try {
-                          var hostUrl = window.location.origin + window.location.pathname;
-                          var img = new Image();
-                          img.src = hostUrl + '#buzz-' + encodeURIComponent(t);
-                      } catch(e) {}
+                      // KIRIM SINYAL REALTIME BIASA
+                      studentChannel.send({ type: 'broadcast', event: 'buzz', payload: { team: t } });
                   });
                   list.appendChild(btn);
               });
