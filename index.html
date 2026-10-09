@@ -476,45 +476,34 @@ function playBuzzerHorn() {
     try {
         if (!kls_audioCtx) kls_audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         var ctx = kls_audioCtx;
+        if (ctx.state === 'suspended') ctx.resume();
         var dest = ctx.destination;
         
-        // Bunyi terompet memiliki banyak gelombang harmonic sekaligus agar megah
-        var freqs = [196.00, 261.63, 329.63, 392.00, 523.25]; // Chord G3 C4 E4 G4 C5
-        var oscs = [];
-        var gains = [];
-        
+        var freqs = [196.00, 261.63, 329.63, 392.00, 523.25];
         var masterGain = ctx.createGain();
         masterGain.gain.setValueAtTime(0.0001, ctx.currentTime);
-        masterGain.gain.exponentialRampToValueAtTime(0.8, ctx.currentTime + 0.03); // Attack cepat
-        masterGain.gain.setValueAtTime(0.8, ctx.currentTime + 0.4); // Hold
-        masterGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.8); // Release pelan
+        masterGain.gain.exponentialRampToValueAtTime(0.8, ctx.currentTime + 0.03);
+        masterGain.gain.setValueAtTime(0.8, ctx.currentTime + 0.4);
+        masterGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.8);
         masterGain.connect(dest);
         
         freqs.forEach(function(f) {
             var osc = ctx.createOscillator();
-            osc.type = 'sawtooth'; // bentuk gelombang terompet
+            osc.type = 'sawtooth';
             osc.frequency.value = f;
-            
             var gain = ctx.createGain();
-            gain.gain.value = 0.2; // volume per harmonic
-            
-            // Tambahkan sedikit detune untuk efek megah/wobbling
+            gain.gain.value = 0.2;
             osc.detune.value = Math.random() * 10 - 5;
-            
             osc.connect(gain);
             gain.connect(masterGain);
             osc.start(ctx.currentTime);
             osc.stop(ctx.currentTime + 0.8);
-            
-            oscs.push(osc);
-            gains.push(gain);
         });
     } catch(e) { console.error('Audio Error:', e); }
 }
 
 var kls_data = { soal: [], kelompok: [], skor: [], soalIndex: 0, mode: 'Rebutan', timer: 15, intervalId: null, currentTeam: null, poin: 100, isBuzzed: false, isLocked: false, currentRoom: null, realtimeChannel: null };
 
-// Warna A, B, C, D yang cerah
 var kls_opt_colors = [
     { grad: 'from-red-500 to-rose-600', glow: 'shadow-[0_0_20px_rgba(244,63,94,0.7)]', border: 'border-red-400' },
     { grad: 'from-blue-500 to-indigo-600', glow: 'shadow-[0_0_20px_rgba(59,130,246,0.7)]', border: 'border-blue-400' },
@@ -522,7 +511,6 @@ var kls_opt_colors = [
     { grad: 'from-green-400 to-emerald-500', glow: 'shadow-[0_0_20px_rgba(16,185,129,0.7)]', border: 'border-green-400' }
 ];
 
-// Warna per Tim (Buzzer)
 var kls_team_colors = [
     { grad: 'from-pink-500 to-rose-600', glow: 'shadow-[0_0_15px_rgba(236,72,153,0.6)]' },
     { grad: 'from-cyan-400 to-blue-500', glow: 'shadow-[0_0_15px_rgba(34,211,238,0.6)]' },
@@ -696,18 +684,20 @@ async function kls_start(id) {
     
     kls_data.realtimeChannel = sb.channel(kls_data.currentRoom)
       .on('broadcast', { event: 'buzz' }, function(payload) {
-          // INI BAGIAN YANG MEMBUAT SINYAL DARI HP TERHUBUNG
-          if (kls_data.kelompok.includes(payload.message.team)) {
-              kls_buzz(payload.message.team); // Langsung eksekusi buzzer di layar guru
+          if (payload && payload.message && payload.message.team) {
+              if (kls_data.kelompok.includes(payload.message.team)) {
+                  kls_buzz(payload.message.team);
+              }
           }
       })
-      .on('broadcast', { event: 'request_sync' }, function() {
-          // Mengirim daftar kelompok ke HP siswa
-          kls_data.realtimeChannel.send({
-              type: 'broadcast',
-              event: 'sync',
-              payload: { teams: kls_data.kelompok }
-          });
+      .on('broadcast', { event: 'request_sync' }, function(payload) {
+          if (kls_data.realtimeChannel) {
+              kls_data.realtimeChannel.send({
+                  type: 'broadcast',
+                  event: 'sync',
+                  payload: { teams: kls_data.kelompok }
+              });
+          }
       })
       .subscribe();
       
@@ -774,7 +764,6 @@ function kls_renderLive() {
     
     html += '<div class="bg-slate-950 rounded-3xl shadow-2xl overflow-hidden border border-slate-700">';
     
-    // Header
     html += '  <div class="bg-slate-900 p-4 flex flex-col md:flex-row justify-between items-center text-white gap-3 border-b border-slate-800">';
     html += '    <div class="flex items-center gap-3">';
     html += '      <div class="bg-white/10 p-2 rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="filter: drop-shadow(0 0 5px rgba(251,191,36,0.7));"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19c0 1.1-.9 2-2 2H5a2 2 0 01-2-2v-7a2 2 0 012-2h1.882a1 1 0 00.941-.665l3.47-9.353a1 1 0 011.4-.538l1.27.635a1 1 0 01.53.53v3.47a1 1 0 00.293.707l.707.707a1 1 0 001.414 0l1-1a1 1 0 011.414 0l1 1a1 1 0 00.707.293h.118a1 1 0 01.998.898l.011.102a1 1 0 01-.998 1.102H21a2 2 0 01-2-2v-7a2 2 0 00-2-2h-1.882a1 1 0 01-.941-.665l-1.47-3.97a1 1 0 00-.4-.538l-1.27-.635a1 1 0 00-1.4.538l-3.47 9.353z" /></svg></div>';
@@ -789,10 +778,8 @@ function kls_renderLive() {
     html += '    </div>';
     html += '  </div>';
     
-    // Progress
     html += '  <div class="bg-slate-800 h-2 w-full"><div class="bg-gradient-to-r from-cyan-400 to-blue-500 h-2 transition-all duration-500" style="width:'+progress+'%; box-shadow: 0 0 10px rgba(59,130,246,0.8);"></div></div>';
     
-    // Soal & Pilihan
     html += '  <div class="p-6 md:p-8 text-center bg-slate-900 min-h-[200px] flex flex-col justify-center">';
     html += '    <p class="text-xl md:text-2xl font-bold text-white mb-6" style="text-shadow: 0 0 10px rgba(255,255,255,0.3);">'+q.text+'</p>';
     html += '    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-2xl mx-auto">';
@@ -811,7 +798,6 @@ function kls_renderLive() {
     html += '    </div>';
     html += '  </div>';
     
-    // Buzzer & Timer
     html += '  <div class="bg-slate-950 p-6 border-t border-slate-800 flex flex-col items-center">';
     
     if (!kls_data.isBuzzed && !kls_data.isLocked) {
@@ -838,14 +824,12 @@ function kls_renderLive() {
     
     html += '    <button onclick="kls_skip()" class="mt-4 text-xs text-slate-400 hover:text-red-500 underline">Lewati Soal Ini</button>';
     
-    // Timer
     html += '    <div class="mt-6 flex items-center gap-3 text-white">';
     html += '      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="filter: drop-shadow(0 0 5px rgba(239,68,68,0.7));"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
     html += '      <div class="text-4xl font-mono font-bold bg-slate-800 px-4 py-1 rounded-xl text-white border border-slate-700" style="text-shadow: 0 0 10px rgba(255,255,255,0.3);"><span id="kls_timer">'+timer+'</span> <span class="text-sm">detik</span></div>';
     html += '    </div>';
     html += '  </div>';
     
-    // Scoreboard
     html += '  <div class="bg-slate-900 p-6 border-t border-slate-800">';
     html += '    <h4 class="text-center text-white font-bold text-lg mb-4 flex items-center justify-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="filter: drop-shadow(0 0 5px rgba(251,191,36,0.7));"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg> PAPAN SKOR REAL-TIME</h4>';
     html += '    <div class="max-w-2xl mx-auto space-y-2" id="kls_scoreboard">'+kls_renderScore()+'</div>';
@@ -887,7 +871,7 @@ function kls_buzz(team) {
     if(kls_data.intervalId) clearInterval(kls_data.intervalId); 
     kls_data.currentTeam = team;
     kls_data.isBuzzed = true;
-    playBuzzerHorn(); // BUNYIKAN TEROMPET SAAT MENERIMA SINYAL DARI HP
+    playBuzzerHorn(); // BUNYIKAN TEROMPET
     kls_renderLive();
 }
 
@@ -1090,18 +1074,19 @@ window.addEventListener('load', function() {
     var hash = window.location.hash;
     if (hash.indexOf('#join-') !== -1) {
         var room = hash.replace('#join-', '');
-        document.body.innerHTML = '<div id="studentApp" class="min-h-[100vh] bg-slate-900 flex flex-col items-center justify-center p-6 text-center"><h1 class="text-3xl font-extrabold text-white mb-4">🔔 Buzzer Online</h1><p class="text-slate-300 mb-8">Pilih Nama Tim Kamu untuk Mengirim Sinyal ke Layar Guru</p><div id="studentBuzzerList" class="grid grid-cols-2 gap-4 w-full max-w-md"></div><div id="buzzStatus" class="mt-6 h-8 text-green-400 font-bold text-lg flex items-center justify-center"></div><p class="text-slate-500 text-xs mt-12">Tersambung ke Room: <span class="text-green-400 font-mono">'+room+'</span></p></div>';
         document.title = "Buzzer Kuis Siswa";
         
-        var channel = sb.channel(room)
+        // Buat UI HP Siswa
+        document.documentElement.innerHTML = '<head><title>Buzzer Kuis Siswa</title></head><body><div class="min-h-[100vh] bg-slate-900 flex flex-col items-center justify-center p-6 text-center"><h1 class="text-3xl font-extrabold text-white mb-4">🔔 Buzzer Online</h1><p class="text-slate-300 mb-8">Pilih Nama Tim Kamu untuk Mengirim Sinyal ke Layar Guru</p><div id="studentBuzzerList" class="grid grid-cols-2 gap-4 w-full max-w-md"></div><div id="buzzStatus" class="mt-6 h-8 text-green-400 font-bold text-lg flex items-center justify-center"></div><p class="text-slate-500 text-xs mt-12">Tersambung ke Room: <span class="text-green-400 font-mono">'+room+'</span></p></div></body>';
+        
+        var studentChannel = sb.channel(room)
           .on('broadcast', { event: 'sync' }, function(payload) {
-              // Menerima daftar kelompok terbaru dari guru
               renderStudentBuzzer(payload.message.teams || []);
           })
-          .subscribe(async function(status) {
+          .subscribe(function(status) {
               if (status === 'SUBSCRIBED') {
                   // Minta daftar kelompok ke guru
-                  channel.send({ type: 'broadcast', event: 'request_sync', payload: {} });
+                  studentChannel.send({ type: 'broadcast', event: 'request_sync', payload: {} });
                   
                   // Jika dalam 3 detik tidak ada respon, gunakan default
                   setTimeout(function() {
@@ -1123,7 +1108,7 @@ window.addEventListener('load', function() {
                   btn.className = 'bg-gradient-to-br ' + col + ' text-white font-bold py-8 rounded-2xl shadow-lg hover:scale-105 transition transform active:scale-95';
                   btn.innerHTML = '<span class="block text-3xl mb-1">🔔</span>' + t;
                   
-                  // Solusi AutoPlay Policy: Audio hanya bisa dimainkan setelah user interact
+                  // Saat tombol HP ditekan
                   btn.addEventListener('pointerdown', function() {
                       if (!kls_audioCtx) {
                           kls_audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1142,7 +1127,7 @@ window.addEventListener('load', function() {
                       }
                       
                       // Kirim sinyal ke layar guru
-                      channel.send({ type: 'broadcast', event: 'buzz', payload: { team: t } });
+                      studentChannel.send({ type: 'broadcast', event: 'buzz', payload: { team: t } });
                   });
                   list.appendChild(btn);
               });
