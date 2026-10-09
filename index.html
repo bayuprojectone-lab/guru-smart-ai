@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="id">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -180,14 +179,12 @@ input,textarea,select{font-size:16px!important}
 </div>
 <div id="toast" class="hidden fixed bottom-5 right-5 z-[60] bg-slate-800 text-white px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2"></div>
 <div id="printArea"></div>
-<!-- 1. PANGGIL FILE CONFIG.JS DI SINI -->
-<script src="/js/config.js"></script>
-
-<!-- 2. LANJUT DENGAN SCRIPT APLIKASI UTAMA ANDA -->
 <script>
-// Hapus kode SUPABASE_URL dan SUPABASE_ANON_KEY dari sini, 
-// karena sudah dipindah ke js/config.js
-
+var SUPABASE_URL='https://urslwiueyqhoykjhxmqq.supabase.co';
+var SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVyc2x3aXVleXFob3lramh4bXFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2NTIxMDgsImV4cCI6MjEwNTIyODEwOH0.cRHI2m9lasLJ6yX2vc1ioxJGm7bLRsCIptmiNtpz5go';
+var sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+var AI_IMG='https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe';
+var TEACHER_IMG='https://z-cdn-media.chatglm.cn/files/75ded651-0d28-42b6-ac6e-372dcb2f3a18.png?auth_key=1890942260-f34ada6a38934170ac18de993429b194-0-e2c31b27403b6a0ff985778a913412f7';
 function imgFallback(img){img.onerror=null;img.src='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="#1e3a8a"/><circle cx="50" cy="45" r="20" fill="white"/><rect x="35" y="40" width="10" height="6" rx="3" fill="#3b82f6"/><rect x="55" y="40" width="10" height="6" rx="3" fill="#3b82f6"/><path d="M30 55 Q50 70 70 55 L70 65 Q50 80 30 65 Z" fill="#3b82f6"/><text x="50" y="95" font-size="15" text-anchor="middle" fill="white" font-family="sans-serif" font-weight="bold">AI</text></svg>';}
 var DB={get:async function(t){if(!currentUser||!currentUser.id)return[];try{var r=await sb.from(t).select('*').eq('user_id',currentUser.id);if(r.error){console.error('Err:',r.error);showToast('Tabel '+t+' belum dibuat di database!','error');return[];}return r.data||[];}catch(e){console.error('Crash diambil:',e);return[];}},insert:async function(t,p){var r=await sb.from(t).insert([{...p,user_id:currentUser.id}]).select();if(r.error){console.error('Err:',r.error);showToast('Gagal: '+r.error.message,'error');return null;}return r.data;},update:async function(t,id,p){var r=await sb.from(t).update(p).eq('id',id).eq('user_id',currentUser.id).select();if(r.error){console.error('Err:',r.error);showToast('Gagal: '+r.error.message,'error');return null;}return r.data;},remove:async function(t,id){var r=await sb.from(t).delete().eq('id',id).eq('user_id',currentUser.id);if(r.error){console.error('Err:',r.error);showToast('Gagal: '+r.error.message,'error');return false;}return true;}};
 var currentUser=null;var currentPage='dashboard';var html5QrCode=null;var currentDaysInMonth=31;
@@ -1314,12 +1311,5 @@ window.addEventListener('load', function() {
     }
 });
 </script>
-<!-- Panggil file config.js di sini -->
-
-<!-- Script utama aplikasi Anda dimulai dari sini -->
-<script>
-var AI_IMG='https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe';
-var TEACHER_IMG='https://z-cdn-media.chatglm.cn/files/75ded651-0d28-42b6-ac6e-372dcb2f3a18.png?auth_key=1890942260-f34ada6a38934170ac18de993429b194-0-e2c31b27403b6a0ff985778a913412f7';
-// ... (lanjutkan dengan kode JavaScript Anda yang lainnya seperti biasa)
 </body>
 </html>
