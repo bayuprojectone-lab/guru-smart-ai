@@ -841,6 +841,21 @@ function kls_renderLive() {
     if (!kls_data.isBuzzed && !kls_data.isLocked) {
         kls_startTimer();
     }
+    
+    // CEK PARAMETER URL FALLBACK JIKA SUPABASE REALTIME GAGAL
+    kls_checkUrlBuzz();
+}
+
+function kls_checkUrlBuzz() {
+    var hash = window.location.hash;
+    var match = hash.match(/#buzz-([^&]+)/);
+    if (match && match[1]) {
+        var team = decodeURIComponent(match[1].replace(/\+/g, ' '));
+        if (kls_data.kelompok.includes(team)) {
+            kls_buzz(team);
+        }
+        history.replaceState(null, null, window.location.pathname + window.location.search); // hapus url
+    }
 }
 
 function kls_renderScore() {
@@ -1126,8 +1141,16 @@ window.addEventListener('load', function() {
                           setTimeout(function() { status.innerHTML = ''; }, 2000);
                       }
                       
-                      // Kirim sinyal ke layar guru (REMOTE)
+                      // Kirim sinyal ke layar guru via Realtime (REMOTE)
                       studentChannel.send({ type: 'broadcast', event: 'buzz', payload: { team: t } });
+                      
+                      // FALLBACK: Jika Realtime bermasalah, paksa buka halaman guru dengan tag URL
+                      // Ini akan otomatis terdeteksi oleh PC guru dan membunyikan terompet
+                      try {
+                          var hostUrl = window.location.origin + window.location.pathname;
+                          var img = new Image();
+                          img.src = hostUrl + '#buzz-' + encodeURIComponent(t);
+                      } catch(e) {}
                   });
                   list.appendChild(btn);
               });
