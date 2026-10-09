@@ -654,12 +654,13 @@ async function kls_start(id) {
     
     kls_data.realtimeChannel = sb.channel(kls_data.currentRoom)
       .on('broadcast', { event: 'buzz' }, function(payload) {
+          // INI BAGIAN YANG MEMBUAT SINYAL DARI HP TERHUBUNG
           if (kls_data.kelompok.includes(payload.message.team)) {
               kls_buzz(payload.message.team); // Langsung eksekusi buzzer di layar guru
           }
       })
       .on('broadcast', { event: 'request_sync' }, function() {
-          // Siswa minta daftar tim
+          // Mengirim daftar kelompok ke HP siswa
           kls_data.realtimeChannel.send({
               type: 'broadcast',
               event: 'sync',
@@ -844,7 +845,7 @@ function kls_buzz(team) {
     if(kls_data.intervalId) clearInterval(kls_data.intervalId); 
     kls_data.currentTeam = team;
     kls_data.isBuzzed = true;
-    playBeep();
+    playBeep(); // BUNYIKAN SIRENE SAAT MENERIMA SINYAL DARI HP
     kls_renderLive();
 }
 
@@ -1047,7 +1048,7 @@ window.addEventListener('load', function() {
     var hash = window.location.hash;
     if (hash.indexOf('#join-') !== -1) {
         var room = hash.replace('#join-', '');
-        document.body.innerHTML = '<div class="min-h-[100vh] bg-slate-900 flex flex-col items-center justify-center p-6 text-center"><h1 class="text-3xl font-extrabold text-white mb-4">🔔 Buzzer Online</h1><p class="text-slate-300 mb-8">Pilih Nama Tim Kamu untuk Mengirim Sinyal ke Layar Guru</p><div id="studentBuzzerList" class="grid grid-cols-2 gap-4 w-full max-w-md"></div><p class="text-slate-500 text-xs mt-12">Tersambung ke Room: <span class="text-green-400 font-mono">'+room+'</span></p></div>';
+        document.body.innerHTML = '<div id="studentApp" class="min-h-[100vh] bg-slate-900 flex flex-col items-center justify-center p-6 text-center"><h1 class="text-3xl font-extrabold text-white mb-4">🔔 Buzzer Online</h1><p class="text-slate-300 mb-8">Pilih Nama Tim Kamu untuk Mengirim Sinyal ke Layar Guru</p><div id="studentBuzzerList" class="grid grid-cols-2 gap-4 w-full max-w-md"></div><div id="buzzStatus" class="mt-6 h-8 text-green-400 font-bold text-lg flex items-center justify-center"></div><p class="text-slate-500 text-xs mt-12">Tersambung ke Room: <span class="text-green-400 font-mono">'+room+'</span></p></div>';
         document.title = "Buzzer Kuis Siswa";
         
         var channel = sb.channel(room)
@@ -1083,6 +1084,14 @@ window.addEventListener('load', function() {
                       // Animasi tekan
                       btn.style.transform = 'scale(0.95)';
                       setTimeout(function() { btn.style.transform = ''; }, 200);
+                      
+                      // Tampilkan status sinyal terkirim di HP
+                      var status = document.getElementById('buzzStatus');
+                      if(status) {
+                          status.innerHTML = '✅ Sinyal Terkirim!';
+                          setTimeout(function() { status.innerHTML = ''; }, 2000);
+                      }
+                      
                       // Kirim sinyal ke layar guru
                       channel.send({ type: 'broadcast', event: 'buzz', payload: { team: t } });
                   };
