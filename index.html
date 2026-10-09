@@ -544,10 +544,10 @@ function playBuzzerHorn() {
 }
 
 function playCorrectSound() {
-    kls_unlockAudio(); // Pastikan audio context aktif
+    kls_unlockAudio();
     var ctx = kls_audioCtx;
     if(!ctx) return;
-    var notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+    var notes = [523.25, 659.25, 783.99, 1046.50]; 
     notes.forEach(function(freq, i) {
         var osc = ctx.createOscillator();
         var gain = ctx.createGain();
@@ -557,7 +557,7 @@ function playCorrectSound() {
         osc.frequency.value = freq;
         var t = ctx.currentTime + i * 0.1;
         gain.gain.setValueAtTime(0.0001, t);
-        gain.gain.exponentialRampToValueAtTime(0.5, t + 0.05); // Volume dinaikkan jadi 0.5
+        gain.gain.exponentialRampToValueAtTime(0.5, t + 0.05);
         gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
         osc.start(t);
         osc.stop(t + 0.4);
@@ -565,7 +565,7 @@ function playCorrectSound() {
 }
 
 function playWrongSound() {
-    kls_unlockAudio(); // Pastikan audio context aktif
+    kls_unlockAudio();
     var ctx = kls_audioCtx;
     if(!ctx) return;
     var osc = ctx.createOscillator();
@@ -575,7 +575,7 @@ function playWrongSound() {
     osc.type = 'sawtooth';
     osc.frequency.setValueAtTime(200, ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.6);
-    gain.gain.setValueAtTime(0.4, ctx.currentTime); // Volume dinaikkan jadi 0.4
+    gain.gain.setValueAtTime(0.4, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.6);
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.6);
@@ -907,7 +907,7 @@ function kls_renderLive() {
     html += '    <div class="bg-slate-800 h-2 w-full rounded-full mb-6"><div class="bg-gradient-to-r from-cyan-400 to-blue-500 h-2 rounded-full transition-all duration-500" style="width:'+progress+'%; box-shadow: 0 0 10px rgba(59,130,246,0.8);"></div></div>';
     
     html += '    <p class="text-xl md:text-2xl font-extrabold text-white mb-8 tracking-wide" style="text-shadow: 0 0 15px rgba(255,255,255,0.3);">'+q.text+'</p>';
-    html += '    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">';
+    html += '    <div id="kls_options_grid" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">';
     
     q.options.forEach(function(opt, index) {
         var safeOpt = encodeURIComponent(opt);
@@ -923,30 +923,10 @@ function kls_renderLive() {
     html += '    </div>';
     html += '  </div>';
     
-    html += '  <div class="relative z-10 lg:col-span-1 bg-slate-900/60 backdrop-blur-md p-6 border-l border-white/10 flex flex-col justify-between">';
+    html += '  <div id="kls_side_panel" class="relative z-10 lg:col-span-1 bg-slate-900/60 backdrop-blur-md p-6 border-l border-white/10 flex flex-col justify-between">';
     
-    html += '    <div class="flex flex-col items-center">';
-    if (!kls_data.isBuzzed && !kls_data.isLocked) {
-        html += '      <h4 class="text-slate-300 font-bold mb-4 text-lg text-center">🔔 Menunggu Buzzer dari HP / atau tekan manual:</h4>';
-        html += '      <div class="flex flex-col gap-3 w-full">';
-        kls_data.kelompok.forEach(function(t, i) {
-            var style = teamStyleMap[t];
-            html += '      <button onclick="kls_buzz(\''+t+'\')" class="bg-gradient-to-r '+style.grad+' text-white font-bold py-3 px-4 rounded-2xl flex items-center justify-center gap-2 hover:scale-105 transition transform active:scale-95 '+style.glow+'">';
-            html += '        <span class="text-xl">🔔</span>'+t;
-            html += '      </button>';
-        });
-        html += '      </div>';
-    } else if (kls_data.isBuzzed && !kls_data.isLocked) {
-        var style = teamStyleMap[kls_data.currentTeam];
-        html += '      <div class="bg-gradient-to-r '+style.grad+' border border-white/20 text-white px-4 py-4 rounded-2xl font-bold text-xl flex flex-col items-center gap-2 animate-pulse '+style.glow+'">';
-        html += '        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
-        html += '        <span>GILIRAN</span><span>'+kls_data.currentTeam+'</span>';
-        html += '      </div>';
-    } else {
-         html += '      <div class="bg-slate-800 border border-slate-700 text-slate-300 px-6 py-3 rounded-lg font-bold text-base flex items-center gap-2">';
-         html += '        ⏳ Menunggu soal berikutnya...';
-         html += '      </div>';
-    }
+    html += '    <div id="kls_buzzer_area" class="flex flex-col items-center">';
+    html += kls_renderBuzzerArea(teamStyleMap);
     html += '    </div>';
     
     html += '    <div class="mt-6 flex flex-col items-center text-white">';
@@ -969,6 +949,32 @@ function kls_renderLive() {
         kls_startTimer();
         playBgMusic(); 
     }
+}
+
+function kls_renderBuzzerArea(teamStyleMap) {
+    var html = '';
+    if (!kls_data.isBuzzed && !kls_data.isLocked) {
+        html += '<h4 class="text-slate-300 font-bold mb-4 text-lg text-center">🔔 Menunggu Buzzer dari HP / atau tekan manual:</h4>';
+        html += '<div class="flex flex-col gap-3 w-full">';
+        kls_data.kelompok.forEach(function(t, i) {
+            var style = teamStyleMap[t];
+            html += '<button onclick="kls_buzz(\''+t+'\')" class="bg-gradient-to-r '+style.grad+' text-white font-bold py-3 px-4 rounded-2xl flex items-center justify-center gap-2 hover:scale-105 transition transform active:scale-95 '+style.glow+'">';
+            html += '  <span class="text-xl">🔔</span>'+t;
+            html += '</button>';
+        });
+        html += '</div>';
+    } else if (kls_data.isBuzzed && !kls_data.isLocked) {
+        var style = teamStyleMap[kls_data.currentTeam];
+        html += '<div class="bg-gradient-to-r '+style.grad+' border border-white/20 text-white px-4 py-4 rounded-2xl font-bold text-xl flex flex-col items-center gap-2 animate-pulse '+style.glow+'">';
+        html += '  <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
+        html += '  <span>GILIRAN</span><span>'+kls_data.currentTeam+'</span>';
+        html += '</div>';
+    } else {
+        html += '<div class="bg-slate-800 border border-slate-700 text-slate-300 px-6 py-3 rounded-lg font-bold text-base flex items-center gap-2">';
+        html += '  ⏳ Menunggu soal berikutnya...';
+        html += '</div>';
+    }
+    return html;
 }
 
 function kls_renderScore() {
@@ -1004,7 +1010,22 @@ function kls_buzz(team) {
     
     kls_data.currentTeam = team;
     kls_data.isBuzzed = true;
-    kls_renderLive();
+
+    // UPDATE UI SMOOTH (Tanpa render ulang seluruh kontainer)
+    document.querySelectorAll('#kls_options_grid .opt-card').forEach(function(el) {
+        el.classList.remove('cursor-not-allowed', 'opacity-50');
+        el.classList.add('cursor-pointer', 'hover:scale-[1.02]', 'hover:brightness-110');
+        el.classList.remove('bg-slate-800/50');
+        el.classList.add('bg-slate-800');
+    });
+
+    var teamStyleMap = {};
+    kls_data.kelompok.forEach(function(t, i){ teamStyleMap[t] = kls_team_colors[i % kls_team_colors.length]; });
+    
+    var buzzerArea = document.getElementById('kls_buzzer_area');
+    if (buzzerArea) {
+        buzzerArea.innerHTML = kls_renderBuzzerArea(teamStyleMap);
+    }
 }
 
 function kls_answer(opt) {
@@ -1018,7 +1039,6 @@ function kls_answer(opt) {
     if(kls_data.intervalId) clearInterval(kls_data.intervalId);
     stopBgMusic(); 
 
-    // WAJIB UNLOCK AUDIO LAGI SETELAH YOUTUBE DIPAUSE
     kls_unlockAudio();
     
     var q = kls_data.soal[kls_data.soalIndex];
@@ -1028,7 +1048,8 @@ function kls_answer(opt) {
     var teamStyleMap = {};
     kls_data.kelompok.forEach(function(t, i){ teamStyleMap[t] = kls_team_colors[i % kls_team_colors.length]; });
     
-    document.querySelectorAll('#kls_live_container .opt-card').forEach(function(el) {
+    // UPDATE PILIHAN JAWABAN SMOOTH (Tanpa render ulang seluruh kontainer)
+    document.querySelectorAll('#kls_options_grid .opt-card').forEach(function(el) {
         var optText = decodeURIComponent(el.dataset.opt);
         var isThisCorrect = optText.indexOf(correct + '.') === 0 || optText.startsWith(correct + '.');
         
@@ -1048,13 +1069,19 @@ function kls_answer(opt) {
             el.className = 'opt-card bg-slate-800 p-4 rounded-xl border-2 border-slate-700 text-slate-500 opacity-50 flex items-center gap-3';
         }
     });
+
+    // Update side panel to loading state
+    var buzzerArea = document.getElementById('kls_buzzer_area');
+    if (buzzerArea) {
+        buzzerArea.innerHTML = '<div class="bg-slate-800 border border-slate-700 text-slate-300 px-6 py-3 rounded-lg font-bold text-base flex items-center gap-2">⏳ Menunggu soal berikutnya...</div>';
+    }
     
     var badgeStyle = teamStyleMap[kls_data.currentTeam] || { grad: 'from-slate-700 to-slate-800', glow: '' };
     var scoreBadge = document.createElement('div');
     scoreBadge.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[100] text-white text-4xl font-extrabold py-4 px-8 rounded-2xl flex items-center gap-2 bg-gradient-to-br '+badgeStyle.grad+' '+badgeStyle.glow;
     
     if (isCorrect) {
-        playCorrectSound(); // SUARA BENAR
+        playCorrectSound(); 
         kls_data.skor[kls_data.currentTeam] += kls_data.poin;
         scoreBadge.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg> +'+kls_data.poin;
         scoreBadge.style.animation = 'kls_bounce 0.5s ease-out';
@@ -1062,7 +1089,7 @@ function kls_answer(opt) {
         kls_confetti();
         showToast('🎉 BENAR! '+kls_data.currentTeam+' +'+kls_data.poin+' POIN', 'success');
     } else {
-        playWrongSound(); // SUARA SALAH
+        playWrongSound(); 
         kls_data.skor[kls_data.currentTeam] -= Math.floor(kls_data.poin / 2);
         scoreBadge.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" /></svg> -'+Math.floor(kls_data.poin / 2);
         scoreBadge.style.animation = 'kls_shake 0.4s ease-in-out';
@@ -1086,7 +1113,7 @@ function kls_answer(opt) {
         kls_data.isBuzzed = false;
         kls_data.isLocked = false;
         if (kls_data.soalIndex < kls_data.soal.length) {
-            kls_renderLive();
+            kls_renderLive(); // Render soal baru
         } else {
             kls_end();
         }
