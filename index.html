@@ -476,7 +476,7 @@ function playBuzzerHorn() {
     try {
         if (!kls_audioCtx) kls_audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         var ctx = kls_audioCtx;
-        if (ctx.state === 'suspended') ctx.resume();
+        if (ctx.state === 'suspended') ctx.resume(); // Wajib resume untuk bypass autoplay policy
         var dest = ctx.destination;
         
         var freqs = [196.00, 261.63, 329.63, 392.00, 523.25]; // Chord G3 C4 E4 G4 C5
@@ -519,7 +519,6 @@ var kls_team_colors = [
 ];
 
 async function renderKuisKelas() {
-    // Bersihkan listener fallback jika ada
     if (kls_data.fallbackInterval) clearInterval(kls_data.fallbackInterval);
     if (kls_data.realtimeChannel) kls_data.realtimeChannel.unsubscribe();
 
@@ -682,22 +681,23 @@ async function kls_start(id) {
     kls_data.isLocked = false;
     if(kls_data.intervalId) clearInterval(kls_data.intervalId); 
     
-    // Generate Room Code Unik
     kls_data.currentRoom = 'kls-' + Math.random().toString(36).substr(2, 6);
-    
-    // Hapus sinyal buzzer lama di database
     await sb.from('kuis_buzzer').delete().eq('room', kls_data.currentRoom);
     
     if (kls_data.realtimeChannel) kls_data.realtimeChannel.unsubscribe();
     
-    // SISTEM DUAL CORE (REALTIME + FALLBACK DB)
-    
-    // 1. Jalur Realtime (Jika diaktifkan di Supabase)
-    kls_data.realtimeChannel = sb.channel(kls_data.currentRoom)
+    // PRIORITAS 1: WEBSOCKET REALTIME (ZERO DELAY)
+    kls_data.realtimeChannel = sb.channel(kls_data.currentRoom, {
+      config: {
+        broadcast: {
+          self: false // Hanya terima dari orang lain (HP siswa)
+        }
+      }
+    })
       .on('broadcast', { event: 'buzz' }, function(payload) {
           if (payload && payload.message && payload.message.team) {
               if (kls_data.kelompok.includes(payload.message.team)) {
-                  kls_buzz(payload.message.team);
+                  kls_buzz(payload.message.team); // EKSEKUSI SEKETIKA
               }
           }
       })
@@ -712,22 +712,21 @@ async function kls_start(id) {
       })
       .subscribe();
       
-    // 2. Jalur Fallback (Auto-check Database tiap 1 detik)
+    // PRIORITAS 2: FALLBACK DATABASE (CEK CEPAT 200ms)
     if (kls_data.fallbackInterval) clearInterval(kls_data.fallbackInterval);
     kls_data.fallbackInterval = setInterval(async function() {
         if (kls_data.isLocked || kls_data.isBuzzed || !kls_data.currentRoom) return;
-        
         try {
             var res = await sb.from('kuis_buzzer').select('*').eq('room', kls_data.currentRoom).limit(1);
             if (res.data && res.data.length > 0) {
                 var team = res.data[0].team;
                 if (kls_data.kelompok.includes(team)) {
-                    kls_buzz(team); // Langsung eksekusi bunyi di PC Guru
-                    await sb.from('kuis_buzzer').delete().eq('room', kls_data.currentRoom); // Bersihkan
+                    kls_buzz(team);
+                    await sb.from('kuis_buzzer').delete().eq('room', kls_data.currentRoom);
                 }
             }
         } catch(e) {}
-    }, 1000);
+    }, 200);
       
     kls_showJoinQR();
 }
@@ -749,6 +748,12 @@ function kls_showJoinQR() {
     var div = document.createElement('div');
     div.innerHTML = html;
     document.body.appendChild(div);
+    
+    // Coba unlock audio saat tombol ditekan agar delay 0 saat buzzer masuk
+    div.querySelector('button').addEventListener('click', function() {
+        if (!kls_audioCtx) kls_audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (kls_audioCtx.state === 'suspended') kls_audioCtx.resume();
+    });
     
     setTimeout(function() {
         try {
@@ -828,7 +833,6 @@ function kls_renderLive() {
     html += '  <div class="bg-slate-950 p-6 border-t border-slate-800 flex flex-col items-center">';
     
     if (!kls_data.isBuzzed && !kls_data.isLocked) {
-        // TIDAK ADA TOMBOL MANUAL, CUMA MENUNGGU REMOTE DARI HP
         html += '    <h4 class="text-slate-300 font-bold mb-4 text-lg text-center">🔔 Menunggu Regu menekan Buzzer dari HP...</h4>';
         html += '    <div class="flex flex-wrap justify-center gap-4 mb-2">';
         
@@ -840,7 +844,6 @@ function kls_renderLive() {
         });
     } else if (kls_data.isBuzzed && !kls_data.isLocked) {
         var style = teamStyleMap[kls_data.currentTeam];
-        // OTOMATIS MENAMPILKAN REGU YANG NGEKLIK DI HP
         html += '    <div class="bg-gradient-to-r '+style.grad+' border border-white/20 text-white px-8 py-4 rounded-lg font-bold text-2xl flex items-center gap-2 animate-pulse '+style.glow+'">';
         html += '      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
         html += '      GILIRAN REGU: '+kls_data.currentTeam+' ! Pilih jawaban di atas.';
@@ -860,14 +863,13 @@ function kls_renderLive() {
     html += '  </div>';
     
     html += '  <div class="bg-slate-900 p-6 border-t border-slate-800">';
-    html += '    <h4 class="text-center text-white font-bold text-lg mb-4 flex items-center justify-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="filter: drop-shadow(0 0 5px rgba(251,191,36,0.7));"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg> PAPAN SKOR REAL-TIME</h4>';
+    html += '    <h4 class="text-center text-white font-bold text-lg mb-4 flex items-center justify-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="filter: drop-shadow(0 0 5px rgba(251,191,36,0.7));"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2-888c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg> PAPAN SKOR REAL-TIME</h4>';
     html += '    <div class="max-w-2xl mx-auto space-y-2" id="kls_scoreboard">'+kls_renderScore()+'</div>';
     html += '  </div>';
     html += '</div>';
     
     c.innerHTML = html;
     
-    // TIMER JALAN OTOMATIS
     if (!kls_data.isBuzzed && !kls_data.isLocked) {
         kls_startTimer();
     }
@@ -899,9 +901,14 @@ function kls_buzz(team) {
     if (kls_data.isLocked) return; 
     if (kls_data.isBuzzed) return; 
     if(kls_data.intervalId) clearInterval(kls_data.intervalId); 
+    
+    // PAKSA RESUME AUDIO CONTEXT AGAR BUNYI SEKETIKA
+    if (!kls_audioCtx) kls_audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (kls_audioCtx.state === 'suspended') kls_audioCtx.resume();
+    
     kls_data.currentTeam = team;
     kls_data.isBuzzed = true;
-    playBuzzerHorn(); // BUNYI TEROMPET OTOMATIS DI PC
+    playBuzzerHorn(); // BUNYI TEROMPET SEKETIKA
     kls_renderLive();
 }
 
@@ -972,7 +979,6 @@ function kls_answer(opt) {
     
     kls_updateScore();
     
-    // OTOMATIS PINDAH KE SOAL SELANJUTNYA
     setTimeout(function() {
         kls_data.soalIndex++;
         kls_data.currentTeam = null;
@@ -1109,17 +1115,21 @@ window.addEventListener('load', function() {
         var room = hash.replace('#join-', '');
         document.title = "Buzzer Kuis Siswa";
         
-        // Buat UI HP Siswa
         document.documentElement.innerHTML = '<head><title>Buzzer Kuis Siswa</title></head><body><div class="min-h-[100vh] bg-slate-900 flex flex-col items-center justify-center p-6 text-center"><h1 class="text-3xl font-extrabold text-white mb-4">🔔 Buzzer Online</h1><p class="text-slate-300 mb-8">Pilih Nama Tim Kamu untuk Mengirim Sinyal ke Layar Guru</p><div id="studentBuzzerList" class="grid grid-cols-2 gap-4 w-full max-w-md"></div><div id="buzzStatus" class="mt-6 h-8 text-green-400 font-bold text-lg flex items-center justify-center"></div><p class="text-slate-500 text-xs mt-12">Tersambung ke Room: <span class="text-green-400 font-mono">'+room+'</span></p></div></body>';
         
-        var studentChannel = sb.channel(room)
+        var studentChannel = sb.channel(room, {
+          config: {
+            broadcast: {
+              self: false
+            }
+          }
+        })
           .on('broadcast', { event: 'sync' }, function(payload) {
               renderStudentBuzzer(payload.message.teams || []);
           })
           .subscribe(function(status) {
               if (status === 'SUBSCRIBED') {
                   studentChannel.send({ type: 'broadcast', event: 'request_sync', payload: {} });
-                  
                   setTimeout(function() {
                       if (document.getElementById('studentBuzzerList').children.length === 0) {
                           renderStudentBuzzer(['GARUDA', 'ELANG', 'RAJAWALI', 'MERPATI']);
@@ -1139,36 +1149,26 @@ window.addEventListener('load', function() {
                   btn.className = 'bg-gradient-to-br ' + col + ' text-white font-bold py-8 rounded-2xl shadow-lg hover:scale-105 transition transform active:scale-95';
                   btn.innerHTML = '<span class="block text-3xl mb-1">🔔</span>' + t;
                   
-                  // Saat tombol HP ditekan
+                  // SUDAH DIOPTIMALKAN UNTUK DELAY 0
                   btn.addEventListener('pointerdown', function() {
-                      if (!kls_audioCtx) {
-                          kls_audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                      }
-                      playBuzzerHorn(); // bunyi di HP
+                      if (!kls_audioCtx) kls_audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                      if (kls_audioCtx.state === 'suspended') kls_audioCtx.resume();
+                      playBuzzerHorn(); // bunyi lokal di HP seketika
                       
-                      // Animasi tekan
                       btn.style.transform = 'scale(0.95)';
                       setTimeout(function() { btn.style.transform = ''; }, 200);
                       
-                      // Tampilkan status sinyal terkirim di HP
                       var status = document.getElementById('buzzStatus');
                       if(status) {
                           status.innerHTML = '✅ Sinyal Terkirim!';
                           setTimeout(function() { status.innerHTML = ''; }, 2000);
                       }
                       
-                      // KIRIM SINYAL KE DATABASE SUPABASE (FALLBACK UTAMA)
-                      // Ini akan ditangkap otomatis oleh PC Guru yang auto-check tiap 1 detik
-                      sb.from('kuis_buzzer').insert([
-                          { room: room, team: t, created_at: new Date().toISOString() }
-                      ]).then(function(res) {
-                          console.log('Sinyal buzzer terkirim ke DB!', res);
-                      }).catch(function(err) {
-                          console.error('Gagal kirim sinyal DB:', err);
-                      });
-                      
-                      // KIRIM SINYAL REALTIME BIASA
+                      // KIRIM SINYAL REALTIME SEKETIKA (ZERO DELAY)
                       studentChannel.send({ type: 'broadcast', event: 'buzz', payload: { team: t } });
+                      
+                      // KIRIM DB FALLBACK ( asynchronous, tidak memblokir realtime )
+                      sb.from('kuis_buzzer').insert([{ room: room, team: t, created_at: new Date().toISOString() }]).then(function() {}).catch(function(e) {});
                   });
                   list.appendChild(btn);
               });
