@@ -470,57 +470,157 @@ function kls_confetti() {
     }
 }
 
-// Suara Terompet Kuis (Game Show Horn)
+// --- SISTEM AUDIO KUIS & YOUTUBE BACKSOUND ---
 var kls_audioCtx = null;
-function playBuzzerHorn() {
-    try {
-        if (!kls_audioCtx) kls_audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        var ctx = kls_audioCtx;
-        if (ctx.state === 'suspended') ctx.resume(); // Wajib resume untuk bypass autoplay policy
-        var dest = ctx.destination;
-        
-        var freqs = [196.00, 261.63, 329.63, 392.00, 523.25]; 
-        var masterGain = ctx.createGain();
-        masterGain.gain.setValueAtTime(0.0001, ctx.currentTime);
-        masterGain.gain.exponentialRampToValueAtTime(0.8, ctx.currentTime + 0.03);
-        masterGain.gain.setValueAtTime(0.8, ctx.currentTime + 0.4);
-        masterGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.8);
-        masterGain.connect(dest);
-        
-        freqs.forEach(function(f) {
-            var osc = ctx.createOscillator();
-            osc.type = 'sawtooth';
-            osc.frequency.value = f;
-            var gain = ctx.createGain();
-            gain.gain.value = 0.2;
-            osc.detune.value = Math.random() * 10 - 5;
-            osc.connect(gain);
-            gain.connect(masterGain);
-            osc.start(ctx.currentTime);
-            osc.stop(ctx.currentTime + 0.8);
+var kls_ytPlayer = null;
+var kls_ytApiLoaded = false;
+
+function kls_loadYouTubeApi() {
+    if (kls_ytApiLoaded) return;
+    var tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    kls_ytApiLoaded = true;
+}
+
+function kls_initYTPlayer() {
+    if (!document.getElementById('kls-yt-player')) {
+        var div = document.createElement('div');
+        div.id = 'kls-yt-player';
+        div.style.cssText = 'position:fixed; top:-9999px; left:-9999px; width:1px; height:1px; opacity:0;';
+        document.body.appendChild(div);
+    }
+
+    window.onYouTubeIframeAPIReady = function() {
+        kls_ytPlayer = new YT.Player('kls-yt-player', {
+            videoId: 'c6xBncftsUU', 
+            playerVars: {
+                'autoplay': 1,
+                'controls': 0,
+                'loop': 1,
+                'playlist': 'c6xBncftsUU', 
+                'mute': 0
+            },
+            events: {
+                'onReady': function(event) {
+                    event.target.setVolume(30); 
+                    event.target.playVideo();
+                }
+            }
         });
-    } catch(e) { console.error('Audio Error:', e); }
+    };
+}
+
+function kls_unlockAudio() {
+    if (!kls_audioCtx) kls_audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (kls_audioCtx.state === 'suspended') {
+        kls_audioCtx.resume().catch(function(e){ console.error("Audio resume failed", e); });
+    }
+}
+
+function playBuzzerHorn() {
+    kls_unlockAudio();
+    var ctx = kls_audioCtx;
+    var freqs = [196.00, 261.63, 329.63, 392.00, 523.25];
+    var masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    masterGain.gain.exponentialRampToValueAtTime(0.8, ctx.currentTime + 0.03);
+    masterGain.gain.setValueAtTime(0.8, ctx.currentTime + 0.4);
+    masterGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.8);
+    masterGain.connect(ctx.destination);
+    freqs.forEach(function(f) {
+        var osc = ctx.createOscillator();
+        osc.type = 'sawtooth';
+        osc.frequency.value = f;
+        var gain = ctx.createGain();
+        gain.gain.value = 0.2;
+        osc.detune.value = Math.random() * 10 - 5;
+        osc.connect(gain);
+        gain.connect(masterGain);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.8);
+    });
+}
+
+function playCorrectSound() {
+    kls_unlockAudio(); // Pastikan audio context aktif
+    var ctx = kls_audioCtx;
+    if(!ctx) return;
+    var notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+    notes.forEach(function(freq, i) {
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        var t = ctx.currentTime + i * 0.1;
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.exponentialRampToValueAtTime(0.5, t + 0.05); // Volume dinaikkan jadi 0.5
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
+        osc.start(t);
+        osc.stop(t + 0.4);
+    });
+}
+
+function playWrongSound() {
+    kls_unlockAudio(); // Pastikan audio context aktif
+    var ctx = kls_audioCtx;
+    if(!ctx) return;
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(200, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.6);
+    gain.gain.setValueAtTime(0.4, ctx.currentTime); // Volume dinaikkan jadi 0.4
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.6);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.6);
+}
+
+function playBgMusic() {
+    if (!kls_ytPlayer) {
+        kls_loadYouTubeApi();
+        kls_initYTPlayer();
+    } else {
+        try {
+            kls_ytPlayer.setVolume(30);
+            kls_ytPlayer.playVideo();
+        } catch(e) {}
+    }
+}
+
+function stopBgMusic() {
+    if (kls_ytPlayer) {
+        try {
+            kls_ytPlayer.pauseVideo();
+        } catch(e) {}
+    }
 }
 
 var kls_data = { soal: [], kelompok: [], skor: [], soalIndex: 0, mode: 'Rebutan', timer: 15, intervalId: null, currentTeam: null, poin: 100, isBuzzed: false, isLocked: false, currentRoom: null, realtimeChannel: null, fallbackInterval: null };
 
 var kls_opt_colors = [
-    { grad: 'from-red-500 to-rose-600', glow: 'shadow-[0_0_20px_rgba(244,63,94,0.7)]', border: 'border-red-400' },
-    { grad: 'from-blue-500 to-indigo-600', glow: 'shadow-[0_0_20px_rgba(59,130,246,0.7)]', border: 'border-blue-400' },
-    { grad: 'from-amber-400 to-yellow-500', glow: 'shadow-[0_0_20px_rgba(251,191,36,0.7)]', border: 'border-amber-400' },
-    { grad: 'from-green-400 to-emerald-500', glow: 'shadow-[0_0_20px_rgba(16,185,129,0.7)]', border: 'border-green-400' }
+    { grad: 'from-rose-500 to-red-700', glow: 'shadow-[0_8px_30px_rgba(244,63,94,0.5)]', border: 'border-rose-400' },
+    { grad: 'from-sky-500 to-blue-700', glow: 'shadow-[0_8px_30px_rgba(59,130,246,0.5)]', border: 'border-sky-400' },
+    { grad: 'from-amber-400 to-orange-600', glow: 'shadow-[0_8px_30px_rgba(251,191,36,0.5)]', border: 'border-amber-400' },
+    { grad: 'from-emerald-400 to-green-600', glow: 'shadow-[0_8px_30px_rgba(16,185,129,0.5)]', border: 'border-emerald-400' }
 ];
 
 var kls_team_colors = [
-    { grad: 'from-pink-500 to-rose-600', glow: 'shadow-[0_0_15px_rgba(236,72,153,0.6)]' },
-    { grad: 'from-cyan-400 to-blue-500', glow: 'shadow-[0_0_15px_rgba(34,211,238,0.6)]' },
-    { grad: 'from-purple-500 to-fuchsia-600', glow: 'shadow-[0_0_15px_rgba(168,85,247,0.6)]' },
-    { grad: 'from-orange-400 to-red-500', glow: 'shadow-[0_0_15px_rgba(249,115,22,0.6)]' }
+    { grad: 'from-fuchsia-500 to-purple-700', glow: 'shadow-[0_8px_30px_rgba(217,70,239,0.4)]' },
+    { grad: 'from-cyan-400 to-blue-600', glow: 'shadow-[0_8px_30px_rgba(34,211,238,0.4)]' },
+    { grad: 'from-violet-500 to-indigo-700', glow: 'shadow-[0_8px_30px_rgba(139,92,246,0.4)]' },
+    { grad: 'from-orange-400 to-rose-600', glow: 'shadow-[0_8px_30px_rgba(251,146,60,0.4)]' }
 ];
 
 async function renderKuisKelas() {
     if (kls_data.fallbackInterval) clearInterval(kls_data.fallbackInterval);
     if (kls_data.realtimeChannel) kls_data.realtimeChannel.unsubscribe();
+    stopBgMusic();
 
     var html = '';
     html += '<div class="space-y-6">';
@@ -744,8 +844,8 @@ function kls_showJoinQR() {
     document.body.appendChild(div);
     
     div.querySelector('button').addEventListener('click', function() {
-        if (!kls_audioCtx) kls_audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (kls_audioCtx.state === 'suspended') kls_audioCtx.resume();
+        kls_unlockAudio();
+        playBgMusic();
     });
     
     setTimeout(function() {
@@ -785,13 +885,12 @@ function kls_renderLive() {
     var html = '';
     html += '<style>@keyframes kls_shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } } @keyframes kls_bounce { 0% { transform: scale(0.5); opacity: 0; } 50% { transform: scale(1.2); } 100% { transform: scale(1); opacity: 1; } }</style>';
     
-    // BUNGKUS KONTENER UTAMA DENGAN GRID FLEX 3 KOLOM AGAR SOAL PANJANG TIDAK BISA TERTUTUP
-    html += '<div class="bg-slate-950 rounded-3xl shadow-2xl overflow-hidden border border-slate-700 grid grid-cols-1 lg:grid-cols-4 gap-0">';
+    html += '<div class="relative bg-slate-950 rounded-[2rem] shadow-2xl overflow-hidden border border-white/10 grid grid-cols-1 lg:grid-cols-4 gap-0">';
+    html += '  <div class="absolute top-0 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none"></div>';
+    html += '  <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>';
     
-    // KOLOM KIRI (SOAL & JAWABAN) - Menyesuaikan panjang teks
-    html += '  <div class="lg:col-span-3 p-6 md:p-8 text-center bg-slate-900 flex flex-col justify-start min-h-[400px]">';
-    // Header
-    html += '    <div class="flex justify-between items-center text-white mb-6 border-b border-slate-700 pb-4">';
+    html += '  <div class="relative z-10 lg:col-span-3 p-6 md:p-8 text-center bg-slate-900/60 backdrop-blur-md flex flex-col justify-start min-h-[400px]">';
+    html += '    <div class="flex justify-between items-center text-white mb-6 border-b border-white/10 pb-4">';
     html += '      <div class="flex items-center gap-3">';
     html += '        <div class="bg-white/10 p-2 rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="filter: drop-shadow(0 0 5px rgba(251,191,36,0.7));"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19c0 1.1-.9 2-2 2H5a2 2 0 01-2-2v-7a2 2 0 012-2h1.882a1 1 0 00.941-.665l3.47-9.353a1 1 0 011.4-.538l1.27.635a1 1 0 01.53.53v3.47a1 1 0 00.293.707l.707.707a1 1 0 001.414 0l1-1a1 1 0 011.414 0l1 1a1 1 0 00.707.293h.118a1 1 0 01.998.898l.011.102a1 1 0 01-.998 1.102H21a2 2 0 01-2-2v-7a2 2 0 00-2-2h-1.882a1 1 0 01-.941-.665l-1.47-3.97a1 1 0 00-.4-.538l-1.27-.635a1 1 0 00-1.4.538l-3.47 9.353z" /></svg></div>';
     html += '        <div>';
@@ -805,40 +904,38 @@ function kls_renderLive() {
     html += '      </div>';
     html += '    </div>';
     
-    // Progress
     html += '    <div class="bg-slate-800 h-2 w-full rounded-full mb-6"><div class="bg-gradient-to-r from-cyan-400 to-blue-500 h-2 rounded-full transition-all duration-500" style="width:'+progress+'%; box-shadow: 0 0 10px rgba(59,130,246,0.8);"></div></div>';
     
-    html += '    <p class="text-xl md:text-2xl font-bold text-white mb-6" style="text-shadow: 0 0 10px rgba(255,255,255,0.3);">'+q.text+'</p>';
-    html += '    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-2xl mx-auto">';
+    html += '    <p class="text-xl md:text-2xl font-extrabold text-white mb-8 tracking-wide" style="text-shadow: 0 0 15px rgba(255,255,255,0.3);">'+q.text+'</p>';
+    html += '    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">';
     
     q.options.forEach(function(opt, index) {
         var safeOpt = encodeURIComponent(opt);
         var col = kls_opt_colors[index % 4];
-        var cursorStyle = kls_data.isBuzzed ? 'cursor-pointer hover:scale-105 hover:brightness-110' : 'cursor-not-allowed opacity-50';
+        var cursorStyle = kls_data.isBuzzed ? 'cursor-pointer hover:scale-[1.02] hover:brightness-110' : 'cursor-not-allowed opacity-50';
         var bgIdle = kls_data.isBuzzed ? 'bg-slate-800' : 'bg-slate-800/50';
         
         html += '      <div class="opt-card '+bgIdle+' p-4 rounded-xl border-2 '+col.border+' text-white text-left font-bold transition-all shadow-sm flex items-center gap-3 '+cursorStyle+' '+col.glow+'" data-opt="'+safeOpt+'" onclick="kls_answer(decodeURIComponent(this.dataset.opt))">';
         html += '        <span class="w-10 h-10 bg-gradient-to-br '+col.grad+' text-white flex items-center justify-center rounded-lg text-lg shadow-md">'+opt.substring(0,1)+'</span>';
-        html += '        <span class="flex-1">'+opt.substring(3)+'</span>';
-        html += '      </div>';
+    html += '        <span class="flex-1">'+opt.substring(3)+'</span>';
+    html += '      </div>';
     });
     html += '    </div>';
     html += '  </div>';
     
-    // KOLOM KANAN (PANEL TIDAK TERTUTUP SOAL PANJANG)
-    html += '  <div class="lg:col-span-1 bg-slate-950 p-6 border-l border-slate-800 flex flex-col justify-between">';
+    html += '  <div class="relative z-10 lg:col-span-1 bg-slate-900/60 backdrop-blur-md p-6 border-l border-white/10 flex flex-col justify-between">';
     
-    // Area Buzzer
     html += '    <div class="flex flex-col items-center">';
     if (!kls_data.isBuzzed && !kls_data.isLocked) {
-        html += '      <h4 class="text-slate-300 font-bold mb-4 text-lg text-center">🔔 Menunggu Regu menekan Buzzer dari HP...</h4>';
+        html += '      <h4 class="text-slate-300 font-bold mb-4 text-lg text-center">🔔 Menunggu Buzzer dari HP / atau tekan manual:</h4>';
         html += '      <div class="flex flex-col gap-3 w-full">';
         kls_data.kelompok.forEach(function(t, i) {
             var style = teamStyleMap[t];
-            html += '      <div class="bg-slate-800 border border-slate-700 text-slate-400 font-bold py-3 px-4 rounded-2xl flex items-center justify-center gap-2">';
-            html += '        <span class="text-xl">⏳</span>'+t;
-            html += '      </div>';
+            html += '      <button onclick="kls_buzz(\''+t+'\')" class="bg-gradient-to-r '+style.grad+' text-white font-bold py-3 px-4 rounded-2xl flex items-center justify-center gap-2 hover:scale-105 transition transform active:scale-95 '+style.glow+'">';
+            html += '        <span class="text-xl">🔔</span>'+t;
+            html += '      </button>';
         });
+        html += '      </div>';
     } else if (kls_data.isBuzzed && !kls_data.isLocked) {
         var style = teamStyleMap[kls_data.currentTeam];
         html += '      <div class="bg-gradient-to-r '+style.grad+' border border-white/20 text-white px-4 py-4 rounded-2xl font-bold text-xl flex flex-col items-center gap-2 animate-pulse '+style.glow+'">';
@@ -852,26 +949,25 @@ function kls_renderLive() {
     }
     html += '    </div>';
     
-    // Area Timer
     html += '    <div class="mt-6 flex flex-col items-center text-white">';
     html += '      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="filter: drop-shadow(0 0 5px rgba(239,68,68,0.7));"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
     html += '      <div class="text-4xl font-mono font-bold bg-slate-800 px-4 py-1 rounded-xl border border-slate-700" style="text-shadow: 0 0 10px rgba(255,255,255,0.3);"><span id="kls_timer">'+timer+'</span> <span class="text-sm">detik</span></div>';
     html += '      <button onclick="kls_skip()" class="mt-4 text-xs text-slate-400 hover:text-red-500 underline">Lewati Soal Ini</button>';
     html += '    </div>';
     
-    // Area Scoreboard
-    html += '    <div class="mt-6 pt-4 border-t border-slate-800">';
+    html += '    <div class="mt-6 pt-4 border-t border-white/10">';
     html += '      <h4 class="text-center text-white font-bold text-sm mb-4 flex items-center justify-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="filter: drop-shadow(0 0 5px rgba(251,191,36,0.7));"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2-888c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg> SKOR REAL-TIME</h4>';
     html += '      <div class="space-y-2" id="kls_scoreboard">'+kls_renderScore()+'</div>';
     html += '    </div>';
     
-    html += '  </div>'; // end col-span-1
-    html += '</div>'; // end grid main container
+    html += '  </div>'; 
+    html += '</div>'; 
     
     c.innerHTML = html;
     
     if (!kls_data.isBuzzed && !kls_data.isLocked) {
         kls_startTimer();
+        playBgMusic(); 
     }
 }
 
@@ -885,7 +981,7 @@ function kls_renderScore() {
     sorted.forEach(function(s, i) {
         var style = teamStyleMap[s[0]] || { grad: 'from-slate-500 to-slate-600', glow: '' };
         var scaleUp = i===0 ? 'border-yellow-400' : 'border-slate-700';
-        html += '<div class="flex justify-between items-center border-2 '+scaleUp+' p-2 rounded-lg bg-slate-800">';
+        html += '<div class="flex justify-between items-center border-2 '+scaleUp+' p-2 rounded-lg bg-slate-800/80">';
         html += '  <span class="text-white text-sm font-bold flex items-center gap-2 truncate">';
         html += '    <span class="text-xl">'+medals[i]+'</span> '+s[0];
         html += '  </span>';
@@ -902,12 +998,12 @@ function kls_buzz(team) {
     if (kls_data.isBuzzed) return; 
     if(kls_data.intervalId) clearInterval(kls_data.intervalId); 
     
-    if (!kls_audioCtx) kls_audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (kls_audioCtx.state === 'suspended') kls_audioCtx.resume();
+    kls_unlockAudio();
+    stopBgMusic(); 
+    playBuzzerHorn(); 
     
     kls_data.currentTeam = team;
     kls_data.isBuzzed = true;
-    playBuzzerHorn(); 
     kls_renderLive();
 }
 
@@ -920,6 +1016,10 @@ function kls_answer(opt) {
     
     kls_data.isLocked = true; 
     if(kls_data.intervalId) clearInterval(kls_data.intervalId);
+    stopBgMusic(); 
+
+    // WAJIB UNLOCK AUDIO LAGI SETELAH YOUTUBE DIPAUSE
+    kls_unlockAudio();
     
     var q = kls_data.soal[kls_data.soalIndex];
     var correct = q.answer;
@@ -954,6 +1054,7 @@ function kls_answer(opt) {
     scoreBadge.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[100] text-white text-4xl font-extrabold py-4 px-8 rounded-2xl flex items-center gap-2 bg-gradient-to-br '+badgeStyle.grad+' '+badgeStyle.glow;
     
     if (isCorrect) {
+        playCorrectSound(); // SUARA BENAR
         kls_data.skor[kls_data.currentTeam] += kls_data.poin;
         scoreBadge.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg> +'+kls_data.poin;
         scoreBadge.style.animation = 'kls_bounce 0.5s ease-out';
@@ -961,6 +1062,7 @@ function kls_answer(opt) {
         kls_confetti();
         showToast('🎉 BENAR! '+kls_data.currentTeam+' +'+kls_data.poin+' POIN', 'success');
     } else {
+        playWrongSound(); // SUARA SALAH
         kls_data.skor[kls_data.currentTeam] -= Math.floor(kls_data.poin / 2);
         scoreBadge.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" /></svg> -'+Math.floor(kls_data.poin / 2);
         scoreBadge.style.animation = 'kls_shake 0.4s ease-in-out';
@@ -994,6 +1096,7 @@ function kls_answer(opt) {
 function kls_skip() {
     if (confirm('Lewati soal ini? Tidak ada poin yang ditambahkan.')) {
         if(kls_data.intervalId) clearInterval(kls_data.intervalId);
+        stopBgMusic();
         kls_data.isLocked = true;
         showToast('Soal dilewati.', 'info');
         setTimeout(function() {
@@ -1026,6 +1129,7 @@ function kls_startTimer() {
             kls_data.intervalId = null;
             showToast('⏳ Waktu habis!', 'error');
             kls_data.isLocked = true; 
+            stopBgMusic();
             
             setTimeout(function() {
                 kls_data.soalIndex++;
@@ -1059,6 +1163,7 @@ function kls_updateScore() {
 function kls_end() {
     if(kls_data.intervalId) clearInterval(kls_data.intervalId);
     if(kls_data.fallbackInterval) clearInterval(kls_data.fallbackInterval);
+    stopBgMusic();
     kls_data.intervalId = null;
     kls_data.isLocked = false;
     kls_data.isBuzzed = false;
@@ -1069,7 +1174,7 @@ function kls_end() {
     }
     
     var sorted = Object.entries(kls_data.skor).sort(function(a, b) { return b[1] - a[1]; });
-    var html = '<div class="bg-slate-950 p-8 rounded-3xl text-center shadow-2xl border border-slate-700 overflow-hidden relative">';
+    var html = '<div class="bg-slate-950 p-8 rounded-3xl text-center shadow-2xl border border-white/10 overflow-hidden relative">';
     html += '  <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-400 via-blue-500 to-purple-600" style="box-shadow: 0 0 10px rgba(59,130,246,0.8);"></div>';
     html += '  <div class="mb-6 mt-4">';
     html += '    <div class="inline-block p-4 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full shadow-xl mb-4" style="box-shadow: 0 0 25px rgba(251,191,36,0.6);"><svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg></div>';
@@ -1097,6 +1202,11 @@ function kls_end() {
     html += '</div>';
     
     document.getElementById('kls_live_container').innerHTML = html;
+    
+    kls_unlockAudio();
+    playCorrectSound();
+    setTimeout(playCorrectSound, 500);
+    setTimeout(playCorrectSound, 1000);
 }
 
 function kls_stop() {
@@ -1144,16 +1254,15 @@ window.addEventListener('load', function() {
                   btn.className = 'bg-gradient-to-br ' + col + ' text-white font-bold py-8 rounded-2xl shadow-lg hover:scale-105 transition transform active:scale-95';
                   btn.innerHTML = '<span class="block text-3xl mb-1">🔔</span>' + t;
                   btn.onclick = function() {
+                      kls_unlockAudio();
                       document.getElementById('studentLogin').classList.add('hidden');
                       var buzzerUI = document.getElementById('studentBuzzer');
                       buzzerUI.classList.remove('hidden');
                       
                       var bigBtn = document.getElementById('buzzBtn');
-                      bigBtn.className = 'bg-gradient-to-br ' + col + ' text-white font-bold py-16 rounded-3xl shadow-lg active:scale-95 transition flex flex-col items-center justify-center cursor-pointer ' + (t === 'GARUDA' ? 'shadow-[0_0_20px_rgba(236,72,153,0.6)]' : 'shadow-lg');
+                      bigBtn.className = 'bg-gradient-to-br ' + col + ' text-white font-bold py-16 rounded-3xl shadow-lg active:scale-95 transition flex flex-col items-center justify-center cursor-pointer shadow-lg';
                       
                       bigBtn.onclick = function() {
-                          if (!kls_audioCtx) kls_audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                          if (kls_audioCtx.state === 'suspended') kls_audioCtx.resume();
                           playBuzzerHorn(); 
                           
                           bigBtn.style.transform = 'scale(0.95)';
