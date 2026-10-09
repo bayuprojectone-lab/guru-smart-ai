@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#1e3a8a">
 <title>GURU SMART - Sistem Manajemen Sekolah</title>
+<!-- Panggil config.js di sini -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -13,7 +16,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://js.puter.com/v2/"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:['Inter','sans-serif']}}}</script>
 <style>
 html{-webkit-text-size-adjust:100%}
@@ -179,8 +181,6 @@ input,textarea,select{font-size:16px!important}
 </div>
 <div id="toast" class="hidden fixed bottom-5 right-5 z-[60] bg-slate-800 text-white px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2"></div>
 <div id="printArea"></div>
-<!-- Panggil config.js di sini -->
-<script src="js/config.js"></script>
 
 <script>
 // Kode lama imgFallback dan DB tetap di sini
