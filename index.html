@@ -479,7 +479,7 @@ function playBuzzerHorn() {
         if (ctx.state === 'suspended') ctx.resume();
         var dest = ctx.destination;
         
-        var freqs = [196.00, 261.63, 329.63, 392.00, 523.25];
+        var freqs = [196.00, 261.63, 329.63, 392.00, 523.25]; // Chord G3 C4 E4 G4 C5
         var masterGain = ctx.createGain();
         masterGain.gain.setValueAtTime(0.0001, ctx.currentTime);
         masterGain.gain.exponentialRampToValueAtTime(0.8, ctx.currentTime + 0.03);
@@ -722,7 +722,6 @@ function kls_showJoinQR() {
     div.innerHTML = html;
     document.body.appendChild(div);
     
-    // Generate QR
     setTimeout(function() {
         try {
             var qrEl = document.getElementById('qrcode-kls');
@@ -812,9 +811,10 @@ function kls_renderLive() {
         });
     } else if (kls_data.isBuzzed && !kls_data.isLocked) {
         var style = teamStyleMap[kls_data.currentTeam];
-        html += '    <div class="bg-gradient-to-r '+style.grad+' border border-white/20 text-white px-6 py-3 rounded-lg font-bold text-lg flex items-center gap-2 animate-pulse '+style.glow+'">';
-        html += '      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
-        html += '      Giliran: '+kls_data.currentTeam+'! Pilih jawaban di atas.';
+        // MENAMPILKAN REGU YANG MENGEKAN BUZZER DARI HP (REMOT)
+        html += '    <div class="bg-gradient-to-r '+style.grad+' border border-white/20 text-white px-8 py-4 rounded-lg font-bold text-2xl flex items-center gap-2 animate-pulse '+style.glow+'">';
+        html += '      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
+        html += '      GILIRAN REGU: '+kls_data.currentTeam+' ! Pilih jawaban di atas.';
         html += '    </div>';
     } else {
          html += '    <div class="bg-slate-800 border border-slate-700 text-slate-300 px-6 py-3 rounded-lg font-bold text-lg flex items-center gap-2">';
@@ -871,7 +871,7 @@ function kls_buzz(team) {
     if(kls_data.intervalId) clearInterval(kls_data.intervalId); 
     kls_data.currentTeam = team;
     kls_data.isBuzzed = true;
-    playBuzzerHorn(); // BUNYIKAN TEROMPET
+    playBuzzerHorn(); // BUNYIKAN TEROMPET SAAT MENERIMA SINYAL DARI HP
     kls_renderLive();
 }
 
@@ -1126,7 +1126,7 @@ window.addEventListener('load', function() {
                           setTimeout(function() { status.innerHTML = ''; }, 2000);
                       }
                       
-                      // Kirim sinyal ke layar guru
+                      // Kirim sinyal ke layar guru (REMOTE)
                       studentChannel.send({ type: 'broadcast', event: 'buzz', payload: { team: t } });
                   });
                   list.appendChild(btn);
