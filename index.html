@@ -470,29 +470,28 @@ function kls_confetti() {
     }
 }
 
-var kls_data = { soal: [], kelompok: [], skor: [], soalIndex: 0, mode: 'Rebutan', timer: 15, intervalId: null, currentTeam: null, poin: 100, isBuzzed: false, isLocked: false };
+var kls_data = { soal: [], kelompok: [], skor: [], soalIndex: 0, mode: 'Rebutan', timer: 15, intervalId: null, currentTeam: null, poin: 100, isBuzzed: false, isLocked: false, currentRoom: null, realtimeChannel: null };
 
-// Warna A, B, C, D yang sangat cerah dan penuh warna
+// Warna A, B, C, D yang cerah
 var kls_opt_colors = [
-    { grad: 'from-red-500 to-rose-600', glow: 'shadow-[0_0_20px_rgba(244,63,94,0.7)]', text: 'text-red-400', border: 'border-red-400' },
-    { grad: 'from-blue-500 to-indigo-600', glow: 'shadow-[0_0_20px_rgba(59,130,246,0.7)]', text: 'text-blue-400', border: 'border-blue-400' },
-    { grad: 'from-amber-400 to-yellow-500', glow: 'shadow-[0_0_20px_rgba(251,191,36,0.7)]', text: 'text-amber-400', border: 'border-amber-400' },
-    { grad: 'from-green-400 to-emerald-500', glow: 'shadow-[0_0_20px_rgba(16,185,129,0.7)]', text: 'text-green-400', border: 'border-green-400' }
+    { grad: 'from-red-500 to-rose-600', glow: 'shadow-[0_0_20px_rgba(244,63,94,0.7)]', border: 'border-red-400' },
+    { grad: 'from-blue-500 to-indigo-600', glow: 'shadow-[0_0_20px_rgba(59,130,246,0.7)]', border: 'border-blue-400' },
+    { grad: 'from-amber-400 to-yellow-500', glow: 'shadow-[0_0_20px_rgba(251,191,36,0.7)]', border: 'border-amber-400' },
+    { grad: 'from-green-400 to-emerald-500', glow: 'shadow-[0_0_20px_rgba(16,185,129,0.7)]', border: 'border-green-400' }
 ];
 
-// Warna per Tim
+// Warna per Tim (Buzzer)
 var kls_team_colors = [
-    { grad: 'from-pink-500 to-rose-600', glow: 'shadow-[0_0_15px_rgba(236,72,153,0.6)]', text: 'text-pink-400' },
-    { grad: 'from-cyan-400 to-blue-500', glow: 'shadow-[0_0_15px_rgba(34,211,238,0.6)]', text: 'text-cyan-400' },
-    { grad: 'from-purple-500 to-fuchsia-600', glow: 'shadow-[0_0_15px_rgba(168,85,247,0.6)]', text: 'text-purple-400' },
-    { grad: 'from-orange-400 to-red-500', glow: 'shadow-[0_0_15px_rgba(249,115,22,0.6)]', text: 'text-orange-400' }
+    { grad: 'from-pink-500 to-rose-600', glow: 'shadow-[0_0_15px_rgba(236,72,153,0.6)]' },
+    { grad: 'from-cyan-400 to-blue-500', glow: 'shadow-[0_0_15px_rgba(34,211,238,0.6)]' },
+    { grad: 'from-purple-500 to-fuchsia-600', glow: 'shadow-[0_0_15px_rgba(168,85,247,0.6)]' },
+    { grad: 'from-orange-400 to-red-500', glow: 'shadow-[0_0_15px_rgba(249,115,22,0.6)]' }
 ];
 
 async function renderKuisKelas() {
     var html = '';
     html += '<div class="space-y-6">';
     
-    // Header Elegan
     html += '<div class="relative bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 p-6 rounded-2xl shadow-lg overflow-hidden">';
     html += '  <div class="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-16 -mt-16 pointer-events-none"></div>';
     html += '  <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 pointer-events-none"></div>';
@@ -503,7 +502,7 @@ async function renderKuisKelas() {
     html += '      </div>';
     html += '      <div>';
     html += '        <h2 class="text-xl font-bold tracking-wide">Modul Kuis Kelas</h2>';
-    html += '        <p class="text-blue-100 text-sm">Buat kuis interaktif dengan mode Buzzer & Papan Skor Real-time!</p>';
+    html += '        <p class="text-blue-100 text-sm">Buat kuis interaktif dengan mode Buzzer Multi-Device Real-time!</p>';
     html += '      </div>';
     html += '    </div>';
     html += '    <button onclick="kls_form()" class="bg-white text-blue-700 font-bold px-5 py-2.5 rounded-lg shadow hover:bg-blue-50 transition flex items-center gap-2">';
@@ -515,7 +514,6 @@ async function renderKuisKelas() {
 
     html += '  <div id="kls_live_container" class="hidden"></div>';
     
-    // Daftar Kuis
     html += '  <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">';
     html += '    <h3 class="font-bold text-lg text-slate-800 dark:text-white mb-4 flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg> Daftar Kuis Tersimpan</h3>';
     html += '    <div id="kls_list" class="grid grid-cols-1 md:grid-cols-3 gap-4">Memuat data...</div>';
@@ -650,6 +648,67 @@ async function kls_start(id) {
     kls_data.isLocked = false;
     if(kls_data.intervalId) clearInterval(kls_data.intervalId); 
     
+    // Generate Room Code Unik & Setup Realtime Channel
+    kls_data.currentRoom = 'kls-' + Math.random().toString(36).substr(2, 6);
+    if (kls_data.realtimeChannel) kls_data.realtimeChannel.unsubscribe();
+    
+    kls_data.realtimeChannel = sb.channel(kls_data.currentRoom)
+      .on('broadcast', { event: 'buzz' }, function(payload) {
+          if (kls_data.kelompok.includes(payload.message.team)) {
+              kls_buzz(payload.message.team); // Langsung eksekusi buzzer di layar guru
+          }
+      })
+      .on('broadcast', { event: 'request_sync' }, function() {
+          // Siswa minta daftar tim
+          kls_data.realtimeChannel.send({
+              type: 'broadcast',
+              event: 'sync',
+              payload: { teams: kls_data.kelompok }
+          });
+      })
+      .subscribe();
+      
+    kls_showJoinQR();
+}
+
+function kls_showJoinQR() {
+    var hostUrl = window.location.origin + window.location.pathname;
+    var html = '<div id="kls-join-modal" class="fixed inset-0 bg-slate-900 bg-opacity-95 z-[90] flex items-center justify-center p-4">';
+    html += '<div class="bg-white rounded-2xl p-8 text-center shadow-2xl max-w-md w-full">';
+    html += '  <h2 class="text-2xl font-bold text-slate-800 mb-2">🔔 Gabung ke Buzzer Kuis</h2>';
+    html += '  <p class="text-slate-500 mb-6 text-sm">Setiap tim buka kamera HP mereka, scan QR Code di bawah, lalu tekan tombol Buzzer sesuai nama tim masing-masing.</p>';
+    html += '  <div id="qrcode-kls" class="flex justify-center mb-6"></div>';
+    html += '  <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">';
+    html += '    <p class="text-xs text-slate-400">Atau buka link ini di HP Siswa:</p>';
+    html += '    <p class="text-sm text-blue-600 font-bold break-all">' + hostUrl + '#join-' + kls_data.currentRoom + '</p>';
+    html += '  </div>';
+    html += '  <button onclick="kls_closeJoinQR()" class="mt-6 bg-blue-600 text-white px-8 py-3 rounded-lg font-bold w-full hover:bg-blue-700 transition">Mulai Kuis (Semua Sudah Siap)</button>';
+    html += '</div></div>';
+    
+    var div = document.createElement('div');
+    div.innerHTML = html;
+    document.body.appendChild(div);
+    
+    // Generate QR
+    setTimeout(function() {
+        try {
+            var qrEl = document.getElementById('qrcode-kls');
+            qrEl.innerHTML = '';
+            new QRCode(qrEl, {
+                text: hostUrl + '#join-' + kls_data.currentRoom,
+                width: 200,
+                height: 200,
+                colorDark: "#1e293b",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        } catch(e) { console.error('QR Error', e); }
+    }, 100);
+}
+
+function kls_closeJoinQR() {
+    var m = document.getElementById('kls-join-modal');
+    if(m) m.remove();
     kls_renderLive();
 }
 
@@ -668,13 +727,11 @@ function kls_renderLive() {
     kls_data.kelompok.forEach(function(t, i){ teamStyleMap[t] = kls_team_colors[i % kls_team_colors.length]; });
     
     var html = '';
-    // Style keyframe lokal
     html += '<style>@keyframes kls_shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } } @keyframes kls_bounce { 0% { transform: scale(0.5); opacity: 0; } 50% { transform: scale(1.2); } 100% { transform: scale(1); opacity: 1; } }</style>';
     
-    // Main Board Container
     html += '<div class="bg-slate-950 rounded-3xl shadow-2xl overflow-hidden border border-slate-700">';
     
-    // Header Live
+    // Header
     html += '  <div class="bg-slate-900 p-4 flex flex-col md:flex-row justify-between items-center text-white gap-3 border-b border-slate-800">';
     html += '    <div class="flex items-center gap-3">';
     html += '      <div class="bg-white/10 p-2 rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="filter: drop-shadow(0 0 5px rgba(251,191,36,0.7));"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19c0 1.1-.9 2-2 2H5a2 2 0 01-2-2v-7a2 2 0 012-2h1.882a1 1 0 00.941-.665l3.47-9.353a1 1 0 011.4-.538l1.27.635a1 1 0 01.53.53v3.47a1 1 0 00.293.707l.707.707a1 1 0 001.414 0l1-1a1 1 0 011.414 0l1 1a1 1 0 00.707.293h.118a1 1 0 01.998.898l.011.102a1 1 0 01-.998 1.102H21a2 2 0 01-2-2v-7a2 2 0 00-2-2h-1.882a1 1 0 01-.941-.665l-1.47-3.97a1 1 0 00-.4-.538l-1.27-.635a1 1 0 00-1.4.538l-3.47 9.353z" /></svg></div>';
@@ -684,27 +741,24 @@ function kls_renderLive() {
     html += '      </div>';
     html += '    </div>';
     html += '    <div class="flex items-center gap-2">';
-    html += '      <span class="bg-indigo-500/80 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-6V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15v-3.75m18 0V5.25A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25v3.75m18 0h-18" /></svg> Mode: '+kls_data.mode+'</span>';
+    html += '      <button onclick="kls_showJoinQR()" class="bg-indigo-500/80 hover:bg-indigo-500 px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h2v-2m-2 0V8.82a2 2 0 012-2h.32a2 2 0 011.86 1.24L20 12M4 13V8.82a2 2 0 012-2h.32a2 2 0 011.86 1.24L8 12M4 13h2m6 0V9.82a2 2 0 012-2h.32a2 2 0 011.86 1.24L16 12M14 13h2" /></svg> Tampilkan QR Kuis</button>';
     html += '      <button onclick="kls_stop()" class="bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg text-xs font-bold transition">Akhiri Kuis</button>';
     html += '    </div>';
     html += '  </div>';
     
-    // Progress Bar Neon
+    // Progress
     html += '  <div class="bg-slate-800 h-2 w-full"><div class="bg-gradient-to-r from-cyan-400 to-blue-500 h-2 transition-all duration-500" style="width:'+progress+'%; box-shadow: 0 0 10px rgba(59,130,246,0.8);"></div></div>';
     
-    // Soal & Pilihan dengan 4 Warna Utama yang Penuh Warna
+    // Soal & Pilihan
     html += '  <div class="p-6 md:p-8 text-center bg-slate-900 min-h-[200px] flex flex-col justify-center">';
     html += '    <p class="text-xl md:text-2xl font-bold text-white mb-6" style="text-shadow: 0 0 10px rgba(255,255,255,0.3);">'+q.text+'</p>';
     html += '    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-2xl mx-auto">';
     
     q.options.forEach(function(opt, index) {
         var safeOpt = encodeURIComponent(opt);
-        var col = kls_opt_colors[index % 4]; // Ambil warna A,B,C,D
+        var col = kls_opt_colors[index % 4];
         var cursorStyle = kls_data.isBuzzed ? 'cursor-pointer hover:scale-105 hover:brightness-110' : 'cursor-not-allowed opacity-50';
-        
-        // Saat idle, backgroundnya gelap namun border & teksnya menyala warnanya. Saat hover, background penuh.
-        var bgIdle = 'bg-slate-800/50';
-        if(kls_data.isBuzzed) bgIdle = 'bg-slate-800';
+        var bgIdle = kls_data.isBuzzed ? 'bg-slate-800' : 'bg-slate-800/50';
         
         html += '      <div class="opt-card '+bgIdle+' p-4 rounded-xl border-2 '+col.border+' text-white text-left font-bold transition-all shadow-sm flex items-center gap-3 '+cursorStyle+' '+col.glow+'" data-opt="'+safeOpt+'" onclick="kls_answer(decodeURIComponent(this.dataset.opt))">';
         html += '        <span class="w-10 h-10 bg-gradient-to-br '+col.grad+' text-white flex items-center justify-center rounded-lg text-lg shadow-md">'+opt.substring(0,1)+'</span>';
@@ -718,7 +772,7 @@ function kls_renderLive() {
     html += '  <div class="bg-slate-950 p-6 border-t border-slate-800 flex flex-col items-center">';
     
     if (!kls_data.isBuzzed && !kls_data.isLocked) {
-        html += '    <h4 class="text-slate-300 font-bold mb-4 text-lg text-center">🔔 Tekan Buzzer Untuk Menjawab!</h4>';
+        html += '    <h4 class="text-slate-300 font-bold mb-4 text-lg text-center">🔔 Menunggu Buzzer dari HP Siswa / atau tekan manual di bawah:</h4>';
         html += '    <div class="flex flex-wrap justify-center gap-4 mb-2">';
         
         kls_data.kelompok.forEach(function(t, i) {
@@ -739,7 +793,6 @@ function kls_renderLive() {
          html += '    </div>';
     }
     
-    // Tombol Skip
     html += '    <button onclick="kls_skip()" class="mt-4 text-xs text-slate-400 hover:text-red-500 underline">Lewati Soal Ini</button>';
     
     // Timer
@@ -749,7 +802,7 @@ function kls_renderLive() {
     html += '    </div>';
     html += '  </div>';
     
-    // Scoreboard Live ala Leaderboard Game
+    // Scoreboard
     html += '  <div class="bg-slate-900 p-6 border-t border-slate-800">';
     html += '    <h4 class="text-center text-white font-bold text-lg mb-4 flex items-center justify-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="filter: drop-shadow(0 0 5px rgba(251,191,36,0.7));"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg> PAPAN SKOR REAL-TIME</h4>';
     html += '    <div class="max-w-2xl mx-auto space-y-2" id="kls_scoreboard">'+kls_renderScore()+'</div>';
@@ -802,7 +855,7 @@ function kls_answer(opt) {
     }
     if (kls_data.isLocked) return; 
     
-    kls_data.isLocked = true; // Kunci agar tidak dobel klik
+    kls_data.isLocked = true; 
     if(kls_data.intervalId) clearInterval(kls_data.intervalId);
     
     var q = kls_data.soal[kls_data.soalIndex];
@@ -812,24 +865,21 @@ function kls_answer(opt) {
     var teamStyleMap = {};
     kls_data.kelompok.forEach(function(t, i){ teamStyleMap[t] = kls_team_colors[i % kls_team_colors.length]; });
     
-    // Animasi pilihan: Mencerahkan jawaban benar (hijau) & jawaban salah (merah)
     document.querySelectorAll('#kls_live_container .opt-card').forEach(function(el) {
         var optText = decodeURIComponent(el.dataset.opt);
         var isThisCorrect = optText.indexOf(correct + '.') === 0 || optText.startsWith(correct + '.');
         
-        el.removeAttribute('onclick'); // Hapus fungsi klik
+        el.removeAttribute('onclick'); 
         el.classList.remove('cursor-pointer', 'hover:scale-105', 'hover:brightness-110', 'opacity-50');
         el.classList.add('cursor-not-allowed');
         
         if(isThisCorrect) {
             el.className = 'opt-card bg-gradient-to-r from-green-400 to-emerald-500 p-4 rounded-xl border-2 border-green-300 text-white font-bold flex items-center gap-3 shadow-[0_0_20px_rgba(16,185,129,0.7)]';
             el.style.transform = 'scale(1.05)';
-            // Tambah ikon centang
             el.innerHTML += '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>';
         } else if (optText === opt) {
             el.className = 'opt-card bg-gradient-to-r from-red-500 to-rose-600 p-4 rounded-xl border-2 border-red-300 text-white font-bold flex items-center gap-3 shadow-[0_0_20px_rgba(239,68,68,0.7)]';
             el.style.animation = 'kls_shake 0.4s ease-in-out';
-            // Tambah ikon silang
             el.innerHTML += '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" /></svg>';
         } else {
             el.className = 'opt-card bg-slate-800 p-4 rounded-xl border-2 border-slate-700 text-slate-500 opacity-50 flex items-center gap-3';
@@ -875,7 +925,7 @@ function kls_answer(opt) {
         } else {
             kls_end();
         }
-    }, 2500); // Beri waktu 2.5 detik untuk melihat jawaban benar
+    }, 2500); 
 }
 
 function kls_skip() {
@@ -948,6 +998,7 @@ function kls_end() {
     kls_data.intervalId = null;
     kls_data.isLocked = false;
     kls_data.isBuzzed = false;
+    if (kls_data.realtimeChannel) kls_data.realtimeChannel.unsubscribe();
     
     for(var i=0; i<5; i++) {
         setTimeout(kls_confetti, i * 300);
@@ -990,6 +1041,56 @@ function kls_stop() {
         kls_end();
     }
 }
+
+// Logika untuk Interface HP Siswa (Jika mendeteksi #join- di URL)
+window.addEventListener('load', function() {
+    var hash = window.location.hash;
+    if (hash.indexOf('#join-') !== -1) {
+        var room = hash.replace('#join-', '');
+        document.body.innerHTML = '<div class="min-h-[100vh] bg-slate-900 flex flex-col items-center justify-center p-6 text-center"><h1 class="text-3xl font-extrabold text-white mb-4">🔔 Buzzer Online</h1><p class="text-slate-300 mb-8">Pilih Nama Tim Kamu untuk Mengirim Sinyal ke Layar Guru</p><div id="studentBuzzerList" class="grid grid-cols-2 gap-4 w-full max-w-md"></div><p class="text-slate-500 text-xs mt-12">Tersambung ke Room: <span class="text-green-400 font-mono">'+room+'</span></p></div>';
+        document.title = "Buzzer Kuis Siswa";
+        
+        var channel = sb.channel(room)
+          .on('broadcast', { event: 'sync' }, function(payload) {
+              // Menerima daftar kelompok terbaru dari guru
+              renderStudentBuzzer(payload.message.teams || []);
+          })
+          .subscribe(async function(status) {
+              if (status === 'SUBSCRIBED') {
+                  // Minta daftar kelompok ke guru
+                  channel.send({ type: 'broadcast', event: 'request_sync', payload: {} });
+                  
+                  // Jika dalam 3 detik tidak ada respon, gunakan default
+                  setTimeout(function() {
+                      if (document.getElementById('studentBuzzerList').children.length === 0) {
+                          renderStudentBuzzer(['GARUDA', 'ELANG', 'RAJAWALI', 'MERPATI']);
+                      }
+                  }, 3000);
+              }
+          });
+          
+          window.renderStudentBuzzer = function(teams) {
+              var list = document.getElementById('studentBuzzerList');
+              if (!list) return;
+              list.innerHTML = '';
+              var colors = ['from-pink-500 to-rose-600', 'from-cyan-400 to-blue-500', 'from-purple-500 to-fuchsia-600', 'from-orange-400 to-red-500'];
+              teams.forEach(function(t, i) {
+                  var col = colors[i % colors.length];
+                  var btn = document.createElement('button');
+                  btn.className = 'bg-gradient-to-br ' + col + ' text-white font-bold py-8 rounded-2xl shadow-lg hover:scale-105 transition transform active:scale-95';
+                  btn.innerHTML = '<span class="block text-3xl mb-1">🔔</span>' + t;
+                  btn.onclick = function() {
+                      // Animasi tekan
+                      btn.style.transform = 'scale(0.95)';
+                      setTimeout(function() { btn.style.transform = ''; }, 200);
+                      // Kirim sinyal ke layar guru
+                      channel.send({ type: 'broadcast', event: 'buzz', payload: { team: t } });
+                  };
+                  list.appendChild(btn);
+              });
+          };
+    }
+});
 </script>
 </body>
 </html>
