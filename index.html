@@ -470,6 +470,48 @@ function kls_confetti() {
     }
 }
 
+// Suara Terompet Kuis (Game Show Horn)
+var kls_audioCtx = null;
+function playBuzzerHorn() {
+    try {
+        if (!kls_audioCtx) kls_audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        var ctx = kls_audioCtx;
+        var dest = ctx.destination;
+        
+        // Bunyi terompet memiliki banyak gelombang harmonic sekaligus agar megah
+        var freqs = [196.00, 261.63, 329.63, 392.00, 523.25]; // Chord G3 C4 E4 G4 C5
+        var oscs = [];
+        var gains = [];
+        
+        var masterGain = ctx.createGain();
+        masterGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+        masterGain.gain.exponentialRampToValueAtTime(0.8, ctx.currentTime + 0.03); // Attack cepat
+        masterGain.gain.setValueAtTime(0.8, ctx.currentTime + 0.4); // Hold
+        masterGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.8); // Release pelan
+        masterGain.connect(dest);
+        
+        freqs.forEach(function(f) {
+            var osc = ctx.createOscillator();
+            osc.type = 'sawtooth'; // bentuk gelombang terompet
+            osc.frequency.value = f;
+            
+            var gain = ctx.createGain();
+            gain.gain.value = 0.2; // volume per harmonic
+            
+            // Tambahkan sedikit detune untuk efek megah/wobbling
+            osc.detune.value = Math.random() * 10 - 5;
+            
+            osc.connect(gain);
+            gain.connect(masterGain);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.8);
+            
+            oscs.push(osc);
+            gains.push(gain);
+        });
+    } catch(e) { console.error('Audio Error:', e); }
+}
+
 var kls_data = { soal: [], kelompok: [], skor: [], soalIndex: 0, mode: 'Rebutan', timer: 15, intervalId: null, currentTeam: null, poin: 100, isBuzzed: false, isLocked: false, currentRoom: null, realtimeChannel: null };
 
 // Warna A, B, C, D yang cerah
@@ -845,7 +887,7 @@ function kls_buzz(team) {
     if(kls_data.intervalId) clearInterval(kls_data.intervalId); 
     kls_data.currentTeam = team;
     kls_data.isBuzzed = true;
-    playBeep(); // BUNYIKAN SIRENE SAAT MENERIMA SINYAL DARI HP
+    playBuzzerHorn(); // BUNYIKAN TEROMPET SAAT MENERIMA SINYAL DARI HP
     kls_renderLive();
 }
 
@@ -1080,7 +1122,14 @@ window.addEventListener('load', function() {
                   var btn = document.createElement('button');
                   btn.className = 'bg-gradient-to-br ' + col + ' text-white font-bold py-8 rounded-2xl shadow-lg hover:scale-105 transition transform active:scale-95';
                   btn.innerHTML = '<span class="block text-3xl mb-1">🔔</span>' + t;
-                  btn.onclick = function() {
+                  
+                  // Solusi AutoPlay Policy: Audio hanya bisa dimainkan setelah user interact
+                  btn.addEventListener('pointerdown', function() {
+                      if (!kls_audioCtx) {
+                          kls_audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                      }
+                      playBuzzerHorn(); // bunyi di HP
+                      
                       // Animasi tekan
                       btn.style.transform = 'scale(0.95)';
                       setTimeout(function() { btn.style.transform = ''; }, 200);
@@ -1094,7 +1143,7 @@ window.addEventListener('load', function() {
                       
                       // Kirim sinyal ke layar guru
                       channel.send({ type: 'broadcast', event: 'buzz', payload: { team: t } });
-                  };
+                  });
                   list.appendChild(btn);
               });
           };
