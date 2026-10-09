@@ -13,7 +13,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://js.puter.com/v2/"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./js/config.js"></script>
 <script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:['Inter','sans-serif']}}}</script>
 <style>
 html{-webkit-text-size-adjust:100%}
@@ -180,9 +180,6 @@ input,textarea,select{font-size:16px!important}
 <div id="toast" class="hidden fixed bottom-5 right-5 z-[60] bg-slate-800 text-white px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2"></div>
 <div id="printArea"></div>
 <script>
-var SUPABASE_URL='https://urslwiueyqhoykjhxmqq.supabase.co';
-var SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVyc2x3aXVleXFob3lramh4bXFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2NTIxMDgsImV4cCI6MjEwNTIyODEwOH0.cRHI2m9lasLJ6yX2vc1ioxJGm7bLRsCIptmiNtpz5go';
-var sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 var AI_IMG='https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe';
 var TEACHER_IMG='https://z-cdn-media.chatglm.cn/files/75ded651-0d28-42b6-ac6e-372dcb2f3a18.png?auth_key=1890942260-f34ada6a38934170ac18de993429b194-0-e2c31b27403b6a0ff985778a913412f7';
 function imgFallback(img){img.onerror=null;img.src='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="#1e3a8a"/><circle cx="50" cy="45" r="20" fill="white"/><rect x="35" y="40" width="10" height="6" rx="3" fill="#3b82f6"/><rect x="55" y="40" width="10" height="6" rx="3" fill="#3b82f6"/><path d="M30 55 Q50 70 70 55 L70 65 Q50 80 30 65 Z" fill="#3b82f6"/><text x="50" y="95" font-size="15" text-anchor="middle" fill="white" font-family="sans-serif" font-weight="bold">AI</text></svg>';}
@@ -195,7 +192,31 @@ document.getElementById('registerForm').addEventListener('submit',async function
 document.getElementById('loginForm').addEventListener('submit',async function(e){e.preventDefault();var btn=document.querySelector('#loginForm button[type="submit"]');btn.disabled=true;btn.innerText='Memproses...';var email=document.getElementById('loginEmail').value;var password=document.getElementById('loginPassword').value;try{var r=await sb.auth.signInWithPassword({email:email,password:password});if(r.error){var errMsg=r.error.message.toLowerCase();if(errMsg.includes('invalid login credentials')){showToast('⚠️ Email atau Password salah!','error');}else if(errMsg.includes('email not confirmed')){showToast('⚠️ Email belum dikonfirmasi.','error');}else{showToast('Gagal: '+r.error.message,'error');}btn.disabled=false;btn.innerText='Masuk';return;}var supabaseUser=r.data.user;if(!supabaseUser){showToast('Gagal mendapatkan data user.','error');btn.disabled=false;btn.innerText='Masuk';return;}var ud=null;var r2=await sb.from('users').select('*').eq('id',supabaseUser.id).maybeSingle();if(r2.data){ud=r2.data;}else{var r3=await sb.from('users').upsert({id:supabaseUser.id,name:email.split('@')[0],username:email,role:'guru',is_premium:false,payment_status:'Belum Bayar'}).select().maybeSingle();if(r3.data)ud=r3.data;else ud={name:email,role:'guru',is_premium:false,payment_status:'Belum Bayar'};}currentUser={id:supabaseUser.id,email:supabaseUser.email,name:ud?.name||supabaseUser.email,role:ud?.role||'guru',avatar_url:ud?.avatar_url||AI_IMG,is_premium:ud?.is_premium||false,payment_status:ud?.payment_status||'Belum Bayar',payment_sender:ud?.payment_sender||''};localStorage.setItem('gs_currentUser',JSON.stringify(currentUser));showToast('Login berhasil!','success');initApp();}catch(err){showToast('Terjadi kesalahan: '+err.message,'error');btn.disabled=false;btn.innerText='Masuk';}});
 async function logout(){await sb.auth.signOut();localStorage.removeItem('gs_currentUser');currentUser=null;location.reload();}
 async function checkSession(){var r=await sb.auth.getSession();if(r.data.session){await sb.auth.refreshSession();var dbU=null;var r2=await sb.from('users').select('*').eq('id',r.data.session.user.id).maybeSingle();if(r2.data)dbU=r2.data;var su=JSON.parse(localStorage.getItem('gs_currentUser')||'{}');currentUser={id:r.data.session.user.id,email:r.data.session.user.email,name:dbU?.name||su.name||r.data.session.user.email,role:dbU?.role||su.role||'guru',avatar_url:dbU?.avatar_url||su.avatar_url||AI_IMG,is_premium:dbU?.is_premium||false,payment_status:dbU?.payment_status||'Belum Bayar',payment_sender:dbU?.payment_sender||''};localStorage.setItem('gs_currentUser',JSON.stringify(currentUser));return true;}return false;}
-function showToast(msg,type){var t=document.getElementById('toast');var bg=type==='success'?'bg-green-600':type==='error'?'bg-red-600':'bg-slate-800';t.className='fixed bottom-5 right-5 z-[60] '+bg+' text-white px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2 fade-in';t.innerHTML='<span>'+msg+'</span>';t.classList.remove('hidden');setTimeout(function(){t.classList.add('hidden');},3500);}
+
+function showToast(msg, type) {
+    var t = document.getElementById('toast');
+    if (!t) return;
+
+    var bg = type === 'success'
+        ? 'bg-green-600'
+        : type === 'error'
+            ? 'bg-red-600'
+            : 'bg-slate-800';
+
+    t.className =
+        'fixed bottom-5 right-5 z-[60] ' + bg +
+        ' text-white px-4 py-3 rounded-lg shadow-lg ' +
+        'flex items-center space-x-2 fade-in';
+
+    // Tampilkan sebagai teks biasa, bukan HTML.
+    t.replaceChildren(document.createTextNode(String(msg ?? '')));
+    t.classList.remove('hidden');
+
+    clearTimeout(t._hideTimer);
+    t._hideTimer = setTimeout(function () {
+        t.classList.add('hidden');
+    }, 3500);
+}
 function toggleDarkMode(){document.documentElement.classList.toggle('dark');document.getElementById('iconSun').classList.toggle('hidden');document.getElementById('iconMoon').classList.toggle('hidden');localStorage.setItem('gs_darkMode',document.documentElement.classList.contains('dark'));}
 if(localStorage.getItem('gs_darkMode')==='true'){document.documentElement.classList.add('dark');document.getElementById('iconSun').classList.remove('hidden');document.getElementById('iconMoon').classList.add('hidden');}
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('-translate-x-full');document.getElementById('sidebarOverlay').classList.toggle('hidden');}
@@ -544,7 +565,7 @@ function playBuzzerHorn() {
 }
 
 function playCorrectSound() {
-    kls_unlockAudio();
+    kls_unlockAudio(); 
     var ctx = kls_audioCtx;
     if(!ctx) return;
     var notes = [523.25, 659.25, 783.99, 1046.50]; 
@@ -557,7 +578,7 @@ function playCorrectSound() {
         osc.frequency.value = freq;
         var t = ctx.currentTime + i * 0.1;
         gain.gain.setValueAtTime(0.0001, t);
-        gain.gain.exponentialRampToValueAtTime(0.5, t + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.5, t + 0.05); 
         gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
         osc.start(t);
         osc.stop(t + 0.4);
@@ -565,7 +586,7 @@ function playCorrectSound() {
 }
 
 function playWrongSound() {
-    kls_unlockAudio();
+    kls_unlockAudio(); 
     var ctx = kls_audioCtx;
     if(!ctx) return;
     var osc = ctx.createOscillator();
@@ -575,7 +596,7 @@ function playWrongSound() {
     osc.type = 'sawtooth';
     osc.frequency.setValueAtTime(200, ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.6);
-    gain.gain.setValueAtTime(0.4, ctx.currentTime);
+    gain.gain.setValueAtTime(0.4, ctx.currentTime); 
     gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.6);
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.6);
@@ -885,29 +906,29 @@ function kls_renderLive() {
     var html = '';
     html += '<style>@keyframes kls_shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } } @keyframes kls_bounce { 0% { transform: scale(0.5); opacity: 0; } 50% { transform: scale(1.2); } 100% { transform: scale(1); opacity: 1; } }</style>';
     
-    html += '<div class="relative bg-slate-950 rounded-[2rem] shadow-2xl overflow-hidden border border-white/10 grid grid-cols-1 lg:grid-cols-4 gap-0">';
-    html += '  <div class="absolute top-0 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none"></div>';
-    html += '  <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>';
+    html += '<div class="flex flex-col lg:flex-row gap-6">';
     
-    html += '  <div class="relative z-10 lg:col-span-3 p-6 md:p-8 text-center bg-slate-900/60 backdrop-blur-md flex flex-col justify-start min-h-[400px]">';
-    html += '    <div class="flex justify-between items-center text-white mb-6 border-b border-white/10 pb-4">';
-    html += '      <div class="flex items-center gap-3">';
-    html += '        <div class="bg-white/10 p-2 rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="filter: drop-shadow(0 0 5px rgba(251,191,36,0.7));"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19c0 1.1-.9 2-2 2H5a2 2 0 01-2-2v-7a2 2 0 012-2h1.882a1 1 0 00.941-.665l3.47-9.353a1 1 0 011.4-.538l1.27.635a1 1 0 01.53.53v3.47a1 1 0 00.293.707l.707.707a1 1 0 001.414 0l1-1a1 1 0 011.414 0l1 1a1 1 0 00.707.293h.118a1 1 0 01.998.898l.011.102a1 1 0 01-.998 1.102H21a2 2 0 01-2-2v-7a2 2 0 00-2-2h-1.882a1 1 0 01-.941-.665l-1.47-3.97a1 1 0 00-.4-.538l-1.27-.635a1 1 0 00-1.4.538l-3.47 9.353z" /></svg></div>';
-    html += '        <div>';
-    html += '          <p class="text-[10px] uppercase tracking-widest text-slate-400">Pertanyaan Ke</p>';
-    html += '          <h3 class="font-bold text-xl text-white">'+(kls_data.soalIndex + 1)+' / '+total+'</h3>';
+    // KOLOM KIRI (SOAL & JAWABAN) - LATAR MOTIF GRID ELEGAN
+    html += '  <div class="flex-1 relative bg-slate-950 rounded-[2rem] shadow-2xl overflow-hidden border border-white/10 min-h-[500px]" style="background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px), radial-gradient(circle at 20% 20%, rgba(167, 139, 250, 0.2) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.2) 0%, transparent 50%); background-size: 40px 40px, 40px 40px, 100% 100%, 100% 100%;">';
+    html += '    <div class="relative z-10 p-6 md:p-8 text-center bg-slate-900/50 backdrop-blur-md flex flex-col justify-start min-h-full">';
+    html += '      <div class="flex justify-between items-center text-white mb-6 border-b border-white/10 pb-4">';
+    html += '        <div class="flex items-center gap-3">';
+    html += '          <div class="bg-white/10 p-2 rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="filter: drop-shadow(0 0 5px rgba(251,191,36,0.7));"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19c0 1.1-.9 2-2 2H5a2 2 0 01-2-2v-7a2 2 0 012-2h1.882a1 1 0 00.941-.665l3.47-9.353a1 1 0 011.4-.538l1.27.635a1 1 0 01.53.53v3.47a1 1 0 00.293.707l.707.707a1 1 0 001.414 0l1-1a1 1 0 011.414 0l1 1a1 1 0 00.707.293h.118a1 1 0 01.998.898l.011.102a1 1 0 01-.998 1.102H21a2 2 0 01-2-2v-7a2 2 0 00-2-2h-1.882a1 1 0 01-.941-.665l-1.47-3.97a1 1 0 00-.4-.538l-1.27-.635a1 1 0 00-1.4.538l-3.47 9.353z" /></svg></div>';
+    html += '          <div>';
+    html += '            <p class="text-[10px] uppercase tracking-widest text-slate-400">Pertanyaan Ke</p>';
+    html += '            <h3 class="font-bold text-xl text-white">'+(kls_data.soalIndex + 1)+' / '+total+'</h3>';
+    html += '          </div>';
+    html += '        </div>';
+    html += '        <div class="flex items-center gap-2">';
+    html += '          <button onclick="kls_showJoinQR()" class="bg-indigo-500/80 hover:bg-indigo-500 px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h2v-2m-2 0V8.82a2 2 0 012-2h.32a2 2 0 011.86 1.24L20 12M4 13V8.82a2 2 0 012-2h.32a2 2 0 011.86 1.24L8 12M4 13h2m6 0V9.82a2 2 0 012-2h.32a2 2 0 011.86 1.24L16 12M14 13h2" /></svg> Tampilkan QR Kuis</button>';
+    html += '          <button onclick="kls_stop()" class="bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg text-xs font-bold transition">Akhiri Kuis</button>';
     html += '        </div>';
     html += '      </div>';
-    html += '      <div class="flex items-center gap-2">';
-    html += '        <button onclick="kls_showJoinQR()" class="bg-indigo-500/80 hover:bg-indigo-500 px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h2v-2m-2 0V8.82a2 2 0 012-2h.32a2 2 0 011.86 1.24L20 12M4 13V8.82a2 2 0 012-2h.32a2 2 0 011.86 1.24L8 12M4 13h2m6 0V9.82a2 2 0 012-2h.32a2 2 0 011.86 1.24L16 12M14 13h2" /></svg> Tampilkan QR Kuis</button>';
-    html += '        <button onclick="kls_stop()" class="bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg text-xs font-bold transition">Akhiri Kuis</button>';
-    html += '      </div>';
-    html += '    </div>';
     
-    html += '    <div class="bg-slate-800 h-2 w-full rounded-full mb-6"><div class="bg-gradient-to-r from-cyan-400 to-blue-500 h-2 rounded-full transition-all duration-500" style="width:'+progress+'%; box-shadow: 0 0 10px rgba(59,130,246,0.8);"></div></div>';
+    html += '      <div class="bg-slate-800 h-2 w-full rounded-full mb-6"><div class="bg-gradient-to-r from-cyan-400 to-blue-500 h-2 rounded-full transition-all duration-500" style="width:'+progress+'%; box-shadow: 0 0 10px rgba(59,130,246,0.8);"></div></div>';
     
-    html += '    <p class="text-xl md:text-2xl font-extrabold text-white mb-8 tracking-wide" style="text-shadow: 0 0 15px rgba(255,255,255,0.3);">'+q.text+'</p>';
-    html += '    <div id="kls_options_grid" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">';
+    html += '      <p class="text-xl md:text-2xl font-extrabold text-white mb-8 tracking-wide" style="text-shadow: 0 0 15px rgba(255,255,255,0.3);">'+q.text+'</p>';
+    html += '      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">';
     
     q.options.forEach(function(opt, index) {
         var safeOpt = encodeURIComponent(opt);
@@ -915,31 +936,55 @@ function kls_renderLive() {
         var cursorStyle = kls_data.isBuzzed ? 'cursor-pointer hover:scale-[1.02] hover:brightness-110' : 'cursor-not-allowed opacity-50';
         var bgIdle = kls_data.isBuzzed ? 'bg-slate-800' : 'bg-slate-800/50';
         
-        html += '      <div class="opt-card '+bgIdle+' p-4 rounded-xl border-2 '+col.border+' text-white text-left font-bold transition-all shadow-sm flex items-center gap-3 '+cursorStyle+' '+col.glow+'" data-opt="'+safeOpt+'" onclick="kls_answer(decodeURIComponent(this.dataset.opt))">';
-        html += '        <span class="w-10 h-10 bg-gradient-to-br '+col.grad+' text-white flex items-center justify-center rounded-lg text-lg shadow-md">'+opt.substring(0,1)+'</span>';
-    html += '        <span class="flex-1">'+opt.substring(3)+'</span>';
-    html += '      </div>';
+        html += '        <div class="opt-card '+bgIdle+' p-4 rounded-xl border-2 '+col.border+' text-white text-left font-bold transition-all shadow-sm flex items-center gap-3 '+cursorStyle+' '+col.glow+'" data-opt="'+safeOpt+'" onclick="kls_answer(decodeURIComponent(this.dataset.opt))">';
+        html += '          <span class="w-10 h-10 bg-gradient-to-br '+col.grad+' text-white flex items-center justify-center rounded-lg text-lg shadow-md">'+opt.substring(0,1)+'</span>';
+        html += '          <span class="flex-1">'+opt.substring(3)+'</span>';
+        html += '        </div>';
     });
+    html += '      </div>';
     html += '    </div>';
     html += '  </div>';
     
-    html += '  <div id="kls_side_panel" class="relative z-10 lg:col-span-1 bg-slate-900/60 backdrop-blur-md p-6 border-l border-white/10 flex flex-col justify-between">';
+    // KOLOM KANAN (PANEL BUZZER MANUAL, TIMER, SKOR)
+    html += '  <div class="lg:w-80 flex-none bg-slate-950 rounded-[2rem] shadow-2xl overflow-hidden border border-white/10 flex flex-col" style="background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px); background-size: 40px 40px, 40px 40px;">';
+    html += '    <div class="relative z-10 p-6 bg-slate-900/50 backdrop-blur-md flex flex-col justify-between flex-1">';
     
-    html += '    <div id="kls_buzzer_area" class="flex flex-col items-center">';
-    html += kls_renderBuzzerArea(teamStyleMap);
+    html += '      <div class="flex flex-col items-center">';
+    if (!kls_data.isBuzzed && !kls_data.isLocked) {
+        html += '        <h4 class="text-slate-300 font-bold mb-4 text-lg text-center">🔔 Menunggu Buzzer dari HP / atau tekan manual:</h4>';
+        html += '        <div class="flex flex-col gap-3 w-full">';
+        kls_data.kelompok.forEach(function(t, i) {
+            var style = teamStyleMap[t];
+            html += '          <button onclick="kls_buzz(\''+t+'\')" class="bg-gradient-to-r '+style.grad+' text-white font-bold py-3 px-4 rounded-2xl flex items-center justify-center gap-2 hover:scale-105 transition transform active:scale-95 '+style.glow+'">';
+            html += '            <span class="text-xl">🔔</span>'+t;
+            html += '          </button>';
+        });
+        html += '        </div>';
+    } else if (kls_data.isBuzzed && !kls_data.isLocked) {
+        var style = teamStyleMap[kls_data.currentTeam];
+        html += '        <div class="bg-gradient-to-r '+style.grad+' border border-white/20 text-white px-4 py-4 rounded-2xl font-bold text-xl flex flex-col items-center gap-2 animate-pulse '+style.glow+'">';
+        html += '          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
+        html += '          <span>GILIRAN</span><span>'+kls_data.currentTeam+'</span>';
+        html += '        </div>';
+    } else {
+         html += '        <div class="bg-slate-800 border border-slate-700 text-slate-300 px-6 py-3 rounded-lg font-bold text-base flex items-center gap-2">';
+         html += '          ⏳ Menunggu soal berikutnya...';
+         html += '        </div>';
+    }
+    html += '      </div>';
+    
+    html += '      <div class="mt-6 flex flex-col items-center text-white">';
+    html += '        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="filter: drop-shadow(0 0 5px rgba(239,68,68,0.7));"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
+    html += '        <div class="text-4xl font-mono font-bold bg-slate-800 px-4 py-1 rounded-xl border border-slate-700" style="text-shadow: 0 0 10px rgba(255,255,255,0.3);"><span id="kls_timer">'+timer+'</span> <span class="text-sm">detik</span></div>';
+    html += '        <button onclick="kls_skip()" class="mt-4 text-xs text-slate-400 hover:text-red-500 underline">Lewati Soal Ini</button>';
+    html += '      </div>';
+    
+    html += '      <div class="mt-6 pt-4 border-t border-white/10">';
+    html += '        <h4 class="text-center text-white font-bold text-sm mb-4 flex items-center justify-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="filter: drop-shadow(0 0 5px rgba(251,191,36,0.7));"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2-888c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg> SKOR REAL-TIME</h4>';
+    html += '        <div class="space-y-2" id="kls_scoreboard">'+kls_renderScore()+'</div>';
+    html += '      </div>';
+    
     html += '    </div>';
-    
-    html += '    <div class="mt-6 flex flex-col items-center text-white">';
-    html += '      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="filter: drop-shadow(0 0 5px rgba(239,68,68,0.7));"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
-    html += '      <div class="text-4xl font-mono font-bold bg-slate-800 px-4 py-1 rounded-xl border border-slate-700" style="text-shadow: 0 0 10px rgba(255,255,255,0.3);"><span id="kls_timer">'+timer+'</span> <span class="text-sm">detik</span></div>';
-    html += '      <button onclick="kls_skip()" class="mt-4 text-xs text-slate-400 hover:text-red-500 underline">Lewati Soal Ini</button>';
-    html += '    </div>';
-    
-    html += '    <div class="mt-6 pt-4 border-t border-white/10">';
-    html += '      <h4 class="text-center text-white font-bold text-sm mb-4 flex items-center justify-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="filter: drop-shadow(0 0 5px rgba(251,191,36,0.7));"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2-888c-.783-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg> SKOR REAL-TIME</h4>';
-    html += '      <div class="space-y-2" id="kls_scoreboard">'+kls_renderScore()+'</div>';
-    html += '    </div>';
-    
     html += '  </div>'; 
     html += '</div>'; 
     
@@ -949,32 +994,6 @@ function kls_renderLive() {
         kls_startTimer();
         playBgMusic(); 
     }
-}
-
-function kls_renderBuzzerArea(teamStyleMap) {
-    var html = '';
-    if (!kls_data.isBuzzed && !kls_data.isLocked) {
-        html += '<h4 class="text-slate-300 font-bold mb-4 text-lg text-center">🔔 Menunggu Buzzer dari HP / atau tekan manual:</h4>';
-        html += '<div class="flex flex-col gap-3 w-full">';
-        kls_data.kelompok.forEach(function(t, i) {
-            var style = teamStyleMap[t];
-            html += '<button onclick="kls_buzz(\''+t+'\')" class="bg-gradient-to-r '+style.grad+' text-white font-bold py-3 px-4 rounded-2xl flex items-center justify-center gap-2 hover:scale-105 transition transform active:scale-95 '+style.glow+'">';
-            html += '  <span class="text-xl">🔔</span>'+t;
-            html += '</button>';
-        });
-        html += '</div>';
-    } else if (kls_data.isBuzzed && !kls_data.isLocked) {
-        var style = teamStyleMap[kls_data.currentTeam];
-        html += '<div class="bg-gradient-to-r '+style.grad+' border border-white/20 text-white px-4 py-4 rounded-2xl font-bold text-xl flex flex-col items-center gap-2 animate-pulse '+style.glow+'">';
-        html += '  <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
-        html += '  <span>GILIRAN</span><span>'+kls_data.currentTeam+'</span>';
-        html += '</div>';
-    } else {
-        html += '<div class="bg-slate-800 border border-slate-700 text-slate-300 px-6 py-3 rounded-lg font-bold text-base flex items-center gap-2">';
-        html += '  ⏳ Menunggu soal berikutnya...';
-        html += '</div>';
-    }
-    return html;
 }
 
 function kls_renderScore() {
@@ -1005,27 +1024,11 @@ function kls_buzz(team) {
     if(kls_data.intervalId) clearInterval(kls_data.intervalId); 
     
     kls_unlockAudio();
-    stopBgMusic(); 
     playBuzzerHorn(); 
     
     kls_data.currentTeam = team;
     kls_data.isBuzzed = true;
-
-    // UPDATE UI SMOOTH (Tanpa render ulang seluruh kontainer)
-    document.querySelectorAll('#kls_options_grid .opt-card').forEach(function(el) {
-        el.classList.remove('cursor-not-allowed', 'opacity-50');
-        el.classList.add('cursor-pointer', 'hover:scale-[1.02]', 'hover:brightness-110');
-        el.classList.remove('bg-slate-800/50');
-        el.classList.add('bg-slate-800');
-    });
-
-    var teamStyleMap = {};
-    kls_data.kelompok.forEach(function(t, i){ teamStyleMap[t] = kls_team_colors[i % kls_team_colors.length]; });
-    
-    var buzzerArea = document.getElementById('kls_buzzer_area');
-    if (buzzerArea) {
-        buzzerArea.innerHTML = kls_renderBuzzerArea(teamStyleMap);
-    }
+    kls_renderLive();
 }
 
 function kls_answer(opt) {
@@ -1037,8 +1040,6 @@ function kls_answer(opt) {
     
     kls_data.isLocked = true; 
     if(kls_data.intervalId) clearInterval(kls_data.intervalId);
-    stopBgMusic(); 
-
     kls_unlockAudio();
     
     var q = kls_data.soal[kls_data.soalIndex];
@@ -1048,8 +1049,7 @@ function kls_answer(opt) {
     var teamStyleMap = {};
     kls_data.kelompok.forEach(function(t, i){ teamStyleMap[t] = kls_team_colors[i % kls_team_colors.length]; });
     
-    // UPDATE PILIHAN JAWABAN SMOOTH (Tanpa render ulang seluruh kontainer)
-    document.querySelectorAll('#kls_options_grid .opt-card').forEach(function(el) {
+    document.querySelectorAll('#kls_live_container .opt-card').forEach(function(el) {
         var optText = decodeURIComponent(el.dataset.opt);
         var isThisCorrect = optText.indexOf(correct + '.') === 0 || optText.startsWith(correct + '.');
         
@@ -1069,12 +1069,6 @@ function kls_answer(opt) {
             el.className = 'opt-card bg-slate-800 p-4 rounded-xl border-2 border-slate-700 text-slate-500 opacity-50 flex items-center gap-3';
         }
     });
-
-    // Update side panel to loading state
-    var buzzerArea = document.getElementById('kls_buzzer_area');
-    if (buzzerArea) {
-        buzzerArea.innerHTML = '<div class="bg-slate-800 border border-slate-700 text-slate-300 px-6 py-3 rounded-lg font-bold text-base flex items-center gap-2">⏳ Menunggu soal berikutnya...</div>';
-    }
     
     var badgeStyle = teamStyleMap[kls_data.currentTeam] || { grad: 'from-slate-700 to-slate-800', glow: '' };
     var scoreBadge = document.createElement('div');
@@ -1113,7 +1107,7 @@ function kls_answer(opt) {
         kls_data.isBuzzed = false;
         kls_data.isLocked = false;
         if (kls_data.soalIndex < kls_data.soal.length) {
-            kls_renderLive(); // Render soal baru
+            kls_renderLive();
         } else {
             kls_end();
         }
@@ -1123,7 +1117,6 @@ function kls_answer(opt) {
 function kls_skip() {
     if (confirm('Lewati soal ini? Tidak ada poin yang ditambahkan.')) {
         if(kls_data.intervalId) clearInterval(kls_data.intervalId);
-        stopBgMusic();
         kls_data.isLocked = true;
         showToast('Soal dilewati.', 'info');
         setTimeout(function() {
@@ -1156,7 +1149,6 @@ function kls_startTimer() {
             kls_data.intervalId = null;
             showToast('⏳ Waktu habis!', 'error');
             kls_data.isLocked = true; 
-            stopBgMusic();
             
             setTimeout(function() {
                 kls_data.soalIndex++;
@@ -1190,7 +1182,7 @@ function kls_updateScore() {
 function kls_end() {
     if(kls_data.intervalId) clearInterval(kls_data.intervalId);
     if(kls_data.fallbackInterval) clearInterval(kls_data.fallbackInterval);
-    stopBgMusic();
+    stopBgMusic(); 
     kls_data.intervalId = null;
     kls_data.isLocked = false;
     kls_data.isBuzzed = false;
