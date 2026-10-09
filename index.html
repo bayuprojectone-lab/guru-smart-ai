@@ -686,7 +686,7 @@ async function kls_start(id) {
       .on('broadcast', { event: 'buzz' }, function(payload) {
           if (payload && payload.message && payload.message.team) {
               if (kls_data.kelompok.includes(payload.message.team)) {
-                  kls_buzz(payload.message.team);
+                  kls_buzz(payload.message.team); // OTOMATIS TERANGKAP DI PC GURU
               }
           }
       })
@@ -800,18 +800,20 @@ function kls_renderLive() {
     html += '  <div class="bg-slate-950 p-6 border-t border-slate-800 flex flex-col items-center">';
     
     if (!kls_data.isBuzzed && !kls_data.isLocked) {
-        html += '    <h4 class="text-slate-300 font-bold mb-4 text-lg text-center">🔔 Menunggu Buzzer dari HP Siswa / atau tekan manual di bawah:</h4>';
+        // SISTEM TIDAK PERLU TOMBOL BUZZER MANUAL DI PC
+        html += '    <h4 class="text-slate-300 font-bold mb-4 text-lg text-center">🔔 Menunggu Regu menekan Buzzer dari HP...</h4>';
         html += '    <div class="flex flex-wrap justify-center gap-4 mb-2">';
         
         kls_data.kelompok.forEach(function(t, i) {
             var style = teamStyleMap[t];
-            html += '      <button onclick="kls_buzz(\''+t+'\')" class="bg-gradient-to-br '+style.grad+' text-white font-bold py-4 px-6 rounded-2xl transition transform hover:scale-110 active:scale-95 '+style.glow+'">';
-            html += '        <span class="block text-2xl mb-1">🔔</span>'+t;
-            html += '      </button>';
+            // MENAMPILKAN STATUS NAMA REGU (HANYA INDIKATOR)
+            html += '      <div class="bg-slate-800 border border-slate-700 text-slate-400 font-bold py-4 px-6 rounded-2xl flex items-center gap-2">';
+            html += '        <span class="text-2xl">⏳</span>'+t;
+            html += '      </div>';
         });
     } else if (kls_data.isBuzzed && !kls_data.isLocked) {
         var style = teamStyleMap[kls_data.currentTeam];
-        // MENAMPILKAN REGU YANG MENGEKAN BUZZER DARI HP (REMOT)
+        // OTOMATIS MENAMPILKAN NAMA REGU YANG MENGEKAN BUZZER DARI HP (REMOT)
         html += '    <div class="bg-gradient-to-r '+style.grad+' border border-white/20 text-white px-8 py-4 rounded-lg font-bold text-2xl flex items-center gap-2 animate-pulse '+style.glow+'">';
         html += '      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
         html += '      GILIRAN REGU: '+kls_data.currentTeam+' ! Pilih jawaban di atas.';
@@ -838,11 +840,12 @@ function kls_renderLive() {
     
     c.innerHTML = html;
     
+    // TIMER OTOMATIS MENYALA SAAT SOAL MUNCUL
     if (!kls_data.isBuzzed && !kls_data.isLocked) {
         kls_startTimer();
     }
     
-    // CEK PARAMETER URL FALLBACK JIKA SUPABASE REALTIME GAGAL
+    // CEK URL PARAMETER FALLBACK
     kls_checkUrlBuzz();
 }
 
@@ -852,7 +855,7 @@ function kls_checkUrlBuzz() {
     if (match && match[1]) {
         var team = decodeURIComponent(match[1].replace(/\+/g, ' '));
         if (kls_data.kelompok.includes(team)) {
-            kls_buzz(team);
+            kls_buzz(team); // OTOMATIS BUNYI & KUNCI DI PC GURU
         }
         history.replaceState(null, null, window.location.pathname + window.location.search); // hapus url
     }
@@ -886,8 +889,8 @@ function kls_buzz(team) {
     if(kls_data.intervalId) clearInterval(kls_data.intervalId); 
     kls_data.currentTeam = team;
     kls_data.isBuzzed = true;
-    playBuzzerHorn(); // BUNYIKAN TEROMPET SAAT MENERIMA SINYAL DARI HP
-    kls_renderLive();
+    playBuzzerHorn(); // OTOMATIS BUNYI TEROMPET DI PC GURU
+    kls_renderLive(); // OTOMATIS RE-RENDER UI PC GURU
 }
 
 function kls_answer(opt) {
@@ -957,6 +960,7 @@ function kls_answer(opt) {
     
     kls_updateScore();
     
+    // OTOMATIS PINDAH KE SOAL SELANJUTNYA TANPA KLIK "MULAI"
     setTimeout(function() {
         kls_data.soalIndex++;
         kls_data.currentTeam = null;
@@ -1006,6 +1010,7 @@ function kls_startTimer() {
             showToast('⏳ Waktu habis!', 'error');
             kls_data.isLocked = true; 
             
+            // OTOMATIS PINDAH SOAL JIKA WAKTU HABIS
             setTimeout(function() {
                 kls_data.soalIndex++;
                 kls_data.currentTeam = null;
