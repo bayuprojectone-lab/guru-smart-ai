@@ -997,7 +997,79 @@ async function loadAttendanceData(){var di=document.getElementById('att_date');i
 function updateRecap(){document.querySelectorAll('tr').forEach(function(r){var im=r.querySelector('td[id^="att_"]');if(im){var sid=im.id.split('_')[1];var h=0,s=0,i=0,a=0;r.querySelectorAll('td[id^="att_"]').forEach(function(c){var v=c.innerText.trim()||'';if(v==='H')h++;else if(v==='S')s++;else if(v==='I')i++;else if(v==='A')a++;});var rh=document.getElementById('recap_h_'+sid);if(rh)rh.innerText=h;var rs=document.getElementById('recap_s_'+sid);if(rs)rs.innerText=s;var ri=document.getElementById('recap_i_'+sid);if(ri)ri.innerText=i;var ra=document.getElementById('recap_a_'+sid);if(ra)ra.innerText=a;}});}
 async function saveAttendance(){var dv=document.getElementById('att_date').value;if(!dv){showToast('Pilih tanggal!','error');return;}var m=dv.substring(0,7);var all=await DB.get('students');var sc=document.getElementById('att_class').value;var sts=sc?all.filter(function(s){return s.class_id===sc;}):all;if(sts.length===0){showToast('Tidak ada siswa.','info');return;}var sids=sts.map(function(s){return s.id;});var rows=[];for(var i=0;i<sts.length;i++){var s=sts[i];for(var d=1;d<=currentDaysInMonth;d++){var c=document.getElementById('att_'+s.id+'_'+d);var st=c?.innerText.trim()||'';if(st==='H'||st==='S'||st==='I'||st==='A'){rows.push({user_id:currentUser.id,student_id:s.id,date:m+'-'+String(d).padStart(2,'0'),status:st,subject:'Umum'});}}}showToast('Menyimpan...','info');try{if(sids.length>0){var dr=await sb.from('attendance').delete().eq('user_id',currentUser.id).in('student_id',sids).gte('date',m+'-01').lte('date',m+'-'+String(currentDaysInMonth).padStart(2,'0'));if(dr.error)console.error('Del:',dr.error);}if(rows.length>0){var ir=await sb.from('attendance').insert(rows);if(ir.error)throw ir.error;}showToast('Absensi tersimpan!','success');}catch(err){console.error('Save:',err);showToast('Gagal: '+(err.message||'Unknown'),'error');}await loadAttendanceData();}
 async function exportAttendanceExcel(){var results=await Promise.all([DB.get('school_profile'),DB.get('students'),DB.get('classes')]);var prof=results[0][0]||{},all=results[1],cl=results[2];var dv=document.getElementById('att_date').value;var cv=document.getElementById('att_class').value;var c=cl.find(function(x){return x.id===cv;});var sts=cv?all.filter(function(s){return s.class_id===cv;}):all;if(sts.length===0){showToast('Tidak ada siswa untuk diekspor.','error');return;}var ms=dv?new Date(dv).toLocaleDateString('id-ID',{month:'long',year:'numeric'}):'-';var aoa=[];aoa.push([""]);aoa.push(["",prof.kop_line1||"NAMA SEKOLAH","","","",""]);if(prof.kop_line1b)aoa.push(["",prof.kop_line1b,"","",""]);aoa.push(["",prof.kop_line2||prof.name||"","","",""]);aoa.push(["",prof.kop_line3||"","","",""]);aoa.push([""]);aoa.push(["DAFTAR HADIR SISWA"]);aoa.push(["Kelas: "+(c?.name||'Semua')+" | Bulan: "+ms]);aoa.push([""]);var header=["No","NIS","Nama"];for(var d=1;d<=currentDaysInMonth;d++)header.push("Tgl "+d);header.push("Total H","Total S","Total I","Total A");aoa.push(header);for(var i=0;i<sts.length;i++){var s=sts[i];var row=[i+1,s.nis,s.name];var h=0,sk=0,iz=0,al=0;for(var d=1;d<=currentDaysInMonth;d++){var cell=document.getElementById('att_'+s.id+'_'+d);var v=cell?.innerText.trim()||'';row.push(v);if(v==='H')h++;else if(v==='S')sk++;else if(v==='I')iz++;else if(v==='A')al++;}row.push(h,sk,iz,al);aoa.push(row);}var ws=XLSX.utils.aoa_to_sheet(aoa);var lastCol=3+currentDaysInMonth+3;ws['!merges']=[{s:{r:1,c:1},e:{r:1,c:lastCol}},{s:{r:2,c:1},e:{r:2,c:lastCol}},{s:{r:3,c:1},e:{r:3,c:lastCol}},{s:{r:4,c:1},e:{r:4,c:lastCol}},{s:{r:6,c:0},e:{r:6,c:lastCol}},{s:{r:7,c:0},e:{r:7,c:lastCol}}];ws['!cols']=[{wch:5},{wch:15},{wch:25}];for(var d=1;d<=currentDaysInMonth;d++)ws['!cols'].push({wch:5});var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Absensi');XLSX.writeFile(wb,'Absensi_'+dv+'.xlsx');showToast('File Excel berhasil diunduh!','success');}
-async function printAttendance(){var results=await Promise.all([DB.get('students'),DB.get('classes'),DB.get('school_profile')]);var all=results[0],cls=results[1],prof=results[2][0]||{};var dv=document.getElementById('att_date').value;var cv=document.getElementById('att_class').value;var cl=cls.find(function(c){return c.id===cv;});var ms=dv?new Date(dv).toLocaleDateString('id-ID',{month:'long',year:'numeric'}):'-';var sts=cv?all.filter(function(s){return s.class_id===cv;}):all;var dh='';for(var d=1;d<=currentDaysInMonth;d++){dh+='<th style="font-size:8px;padding:2px;border:1px solid #000;width:12px;">'+d+'</th>';}var rh='';for(var i=0;i<sts.length;i++){var s=sts[i];var td='';var h=0,sk=0,iz=0,al=0;for(var d=1;d<=currentDaysInMonth;d++){var c=document.getElementById('att_'+s.id+'_'+d);var v=c?.innerText.trim()||'';var col=v==='H'?'green':v==='A'?'red':v===''?'transparent':'orange';td+='<td style="font-size:8px;padding:2px;border:1px solid #000;color:'+col+';font-weight:bold;text-align:center;">'+v+'</td>';if(v==='H')h++;else if(v==='S')sk++;else if(v==='I')iz++;else if(v==='A')al++;}rh+='<tr><td style="padding:4px;border:1px solid #000;text-align:center;font-size:10px;">'+(i+1)+'</td><td style="padding:4px;border:1px solid #000;font-size:10px;">'+s.name+'</td>'+td+'<td style="padding:4px;border:1px solid #000;text-align:center;font-size:10px;color:green;font-weight:bold;">'+h+'</td><td style="padding:4px;border:1px solid #000;text-align:center;font-size:10px;color:blue;font-weight:bold;">'+sk+'</td><td style="padding:4px;border:1px solid #000;text-align:center;font-size:10px;color:orange;font-weight:bold;">'+iz+'</td><td style="padding:4px;border:1px solid #000;text-align:center;font-size:10px;color:red;font-weight:bold;">'+al+'</td></tr>';}var kh=await generateKopHTML();openPrintPreview('<div style="font-family:Arial;color:#000;">'+kh+'<h3 style="text-align:center;margin:20px 0 5px;">DAFTAR HADIR SISWA</h3><p style="text-align:center;margin:0 0 15px;font-size:12px;">Kelas: '+(cl?.name||'Semua')+' | Bulan: '+ms+'</p><table style="width:100%;border-collapse:collapse;font-size:10px;"><thead><tr style="background:#eee;"><th rowspan="2" style="padding:5px;border:1px solid #000;">No</th><th rowspan="2" style="padding:5px;border:1px solid #000;">Nama</th><th colspan="'+currentDaysInMonth+'" style="border:1px solid #000;padding:4px;">Tanggal</th><th rowspan="2" style="padding:5px;border:1px solid #000;color:green;">H</th><th rowspan="2" style="padding:5px;border:1px solid #000;color:blue;">S</th><th rowspan="2" style="padding:5px;border:1px solid #000;color:orange;">I</th><th rowspan="2" style="padding:5px;border:1px solid #000;color:red;">A</th></tr><tr style="background:#eee;">'+dh+'</tr></thead><tbody>'+rh+'</tbody></table><div style="display:flex;justify-content:space-between;margin-top:40px;font-size:12px;"><div style="text-align:center;"><p>Mengetahui,</p><p>Kepala Sekolah</p><br><br><br><p style="font-weight:bold;text-decoration:underline;">'+(prof.principal||'-')+'</p><p>NIP. '+(prof.principal_nip||'-')+'</p></div><div style="text-align:center;"><p>'+new Date().toLocaleDateString('id-ID',{dateStyle:'long'})+'</p><p>Wali Kelas</p><br><br><br><p style="font-weight:bold;text-decoration:underline;">'+currentUser.name+'</p></div></div></div>');}
+async function printAttendance(){
+  var results=await Promise.all([DB.get('students'),DB.get('classes'),DB.get('school_profile')]);
+  var all=results[0],cls=results[1],prof=results[2][0]||{};
+  var dv=document.getElementById('att_date').value;
+  var cv=document.getElementById('att_class').value;
+  var cl=cls.find(function(c){return c.id===cv;});
+  var ms=dv?new Date(dv).toLocaleDateString('id-ID',{month:'long',year:'numeric'}):'-';
+  var sts=cv?all.filter(function(s){return s.class_id===cv;}):all;
+
+  // Ambil nama wali kelas dari data kelas; fallback ke currentUser jika kosong
+  var waliKelasNama = (cl && cl.homeroom && cl.homeroom.trim()) ? cl.homeroom : currentUser.name;
+
+  var dh='';
+  for(var d=1;d<=currentDaysInMonth;d++){
+    dh+='<th style="font-size:8px;padding:2px;border:1px solid #000;width:12px;">'+d+'</th>';
+  }
+  var rh='';
+  for(var i=0;i<sts.length;i++){
+    var s=sts[i];
+    var td='';
+    var h=0,sk=0,iz=0,al=0;
+    for(var d=1;d<=currentDaysInMonth;d++){
+      var c=document.getElementById('att_'+s.id+'_'+d);
+      var v=c?.innerText.trim()||'';
+      var col=v==='H'?'green':v==='A'?'red':v===''?'transparent':'orange';
+      td+='<td style="font-size:8px;padding:2px;border:1px solid #000;color:'+col+';font-weight:bold;text-align:center;">'+v+'</td>';
+      if(v==='H')h++;
+      else if(v==='S')sk++;
+      else if(v==='I')iz++;
+      else if(v==='A')al++;
+    }
+    rh+='<tr><td style="padding:4px;border:1px solid #000;text-align:center;font-size:10px;">'+(i+1)+'</td>'+
+        '<td style="padding:4px;border:1px solid #000;font-size:10px;">'+s.name+'</td>'+
+        td+
+        '<td style="padding:4px;border:1px solid #000;text-align:center;font-size:10px;color:green;font-weight:bold;">'+h+'</td>'+
+        '<td style="padding:4px;border:1px solid #000;text-align:center;font-size:10px;color:blue;font-weight:bold;">'+sk+'</td>'+
+        '<td style="padding:4px;border:1px solid #000;text-align:center;font-size:10px;color:orange;font-weight:bold;">'+iz+'</td>'+
+        '<td style="padding:4px;border:1px solid #000;text-align:center;font-size:10px;color:red;font-weight:bold;">'+al+'</td></tr>';
+  }
+  var kh=await generateKopHTML();
+  openPrintPreview(
+    '<div style="font-family:Arial;color:#000;">'+kh+
+    '<h3 style="text-align:center;margin:20px 0 5px;">DAFTAR HADIR SISWA</h3>'+
+    '<p style="text-align:center;margin:0 0 15px;font-size:12px;">Kelas: '+(cl?.name||'Semua')+' | Bulan: '+ms+'</p>'+
+    '<table style="width:100%;border-collapse:collapse;font-size:10px;">'+
+      '<thead><tr style="background:#eee;">'+
+        '<th rowspan="2" style="padding:5px;border:1px solid #000;">No</th>'+
+        '<th rowspan="2" style="padding:5px;border:1px solid #000;">Nama</th>'+
+        '<th colspan="'+currentDaysInMonth+'" style="border:1px solid #000;padding:4px;">Tanggal</th>'+
+        '<th rowspan="2" style="padding:5px;border:1px solid #000;color:green;">H</th>'+
+        '<th rowspan="2" style="padding:5px;border:1px solid #000;color:blue;">S</th>'+
+        '<th rowspan="2" style="padding:5px;border:1px solid #000;color:orange;">I</th>'+
+        '<th rowspan="2" style="padding:5px;border:1px solid #000;color:red;">A</th>'+
+      '</tr><tr style="background:#eee;">'+dh+'</tr></thead>'+
+      '<tbody>'+rh+'</tbody>'+
+    '</table>'+
+    '<div style="display:flex;justify-content:space-between;margin-top:40px;font-size:12px;">'+
+      '<div style="text-align:center;">'+
+        '<p>Mengetahui,</p>'+
+        '<p>Kepala Sekolah</p><br><br><br>'+
+        '<p style="font-weight:bold;text-decoration:underline;">'+(prof.principal||'-')+'</p>'+
+        '<p>NIP. '+(prof.principal_nip||'-')+'</p>'+
+      '</div>'+
+      '<div style="text-align:center;">'+
+        '<p>'+new Date().toLocaleDateString('id-ID',{dateStyle:'long'})+'</p>'+
+        '<p>Wali Kelas</p><br><br><br>'+
+        '<p style="font-weight:bold;text-decoration:underline;">'+waliKelasNama+'</p>'+
+        // Tampilkan nama kelas di bawah wali kelas untuk kejelasan
+        '<p style="font-size:10px;">Kelas '+(cl?.name||'-')+'</p>'+
+      '</div>'+
+    '</div></div>'
+  );
+}
 function playBeep(){try{var ctx=new(window.AudioContext||window.webkitAudioContext)();var osc=ctx.createOscillator();var gain=ctx.createGain();osc.connect(gain);gain.connect(ctx.destination);osc.type='sine';osc.frequency.value=900;gain.gain.setValueAtTime(1,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+0.3);osc.start(ctx.currentTime);osc.stop(ctx.currentTime+0.3);}catch(e){}}
 function startScanCamera(){try{html5QrCode=new Html5Qrcode("qr-reader");var onScanSuccess=function(t){stopCameraStream();if(window.currentActId){processActQRResult(window.currentActId,t);}else{processQRResult(t);}};html5QrCode.start({facingMode:"environment"},{fps:10,qrbox:{width:280,height:280}},onScanSuccess,function(){});var st=document.getElementById('qr-status');if(st)st.innerText="Arahkan kamera ke QR Siswa";}catch(e){var st=document.getElementById('qr-status');if(st)st.innerText="Kamera gagal diakses.";}}
 function stopCameraStream(){if(html5QrCode){html5QrCode.stop().then(function(){html5QrCode.clear();html5QrCode=null;}).catch(function(){html5QrCode=null;});}}
