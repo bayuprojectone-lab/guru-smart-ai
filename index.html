@@ -1023,7 +1023,34 @@ async function renderSubjects(){
   '</div>';
 }
 async function subjectForm(id){var s=null;if(id){s=(await DB.get('subjects')).find(function(x){return x.id===id;});}openModal('Tambah Mapel','<form id="subjectForm" class="space-y-4"><div><label class="block text-sm mb-1">Kode</label><input type="text" id="sub_code" value="'+(s?.code||'')+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Nama Mapel</label><input type="text" id="sub_name" value="'+(s?.name||'')+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Guru Pengampu</label><input type="text" id="sub_teacher" value="'+(s?.teacher||'')+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">KKM</label><input type="number" id="sub_kkm" value="'+(s?.kkm||75)+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button></form>');document.getElementById('subjectForm').onsubmit=async function(e){e.preventDefault();var p={code:document.getElementById('sub_code').value,name:document.getElementById('sub_name').value,teacher:document.getElementById('sub_teacher').value,kkm:parseInt(document.getElementById('sub_kkm').value)};await saveData('subjects',p,id);closeModal();renderSubjects();};}
-async function saveData(key,data,id){var result=null;if(id){result=await DB.update(key,id,data);}else{result=await DB.insert(key,data);}if(result){showToast('Data disimpan!','success');return true;}return false;}
+async function saveData(key,data,id){
+    var result=null;
+    try {
+        if(id){
+            result=await sb.from(key).update(data).eq('id',id).eq('user_id',currentUser.id).select();
+        } else {
+            result=await sb.from(key).insert([{...data,user_id:currentUser.id}]).select();
+        }
+        
+        if(result.error){
+            console.error("Supabase Error Detail:", result.error);
+            showToast('Gagal Simpan: ' + result.error.message, 'error');
+            return false;
+        }
+        
+        if(!result.data || result.data.length === 0){
+            showToast('Gagal Simpan: Tabel "'+key+'" memblokir data (Cek RLS Policy di Supabase).', 'error');
+            return false;
+        }
+        
+        showToast('Data disimpan!','success');
+        return true;
+    } catch(err) {
+        console.error("Crash di saveData:", err);
+        showToast('Error Sistem: ' + err.message, 'error');
+        return false;
+    }
+}
 async function deleteData(key,id,callback){if(confirm('Hapus data?')){await DB.remove(key,id);if(typeof callback==='function')callback();}}
 function filterTable(searchId,tbodyId){var input=document.getElementById(searchId).value.toLowerCase();var rows=document.getElementById(tbodyId).getElementsByTagName('tr');for(var i=0;i<rows.length;i++){rows[i].style.display=rows[i].innerText.toLowerCase().includes(input)?'':'none';}}
 async function annForm(id){var a=null;if(id){a=(await DB.get('announcements')).find(function(x){return x.id===id;});}openModal('Buat Pengumuman','<form id="annForm" class="space-y-4"><div><label class="block text-sm mb-1">Judul</label><input type="text" id="an_title" value="'+(a?.title||'')+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Isi</label><textarea id="an_content" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">'+(a?.content||'')+'</textarea></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Simpan</button></form>');document.getElementById('annForm').onsubmit=async function(e){e.preventDefault();var p={title:document.getElementById('an_title').value,content:document.getElementById('an_content').value,date:new Date().toISOString().split('T')[0]};await saveData('announcements',p,id);closeModal();loadAnnListDash();};}
