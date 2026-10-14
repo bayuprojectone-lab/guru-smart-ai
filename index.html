@@ -2552,5 +2552,105 @@ function applyExactStudentCardPrintColors(root){
  #printArea .student-card-face,#printArea .student-card-front-head,#printArea .student-card-back-title,#printArea .student-card-back-footer{ -webkit-print-color-adjust:exact!important; print-color-adjust:exact!important; }
 }
 </style>
+
+<!-- GURU SMART AI PRO: sistem peringatan kendala; kode fitur lain tidak diubah -->
+<style id="gs-system-alert-style">
+#gsSystemAlert{position:fixed;top:12px;left:50%;transform:translateX(-50%);width:min(620px,calc(100vw - 24px));z-index:2147483647;display:none;border-radius:12px;padding:12px 14px;box-shadow:0 12px 35px rgba(15,23,42,.25);font:14px/1.45 Inter,Arial,sans-serif}
+#gsSystemAlert.gs-alert-warning{display:block;background:#fff7ed;color:#9a3412;border:1px solid #fdba74}
+#gsSystemAlert.gs-alert-error{display:block;background:#fef2f2;color:#991b1b;border:1px solid #fca5a5}
+#gsSystemAlert.gs-alert-success{display:block;background:#f0fdf4;color:#166534;border:1px solid #86efac}
+#gsSystemAlert .gs-alert-title{font-weight:800;margin-bottom:3px}
+#gsSystemAlert .gs-alert-detail{font-size:12px;overflow-wrap:anywhere}
+#gsSystemAlert .gs-alert-close{float:right;border:0;background:transparent;font-size:20px;line-height:1;cursor:pointer;margin-left:12px;color:inherit}
+@media(prefers-reduced-motion:no-preference){#gsSystemAlert{animation:gsAlertIn .2s ease-out}@keyframes gsAlertIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}}
+</style>
+<div id="gsSystemAlert" role="alert" aria-live="assertive">
+  <button type="button" class="gs-alert-close" aria-label="Tutup peringatan" id="gsSystemAlertClose">×</button>
+  <div class="gs-alert-title" id="gsSystemAlertTitle">Peringatan Sistem</div>
+  <div id="gsSystemAlertMessage"></div>
+  <div class="gs-alert-detail" id="gsSystemAlertDetail"></div>
+</div>
+<script id="gs-system-alert-logic">
+(function(){
+  'use strict';
+  var alertTimer=null, lastKey='', lastAt=0;
+  function showSystemAlert(type,title,message,detail,autoHide){
+    var box=document.getElementById('gsSystemAlert');
+    if(!box)return;
+    var key=[type,title,message].join('|'), now=Date.now();
+    if(key===lastKey && now-lastAt<8000)return;
+    lastKey=key;lastAt=now;
+    box.className='gs-alert-'+(type||'warning');
+    document.getElementById('gsSystemAlertTitle').textContent=title||'Peringatan Sistem';
+    document.getElementById('gsSystemAlertMessage').textContent=message||'Terjadi kendala.';
+    document.getElementById('gsSystemAlertDetail').textContent=detail||'';
+    box.style.display='block';
+    if(alertTimer)clearTimeout(alertTimer);
+    if(autoHide)alertTimer=setTimeout(function(){box.style.display='none';},autoHide);
+  }
+  window.gsShowSystemAlert=showSystemAlert;
+  document.addEventListener('click',function(e){
+    if(e.target && e.target.id==='gsSystemAlertClose'){
+      var box=document.getElementById('gsSystemAlert');
+      if(box)box.style.display='none';
+      if(alertTimer)clearTimeout(alertTimer);
+    }
+  });
+  function isOffline(){
+    return typeof navigator!=='undefined' && navigator.onLine===false;
+  }
+  window.addEventListener('offline',function(){
+    showSystemAlert('error','Koneksi Internet Terputus','Aplikasi tidak dapat terhubung ke internet.','Periksa Wi-Fi atau jaringan seluler Anda. Data yang belum tersimpan mungkin perlu dikirim ulang.');
+  });
+  window.addEventListener('online',function(){
+    showSystemAlert('success','Koneksi Internet Kembali','Internet terhubung kembali.','Jika sebelumnya ada data gagal disimpan, periksa dan ulangi penyimpanannya bila diperlukan.',6500);
+  });
+  window.addEventListener('error',function(e){
+    if(isOffline())return;
+    var msg=e && e.message ? String(e.message) : 'Terjadi kesalahan pada halaman.';
+    showSystemAlert('error','Ada Kendala pada Aplikasi','Sebagian fungsi mungkin tidak berjalan normal.',msg.slice(0,240));
+  });
+  window.addEventListener('unhandledrejection',function(e){
+    if(isOffline())return;
+    var reason=e && e.reason, msg='';
+    try{msg=reason && reason.message ? String(reason.message) : String(reason||'Permintaan gagal diproses.');}catch(_){msg='Permintaan gagal diproses.';}
+    showSystemAlert('error','Permintaan Gagal Diproses','Aplikasi menerima kegagalan saat menjalankan suatu proses.',msg.slice(0,240));
+  });
+  // Pantau respons server 5xx tanpa mengubah respons yang diterima fitur aplikasi.
+  if(typeof window.fetch==='function'){
+    var originalFetch=window.fetch;
+    window.fetch=function(){
+      var args=arguments;
+      return originalFetch.apply(this,args).then(function(response){
+        try{
+          if(response && response.status>=500){
+            var req=args[0], url=typeof req==='string'?req:(req&&req.url)||'';
+            showSystemAlert('error','Server Sedang Bermasalah','Server mengembalikan kesalahan ('+response.status+').','Coba lagi beberapa saat. Jika berulang, hubungi pengelola aplikasi. URL: '+url.slice(0,160));
+          }else if(response && response.status===429){
+            showSystemAlert('warning','Permintaan Terlalu Banyak','Layanan sedang membatasi jumlah permintaan.','Tunggu sebentar sebelum mencoba kembali.',7000);
+          }
+        }catch(_){}
+        return response;
+      }).catch(function(err){
+        if(!isOffline()){
+          var msg=err&&err.message?String(err.message):'Koneksi ke layanan gagal.';
+          showSystemAlert('error','Gagal Menghubungi Layanan','Permintaan ke server tidak berhasil.',msg.slice(0,200)+' — periksa koneksi dan coba kembali.');
+        }
+        throw err;
+      });
+    };
+  }
+  // Beri peringatan saat tab kembali aktif jika perangkat sedang offline.
+  document.addEventListener('visibilitychange',function(){
+    if(!document.hidden && isOffline()){
+      showSystemAlert('error','Tidak Ada Koneksi Internet','Aplikasi sedang offline.','Sambungkan internet agar fitur yang membutuhkan server dapat digunakan.');
+    }
+  });
+  if(isOffline()){
+    showSystemAlert('error','Koneksi Internet Terputus','Aplikasi sedang offline.','Sambungkan internet untuk menggunakan fitur yang membutuhkan server.');
+  }
+})();
+</script>
+
 </body>
 </html>
