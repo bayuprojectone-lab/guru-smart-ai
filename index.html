@@ -681,7 +681,14 @@ function navigate(page){currentPage=page;document.getElementById('pageTitle').in
 async function renderContent(page){var c=document.getElementById('content');c.className='flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 lg:p-6 bg-slate-100 dark:bg-slate-900';if(page==='ai'){c.className='flex-1 min-h-0 flex flex-col overflow-hidden p-4 bg-slate-100 dark:bg-slate-900';}c.innerHTML='<div class="text-center py-10 text-slate-500 dark:text-slate-400">Memuat data...</div>';switch(page){case'dashboard':await renderDashboard();break;case'ai':await renderAI();break;case'kuis_kelas':await renderKuisKelas();break;case'teachers':await renderTeachers();break;case'students':await renderStudents();break;case'classes':await renderClasses();break;case'subjects':await renderSubjects();break;case'schedules':await renderSchedules();break;case'attendance':await renderAttendance();break;case'activity_attendance':await renderActivityAttendance();break;case'grades':await renderGrades();break;case'assignments':await renderAssignments();break;case'materi':await renderMateri();break;case'keuangan':await renderKeuangan();break;case'rapor':await renderRapor();break;case'settings':await renderSettings();break;}}
 function statCard(t,c,gradient,i,subtitle){return '<div class="stat-card relative bg-gradient-to-br '+gradient+' p-5 rounded-2xl shadow-lg text-white overflow-hidden slide-up"><div class="relative z-10 flex items-start justify-between"><div><p class="text-xs font-medium opacity-90 uppercase tracking-wider">'+t+'</p><h3 class="text-3xl font-extrabold mt-2 mb-1">'+c+'</h3><p class="text-xs opacity-80">'+subtitle+'</p></div><div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm"><svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="'+i+'"></path></svg></div></div></div>';}
 function initApp(){document.getElementById('authScreen').classList.add('hidden');document.getElementById('appScreen').classList.remove('hidden');document.getElementById('userName').innerText=currentUser.name;document.getElementById('userRole').innerText=currentUser.role;document.getElementById('userAvatar').src=currentUser.avatar_url||AI_IMG;navigate('dashboard');}
-window.onload=async function(){if(await checkSession()){initApp();}};
+window.onload=async function(){
+  // CEK JIKA SEDANG AKSES MODE BUZZER SISWA MELALUI LINK QR
+  if(window.location.hash.indexOf('#join-') !== -1){
+    handleBuzzerJoin();
+    return; // Hentikan proses login aplikasi guru
+  }
+  if(await checkSession()){initApp();}
+};
 </script><script>
 var kurikulumTypes=[
 {id:'cp',label:'Capaian Pembelajaran (CP)',desc:'Kompetensi yang harus dicapai peserta didik',color:'from-blue-500 to-cyan-600',icon:'M13 10V3L4 14h7v7l9-11h-7z'},
