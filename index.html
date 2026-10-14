@@ -2428,13 +2428,15 @@ function kls_stop() {
 }
 
 // Logika untuk Interface HP Siswa
-window.addEventListener('load', function() {
+function handleBuzzerJoin() {
     var hash = window.location.hash;
     if (hash.indexOf('#join-') !== -1) {
         var room = hash.replace('#join-', '');
         document.title = "Buzzer Kuis Siswa";
         
-        document.documentElement.innerHTML = `<head><title>Buzzer Kuis Siswa</title><style>body{margin:0;font-family:Inter,sans-serif;}</style>
+        // Jika tampilan buzzer belum ada (masih di halaman login/dashboard), generate ulang
+        if (!document.getElementById('studentApp')) {
+            document.documentElement.innerHTML = `<head><title>Buzzer Kuis Siswa</title><style>body{margin:0;font-family:Inter,sans-serif;}</style>
 <style id="student-card-logo-photo-refinement">
 /* Logo depan sedikit diperkecil dan memakai latar putih kotak agar rapi */
 .student-card-front-head img#cardLogo {
@@ -2460,6 +2462,7 @@ window.addEventListener('load', function() {
 }
 </style>
 </head><body><div id="studentApp" class="min-h-[100vh] bg-slate-900 flex flex-col items-center justify-center p-6 text-center"><div id="studentLogin" class="w-full max-w-md"><h1 class="text-3xl font-extrabold text-white mb-4">🔔 Buzzer Online</h1><p class="text-slate-300 mb-8">Pilih Nama Tim Kamu di bawah ini:</p><div id="teamList" class="grid grid-cols-2 gap-4"></div></div><div id="studentBuzzer" class="hidden w-full max-w-md"><div id="buzzBtn" class="bg-gradient-to-br from-red-500 to-rose-600 text-white font-bold py-16 rounded-3xl shadow-lg active:scale-95 transition flex flex-col items-center justify-center cursor-pointer"><span class="text-6xl mb-2">🔔</span><span class="text-3xl">TEKAN</span></div><div id="buzzStatus" class="mt-6 h-8 text-green-400 font-bold text-lg flex items-center justify-center"></div><button id="changeTeamBtn" class="mt-8 text-slate-400 text-sm underline">Ganti Tim</button></div><p class="text-slate-500 text-xs mt-12">Tersambung ke Room: <span class="text-green-400 font-mono">${room}</span></p></div></body>`;
+        }
         
         var studentChannel = sb.channel(room, {
           config: { broadcast: { self: false } }
@@ -2471,7 +2474,7 @@ window.addEventListener('load', function() {
               if (status === 'SUBSCRIBED') {
                   studentChannel.send({ type: 'broadcast', event: 'request_sync', payload: {} });
                   setTimeout(function() {
-                      if (document.getElementById('teamList').children.length === 0) {
+                      if (document.getElementById('teamList') && document.getElementById('teamList').children.length === 0) {
                           window.renderTeams(['GARUDA', 'ELANG', 'RAJAWALI', 'MERPATI']);
                       }
                   }, 3000);
@@ -2517,12 +2520,21 @@ window.addEventListener('load', function() {
               });
           };
           
-          document.getElementById('changeTeamBtn').onclick = function() {
-              document.getElementById('studentLogin').classList.remove('hidden');
-              document.getElementById('studentBuzzer').classList.add('hidden');
-          };
+          var changeBtn = document.getElementById('changeTeamBtn');
+          if(changeBtn) {
+              changeBtn.onclick = function() {
+                  document.getElementById('studentLogin').classList.remove('hidden');
+                  document.getElementById('studentBuzzer').classList.add('hidden');
+              };
+          }
     }
-});
+}
+
+// Panggil saat halaman pertama kali dimuat
+window.addEventListener('load', handleBuzzerJoin);
+
+// Panggil juga saat URL hash berubah (agar tidak perlu reload tab)
+window.addEventListener('hashchange', handleBuzzerJoin);
 </script>
 
 <script>
