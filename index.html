@@ -1462,23 +1462,101 @@ window.printCardNow=async function(studentId){
  showToast('Agar warna tercetak sesuai, aktifkan Grafik latar belakang / Background graphics pada pengaturan cetak.','info');
  window.print();setTimeout(function(){document.getElementById('printArea').innerHTML='';},500);
 };
-window.printAllStudentCards=async function(){
- var results=await Promise.all([DB.get('students'),DB.get('classes'),DB.get('school_profile')]);var sts=results[0],classes=results[1],prof=results[2][0]||{};
- if(!sts.length){showToast('Belum ada siswa!','error');return;}
- var safe=function(v){return String(v==null||v===''?'-':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
- var logo=prof.logo_left||'',sign=prof.principal_sign||'',stamp=prof.principal_stamp||'',html='',qids=[];
- sts.forEach(function(s,i){var cls=classes.find(function(c){return c.id===s.class_id;})||{},qid='allCardQR_'+i; qids.push({id:qid,s:s,cls:cls});
- var school=safe(prof.name||'NAMA SEKOLAH'),address=safe(prof.address||prof.school_address||''),name=safe(s.name),nis=safe(s.nis||s.nisn),birthplace=safe(s.birthplace||'-'),birthdate=safe(formatDateID(s.birthdate)),gender=safe(s.gender||'-'),className=safe(cls.name||'-'),principal=safe(prof.principal||'-'),nip=safe(prof.principal_nip||'-');
- html+='<div class="student-card-pair"><article class="student-card-face"><div class="student-card-front-head">'+(logo?'<img src="'+logo+'" alt="Logo sekolah">':'<div style="width:12mm;height:12mm;background:#fff;color:#1e3a8a;display:flex;align-items:center;justify-content:center;border-radius:2mm;font-size:5pt">LOGO</div>')+'<div><div style="font-size:9pt">'+school+'</div><div>'+address+'</div></div></div><div class="student-card-front-body">'+(s.photo_url?'<img class="student-card-front-photo" src="'+s.photo_url+'" alt="Foto siswa">':'<div class="student-card-front-photo" style="display:flex;align-items:center;justify-content:center;text-align:center;font-size:6pt">FOTO SISWA</div>')+'<div class="student-card-front-info"><strong class="student-card-identity-title">KARTU PELAJAR</strong><div class="student-card-data-row"><span>Nama Siswa</span><b>: '+name+'</b></div><div class="student-card-data-row"><span>NIS / NISN</span><b>: '+nis+'</b></div><div class="student-card-data-row"><span>Tanggal Lahir</span><b>: '+birthplace+', '+birthdate+'</b></div><div class="student-card-data-row"><span>Alamat</span><b>: '+safe(s.address||'-')+'</b></div></div><div class="student-card-bottom"><div id="'+qid+'" class="student-card-front-qr"></div><div class="student-card-sign">Kepala Sekolah<div class="student-card-sign-assets">'+(sign?'<img src="'+sign+'" alt="Tanda tangan">':'<span style="width:12mm;height:7mm"></span>')+(stamp?'<img class="student-card-stamp" src="'+stamp+'" alt="Stempel sekolah">':'')+'</div><div style="border-top:.3mm solid #333;padding-top:1mm;font-weight:bold">'+principal+'</div><div>NIP. '+nip+'</div></div></div></div></article><article class="student-card-face student-card-back"><div class="student-card-back-title">KARTU PELAJAR</div><div class="student-card-back-content">'+(logo?'<img class="student-card-back-logo" src="'+logo+'" alt="Logo sekolah">':'<div class="student-card-back-logo" style="display:flex;align-items:center;justify-content:center;text-align:center">LOGO SEKOLAH</div>')+'<div class="student-card-back-rules"><b>KETENTUAN</b><div>• Kartu berlaku selama pemilik masih terdaftar sebagai siswa '+school+'.</div><div>• Kartu tidak boleh dipindahtangankan.</div><div>• Jika kartu hilang, hubungi pihak sekolah.</div><div style="margin-top:2mm">Alamat: '+address+'</div></div></div><div class="student-card-back-footer">'+school+(address?'<br><span style="font-weight:normal">'+address+'</span>':'')+'</div></article></div>';
- });
- document.getElementById('printArea').style.setProperty('--card-color',localStorage.getItem('guruSmartStudentCardColor')||'#00a65a');document.getElementById('printArea').style.setProperty('--card-gradient-end',localStorage.getItem('guruSmartStudentCardGradient')||'#8bc943');document.getElementById('printArea').style.setProperty('--card-line-color',localStorage.getItem('guruSmartStudentCardLineColor')||'#16804a');document.getElementById('printArea').style.setProperty('--card-title-color',localStorage.getItem('guruSmartStudentCardTitleColor')||'#16804a');document.getElementById('printArea').innerHTML=html;applyExactStudentCardPrintColors(document.getElementById('printArea'));
- qids.forEach(function(q){try{var qrEl=document.getElementById(q.id);new QRCode(qrEl,{text:JSON.stringify({jenis:'KARTU PELAJAR',sekolah:prof.name||'',nama:q.s.name||'',nis:q.s.nis||q.s.nisn||'',kelas:q.cls.name||''}),width:180,height:180,correctLevel:QRCode.CorrectLevel.H});addSchoolLogoToCardQR(qrEl,logo);}catch(e){console.error(e);}});
- var imgs=[...document.querySelectorAll('#printArea img')];await Promise.all(imgs.map(function(im){if(im.complete)return Promise.resolve();return new Promise(function(resolve){im.onload=resolve;im.onerror=resolve;setTimeout(resolve,2500);});}));
- window.print();setTimeout(function(){document.getElementById('printArea').innerHTML='';},500);
+window.printAllStudentCards = async function() {
+  var results = await Promise.all([DB.get('students'), DB.get('classes'), DB.get('school_profile')]);
+  var sts = results[0], classes = results[1], prof = results[2][0] || {};
+  
+  if (!sts.length) {
+    showToast('Belum ada siswa!', 'error');
+    return;
+  }
+  
+  var safe = function(v) {
+    return String(v == null || v === '' ? '-' : v).replace(/[&<>"']/g, function(c) {
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  };
+  
+  var logo = prof.logo_left || '', sign = prof.principal_sign || '', stamp = prof.principal_stamp || '', html = '', qids = [];
+  
+  sts.forEach(function(s, i) {
+    var cls = classes.find(function(c) { return c.id === s.class_id; }) || {}, qid = 'allCardQR_' + i;
+    qids.push({id: qid, s: s, cls: cls});
+    
+    var school = safe(prof.name || 'NAMA SEKOLAH'), address = safe(prof.address || prof.school_address || ''), name = safe(s.name), nis = safe(s.nis || s.nisn), birthplace = safe(s.birthplace || '-'), birthdate = safe(formatDateID(s.birthdate)), gender = safe(s.gender || '-'), className = safe(cls.name || '-'), principal = safe(prof.principal || '-'), nip = safe(prof.principal_nip || '-');
+    
+    html += '<div class="student-card-pair">' +
+      '<article class="student-card-face">' +
+        '<div class="student-card-front-head">' + (logo ? '<img src="'+logo+'" alt="Logo sekolah">' : '<div style="width:12mm;height:12mm;background:#fff;color:#1e3a8a;display:flex;align-items:center;justify-content:center;border-radius:2mm;font-size:5pt">LOGO</div>') +
+          '<div><div style="font-size:9pt">'+school+'</div><div>'+address+'</div></div>' +
+        '</div>' +
+        '<div class="student-card-front-body">' + (s.photo_url ? '<img class="student-card-front-photo" src="'+s.photo_url+'" alt="Foto siswa">' : '<div class="student-card-front-photo" style="display:flex;align-items:center;justify-content:center;text-align:center;font-size:6pt">FOTO SISWA</div>') +
+          '<div class="student-card-front-info">' +
+            '<strong class="student-card-identity-title">KARTU PELAJAR</strong>' +
+            '<div class="student-card-data-row"><span>Nama Siswa</span><b>: '+name+'</b></div>' +
+            '<div class="student-card-data-row"><span>NIS / NISN</span><b>: '+nis+'</b></div>' +
+            '<div class="student-card-data-row"><span>Tanggal Lahir</span><b>: '+birthplace+', '+birthdate+'</b></div>' +
+            '<div class="student-card-data-row"><span>Alamat</span><b>: '+safe(s.address||'-')+'</b></div>' +
+          '</div>' +
+          '<div class="student-card-bottom">' +
+            '<div id="'+qid+'" class="student-card-front-qr"></div>' +
+            '<div class="student-card-sign">Kepala Sekolah<div class="student-card-sign-assets">'+(sign?'<img src="'+sign+'" alt="Tanda tangan">':'<span style="width:12mm;height:7mm"></span>')+(stamp?'<img class="student-card-stamp" src="'+stamp+'" alt="Stempel sekolah">':'')+'</div><div style="border-top:.3mm solid #333;padding-top:1mm;font-weight:bold">'+principal+'</div><div>NIP. '+nip+'</div></div>' +
+          '</div>' +
+        '</div>' +
+      '</article>' +
+      '<article class="student-card-face student-card-back">' +
+        '<div class="student-card-back-title">KARTU PELAJAR</div>' +
+        '<div class="student-card-back-content">' + (logo ? '<img class="student-card-back-logo" src="'+logo+'" alt="Logo sekolah">' : '<div class="student-card-back-logo" style="display:flex;align-items:center;justify-content:center;text-align:center">LOGO SEKOLAH</div>') +
+          '<div class="student-card-back-rules"><b>KETENTUAN</b>' +
+            '<div>• Kartu berlaku selama pemilik masih terdaftar sebagai siswa '+school+'.</div>' +
+            '<div>• Kartu tidak boleh dipindahtangankan.</div>' +
+            '<div>• Jika kartu hilang, hubungi pihak sekolah.</div>' +
+            '<div style="margin-top:2mm">Alamat: '+address+'</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="student-card-back-footer">'+school+(address?'<br><span style="font-weight:normal">'+address+'</span>':'')+'</div>' +
+      '</article>' +
+    '</div>';
+  });
+  
+  document.getElementById('printArea').style.setProperty('--card-color', localStorage.getItem('guruSmartStudentCardColor') || '#00a65a');
+  document.getElementById('printArea').style.setProperty('--card-gradient-end', localStorage.getItem('guruSmartStudentCardGradient') || '#8bc943');
+  document.getElementById('printArea').style.setProperty('--card-line-color', localStorage.getItem('guruSmartStudentCardLineColor') || '#16804a');
+  document.getElementById('printArea').style.setProperty('--card-title-color', localStorage.getItem('guruSmartStudentCardTitleColor') || '#16804a');
+  document.getElementById('printArea').innerHTML = html;
+  
+  applyExactStudentCardPrintColors(document.getElementById('printArea'));
+  
+  // Generate QR Codes
+  qids.forEach(function(q) {
+    try {
+      var qrEl = document.getElementById(q.id);
+      new QRCode(qrEl, {
+        text: JSON.stringify({jenis:'KARTU PELAJAR', sekolah:prof.name||'', nama:q.s.name||'', nis:q.s.nis||q.s.nisn||'', kelas:q.cls.name||''}),
+        width: 180, height: 180, correctLevel: QRCode.CorrectLevel.H
+      });
+      addSchoolLogoToCardQR(qrEl, logo);
+    } catch(e) { console.error(e); }
+  });
+  
+  // Tunggu semua gambar termuat sebelum mencetak
+  var imgs = [...document.querySelectorAll('#printArea img')];
+  await Promise.all(imgs.map(function(im) {
+    if(im.complete) return Promise.resolve();
+    return new Promise(function(resolve) {
+      im.onload = resolve;
+      im.onerror = resolve;
+      setTimeout(resolve, 2500);
+    });
+  }));
+  
+  showToast('Agar warna tercetak sesuai, aktifkan "Grafik latar belakang / Background graphics" pada pengaturan cetak.', 'info');
+  
+  window.print();
+  setTimeout(function() {
+    document.getElementById('printArea').innerHTML = '';
+  }, 500);
 };
-async function openPrintPreview(htmlContent){var pw=window.open('','_blank');if(!pw){showToast('Pop-up diblokir.','error');document.getElementById('printArea').innerHTML=htmlContent;window.print();return;}pw.document.write('<html lang="id"><head><title>Cetak</title><script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"><\/script><style>body{font-family:Times New Roman,Georgia,serif;margin:20px;color:#000}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}table,th,td{border:1px solid #000!important;border-collapse:collapse!important}.rapor-info-table,.rapor-info-table td,.rapor-info-table tr{border:none!important;background:transparent!important}.card-info-table,.card-info-table td,.card-info-table tr{border:none!important;background:transparent!important}.ai-output h1,.ai-output h2,.ai-output h3{font-weight:bold;margin-top:12px;margin-bottom:6px}.ai-output p{margin-bottom:8px}.ai-output ul,.ai-output ol{margin-left:20px;margin-bottom:8px}.ai-output table{width:100%;border-collapse:collapse;margin-bottom:8px}.ai-output th,.ai-output td{border:1px solid #000;padding:6px;text-align:left}.ai-output img{max-width:100%;height:auto;border-radius:8px;margin:10px 0;box-shadow:0 2px 5px rgba(0,0,0,.1)}.ai-output .soal-item{margin-bottom:18px;padding-bottom:15px;border-bottom:1px solid #eee;page-break-inside:avoid}.ai-output .soal-header{display:flex;align-items:flex-start;gap:6px;margin-bottom:8px}.ai-output .soal-number{font-weight:bold;min-width:28px}.ai-output .soal-text{font-size:14px;line-height:1.7;font-weight:500;flex:1}.ai-output .soal-opts{display:flex;gap:24px;margin:8px 0 8px 34px}.ai-output .opt-col{flex:1;display:flex;flex-direction:column;gap:4px}.ai-output .soal-opt{display:flex;align-items:flex-start;font-size:13px}.ai-output .soal-opt .opt-label{font-weight:bold;margin-right:6px;min-width:20px}@media print{body{margin:0}.no-print{display:none}}</style></head><body><div class="no-print" style="text-align:center;margin-bottom:20px;position:fixed;bottom:10px;left:0;width:100%"><button onclick="window.print()" style="padding:10px 20px;font-size:16px;background:#2563eb;color:white;border:none;border-radius:8px;cursor:pointer">🖨️ Cetak / PDF</button></div><div id="contentArea">'+htmlContent+'</div><script>var ca=document.getElementById("contentArea");var rt=ca.textContent;if(rt.trim().startsWith("#")||rt.includes("**")){ca.innerHTML=marked.parse(rt);}<\/script></body></html>');pw.document.close();pw.focus();setTimeout(function(){pw.print();},500);}
-async function printAIResult(includeKey){if(!lastAIFormattedHTML)return;var ch=lastAIFormattedHTML;if(!includeKey){ch=ch.replace(/<div class="kunci-jawaban-section[^"]*"[^>]*>[\s\S]*?<\/div><\/div>/g,'');ch=ch.replace(/<div class="soal-answer[^"]*"[^>]*>[\s\S]*?<\/div>/g,'');ch=ch.replace(/class="soal-opt[^"]*correct[^"]*"/g,'class="soal-opt"');}else{ch=ch.replace(/hide-on-print/g,'');}var kh=await generateKopHTML();openPrintPreview('<div style="font-family:Times New Roman,Georgia,serif;color:#000;padding:0;margin:0;width:100%">'+kh+'<div class="ai-output" style="color:#000;margin:0;padding:0">'+ch+'</div></div>');}
-async function exportToWord(){if(!lastAIFormattedHTML){showToast('Tidak ada teks.','error');return;}var td=document.createElement('div');td.innerHTML=lastAIFormattedHTML;td.querySelectorAll('.kunci-jawaban-section,.soal-answer').forEach(function(el){el.remove();});td.querySelectorAll('.soal-opt.correct').forEach(function(el){el.classList.remove('correct');});td.querySelectorAll('.soal-item').forEach(function(item){item.style.marginBottom='18px';item.style.paddingBottom='15px';item.style.borderBottom='1px solid #eee';item.style.overflow='hidden';});td.querySelectorAll('.soal-header').forEach(function(h){h.style.marginBottom='8px';});td.querySelectorAll('.soal-number').forEach(function(n){n.style.fontWeight='bold';n.style.marginRight='8px';});td.querySelectorAll('.soal-text').forEach(function(t){t.style.fontWeight='600';t.style.lineHeight='1.6';});td.querySelectorAll('.soal-opts').forEach(function(od){od.style.display='block';od.style.width='100%';od.style.marginLeft='25px';od.style.marginTop='8px';var cols=od.querySelectorAll('.opt-col');cols.forEach(function(col){col.style.display='inline-block';col.style.width='48%';col.style.verticalAlign='top';col.style.styleFloat='left';col.style.cssFloat='left';col.style.marginRight='2%';});});var ch=td.innerHTML;var kh=await generateKopHTML();var htmlContent='<div style="font-family:Times New Roman,Georgia,serif;color:#000;padding:0;margin:0;width:100%">'+kh+'<div class="ai-output" style="color:#000;margin:0;padding:0">'+ch+'</div></div>';var header='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Soal - GURU SMART</title><style>@page{size:21cm 29.7cm;margin:2cm}body{font-family:Times New Roman,Georgia,serif;font-size:12pt;color:#000;line-height:1.5}h2{text-align:center;font-size:16pt;margin-bottom:5px}p{text-align:center;font-size:10pt;margin-top:0}img{max-width:100%;height:auto}.ai-output table{width:100%;border-collapse:collapse;margin-bottom:8px}.ai-output th,.ai-output td{border:1px solid #000;padding:6px;text-align:left}.ai-output img{max-width:100%;height:auto;border-radius:8px;margin:10px 0;box-shadow:0 2px 5px rgba(0,0,0,.1)}.ai-output .soal-item{margin-bottom:18px;padding-bottom:15px;border-bottom:1px solid #eee;page-break-inside:avoid}.ai-output .soal-header{display:flex;align-items:flex-start;gap:6px;margin-bottom:8px}.ai-output .soal-number{font-weight:bold;min-width:28px}.ai-output .soal-text{font-size:14px;line-height:1.7;font-weight:500;flex:1}.ai-output .soal-opts{display:flex;gap:24px;margin:8px 0 8px 34px}.ai-output .opt-col{flex:1;display:flex;flex-direction:column;gap:4px}.ai-output .soal-opt{display:flex;align-items:flex-start;font-size:13px}.ai-output .soal-opt .opt-label{font-weight:normal !important;margin-right:6px;min-width:20px}</style></head><body>'+htmlContent+'</body></html>';var blob=new Blob(['\ufeff',header],{type:'application/msword'});var url=URL.createObjectURL(blob);var fd=document.createElement("a");fd.href=url;fd.download='Soal_Guru_Smart.doc';document.body.appendChild(fd);fd.click();document.body.removeChild(fd);URL.revokeObjectURL(url);showToast('Diekspor ke Word!','success');}
 </script><script>
 // Efek Confetti Bintang saat Benar / Juara
 function kls_confetti() {
@@ -2661,9 +2739,64 @@ function applyExactStudentCardPrintColors(root){
 }
 </script>
 <style>
+/* PERBAIKAN FINAL: UKURAN PRATINJAU ASLI & ANTI-TUMPUK */
 @media print {
- html,body,#printArea{ -webkit-print-color-adjust:exact!important; print-color-adjust:exact!important; }
- #printArea .student-card-face,#printArea .student-card-front-head,#printArea .student-card-back-title,#printArea .student-card-back-footer{ -webkit-print-color-adjust:exact!important; print-color-adjust:exact!important; }
+  @page {
+    size: A4 portrait; /* A4 Tegak agar muat banyak siswa ke bawah */
+    margin: 0;
+  }
+  
+  html, body {
+    width: 210mm !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    overflow: visible !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+  #printArea, #printArea * {
+    visibility: visible !important;
+  }
+
+  #printArea {
+    display: block !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 210mm !important;
+    padding: 10mm 5mm !important; /* Margin kertas atas-bawah 10mm, kiri-kanan 5mm */
+    box-sizing: border-box !important;
+    background: #fff !important;
+    z-index: 9999 !important;
+  }
+
+  /* GUNAKAN SISTEM TABEL AGAR KARTU TIDAK BERTUMPUK */
+  #printArea .student-card-pair {
+    display: table !important;
+    table-layout: fixed !important;
+    width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 4mm 0 !important; /* Jarak antara kartu depan dan belakang */
+    margin: 0 0 8mm 0 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* UKURAN KARTU ASLI 100MM x 63MM (SAMA PERSIS PRATINJAU) */
+  #printArea .student-card-face {
+    display: table-cell !important;
+    width: 100mm !important;
+    height: 63mm !important;
+    vertical-align: top !important;
+    box-shadow: none !important;
+    border-radius: 2mm !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
 }
 </style>
 </body>
