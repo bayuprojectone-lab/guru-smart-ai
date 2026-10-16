@@ -1146,12 +1146,106 @@ async function printAttendance(){
   );
 }
 function playBeep(){try{var ctx=new(window.AudioContext||window.webkitAudioContext)();var osc=ctx.createOscillator();var gain=ctx.createGain();osc.connect(gain);gain.connect(ctx.destination);osc.type='sine';osc.frequency.value=900;gain.gain.setValueAtTime(1,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+0.3);osc.start(ctx.currentTime);osc.stop(ctx.currentTime+0.3);}catch(e){}}
-function startScanCamera(){try{html5QrCode=new Html5Qrcode("qr-reader");var onScanSuccess=function(t){stopCameraStream();if(window.currentActId){processActQRResult(window.currentActId,t);}else{processQRResult(t);}};html5QrCode.start({facingMode:"environment"},{fps:10,qrbox:{width:280,height:280}},onScanSuccess,function(){});var st=document.getElementById('qr-status');if(st)st.innerText="Arahkan kamera ke QR Siswa";}catch(e){var st=document.getElementById('qr-status');if(st)st.innerText="Kamera gagal diakses.";}}
-function stopCameraStream(){if(html5QrCode){html5QrCode.stop().then(function(){html5QrCode.clear();html5QrCode=null;}).catch(function(){html5QrCode=null;});}}
-function closeScannerModal(){stopCameraStream();document.querySelectorAll('video').forEach(function(v){if(v.srcObject){v.srcObject.getTracks().forEach(function(track){track.stop();});v.srcObject=null;}v.remove();});window.currentActId=null;closeModal();}
+var scannerStarting=false;
+var scannerLastText='';
+var scannerLastAt=0;
+async function startScanCamera(){
+  var reader=document.getElementById('qr-reader');
+  var status=document.getElementById('qr-status');
+  if(!reader){return;}
+  if(typeof Html5Qrcode==='undefined'){
+    if(status)status.innerText='Pustaka scanner gagal dimuat. Periksa koneksi internet lalu muat ulang.';
+    return;
+  }
+  if(scannerStarting)return;
+  scannerStarting=true;
+  try{
+    if(html5QrCode){
+      try{await html5QrCode.stop();}catch(e){}
+      try{html5QrCode.clear();}catch(e){}
+      html5QrCode=null;
+    }
+    reader.style.width='100%';
+    reader.style.maxWidth='100%';
+    reader.style.minHeight='300px';
+    reader.style.position='relative';
+    html5QrCode=new Html5Qrcode('qr-reader',{
+      verbose:false,
+      formatsToSupport:[Html5QrcodeSupportedFormats.QR_CODE],
+      experimentalFeatures:{useBarCodeDetectorIfSupported:true}
+    });
+    var onScanSuccess=async function(decodedText){
+      var now=Date.now();
+      if(!decodedText || (decodedText===scannerLastText && now-scannerLastAt<2500))return;
+      scannerLastText=decodedText;scannerLastAt=now;
+      if(status)status.innerText='QR terbaca. Memproses...';
+      try{await stopCameraStream();}catch(e){}
+      if(window.currentActId){await processActQRResult(window.currentActId,decodedText);}
+      else{await processQRResult(decodedText);}
+    };
+    var config={
+      fps:15,
+      qrbox:function(viewWidth,viewHeight){
+        var side=Math.floor(Math.min(viewWidth*0.88,viewHeight*0.72,420));
+        side=Math.max(180,side);
+        return {width:Math.min(side,viewWidth),height:Math.min(side,viewHeight)};
+      },
+      aspectRatio:1,
+      disableFlip:false,
+      videoConstraints:{
+        facingMode:{ideal:'environment'},
+        width:{ideal:1920},
+        height:{ideal:1080}
+      }
+    };
+    await html5QrCode.start(
+      {facingMode:'environment'},
+      config,
+      onScanSuccess,
+      function(){/* Frame belum berisi QR; lanjutkan pemindaian. */}
+    );
+    var video=reader.querySelector('video');
+    if(video){
+      video.setAttribute('playsinline','true');
+      video.setAttribute('autoplay','true');
+      video.muted=true;
+      video.style.width='100%';
+      video.style.height='100%';
+      video.style.minHeight='300px';
+      video.style.objectFit='cover';
+    }
+    if(status)status.innerText='Kamera aktif — dekatkan QR ke kotak pemindai.';
+  }catch(e){
+    console.error('Scanner QR gagal:',e);
+    if(status)status.innerText=(e&&e.name==='NotAllowedError')
+      ?'Izin kamera ditolak. Izinkan kamera di browser.'
+      :(e&&e.name==='NotFoundError')
+        ?'Kamera tidak ditemukan pada perangkat ini.'
+        :'Kamera gagal dibuka. Gunakan HTTPS, izinkan kamera, lalu coba lagi.';
+    if(html5QrCode){
+      try{await html5QrCode.clear();}catch(ignore){}
+      html5QrCode=null;
+    }
+  }finally{scannerStarting=false;}
+}
+async function stopCameraStream(){
+  var scanner=html5QrCode;
+  if(!scanner)return;
+  html5QrCode=null;
+  try{await scanner.stop();}catch(e){}
+  try{scanner.clear();}catch(e){}
+}
+function closeScannerModal(){
+  stopCameraStream();
+  document.querySelectorAll('#qr-reader video').forEach(function(v){
+    if(v.srcObject){v.srcObject.getTracks().forEach(function(track){track.stop();});v.srcObject=null;}
+  });
+  window.currentActId=null;
+  closeModal();
+}
 async function startNativeScanner(){var d=document.getElementById('att_date')?.value;if(!d){showToast('Pilih tanggal!','error');return;}openModal('Scan QR Siswa',`<div class="flex flex-col items-center space-y-4">
-<div class="w-full max-w-xs p-1.5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg">
-  <div id="qr-reader" class="relative w-full bg-slate-900 rounded-xl overflow-hidden flex items-center justify-center" style="aspect-ratio:3/4; max-height:65vh;">
+<div class="w-full max-w-lg p-1.5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg">
+  <div id="qr-reader" class="relative w-full bg-slate-900 rounded-xl overflow-hidden flex items-center justify-center" style="min-height:320px;height:min(62dvh,620px);">
     <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent z-10 pointer-events:none"></div>
     <div class="absolute top-0 left-0 w-14 h-14 border-t-4 border-l-4 border-white rounded-tl-lg m-2 z-10"></div>
     <div class="absolute top-0 right-0 w-14 h-14 border-t-4 border-r-4 border-white rounded-tr-lg m-2 z-10"></div>
@@ -1178,8 +1272,8 @@ async function loadActAttendanceData(actId){var di=document.getElementById('act_
 function updateActRecap(){document.querySelectorAll('#actAttTableBody tr').forEach(function(r){var firstCell=r.querySelector('td[id^="act_att_"]');if(firstCell){var parts=firstCell.id.split('_');var sid=parts[2];var h=0,s=0,i=0,a=0;r.querySelectorAll('td[id^="act_att_"]').forEach(function(c){var v=c.innerText.trim()||'';if(v==='H')h++;else if(v==='S')s++;else if(v==='I')i++;else if(v==='A')a++;});var rh=document.getElementById('act_recap_h_'+sid);if(rh)rh.innerText=h;var rs=document.getElementById('act_recap_s_'+sid);if(rs)rs.innerText=s;var ri=document.getElementById('act_recap_i_'+sid);if(ri)ri.innerText=i;var ra=document.getElementById('act_recap_a_'+sid);if(ra)ra.innerText=a;}});}
 async function saveActivityAttendance(actId){var di=document.getElementById('act_att_date');if(!di){showToast('Pilih tanggal!','error');return;}var dv=di.value;if(!dv){showToast('Pilih tanggal!','error');return;}var m=dv.substring(0,7);var tbody=document.getElementById('actAttTableBody');if(!tbody){showToast('Tabel tidak ditemukan.','error');return;}var rows=tbody.querySelectorAll('tr[data-student-row]');if(rows.length===0){showToast('Tidak ada siswa di tabel. Tidak ada yang disimpan.','info');return;}var rowsData=[];rows.forEach(function(r){var sid=r.getAttribute('data-student-row');for(var d=1;d<=currentActDaysInMonth;d++){var c=document.getElementById('act_att_'+sid+'_'+d);var code=c?.innerText.trim()||'';var status='';if(code==='H')status='Hadir';else if(code==='S')status='Sakit';else if(code==='I')status='Izin';else if(code==='A')status='Alpa';if(status){rowsData.push({user_id:currentUser.id,act_id:actId,student_id:sid,status:status,date:m+'-'+String(d).padStart(2,'0')});}}});showToast('Menyimpan...','info');try{var dr=await sb.from('activity_records').delete().eq('act_id',actId).eq('user_id',currentUser.id).gte('date',m+'-01').lte('date',m+'-'+String(currentActDaysInMonth).padStart(2,'0'));if(dr.error){if(String(dr.error.message).toLowerCase().includes('date')||String(dr.error.message).toLowerCase().includes('column')){var dr2=await sb.from('activity_records').delete().eq('act_id',actId).eq('user_id',currentUser.id);}}if(rowsData.length>0){var ir=await sb.from('activity_records').insert(rowsData);if(ir.error)throw ir.error;}showToast('Absensi tersimpan!','success');}catch(err){console.error('Save:',err);showToast('Gagal: '+(err.message||'Unknown'),'error');}await loadActAttendanceData(actId);}
 async function startActScanner(actId){openModal('Scan QR Kegiatan',`<div class="flex flex-col items-center space-y-4">
-<div class="w-full max-w-xs p-1.5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg">
-  <div id="qr-reader" class="relative w-full bg-slate-900 rounded-xl overflow-hidden flex items-center justify-center" style="aspect-ratio:3/4; max-height:65vh;">
+<div class="w-full max-w-lg p-1.5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg">
+  <div id="qr-reader" class="relative w-full bg-slate-900 rounded-xl overflow-hidden flex items-center justify-center" style="min-height:320px;height:min(62dvh,620px);">
     <div class="absolute top-0 left-0 w-14 h-14 border-t-4 border-l-4 border-white rounded-tl-lg m-2 z-10"></div>
     <div class="absolute top-0 right-0 w-14 h-14 border-t-4 border-r-4 border-white rounded-tr-lg m-2 z-10"></div>
     <div class="absolute bottom-0 left-0 w-14 h-14 border-b-4 border-l-4 border-white rounded-bl-lg m-2 z-10"></div>
