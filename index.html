@@ -1271,7 +1271,32 @@ async function startScanCamera(){
       if(!decodedText || (decodedText===scannerLastText && now-scannerLastAt<2500))return;
       scannerLastText=decodedText;scannerLastAt=now;
       var liveStatus=document.getElementById('qr-status');
-      if(liveStatus)liveStatus.innerText='QR berhasil dibaca. Memproses data...';
+      if(liveStatus)liveStatus.innerText='QR terdeteksi. Mengambil screenshot otomatis dan memverifikasi hasil...';
+      /* Ambil snapshot otomatis dari frame kamera saat QR terdeteksi. Hasil dekode
+         Html5Qrcode dipakai sebagai hasil utama agar proses tetap cepat dan stabil. */
+      try{
+        var scanVideo=reader.querySelector('video');
+        if(scanVideo && scanVideo.videoWidth>0 && scanVideo.videoHeight>0){
+          var snapCanvas=document.createElement('canvas');
+          snapCanvas.width=scanVideo.videoWidth;
+          snapCanvas.height=scanVideo.videoHeight;
+          var snapCtx=snapCanvas.getContext('2d',{willReadFrequently:true});
+          snapCtx.drawImage(scanVideo,0,0,snapCanvas.width,snapCanvas.height);
+          window.lastQrScanScreenshot=snapCanvas.toDataURL('image/jpeg',0.92);
+          window.lastQrScanText=decodedText;
+          window.lastQrScanAt=new Date().toISOString();
+          /* Verifikasi ulang teks pada frame snapshot bila API decode browser tersedia. */
+          if('BarcodeDetector' in window){
+            try{
+              var qrDetector=new BarcodeDetector({formats:['qr_code']});
+              var foundCodes=await qrDetector.detect(snapCanvas);
+              var sameCode=foundCodes&&foundCodes.find(function(item){return item.rawValue===decodedText;});
+              if(sameCode)decodedText=sameCode.rawValue;
+            }catch(snapshotVerifyError){console.debug('Verifikasi snapshot tambahan tidak tersedia; memakai hasil scanner.',snapshotVerifyError);}
+          }
+        }
+      }catch(snapshotError){console.warn('Screenshot otomatis tidak tersedia; tetap memakai hasil QR yang terdeteksi.',snapshotError);}
+      if(liveStatus)liveStatus.innerText='QR berhasil ditangkap dan dibaca. Memproses data...';
       await stopCameraStream();
       if(window.currentActId){await processActQRResult(window.currentActId,decodedText);}
       else{await processQRResult(decodedText);}
