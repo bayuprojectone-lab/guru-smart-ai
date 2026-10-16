@@ -1273,14 +1273,23 @@ async function startScanCamera(){
       else{await processQRResult(decodedText);}
     };
     var config={
-      fps:20,
+      /* Tingkatkan peluang membaca QR kecil: frame lebih sering dan area pemindaian lebih luas. */
+      fps:30,
       qrbox:function(viewWidth,viewHeight){
-        var side=Math.floor(Math.min(viewWidth*0.88,viewHeight*0.88,520));
-        side=Math.max(160,side);
+        var side=Math.floor(Math.min(viewWidth*0.96,viewHeight*0.96,720));
+        side=Math.max(120,side);
         return {width:Math.min(side,viewWidth),height:Math.min(side,viewHeight)};
       },
       aspectRatio:1,
-      disableFlip:false
+      disableFlip:false,
+      formatsToSupport:[Html5QrcodeSupportedFormats.QR_CODE],
+      experimentalFeatures:{useBarCodeDetectorIfSupported:true},
+      videoConstraints:{
+        facingMode:'environment',
+        width:{ideal:1920},
+        height:{ideal:1080},
+        frameRate:{ideal:30,max:30}
+      }
     };
     var cameraConfig={facingMode:{ideal:'environment'}};
     /* Pilih kamera belakang yang terdeteksi, terutama pada HP dengan beberapa kamera. */
@@ -1294,6 +1303,17 @@ async function startScanCamera(){
     await html5QrCode.start(cameraConfig,config,onScanSuccess,function(){/* Tidak ada QR pada frame ini; lanjut memindai. */});
     var video=reader.querySelector('video');
     if(video){
+      /* Minta fokus otomatis berkelanjutan jika didukung kamera/browser. */
+      try{
+        var videoTrack=video.srcObject&&video.srcObject.getVideoTracks?video.srcObject.getVideoTracks()[0]:null;
+        if(videoTrack&&videoTrack.applyConstraints){
+          var supported=videoTrack.getCapabilities?videoTrack.getCapabilities():{};
+          var focusConstraints={};
+          if(supported.focusMode&&supported.focusMode.indexOf('continuous')!==-1)focusConstraints.focusMode='continuous';
+          if(supported.zoom&&supported.zoom.max>1)focusConstraints.zoom=Math.min(supported.zoom.max,1.5);
+          if(Object.keys(focusConstraints).length)await videoTrack.applyConstraints({advanced:[focusConstraints]});
+        }
+      }catch(focusError){console.warn('Fokus/zoom otomatis tidak didukung kamera ini.',focusError);}
       video.setAttribute('playsinline','true');
       video.setAttribute('autoplay','true');
       video.setAttribute('webkit-playsinline','true');
@@ -1305,7 +1325,7 @@ async function startScanCamera(){
       video.style.objectFit='contain';
     }
     var liveStatus=document.getElementById('qr-status');
-    if(liveStatus)liveStatus.innerText='Kamera aktif. Posisikan seluruh QR di dalam kotak, dekatkan perlahan, dan hindari pantulan cahaya.';
+    if(liveStatus)liveStatus.innerText='Kamera aktif dengan pemindaian resolusi tinggi. Untuk QR kecil, dekatkan kamera perlahan hingga pola QR terlihat jelas dan hindari goyangan/pantulan cahaya.';
   }catch(e){
     console.error('Scanner QR gagal:',e);
     var msg=(e&&e.name==='NotAllowedError')?'Izin kamera ditolak. Izinkan kamera di pengaturan browser.':
