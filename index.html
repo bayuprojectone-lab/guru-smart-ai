@@ -2573,8 +2573,11 @@ async function kls_start(id) {
 
 function kls_showJoinQR() {
     var hostUrl = window.location.origin + window.location.pathname;
-    // Sertakan daftar kelompok di QR agar tombol buzzer langsung tampil meski sinkronisasi realtime terlambat.
-    var joinUrl = hostUrl + '?buzzer=1&room=' + encodeURIComponent(kls_data.currentRoom || '') + '&teams=' + encodeURIComponent(JSON.stringify(kls_data.kelompok || []));
+    // Gunakan hash-route agar tidak bergantung pada server yang mungkin menghapus query string.
+    // Hash ini ditangani langsung oleh halaman Buzzer dan tidak membuka menu aplikasi biasa.
+    var joinRoom = String(kls_data.currentRoom || '');
+    var joinTeams = Array.isArray(kls_data.kelompok) ? kls_data.kelompok : [];
+    var joinUrl = hostUrl + '#join-' + encodeURIComponent(joinRoom) + '--teams-' + encodeURIComponent(JSON.stringify(joinTeams));
     var html = '<div id="kls-join-modal" class="fixed inset-0 bg-slate-900 bg-opacity-95 z-[90] flex items-center justify-center p-4">';
     html += '<div class="bg-white rounded-2xl p-8 text-center shadow-2xl max-w-md w-full">';
     html += '  <h2 class="text-2xl font-bold text-slate-800 mb-2">🔔 Gabung ke Buzzer Kuis</h2>';
@@ -2977,7 +2980,7 @@ window.addEventListener('load', function() {
             try { initialTeams = JSON.parse(buzzerParams.get('teams') || '[]'); } catch (e) { initialTeams = []; }
         } else {
             var joinParts = hash.substring(6).split('--teams-');
-            room = joinParts[0];
+            try { room = decodeURIComponent(joinParts[0] || ''); } catch (e) { room = joinParts[0] || ''; }
             try { if (joinParts.length > 1) initialTeams = JSON.parse(decodeURIComponent(joinParts.slice(1).join('--teams-'))); } catch (e) { initialTeams = []; }
         }
         if (!Array.isArray(initialTeams)) initialTeams = [];
