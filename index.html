@@ -1323,8 +1323,8 @@ async function startScanCamera(){
       /* Tingkatkan peluang membaca QR kecil: frame lebih sering dan area pemindaian lebih luas. */
       fps:30,
       qrbox:function(viewWidth,viewHeight){
-        var side=Math.floor(Math.min(viewWidth*0.96,viewHeight*0.96,720));
-        side=Math.max(120,side);
+        var side=Math.floor(Math.min(viewWidth*0.90,viewHeight*0.90,720));
+        side=Math.max(100,side);
         return {width:Math.min(side,viewWidth),height:Math.min(side,viewHeight)};
       },
       aspectRatio:1,
@@ -1339,15 +1339,36 @@ async function startScanCamera(){
       }
     };
     var cameraConfig={facingMode:{ideal:'environment'}};
-    /* Pilih kamera belakang yang terdeteksi, terutama pada HP dengan beberapa kamera. */
+    var cameras=[];
+    /* Pilih kamera secara berbeda untuk HP dan PC: HP utamakan kamera belakang,
+       sedangkan PC utamakan webcam yang tersedia dan jangan asal memilih kamera terakhir. */
     try{
-      var cameras=await Html5Qrcode.getCameras();
+      cameras=await Html5Qrcode.getCameras();
       if(cameras&&cameras.length){
+        var isMobileDevice=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent||'');
         var backCamera=cameras.find(function(c){return /back|rear|environment|belakang|traseira/i.test(c.label||'');});
-        cameraConfig=(backCamera||cameras[cameras.length-1]).id;
+        var frontCamera=cameras.find(function(c){return /front|user|integrated|webcam|facetime|hd camera/i.test(c.label||'');});
+        cameraConfig=(isMobileDevice?(backCamera||cameras[0]):(frontCamera||cameras[0])).id;
       }
     }catch(cameraListError){console.warn('Daftar kamera tidak tersedia; memakai kamera default.',cameraListError);}
-    await html5QrCode.start(cameraConfig,config,onScanSuccess,function(){/* Tidak ada QR pada frame ini; lanjut memindai. */});
+    /* Kompatibilitas webcam PC: coba resolusi standar lalu fallback ke batasan kamera
+       yang lebih ringan jika webcam tidak menerima resolusi tinggi atau facingMode. */
+    var scanFailure=null;
+    var startOptions=[config,
+      Object.assign({},config,{videoConstraints:{width:{ideal:1280},height:{ideal:720},frameRate:{ideal:24}}}),
+      Object.assign({},config,{videoConstraints:{}})
+    ];
+    var cameraOptions=cameras.length?[cameraConfig,{facingMode:'environment'},cameras[0].id]:[cameraConfig,{facingMode:'user'},{facingMode:'environment'}];
+    var started=false;
+    for(var ci=0;ci<cameraOptions.length&&!started;ci++){
+      for(var si=0;si<startOptions.length&&!started;si++){
+        try{
+          await html5QrCode.start(cameraOptions[ci],startOptions[si],onScanSuccess,function(){/* Terus pindai sampai QR terbaca. */});
+          started=true;
+        }catch(startErr){scanFailure=startErr;console.warn('Percobaan membuka kamera gagal; mencoba konfigurasi lain.',startErr);}
+      }
+    }
+    if(!started)throw scanFailure||new Error('Tidak ada kamera yang berhasil dibuka');
     var video=reader.querySelector('video');
     if(video){
       /* Minta fokus otomatis berkelanjutan jika didukung kamera/browser. */
@@ -1372,7 +1393,7 @@ async function startScanCamera(){
       video.style.objectFit='contain';
     }
     var liveStatus=document.getElementById('qr-status');
-    if(liveStatus)liveStatus.innerText='Kamera aktif dengan pemindaian resolusi tinggi. Untuk QR kecil, dekatkan kamera perlahan hingga pola QR terlihat jelas dan hindari goyangan/pantulan cahaya.';
+    if(liveStatus)liveStatus.innerText='Kamera aktif. Arahkan QR ke bingkai dan tahan stabil; di PC pastikan webcam tidak sedang dipakai aplikasi lain. Scanner akan membaca otomatis saat QR terlihat jelas.';
   }catch(e){
     console.error('Scanner QR gagal:',e);
     var msg=(e&&e.name==='NotAllowedError')?'Izin kamera ditolak. Izinkan kamera di pengaturan browser.':
