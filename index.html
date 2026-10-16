@@ -1270,7 +1270,7 @@ async function startScanCamera(){
     html5QrCode=new Html5Qrcode('qr-reader',{verbose:false});
     var onScanSuccess=async function(decodedText){
       var now=Date.now();
-      if(!decodedText || scannerProcessing || (decodedText===scannerLastText && now-scannerLastAt<2500))return;
+      if(!decodedText || scannerProcessing || (decodedText===scannerLastText && now-scannerLastAt<0))return;
       scannerProcessing=true;
       scannerLastText=decodedText;scannerLastAt=now;
       var liveStatus=document.getElementById('qr-status');
