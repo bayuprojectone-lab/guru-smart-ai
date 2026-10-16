@@ -2574,7 +2574,7 @@ async function kls_start(id) {
 function kls_showJoinQR() {
     var hostUrl = window.location.origin + window.location.pathname;
     // Sertakan daftar kelompok di QR agar tombol buzzer langsung tampil meski sinkronisasi realtime terlambat.
-    var joinUrl = hostUrl + '#join-' + kls_data.currentRoom + '--teams-' + encodeURIComponent(JSON.stringify(kls_data.kelompok || []));
+    var joinUrl = hostUrl + '?buzzer=1&room=' + encodeURIComponent(kls_data.currentRoom || '') + '&teams=' + encodeURIComponent(JSON.stringify(kls_data.kelompok || []));
     var html = '<div id="kls-join-modal" class="fixed inset-0 bg-slate-900 bg-opacity-95 z-[90] flex items-center justify-center p-4">';
     html += '<div class="bg-white rounded-2xl p-8 text-center shadow-2xl max-w-md w-full">';
     html += '  <h2 class="text-2xl font-bold text-slate-800 mb-2">🔔 Gabung ke Buzzer Kuis</h2>';
@@ -2965,13 +2965,21 @@ function kls_stop() {
 
 // Logika untuk Interface HP Siswa
 window.addEventListener('load', function() {
-    var hash = window.location.hash;
-    if (hash.indexOf('#join-') === 0) {
-        // Format baru membawa nama kelompok di QR; format lama tetap didukung.
-        var joinParts = hash.substring(6).split('--teams-');
-        var room = joinParts[0];
+    var hash = window.location.hash || '';
+    var buzzerParams = new URLSearchParams(window.location.search || '');
+    var isQueryBuzzer = buzzerParams.get('buzzer') === '1';
+    if (hash.indexOf('#join-') === 0 || isQueryBuzzer) {
+        // QR baru memakai query string agar tidak bentrok dengan routing berbasis hash; format hash lama tetap didukung.
+        var room = '';
         var initialTeams = [];
-        try { if (joinParts.length > 1) initialTeams = JSON.parse(decodeURIComponent(joinParts.slice(1).join('--teams-'))); } catch (e) { initialTeams = []; }
+        if (isQueryBuzzer) {
+            room = buzzerParams.get('room') || '';
+            try { initialTeams = JSON.parse(buzzerParams.get('teams') || '[]'); } catch (e) { initialTeams = []; }
+        } else {
+            var joinParts = hash.substring(6).split('--teams-');
+            room = joinParts[0];
+            try { if (joinParts.length > 1) initialTeams = JSON.parse(decodeURIComponent(joinParts.slice(1).join('--teams-'))); } catch (e) { initialTeams = []; }
+        }
         if (!Array.isArray(initialTeams)) initialTeams = [];
         document.title = "Buzzer Kuis Siswa";
         
