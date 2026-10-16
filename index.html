@@ -1298,32 +1298,22 @@ async function startScanCamera(){
             window.lastQrScanText=decodedText;
             window.lastQrScanAt=new Date().toISOString();
             window.lastQrScanImage=snapCanvas;
-            /* Tampilkan hasil tangkapan agar pengguna melihat screenshot benar-benar dibuat. */
-            var shotResult=document.getElementById('scan-result');
-            if(shotResult){
-              shotResult.innerHTML='<div class="bg-blue-50 text-blue-800 p-3 rounded-lg text-sm"><strong>📸 Screenshot QR berhasil diambil</strong><div class="mt-2"><img alt="Screenshot saat QR terdeteksi" src="'+window.lastQrScanScreenshot+'" style="display:block;width:100%;max-width:280px;max-height:180px;object-fit:contain;margin:0 auto;border:1px solid #93c5fd;border-radius:8px;background:#fff"></div><a id="qr-screenshot-download" download="QR_Scan_'+Date.now()+'.jpg" href="'+window.lastQrScanScreenshot+'" style="display:inline-block;margin-top:8px;padding:8px 12px;background:#2563eb;color:#fff;border-radius:8px;font-weight:600">Simpan Screenshot</a></div>';
-            }
-            /* Picu simpan otomatis; bila browser HP menahan unduhan otomatis, tautan manual tetap tersedia. */
-            try{
-              var shotLink=document.createElement('a');
-              shotLink.href=window.lastQrScanScreenshot;
-              shotLink.download='QR_Scan_'+new Date().toISOString().replace(/[:.]/g,'-')+'.jpg';
-              shotLink.style.display='none';
-              document.body.appendChild(shotLink);shotLink.click();shotLink.remove();
-            }catch(downloadError){console.debug('Browser menahan unduhan otomatis; gunakan tombol Simpan Screenshot.',downloadError);}
-            /* Verifikasi ulang teks pada frame snapshot bila API decode browser tersedia. */
+            /* Screenshot hanya disimpan sementara di memori halaman; jangan unduh ke perangkat.
+               Baca ulang QR dari gambar snapshot secara otomatis bila browser mendukungnya. */
             if('BarcodeDetector' in window){
               try{
                 var qrDetector=new BarcodeDetector({formats:['qr_code']});
                 var foundCodes=await qrDetector.detect(snapCanvas);
-                var sameCode=foundCodes&&foundCodes.find(function(item){return item.rawValue===decodedText;});
-                if(sameCode)decodedText=sameCode.rawValue;
-              }catch(snapshotVerifyError){console.debug('Verifikasi snapshot tambahan tidak tersedia; memakai hasil scanner.',snapshotVerifyError);}
+                if(foundCodes && foundCodes.length){
+                  var matchedCode=foundCodes.find(function(item){return item.rawValue===decodedText;}) || foundCodes[0];
+                  if(matchedCode && matchedCode.rawValue)decodedText=matchedCode.rawValue;
+                }
+              }catch(snapshotVerifyError){console.debug('Pembacaan ulang snapshot tidak tersedia; memakai hasil pembaca QR utama.',snapshotVerifyError);}
             }
           }else{throw new Error('Video kamera belum menghasilkan frame');}
         }else{throw new Error('Elemen video kamera tidak ditemukan');}
       }catch(snapshotError){console.warn('Screenshot otomatis tidak tersedia; tetap memakai hasil QR yang terdeteksi.',snapshotError);}
-      if(liveStatus)liveStatus.innerText='QR berhasil ditangkap dan dibaca. Memproses data...';
+      if(liveStatus)liveStatus.innerText='QR berhasil difoto sementara dan dibaca otomatis. Memproses data...';
       await stopCameraStream();
       if(window.currentActId){await processActQRResult(window.currentActId,decodedText);}
       else{await processQRResult(decodedText);}
