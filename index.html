@@ -626,6 +626,15 @@ input,textarea,select{font-size:16px!important}
   }
 }
 </style>
+
+<style id="scanner-qr-moving-line-v1">
+/* Garis pemindai bergerak naik-turun di atas tampilan kamera QR; fitur lain tidak diubah. */
+#qr-reader{position:relative!important;overflow:hidden!important;isolation:isolate}
+#qr-reader::after{content:"";position:absolute;left:7%;top:8%;width:86%;height:3px;z-index:40;pointer-events:none;border-radius:999px;background:linear-gradient(90deg,transparent 0%,rgba(16,185,129,.45) 8%,#34d399 28%,#ecfdf5 50%,#34d399 72%,rgba(16,185,129,.45) 92%,transparent 100%);box-shadow:0 0 5px 2px rgba(16,185,129,.75),0 0 16px 5px rgba(16,185,129,.35);animation:qrScanLineSweep 2.15s ease-in-out infinite alternate}
+#qr-reader::before{content:"";position:absolute;left:7%;top:8%;width:86%;height:84%;z-index:35;pointer-events:none;border-top:1px solid rgba(52,211,153,.28);border-bottom:1px solid rgba(52,211,153,.28);box-shadow:inset 0 0 18px rgba(16,185,129,.06)}
+@keyframes qrScanLineSweep{0%{top:8%;opacity:.8}100%{top:91%;opacity:1}}
+@media(prefers-reduced-motion:reduce){#qr-reader::after{animation-duration:4s}}
+</style>
 </head><body class="bg-slate-100 dark:bg-slate-900 transition-colors duration-300">
 <div id="authScreen" class="min-h-[100dvh] flex flex-col items-center justify-center p-4 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700">
 <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 w-full max-w-md fade-in">
