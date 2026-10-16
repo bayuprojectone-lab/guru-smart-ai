@@ -1152,9 +1152,9 @@ var scannerLastAt=0;
 async function startScanCamera(){
   var reader=document.getElementById('qr-reader');
   var status=document.getElementById('qr-status');
-  if(!reader){return;}
+  if(!reader)return;
   if(typeof Html5Qrcode==='undefined'){
-    if(status)status.innerText='Pustaka scanner gagal dimuat. Periksa koneksi internet lalu muat ulang.';
+    if(status)status.innerText='Mesin pembaca QR tidak termuat. Periksa internet lalu muat ulang halaman.';
     return;
   }
   if(scannerStarting)return;
@@ -1167,65 +1167,64 @@ async function startScanCamera(){
     }
     reader.style.width='100%';
     reader.style.maxWidth='100%';
-    reader.style.minHeight='300px';
+    reader.style.minHeight='320px';
     reader.style.position='relative';
-    html5QrCode=new Html5Qrcode('qr-reader',{
-      verbose:false,
-      formatsToSupport:[Html5QrcodeSupportedFormats.QR_CODE],
-      experimentalFeatures:{useBarCodeDetectorIfSupported:true}
-    });
+    scannerLastText='';
+    scannerLastAt=0;
+    html5QrCode=new Html5Qrcode('qr-reader',{verbose:false});
     var onScanSuccess=async function(decodedText){
       var now=Date.now();
       if(!decodedText || (decodedText===scannerLastText && now-scannerLastAt<2500))return;
       scannerLastText=decodedText;scannerLastAt=now;
-      if(status)status.innerText='QR terbaca. Memproses...';
-      try{await stopCameraStream();}catch(e){}
+      var liveStatus=document.getElementById('qr-status');
+      if(liveStatus)liveStatus.innerText='QR berhasil dibaca. Memproses data...';
+      await stopCameraStream();
       if(window.currentActId){await processActQRResult(window.currentActId,decodedText);}
       else{await processQRResult(decodedText);}
     };
     var config={
-      fps:15,
+      fps:20,
       qrbox:function(viewWidth,viewHeight){
-        var side=Math.floor(Math.min(viewWidth*0.88,viewHeight*0.72,420));
-        side=Math.max(180,side);
+        var side=Math.floor(Math.min(viewWidth*0.88,viewHeight*0.88,520));
+        side=Math.max(160,side);
         return {width:Math.min(side,viewWidth),height:Math.min(side,viewHeight)};
       },
       aspectRatio:1,
-      disableFlip:false,
-      videoConstraints:{
-        facingMode:{ideal:'environment'},
-        width:{ideal:1920},
-        height:{ideal:1080}
-      }
+      disableFlip:false
     };
-    await html5QrCode.start(
-      {facingMode:'environment'},
-      config,
-      onScanSuccess,
-      function(){/* Frame belum berisi QR; lanjutkan pemindaian. */}
-    );
+    var cameraConfig={facingMode:{ideal:'environment'}};
+    /* Pilih kamera belakang yang terdeteksi, terutama pada HP dengan beberapa kamera. */
+    try{
+      var cameras=await Html5Qrcode.getCameras();
+      if(cameras&&cameras.length){
+        var backCamera=cameras.find(function(c){return /back|rear|environment|belakang|traseira/i.test(c.label||'');});
+        cameraConfig=(backCamera||cameras[cameras.length-1]).id;
+      }
+    }catch(cameraListError){console.warn('Daftar kamera tidak tersedia; memakai kamera default.',cameraListError);}
+    await html5QrCode.start(cameraConfig,config,onScanSuccess,function(){/* Tidak ada QR pada frame ini; lanjut memindai. */});
     var video=reader.querySelector('video');
     if(video){
       video.setAttribute('playsinline','true');
       video.setAttribute('autoplay','true');
+      video.setAttribute('webkit-playsinline','true');
       video.muted=true;
+      video.style.display='block';
       video.style.width='100%';
       video.style.height='100%';
-      video.style.minHeight='300px';
-      video.style.objectFit='cover';
+      video.style.minHeight='320px';
+      video.style.objectFit='contain';
     }
-    if(status)status.innerText='Kamera aktif — dekatkan QR ke kotak pemindai.';
+    var liveStatus=document.getElementById('qr-status');
+    if(liveStatus)liveStatus.innerText='Kamera aktif. Posisikan seluruh QR di dalam kotak, dekatkan perlahan, dan hindari pantulan cahaya.';
   }catch(e){
     console.error('Scanner QR gagal:',e);
-    if(status)status.innerText=(e&&e.name==='NotAllowedError')
-      ?'Izin kamera ditolak. Izinkan kamera di browser.'
-      :(e&&e.name==='NotFoundError')
-        ?'Kamera tidak ditemukan pada perangkat ini.'
-        :'Kamera gagal dibuka. Gunakan HTTPS, izinkan kamera, lalu coba lagi.';
-    if(html5QrCode){
-      try{await html5QrCode.clear();}catch(ignore){}
-      html5QrCode=null;
-    }
+    var msg=(e&&e.name==='NotAllowedError')?'Izin kamera ditolak. Izinkan kamera di pengaturan browser.':
+      (e&&e.name==='NotFoundError')?'Kamera tidak ditemukan pada perangkat ini.':
+      (e&&e.name==='NotReadableError')?'Kamera sedang dipakai aplikasi lain. Tutup aplikasi kamera lain lalu coba lagi.':
+      'Kamera gagal dibuka. Pastikan halaman HTTPS dan izin kamera aktif.';
+    var liveStatus=document.getElementById('qr-status');
+    if(liveStatus)liveStatus.innerText=msg;
+    if(html5QrCode){try{await html5QrCode.clear();}catch(ignore){}html5QrCode=null;}
   }finally{scannerStarting=false;}
 }
 async function stopCameraStream(){
