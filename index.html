@@ -2965,14 +2965,13 @@ function kls_stop() {
         kls_end();
     }
 }
-
 // Logika untuk Interface HP Siswa
 window.addEventListener('load', function() {
     var hash = window.location.hash || '';
     var buzzerParams = new URLSearchParams(window.location.search || '');
     var isQueryBuzzer = buzzerParams.get('buzzer') === '1';
+    
     if (hash.indexOf('#join-') === 0 || isQueryBuzzer) {
-        // QR baru memakai query string agar tidak bentrok dengan routing berbasis hash; format hash lama tetap didukung.
         var room = '';
         var initialTeams = [];
         if (isQueryBuzzer) {
@@ -2986,34 +2985,14 @@ window.addEventListener('load', function() {
         if (!Array.isArray(initialTeams)) initialTeams = [];
         document.title = "Buzzer Kuis Siswa";
         
+        // Matikan aplikasi utama agar tidak balik ke login/dashboard
+        window.initApp = function() {};
+        window.renderContent = function() {};
+        
+        // Tambahkan tanda kutip penutup yang hilang di bagian style CSS #buzzBtn
         document.documentElement.innerHTML = `<head><title>Buzzer Kuis Siswa</title><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"><style>
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;width:100%;font-family:Inter,Arial,sans-serif;background:#0f172a;-webkit-tap-highlight-color:transparent}body{min-height:100dvh;color:#fff}.hidden{display:none!important}#studentApp{min-height:100dvh;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:clamp(14px,4vw,28px);padding-bottom:max(24px,env(safe-area-inset-bottom));text-align:center}#studentLogin,#studentBuzzer{width:100%;max-width:480px}#teamList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%}#teamList button{min-height:108px;width:100%;border:0;border-radius:18px;padding:18px 8px;font-size:clamp(16px,4vw,22px);line-height:1.25;overflow-wrap:anywhere;touch-action:manipulation}#buzzBtn{width:100%;min-height:clamp(230px,48vh,430px);padding:24px 12px;border:3px solid rgba(255,255,255,.25);border-radius:28px;box-shadow:0 12px 30px rgba(0,0,0,.35);user-select:none;-webkit-user-select:none;touch-action:manipulation;cursor:pointer}#buzzBtn span:last-child{font-size:clamp(30px,8vw,48px)}#buzzStatus{min-height:36px;overflow-wrap:anywhere}#changeTeamBtn{min-height:44px;padding:10px 18px}#studentApp p{overflow-wrap:anywhere}@media(max-width:380px){#teamList{gap:8px}#teamList button{min-height:92px;padding:14px 6px}#buzzBtn{min-height:220px}}
-</style>
-<style id="student-card-logo-photo-refinement">
-/* Logo depan sedikit diperkecil dan memakai latar putih kotak agar rapi */
-.student-card-front-head img#cardLogo {
-  width:9.5mm !important; height:9.5mm !important; flex:0 0 9.5mm !important;
-  object-fit:contain !important; background:#fff !important;
-  border:0.3mm solid rgba(255,255,255,.95) !important;
-  border-radius:1.4mm !important; padding:.45mm !important; box-sizing:border-box !important;
-}
-.student-card-front-head #cardLogo:not(img) {
-  width:9.5mm !important; height:9.5mm !important; flex:0 0 9.5mm !important;
-  border-radius:1.4mm !important; box-sizing:border-box !important;
-}
-/* Bingkai foto siswa yang halus dan konsisten pada layar maupun cetak */
-.student-card-front-photo {
-  border:0.55mm solid #16804a !important;
-  outline:0.25mm solid #fff !important; outline-offset:-0.9mm !important;
-  box-shadow:0 0.35mm 1mm rgba(15,45,30,.22) !important;
-  border-radius:1mm !important; box-sizing:border-box !important;
-}
-@media print {
-  .student-card-front-head img#cardLogo {width:9.5mm!important;height:9.5mm!important;flex-basis:9.5mm!important;}
-  .student-card-front-photo {border:0.55mm solid #16804a!important;outline:0.25mm solid #fff!important;box-shadow:0 0.35mm 1mm rgba(15,45,30,.22)!important;border-radius:1mm!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
-}
-</style>
-</head><body><div id="studentApp" class="min-h-[100vh] bg-slate-900 flex flex-col items-center justify-center p-6 text-center"><div id="studentLogin" class="w-full max-w-md"><h1 class="text-3xl font-extrabold text-white mb-4">🔔 Buzzer Online</h1><p class="text-slate-300 mb-8">Pilih Nama Tim Kamu di bawah ini:</p><div id="teamList" class="grid grid-cols-2 gap-4"></div></div><div id="studentBuzzer" class="hidden w-full max-w-md"><div id="buzzBtn" class="bg-gradient-to-br from-red-500 to-rose-600 text-white font-bold py-16 rounded-3xl shadow-lg active:scale-95 transition flex flex-col items-center justify-center cursor-pointer"><span class="text-6xl mb-2">🔔</span><span class="text-3xl">TEKAN</span></div><div id="buzzStatus" class="mt-6 h-8 text-green-400 font-bold text-lg flex items-center justify-center"></div><button id="changeTeamBtn" class="mt-8 text-slate-400 text-sm underline">Ganti Tim</button></div><p class="text-slate-500 text-xs mt-12">Tersambung ke Room: <span class="text-green-400 font-mono">${room}</span></p></div></body>`;
+</style></head><body><div id="studentApp" class="min-h-[100vh] bg-slate-900 flex flex-col items-center justify-center p-6 text-center"><div id="studentLogin" class="w-full max-w-md"><h1 class="text-3xl font-extrabold text-white mb-4">🔔 Buzzer Online</h1><p class="text-slate-300 mb-8">Pilih Nama Tim Kamu di bawah ini:</p><div id="teamList" class="grid grid-cols-2 gap-4"></div></div><div id="studentBuzzer" class="hidden w-full max-w-md"><div id="buzzBtn" class="bg-gradient-to-br from-red-500 to-rose-600 text-white font-bold py-16 rounded-3xl shadow-lg active:scale-95 transition flex flex-col items-center justify-center cursor-pointer"><span class="text-6xl mb-2">🔔</span><span class="text-3xl">TEKAN</span></div><div id="buzzStatus" class="mt-6 h-8 text-green-400 font-bold text-lg flex items-center justify-center"></div><button id="changeTeamBtn" class="mt-8 text-slate-400 text-sm underline">Ganti Tim</button></div><p class="text-slate-500 text-xs mt-12">Tersambung ke Room: <span class="text-green-400 font-mono">${room}</span></p></div></body>`;
         
         var studentChannel = sb.channel(room, {
           config: { broadcast: { self: false } }
@@ -3032,51 +3011,53 @@ window.addEventListener('load', function() {
               }
           });
           
-          window.renderTeams = function(teams) {
-              var list = document.getElementById('teamList');
-              if (!list) return;
-              list.innerHTML = '';
-              var colors = ['from-pink-500 to-rose-600', 'from-cyan-400 to-blue-500', 'from-purple-500 to-fuchsia-600', 'from-orange-400 to-red-500'];
-              teams.forEach(function(t, i) {
-                  var col = colors[i % colors.length];
-                  var btn = document.createElement('button');
-                  btn.className = 'bg-gradient-to-br ' + col + ' text-white font-bold py-8 rounded-2xl shadow-lg hover:scale-105 transition transform active:scale-95';
-                  btn.innerHTML = '<span class="block text-3xl mb-1">🔔</span>' + t;
-                  btn.onclick = function() {
-                      kls_unlockAudio();
-                      document.getElementById('studentLogin').classList.add('hidden');
-                      var buzzerUI = document.getElementById('studentBuzzer');
-                      buzzerUI.classList.remove('hidden');
-                       
-                      var bigBtn = document.getElementById('buzzBtn');
-                      bigBtn.className = 'bg-gradient-to-br ' + col + ' text-white font-bold py-16 rounded-3xl shadow-lg active:scale-95 transition flex flex-col items-center justify-center cursor-pointer shadow-lg';
-                       
-                      bigBtn.onclick = function() {
-                          playBuzzerHorn(); 
-                          
-                          bigBtn.style.transform = 'scale(0.95)';
-                          setTimeout(function() { bigBtn.style.transform = ''; }, 200);
-                          
-                          var status = document.getElementById('buzzStatus');
-                          if(status) {
-                              status.innerHTML = '✅ Sinyal Terkirim!';
-                              setTimeout(function() { status.innerHTML = ''; }, 2000);
-                          }
-                          
-                          studentChannel.send({ type: 'broadcast', event: 'buzz', payload: { team: t } });
-                          sb.from('kuis_buzzer').insert([{ room: room, team: t, created_at: new Date().toISOString() }]).then(function(){}).catch(function(e){});
-                      };
-                  };
-                  list.appendChild(btn);
-              });
-          };
-          // Tampilkan tombol setiap kelompok langsung setelah halaman QR terbuka.
-          if (initialTeams.length) window.renderTeams(initialTeams);
-          
-          document.getElementById('changeTeamBtn').onclick = function() {
-              document.getElementById('studentLogin').classList.remove('hidden');
-              document.getElementById('studentBuzzer').classList.add('hidden');
-          };
+        window.renderTeams = function(teams) {
+            var list = document.getElementById('teamList');
+            if (!list) return;
+            list.innerHTML = '';
+            var colors = ['from-pink-500 to-rose-600', 'from-cyan-400 to-blue-500', 'from-purple-500 to-fuchsia-600', 'from-orange-400 to-red-500'];
+            teams.forEach(function(t, i) {
+                var col = colors[i % colors.length];
+                var btn = document.createElement('button');
+                btn.className = 'bg-gradient-to-br ' + col + ' text-white font-bold py-8 rounded-2xl shadow-lg hover:scale-105 transition transform active:scale-95';
+                btn.innerHTML = '<span class="block text-3xl mb-1">🔔</span>' + t;
+                btn.onclick = function() {
+                    kls_unlockAudio();
+                    document.getElementById('studentLogin').classList.add('hidden');
+                    var buzzerUI = document.getElementById('studentBuzzer');
+                    buzzerUI.classList.remove('hidden');
+                    
+                    var bigBtn = document.getElementById('buzzBtn');
+                    bigBtn.className = 'bg-gradient-to-br ' + col + ' text-white font-bold py-16 rounded-3xl shadow-lg active:scale-95 transition flex flex-col items-center justify-center cursor-pointer shadow-lg';
+                    
+                    bigBtn.onclick = function() {
+                        playBuzzerHorn(); 
+                        bigBtn.style.transform = 'scale(0.95)';
+                        setTimeout(function() { bigBtn.style.transform = ''; }, 200);
+                        
+                        var status = document.getElementById('buzzStatus');
+                        if(status) {
+                            status.innerHTML = '✅ Sinyal Terkirim!';
+                            setTimeout(function() { status.innerHTML = ''; }, 2000);
+                        }
+                        
+                        studentChannel.send({ type: 'broadcast', event: 'buzz', payload: { team: t } });
+                        sb.from('kuis_buzzer').insert([{ room: room, team: t, created_at: new Date().toISOString() }]).then(function(){}).catch(function(e){});
+                    };
+                };
+                list.appendChild(btn);
+            });
+        };
+        
+        if (initialTeams.length) window.renderTeams(initialTeams);
+        
+        document.getElementById('changeTeamBtn').onclick = function() {
+            document.getElementById('studentLogin').classList.remove('hidden');
+            document.getElementById('studentBuzzer').classList.add('hidden');
+        };
+        
+        // Stop proses selanjutnya
+        return;
     }
 });
 </script>
