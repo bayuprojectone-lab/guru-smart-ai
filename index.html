@@ -876,134 +876,295 @@ input,textarea,select{font-size:16px!important}
 @media(prefers-reduced-motion:reduce){#qr-reader::after{animation-duration:4s}}
 </style>
 <style id="lkpd-worksheet-styles">
-/* ===== LKPD WORKSHEET VISUAL STYLE ===== */
-.lkpd-worksheet-modal{padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important}
-.lkpd-worksheet-print,.lkpd-worksheet-canvas{
-  background:#fff;color:#1f2937;
-  font-family:'Comic Sans MS','Trebuchet MS',Arial,sans-serif;
-  padding:20px;border-radius:16px;
-  border:3px solid #fbbf24;
-  box-shadow:0 8px 28px rgba(0,0,0,0.08);
+/* ===== LKPD WORKSHEET - VERSI GAMBAR ===== */
+.lkpd-worksheet-modal{padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important;max-width:900px!important;width:100%!important;margin:0 auto!important}
+.lkpd-worksheet-canvas,.lkpd-worksheet-print{
+  background:#fffdf7;color:#1f2937;
+  font-family:'Comic Sans MS','Trebuchet MS','Segoe UI',Arial,sans-serif;
+  padding:24px 26px 20px;border-radius:18px;
+  border:4px solid #fbbf24;
+  box-shadow:0 10px 36px rgba(0,0,0,0.10);
   position:relative;overflow:hidden;
   background-image:
-    radial-gradient(circle at 8% 12%,rgba(244,114,182,0.06) 0,transparent 18%),
-    radial-gradient(circle at 92% 88%,rgba(251,191,36,0.06) 0,transparent 18%);
+    radial-gradient(circle at 0% 0%,rgba(244,114,182,0.10) 0,transparent 22%),
+    radial-gradient(circle at 100% 100%,rgba(251,191,36,0.12) 0,transparent 22%),
+    radial-gradient(circle at 100% 0%,rgba(96,165,250,0.08) 0,transparent 18%),
+    radial-gradient(circle at 0% 100%,rgba(167,139,250,0.10) 0,transparent 18%);
 }
-.lkpd-worksheet-canvas{background:linear-gradient(135deg,#fef9ff 0%,#fffef7 100%)}
 .lkpd-worksheet-canvas::before{
-  content:"";position:absolute;top:0;left:0;right:0;height:6px;
-  background:linear-gradient(90deg,#f472b6,#fbbf24,#34d399,#60a5fa,#a78bfa);
+  content:"";position:absolute;top:0;left:0;right:0;height:8px;
+  background:linear-gradient(90deg,#f472b6,#fb7185,#fbbf24,#34d399,#60a5fa,#a78bfa);
+  z-index:1;
 }
 .lkpd-worksheet-canvas::after{
-  content:"";position:absolute;bottom:0;left:0;right:0;height:6px;
-  background:linear-gradient(90deg,#a78bfa,#60a5fa,#34d399,#fbbf24,#f472b6);
+  content:"";position:absolute;bottom:0;left:0;right:0;height:8px;
+  background:linear-gradient(90deg,#a78bfa,#60a5fa,#34d399,#fbbf24,#fb7185,#f472b6);
+  z-index:1;
+}
+/* Watermark */
+.lkpd-watermark{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-30deg);
+  font-size:120px;font-weight:900;color:rgba(99,102,241,0.04);
+  pointer-events:none;z-index:0;letter-spacing:8px;text-transform:uppercase;
+  white-space:nowrap;
 }
 /* Header */
 .lkpd-header{
-  display:flex;align-items:center;justify-content:space-between;gap:12px;
-  padding:16px 18px;margin-bottom:16px;border-radius:14px;color:#fff;
-  background:linear-gradient(135deg,#f472b6 0%,#fb7185 50%,#fbbf24 100%);
-  box-shadow:0 6px 16px rgba(244,114,182,0.28);
-  position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:18px 20px;margin-bottom:18px;border-radius:16px;color:#fff;
+  background:linear-gradient(135deg,#f472b6 0%,#fb7185 35%,#fbbf24 100%);
+  box-shadow:0 8px 20px rgba(244,114,182,0.30);
+  position:relative;overflow:hidden;z-index:2;
 }
-.lkpd-header::before{content:"";position:absolute;top:-22px;right:-22px;width:90px;height:90px;background:rgba(255,255,255,0.15);border-radius:50%}
-.lkpd-header::after{content:"";position:absolute;bottom:-18px;left:-18px;width:70px;height:70px;background:rgba(255,255,255,0.12);border-radius:50%}
-.lkpd-decor{font-size:38px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.18));z-index:1}
-.lkpd-header-center{text-align:center;flex:1;z-index:1}
-.lkpd-title{font-size:22px;font-weight:800;letter-spacing:0.5px;text-shadow:0 2px 4px rgba(0,0,0,0.2);line-height:1.2}
-.lkpd-subtitle{font-size:14px;margin-top:4px;font-style:italic;opacity:0.95}
+.lkpd-header::before{content:"";position:absolute;top:-26px;right:-26px;width:110px;height:110px;background:rgba(255,255,255,0.16);border-radius:50%}
+.lkpd-header::after{content:"";position:absolute;bottom:-22px;left:-22px;width:80px;height:80px;background:rgba(255,255,255,0.13);border-radius:50%}
+.lkpd-decor{font-size:42px;filter:drop-shadow(0 3px 5px rgba(0,0,0,0.20));z-index:2;flex:0 0 auto;line-height:1}
+.lkpd-header-center{text-align:center;flex:1;z-index:2;min-width:0}
+.lkpd-title{font-size:24px;font-weight:800;letter-spacing:0.8px;text-shadow:0 2px 4px rgba(0,0,0,0.25);line-height:1.15}
+.lkpd-subtitle{font-size:15px;margin-top:5px;font-style:italic;opacity:0.96;text-shadow:0 1px 2px rgba(0,0,0,0.18)}
 /* Identity */
 .lkpd-identity{
-  display:grid;grid-template-columns:2fr 1fr 1fr;gap:14px;
-  margin-bottom:18px;padding:12px 14px;
-  background:#fff7ed;border:2px dashed #fb923c;border-radius:10px;
+  display:grid;grid-template-columns:2.2fr 1fr 1fr;gap:18px;
+  margin-bottom:20px;padding:14px 18px;
+  background:linear-gradient(135deg,#fff7ed 0%,#fef3c7 100%);
+  border:2px dashed #fb923c;border-radius:12px;
+  position:relative;z-index:2;
 }
-.lkpd-id-field{display:flex;align-items:baseline;gap:8px;font-size:13px;font-weight:600;color:#9a3412}
-.lkpd-id-label{white-space:nowrap}
-.lkpd-id-line{flex:1;border-bottom:2px dotted #9a3412;min-width:40px;height:14px}
+.lkpd-id-field{display:flex;align-items:baseline;gap:10px;font-size:14px;font-weight:700;color:#7c2d12}
+.lkpd-id-label{white-space:nowrap;flex:0 0 auto}
+.lkpd-id-line{flex:1;border-bottom:2.5px dotted #9a3412;min-width:40px;height:16px}
 /* Section */
-.lkpd-section{margin-bottom:18px;page-break-inside:avoid;break-inside:avoid}
+.lkpd-section{margin-bottom:20px;page-break-inside:avoid;break-inside:avoid;position:relative;z-index:2}
 .lkpd-section-bar{
   display:flex;align-items:center;gap:12px;
-  padding:8px 14px;border-radius:10px 10px 0 0;color:#fff;font-weight:700;
-  box-shadow:0 2px 6px rgba(0,0,0,0.08);
+  padding:10px 16px;border-radius:12px 12px 0 0;color:#fff;font-weight:700;
+  box-shadow:0 3px 8px rgba(0,0,0,0.10);position:relative;
 }
+.lkpd-section-bar::after{content:"";position:absolute;top:0;right:0;bottom:0;width:30px;background:rgba(255,255,255,0.12);border-radius:0 12px 0 0}
 .lkpd-bar-letter{
   display:inline-flex;align-items:center;justify-content:center;
-  width:32px;height:32px;background:rgba(255,255,255,0.3);
-  border:2px solid #fff;border-radius:50%;font-size:16px;font-weight:800;flex:0 0 32px;
+  width:34px;height:34px;background:rgba(255,255,255,0.30);
+  border:2.5px solid #fff;border-radius:50%;font-size:18px;font-weight:800;flex:0 0 34px;
+  box-shadow:0 2px 4px rgba(0,0,0,0.15);position:relative;z-index:1;
 }
-.lkpd-bar-title{font-size:14px;letter-spacing:0.3px}
+.lkpd-bar-title{font-size:15px;letter-spacing:0.4px;position:relative;z-index:1}
 .lkpd-bar-a{background:linear-gradient(135deg,#3b82f6 0%,#06b6d4 100%)}
 .lkpd-bar-b{background:linear-gradient(135deg,#10b981 0%,#34d399 100%)}
 .lkpd-bar-c{background:linear-gradient(135deg,#f59e0b 0%,#fbbf24 100%)}
 .lkpd-bar-d{background:linear-gradient(135deg,#8b5cf6 0%,#a78bfa 100%)}
 .lkpd-bar-e{background:linear-gradient(135deg,#ec4899 0%,#f472b6 100%)}
 .lkpd-section-body{
-  padding:14px 16px;border:2px solid;border-top:none;border-radius:0 0 10px 10px;
-  font-size:13px;line-height:1.6;background:#fff;
+  padding:16px 18px;border:2.5px solid;border-top:none;border-radius:0 0 12px 12px;
+  font-size:13.5px;line-height:1.65;background:#fff;
 }
-.lkpd-body-a{border-color:#3b82f6;background:#eff6ff}
-.lkpd-body-b{border-color:#10b981;background:#ecfdf5}
-.lkpd-body-c{border-color:#f59e0b;background:#fffbeb}
-.lkpd-body-d{border-color:#8b5cf6;background:#f5f3ff}
-.lkpd-body-e{border-color:#ec4899;background:#fdf2f8}
-.lkpd-section-body p{margin:0 0 8px}
+.lkpd-body-a{border-color:#3b82f6;background:linear-gradient(135deg,#eff6ff 0%,#f0f9ff 100%)}
+.lkpd-body-b{border-color:#10b981;background:linear-gradient(135deg,#ecfdf5 0%,#f0fdf4 100%)}
+.lkpd-body-c{border-color:#f59e0b;background:linear-gradient(135deg,#fffbeb 0%,#fffdf5 100%)}
+.lkpd-body-d{border-color:#8b5cf6;background:linear-gradient(135deg,#f5f3ff 0%,#faf5ff 100%)}
+.lkpd-body-e{border-color:#ec4899;background:linear-gradient(135deg,#fdf2f8 0%,#fef6fb 100%)}
+.lkpd-section-body p{margin:0 0 9px}
 .lkpd-section-body p:last-child{margin-bottom:0}
+.lkpd-konsep-title{font-weight:700;color:#1e3a8a;margin-bottom:8px;font-size:14px;display:flex;align-items:center;gap:6px}
+.lkpd-konsep-list{margin:8px 0 0;padding-left:0;list-style:none}
+.lkpd-konsep-list li{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;padding-left:0}
+.lkpd-konsep-bullet{color:#3b82f6;font-weight:800;flex:0 0 auto;margin-top:1px}
 /* Tables */
-.lkpd-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:4px;background:#fff}
-.lkpd-table th,.lkpd-table td{border:1.5px solid #cbd5e1;padding:8px 10px;vertical-align:top;text-align:left}
-.lkpd-table th{background:#1e293b;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;text-align:center}
+.lkpd-table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px;background:#fff;border-radius:8px;overflow:hidden}
+.lkpd-table th,.lkpd-table td{border:1.5px solid #cbd5e1;padding:9px 11px;vertical-align:top;text-align:left}
+.lkpd-table th{background:linear-gradient(135deg,#1e293b 0%,#334155 100%);color:#fff;font-weight:700;font-size:11.5px;text-transform:uppercase;letter-spacing:0.5px;text-align:center}
 .lkpd-table tbody tr:nth-child(even){background:#f8fafc}
-.lkpd-td-center{text-align:center;font-weight:600}
-.lkpd-td-answer{background:repeating-linear-gradient(180deg,transparent,transparent 26px,#e2e8f0 26px,#e2e8f0 27px);min-height:34px}
-.lkpd-td-checkbox{font-size:18px;color:#475569}
+.lkpd-table tbody tr:hover{background:#f1f5f9}
+.lkpd-td-center{text-align:center;font-weight:700;color:#475569}
+.lkpd-td-answer{background:repeating-linear-gradient(180deg,transparent,transparent 28px,#e2e8f0 28px,#e2e8f0 29px);min-height:38px}
+.lkpd-td-checkbox{font-size:20px;color:#475569;text-align:center}
 /* Reading box */
 .lkpd-bacaan-box{
-  background:#fff;border-left:4px solid #8b5cf6;
-  padding:10px 14px;border-radius:0 8px 8px 0;margin-bottom:12px;
-  font-style:italic;color:#4c1d95;
+  background:linear-gradient(135deg,#faf5ff 0%,#f3e8ff 100%);
+  border-left:5px solid #8b5cf6;border:1.5px solid #c4b5fd;border-left:5px solid #8b5cf6;
+  padding:12px 16px;border-radius:0 10px 10px 0;margin-bottom:14px;
+  font-style:italic;color:#4c1d95;line-height:1.7;
 }
-.lkpd-bacaan-label{font-size:12px;font-weight:700;color:#6d28d9;margin-bottom:6px;font-style:normal}
+.lkpd-bacaan-label{font-size:13px;font-weight:700;color:#6d28d9;margin-bottom:8px;font-style:normal;display:flex;align-items:center;gap:6px}
 .lkpd-pertanyaan-list{list-style:none;padding:0;margin:0}
-.lkpd-pertanyaan-list li{display:flex;align-items:baseline;gap:6px;margin-bottom:14px;font-size:13px}
-.lkpd-q-num{font-weight:700;color:#6d28d9;flex:0 0 auto}
-.lkpd-q-text{flex:0 0 auto}
-.lkpd-q-line{flex:1;border-bottom:1.5px dotted #6d28d9;min-width:60px;height:14px}
+.lkpd-pertanyaan-list li{display:flex;align-items:baseline;gap:8px;margin-bottom:16px;font-size:13.5px;line-height:1.5}
+.lkpd-q-num{font-weight:700;color:#6d28d9;flex:0 0 auto;background:#ede9fe;color:#6d28d9;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:11px}
+.lkpd-q-text{flex:0 0 auto;font-weight:500;color:#1f2937}
+.lkpd-q-line{flex:1;border-bottom:1.8px dotted #6d28d9;min-width:60px;height:16px}
 /* Refleksi */
-.lkpd-refleksi-info{font-style:italic;color:#64748b;margin-bottom:8px;font-size:12px}
-.lkpd-refleksi-table th{background:#be185d}
-.lkpd-refleksi-table td{font-size:12px}
-/* Tips box */
+.lkpd-refleksi-info{font-style:italic;color:#64748b;margin-bottom:10px;font-size:12.5px;display:flex;align-items:center;gap:6px}
+.lkpd-refleksi-table th{background:linear-gradient(135deg,#be185d 0%,#ec4899 100%)}
+.lkpd-refleksi-table td{font-size:12.5px}
+.lkpd-refleksi-table tbody tr:nth-child(even){background:#fdf2f8}
+/* Tips & Ingat boxes */
+.lkpd-tips-row{display:grid;grid-template-columns:1fr;gap:14px;margin-top:8px}
 .lkpd-tips-box{
-  display:flex;align-items:flex-start;gap:10px;
+  display:flex;align-items:flex-start;gap:12px;
   background:linear-gradient(135deg,#fef9c3 0%,#fde68a 100%);
-  border:2px solid #facc15;border-radius:10px;padding:10px 14px;margin-bottom:14px;
-  font-size:12px;color:#713f12;
+  border:2.5px solid #facc15;border-radius:12px;padding:12px 16px;
+  font-size:12.5px;color:#713f12;line-height:1.55;
+  box-shadow:0 3px 8px rgba(250,204,21,0.25);
 }
-.lkpd-tips-icon{font-size:24px;flex:0 0 auto}
+.lkpd-tips-icon{font-size:30px;flex:0 0 auto;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.15))}
+.lkpd-tips-content{flex:1}
+.lkpd-tips-title{font-weight:800;color:#854d0e;font-size:14px;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px}
+.lkpd-ingat-box{
+  display:flex;align-items:flex-start;gap:12px;
+  background:linear-gradient(135deg,#fee2e2 0%,#fecaca 100%);
+  border:2.5px solid #ef4444;border-radius:12px;padding:12px 16px;
+  font-size:12.5px;color:#7f1d1d;line-height:1.55;
+  box-shadow:0 3px 8px rgba(239,68,68,0.25);
+  position:relative;overflow:hidden;
+}
+.lkpd-ingat-box::before{content:"";position:absolute;top:-15px;right:-15px;width:50px;height:50px;background:rgba(239,68,68,0.12);border-radius:50%}
+.lkpd-ingat-icon{font-size:30px;flex:0 0 auto;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.15));z-index:1}
+.lkpd-ingat-content{flex:1;z-index:1}
+.lkpd-ingat-title{font-weight:800;color:#991b1b;font-size:14px;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:4px}
+.lkpd-ingat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+.lkpd-ingat-card{background:rgba(255,255,255,0.7);padding:6px 8px;border-radius:6px;font-size:11px}
+.lkpd-ingat-card-title{font-weight:700;color:#991b1b;margin-bottom:3px;font-size:11px;text-transform:uppercase}
+.lkpd-ingat-card-item{display:block;color:#7f1d1d;line-height:1.4}
+/* Decorations */
+.lkpd-corner-decor{position:absolute;font-size:42px;opacity:0.7;z-index:5;pointer-events:none;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.15))}
+.lkpd-corner-tl{top:14px;left:14px;transform:rotate(-15deg)}
+.lkpd-corner-tr{top:14px;right:14px;transform:rotate(15deg)}
+.lkpd-corner-bl{bottom:14px;left:14px;transform:rotate(15deg)}
+.lkpd-corner-br{bottom:14px;right:14px;transform:rotate(-15deg)}
+/* Mascot - karakter anak di sudut */
+.lkpd-mascot{
+  position:absolute;bottom:80px;right:18px;width:96px;height:96px;z-index:6;pointer-events:none;
+  filter:drop-shadow(0 6px 12px rgba(0,0,0,0.20));
+}
+.lkpd-mascot-left{
+  position:absolute;top:80px;left:18px;width:72px;height:72px;z-index:5;pointer-events:none;
+  filter:drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+}
 /* Footer */
 .lkpd-footer{
-  display:flex;align-items:center;justify-content:center;gap:14px;
-  padding:12px 16px;border-radius:10px;color:#fff;font-weight:700;font-size:14px;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  padding:14px 18px;border-radius:12px;color:#fff;font-weight:700;font-size:15px;
   background:linear-gradient(135deg,#fbbf24 0%,#f472b6 100%);
-  text-shadow:0 1px 2px rgba(0,0,0,0.15);
+  text-shadow:0 1px 2px rgba(0,0,0,0.18);margin-top:14px;
+  box-shadow:0 4px 12px rgba(244,114,182,0.25);position:relative;z-index:2;
 }
-.lkpd-footer-decor{font-size:26px}
-.lkpd-footer-tagline{letter-spacing:0.5px}
+.lkpd-footer-decor{font-size:28px;filter:drop-shadow(0 2px 3px rgba(0,0,0,0.15))}
+.lkpd-footer-tagline{letter-spacing:0.6px}
 /* Print */
 @media print{
   .lkpd-worksheet-print{border:none;box-shadow:none;padding:10mm;border-radius:0}
   .lkpd-section{page-break-inside:avoid;break-inside:avoid}
-  .lkpd-table th,.lkpd-table td,.lkpd-header,.lkpd-section-bar,.lkpd-footer,.lkpd-refleksi-table th,.lkpd-bacaan-box,.lkpd-tips-box,.lkpd-identity,.lkpd-section-body{
+  .lkpd-table th,.lkpd-table td,.lkpd-header,.lkpd-section-bar,.lkpd-footer,.lkpd-refleksi-table th,.lkpd-bacaan-box,.lkpd-tips-box,.lkpd-ingat-box,.lkpd-identity,.lkpd-section-body,.lkpd-mascot,.lkpd-corner-decor{
     -webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;
   }
 }
 /* Dark mode in app modal */
-.dark .lkpd-worksheet-canvas{background:#fff!important}
+.dark .lkpd-worksheet-canvas{background:#fffdf7!important}
 .dark .lkpd-section-body{background:#fff!important}
 .dark .lkpd-table{background:#fff!important}
 .dark .lkpd-table tbody tr:nth-child(even){background:#f8fafc!important}
+.dark .lkpd-identity{background:linear-gradient(135deg,#fff7ed 0%,#fef3c7 100%)!important}
+/* Action buttons */
+.lkpd-action-bar{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;justify-content:center}
+.lkpd-btn{padding:10px 16px;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:transform .15s ease,box-shadow .15s ease}
+.lkpd-btn:hover{transform:translateY(-1px)}
+.lkpd-btn-primary{background:linear-gradient(135deg,#3b82f6 0%,#6366f1 100%);color:#fff;box-shadow:0 4px 10px rgba(59,130,246,0.3)}
+.lkpd-btn-success{background:linear-gradient(135deg,#10b981 0%,#059669 100%);color:#fff;box-shadow:0 4px 10px rgba(16,185,129,0.3)}
+.lkpd-btn-warning{background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%);color:#fff;box-shadow:0 4px 10px rgba(245,158,11,0.3)}
+.lkpd-btn-secondary{background:linear-gradient(135deg,#64748b 0%,#475569 100%);color:#fff;box-shadow:0 4px 10px rgba(100,116,139,0.3)}
+.lkpd-modal-scroll{max-height:calc(100dvh - 12rem);overflow-y:auto;overflow-x:auto;padding:8px}
+
+/* ===== A4 PAGE SIZE + PRINT FIX ===== */
+.lkpd-a4-page{
+  width:210mm;min-height:297mm;max-width:210mm;margin:0 auto;
+  padding:14mm 14mm 12mm;box-sizing:border-box;
+  background:#fffdf7;
+  position:relative;
+}
+.lkpd-worksheet-canvas.lkpd-a4-page{
+  border:4px solid #fbbf24;border-radius:14px;
+  padding:14mm 14mm 12mm;
+}
+/* Untuk tampilan di modal yang lebih kecil dari A4, scale down */
+@media (max-width:900px){
+  .lkpd-a4-page{width:100%;min-height:auto;padding:18px}
+  .lkpd-a4-page .lkpd-section{margin-bottom:14px}
+  .lkpd-a4-page .lkpd-header{padding:14px 16px;margin-bottom:14px}
+  .lkpd-a4-page .lkpd-title{font-size:20px}
+  .lkpd-a4-page .lkpd-subtitle{font-size:13px}
+  .lkpd-a4-page .lkpd-table{font-size:11.5px}
+  .lkpd-a4-page .lkpd-section-body{padding:12px 14px;font-size:12.5px}
+  .lkpd-a4-page .lkpd-mascot{width:72px;height:72px}
+  .lkpd-a4-page .lkpd-mascot-left{width:56px;height:56px}
+}
+/* Pada layar besar, tampilkan A4 full */
+@media (min-width:901px){
+  .lkpd-a4-page{transform-origin:top center}
+}
+
+/* Tingkat badges */
+.lkpd-tingkat-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:4px 12px;border-radius:999px;font-size:11px;font-weight:700;
+  letter-spacing:0.5px;text-transform:uppercase;
+  margin-left:auto;flex:0 0 auto;z-index:2;
+  box-shadow:0 2px 6px rgba(0,0,0,0.15);
+}
+.lkpd-tingkat-sd{background:linear-gradient(135deg,#fbbf24 0%,#f59e0b 100%);color:#fff}
+.lkpd-tingkat-smp{background:linear-gradient(135deg,#3b82f6 0%,#06b6d4 100%);color:#fff}
+.lkpd-tingkat-sma{background:linear-gradient(135deg,#8b5cf6 0%,#ec4899 100%);color:#fff}
+
+/* Ilustrasi tema sesuai tingkat - kartun untuk SD */
+.lkpd-illust-sd .lkpd-header{background:linear-gradient(135deg,#fbbf24 0%,#fb7185 50%,#f472b6 100%)}
+.lkpd-illust-sd .lkpd-footer{background:linear-gradient(135deg,#fbbf24 0%,#fb7185 100%)}
+.lkpd-illust-sd .lkpd-watermark{color:rgba(251,191,36,0.08)}
+/* Tema SMP - lebih biru/sporty */
+.lkpd-illust-smp .lkpd-header{background:linear-gradient(135deg,#3b82f6 0%,#06b6d4 50%,#10b981 100%)}
+.lkpd-illust-smp .lkpd-footer{background:linear-gradient(135deg,#3b82f6 0%,#06b6d4 100%)}
+.lkpd-illust-smp .lkpd-watermark{color:rgba(59,130,246,0.08)}
+/* Tema SMA - lebih ungu/profesional */
+.lkpd-illust-sma .lkpd-header{background:linear-gradient(135deg,#8b5cf6 0%,#ec4899 50%,#f43f5e 100%)}
+.lkpd-illust-sma .lkpd-footer{background:linear-gradient(135deg,#8b5cf6 0%,#ec4899 100%)}
+.lkpd-illust-sma .lkpd-watermark{color:rgba(139,92,246,0.08)}
+.lkpd-illust-sma .lkpd-section-body{font-size:13px;line-height:1.7}
+
+/* Mascot variants */
+.lkpd-mascot-sd{filter:drop-shadow(0 4px 10px rgba(251,191,36,0.4)) drop-shadow(0 2px 4px rgba(0,0,0,0.15))}
+.lkpd-mascot-smp{filter:drop-shadow(0 4px 10px rgba(59,130,246,0.4)) drop-shadow(0 2px 4px rgba(0,0,0,0.15))}
+.lkpd-mascot-sma{filter:drop-shadow(0 4px 10px rgba(139,92,246,0.4)) drop-shadow(0 2px 4px rgba(0,0,0,0.15))}
+
+/* PRINT: Pastikan A4 + SVG terlihat */
+@media print{
+  @page{size:A4 portrait;margin:0}
+  html,body{width:210mm!important;margin:0!important;padding:0!important;background:#fff!important}
+  .lkpd-worksheet-print{
+    width:210mm!important;min-height:297mm!important;
+    padding:12mm!important;margin:0!important;
+    border:none!important;border-radius:0!important;
+    box-shadow:none!important;overflow:visible!important;
+    page-break-after:always;break-after:page;
+  }
+  .lkpd-worksheet-print:last-child{page-break-after:auto;break-after:auto}
+  /* CRITICAL: pastikan SVG mascot terlihat saat print */
+  .lkpd-mascot,.lkpd-mascot-left,.lkpd-corner-decor,.lkpd-watermark{
+    -webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;
+    visibility:visible!important;opacity:1!important;
+  }
+  .lkpd-mascot *,.lkpd-mascot-left *{
+    -webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;
+  }
+  .lkpd-worksheet-print svg{display:inline-block!important;visibility:visible!important}
+  .lkpd-worksheet-print{overflow:visible!important}
+  .lkpd-section{page-break-inside:avoid;break-inside:avoid}
+  .lkpd-header,.lkpd-section-bar,.lkpd-footer,.lkpd-refleksi-table th,
+  .lkpd-bacaan-box,.lkpd-tips-box,.lkpd-ingat-box,.lkpd-identity,
+  .lkpd-section-body,.lkpd-table th,.lkpd-tingkat-badge{
+    -webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;
+  }
+  /* Hide scrollbar in print */
+  .lkpd-modal-scroll{overflow:visible!important;max-height:none!important}
+  /* Pastikan ilustrasi tidak terpotong */
+  .lkpd-worksheet-print .lkpd-mascot{bottom:80px!important;right:18px!important}
+  .lkpd-worksheet-print .lkpd-mascot-left{top:80px!important;left:18px!important}
+}
 </style>
 </head><body class="bg-slate-100 dark:bg-slate-900 transition-colors duration-300">
 <div id="authScreen" class="min-h-[100dvh] flex flex-col items-center justify-center p-4 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700">
@@ -1271,10 +1432,331 @@ window._liveClockInterval=setInterval(updateLiveClockDashboard,1000);
 async function loadKurikulumTableDash(){try{var results=await Promise.all([DB.get('subjects'),DB.get('kurikulum')]);var sub=results[0],kd=results[1];var c=document.getElementById('kurikulumTableContainer');if(!c)return;c.innerHTML='<h3 class="font-bold text-slate-800 dark:text-white mb-4">Dokumen Tersimpan</h3><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-50 dark:bg-slate-700 text-xs uppercase"><tr><th class="px-4 py-3">Jenis</th><th class="px-4 py-3">Mapel</th><th class="px-4 py-3">Judul</th><th class="px-4 py-3">Kelas</th><th class="px-4 py-3">Aksi</th></tr></thead><tbody class="divide-y dark:divide-slate-700">'+(kd.length?kd.map(function(k){var s=sub.find(function(x){return x.id===k.subject_id;});var tl=kurikulumTypes.find(function(x){return x.id===k.type;})?.label||k.type;return '<tr><td class="px-4 py-3"><span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">'+tl+'</span></td><td class="px-4 py-3">'+(s?.name||'-')+'</td><td class="px-4 py-3 font-medium">'+k.title+'</td><td class="px-4 py-3">'+(k.class_name||'-')+'</td><td class="px-4 py-3 flex gap-2"><button onclick="viewKurikulum(\''+k.id+'\')" class="text-blue-500">Lihat</button><button onclick="printKurikulumDoc(\''+k.id+'\')" class="text-green-500">Cetak</button><button onclick="deleteData(\'kurikulum\',\''+k.id+'\',loadKurikulumTableDash)" class="text-red-500">Hapus</button></td></tr>';}).join(''):'<tr><td colspan="5" class="text-center py-4 text-slate-500">Belum ada dokumen.</td></tr>')+'</tbody></table></div>';}catch(e){console.error('Kurikulum Dash Error:',e);}}
 async function loadAnnListDash(){try{var an=await DB.get('announcements');var c=document.getElementById('annListContainer');if(!c)return;c.innerHTML=(an.length?an.map(function(a){return '<div class="p-4 bg-slate-50 dark:bg-slate-700 rounded-lg"><div class="flex justify-between"><h4 class="font-bold text-slate-800 dark:text-white">'+a.title+'</h4><div class="flex gap-2"><button onclick="annForm(\''+a.id+'\')" class="text-xs text-blue-500">Edit</button><button onclick="deleteData(\'announcements\',\''+a.id+'\',loadAnnListDash)" class="text-xs text-red-500">Hapus</button></div></div><p class="text-xs text-slate-400 mt-1">'+formatDateID(a.date)+'</p><p class="text-sm mt-2 text-slate-700 dark:text-slate-300">'+a.content+'</p></div>';}).join(''):'<p class="text-sm text-slate-500 text-center py-4">Belum ada pengumuman.</p>');}catch(e){console.error('Ann Dash Error:',e);}}
 function formatSoalHTML(rawText){var text=rawText||'';var kunciSection='';var kunciMatch=text.match(/\n?\**(?:Kunci Jawaban|Jawaban)[*:]*\s*\n([\s\S]*?)$/i);if(kunciMatch){var kt=kunciMatch[1].trim();var kl=kt.split('\n').filter(function(l){return l.trim();});var kh='<div class="kunci-jawaban-section hide-on-print"><h3>📋 KUNCI JAWABAN</h3><div class="kunci-jawaban-grid">';kl.forEach(function(line){var m=line.match(/(\d+)\s*[.):\s]\s*([A-D])/i);if(m){kh+='<span>'+m[1]+'. '+m[2].toUpperCase()+'</span>';}});kh+='</div></div>';kunciSection=kh;text=text.replace(kunciMatch[0],'');}var sp=/(?:\*\*)?(\d+)[\.\)]\s*\*?\s*([\s\S]*?)(?=(?:\*\*)?\d+[\.\)]\s*\*?\s|$)/g;var match;var soalBlocks=[];var hasQ=false;while((match=sp.exec(text))!==null){var num=match[1];var block=match[2];var op=/(?:^|\n)\s*([A-D])[\.\)\s]\s*(.+?)(?=(?:\n\s*[A-D][\.\)\s])|(?:\n\s*(?:Jawaban|Kunci)[:\s])|$)/g;var options=[];var om;while((om=op.exec(block))!==null){options.push({label:om[1].toUpperCase(),text:om[2].trim()});}if(options.length>=2){hasQ=true;var qt=block.substring(0,block.search(new RegExp('\\s*'+options[0].label+'[\\.\\)\\s]'))).trim();var ca=null;var ap=[/(?:Jawaban|Kunci)[:\s]*\*?\*?\s*([A-D])/i,/\[BENAR[:\s]*([A-D])\]/i,/\(BENAR[:\s]*([A-D])\)/i,/\*([A-D])\s*\(BENAR\)/i,/([A-D])\s*\(BENAR\)/i,/([A-D])\s*\[BENAR\]/i,/✅\s*([A-D])/i,/([A-D])\s*✅/i];for(var i=0;i<ap.length;i++){var am=block.match(ap[i]);if(am){ca=am[1].toUpperCase();break;}}if(!ca&&kunciMatch){var kunciText=kunciMatch[1];var kl2=kunciText.match(new RegExp(num+'\\s*[.):\\s]\\s*([A-D])','i'));if(kl2)ca=kl2[1].toUpperCase();}soalBlocks.push({num:num,question:qt,options:options,correct:ca,fullMatch:match[0]});}}if(hasQ&&soalBlocks.length>0){var sh='<div class="soal-container">';soalBlocks.forEach(function(sb){var qT=sb.question.replace(/^\*+|\*+$/g,'').replace(/_+/g,'').trim();qT=qT.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');sh+='<div class="soal-item"><div class="soal-header"><span class="soal-number">'+sb.num+'.</span><span class="soal-text">'+qT+'</span></div><div class="soal-opts"><div class="opt-col">';var half=Math.ceil(sb.options.length/2);sb.options.forEach(function(opt,index){if(index===half)sh+='</div><div class="opt-col">';var isC=opt.label===sb.correct;sh+='<div class="soal-opt '+(isC?'correct':'')+'"><span class="opt-label">'+opt.label+'.</span><span class="opt-text">'+opt.text+'</span></div>';});sh+='</div></div>';if(sb.correct){sh+='<div class="soal-answer hide-on-print">Jawaban: <strong>'+sb.correct+'</strong></div>';}sh+='</div>';});sh+='</div>';var tt=text;soalBlocks.forEach(function(sb){var esc=sb.fullMatch.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');tt=tt.replace(new RegExp(esc,'s'),'|||SOAL_MARKER|||');});var nsp=tt.split('|||SOAL_MARKER|||').filter(function(p){return p.trim();});var fh='';nsp.forEach(function(part){if(part.trim()){fh+=marked.parse(part.trim());}});fh+=sh+kunciSection;return fh;}return marked.parse(text)+kunciSection;}
-async function generateKurikulum(type,typeLabel){var results=await Promise.all([DB.get('subjects'),DB.get('classes')]);var sub=results[0],cls=results[1];if(sub.length===0||cls.length===0){showToast('Tambah Mapel & Kelas dulu!','error');return;}var isLKPD=(type==='lkpd');var infoBox=isLKPD?'<div class="bg-rose-50 dark:bg-slate-700 p-3 rounded-lg text-sm text-rose-700 dark:text-rose-300">🎨 AI akan membuatkan <strong>LKPD visual</strong> lengkap dengan section Pemahaman Konsep, Latihan tabel, Bacaan & Pertanyaan, dan Refleksi Diri — tampil seperti gambar worksheet siap cetak.</div>':'<div class="bg-blue-50 dark:bg-slate-700 p-3 rounded-lg text-sm text-blue-700 dark:text-blue-300">💡 AI akan membuatkan <strong>'+typeLabel+'</strong> secara otomatis.</div>';openModal('Buat '+typeLabel,'<form id="kurikulumForm" class="space-y-4">'+infoBox+'<div><label class="block text-sm mb-1">Mata Pelajaran</label><select id="kSubject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required>'+sub.map(function(s){return '<option value="'+s.id+'">'+s.name+'</option>';}).join('')+'</select></div><div><label class="block text-sm mb-1">Kelas</label><select id="kClass" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required>'+cls.map(function(c){return '<option value="'+c.id+'" data-name="'+c.name+'">'+c.name+'</option>';}).join('')+'</select></div><div><label class="block text-sm mb-1">Topik / Materi</label><input type="text" id="kTopic" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" placeholder="Contoh: Ekosistem" required></div><div><label class="block text-sm mb-1">Fase</label><select id="kPhase" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option>Fase A</option><option>Fase B</option><option>Fase C</option><option>Fase D</option><option>Fase E</option><option>Fase F</option></select></div><button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 rounded-lg font-semibold">⚡ Generate dengan AI</button></form>');document.getElementById('kurikulumForm').onsubmit=async function(e){e.preventDefault();var btn=document.querySelector('#kurikulumForm button[type="submit"]');btn.disabled=true;btn.innerText='AI Sedang Menyusun...';var sid=document.getElementById('kSubject').value;var cs=document.getElementById('kClass');var cn=cs.options[cs.selectedIndex].dataset.name;var tp=document.getElementById('kTopic').value;var ph=document.getElementById('kPhase').value;var sj=sub.find(function(x){return x.id===sid;});try{var content;if(isLKPD){var sysLKPD='Anda adalah ahli kurikulum pendidikan Indonesia yang membuat Lembar Kerja Peserta Didik (LKPD) berkualitas. Anda WAJIB membalas HANYA dengan JSON murni (tanpa markdown codeblock, tanpa teks pembuka/penutup). Struktur JSON persis seperti ini: {"title":"LEMBAR KERJA PESERTA DIDIK (LKPD)","subtitle":"<judul materi singkat dalam Bahasa Indonesia>","konsep":"<paragraf 4-6 kalimat penjelasan konsep materi yang jelas dan mudah dipahami siswa>","latihan_direct":["<8 kalimat direct speech yang bervariasi, contoh: Ibu berkata, \\"Jangan lupa belajar!\\""],"latihan_indirect":["<8 kalimat indirect speech yang bervariasi, contoh: Ibu berpesan agar tidak lupa belajar."],"bacaan":"<paragraf bacaan atau dialog 6-10 kalimat yang relevan dengan materi>","pertanyaan":["<4 pertanyaan terkait bacaan, mulai dari mudah ke analisis>"],"refleksi":["<5 pernyataan refleksi diri tentang pemahaman materi, contoh: Saya memahami konsep materi ini dengan baik."],"tagline":"<tagline motivasi belajar singkat, contoh: Rajin Belajar, Bahasa Menjadi Mudah!>"}. Pastikan latihan_direct dan latihan_indirect masing-masing tepat 8 item bervariasi.';var promptLKPD='Buatkan LKPD mata pelajaran '+sj.name+' untuk kelas '+cn+' Fase '+ph+' dengan topik: '+tp+'. Sesuaikan kalimat latihan, bacaan, dan pertanyaan dengan materi tersebut. Output HANYA JSON valid tanpa teks tambahan.';var resLKPD=await callAIWithAutoUpgrade([{role:'system',content:sysLKPD},{role:'user',content:promptLKPD}]);var raw=typeof resLKPD==='string'?resLKPD:(resLKPD?.message?.content||resLKPD?.text||'');var jsonStr=raw.replace(/```json/gi,'').replace(/```/g,'').trim();content='__LKPD_JSON__'+jsonStr;}else{var prompt='Buatkan '+typeLabel+' lengkap untuk mata pelajaran '+sj.name+', kelas '+cn+', Fase '+ph+', topik: '+tp+'. Gunakan format markdown.';var sys='Anda adalah ahli kurikulum pendidikan Indonesia. Buatkan '+typeLabel+' yang sesuai dengan Kurikulum Merdeka. Gunakan markdown.';var res=await callAIWithAutoUpgrade([{role:'system',content:sys},{role:'user',content:prompt}]);content=typeof res==='string'?res:(res?.message?.content||res?.text||'');if(!content)throw new Error('AI tidak memberikan respon.');}await DB.insert('kurikulum',{type:type,title:typeLabel+' - '+tp,subject_id:sid,class_name:cn,content:content});showToast('Dokumen berhasil dibuat!','success');closeModal();loadKurikulumTableDash();}catch(err){showToast('Error: '+err.message,'error');btn.disabled=false;btn.innerText='⚡ Coba Lagi';}};}
-async function viewKurikulum(id){var doc=(await DB.get('kurikulum')).find(function(k){return k.id===id;});if(!doc)return;var tl=kurikulumTypes.find(function(t){return t.id===doc.type;})?.label||doc.type;if(doc.type==='lkpd'&&typeof doc.content==='string'&&doc.content.indexOf('__LKPD_JSON__')===0){var lkpdHTML=renderLKPDWorksheetHTML(doc.content.substring(14),tl);openModal(tl+' (Visual)','<div class="lkpd-worksheet-modal"><div class="lkpd-worksheet-canvas">'+lkpdHTML+'</div></div><div class="mt-4 flex gap-2"><button onclick="printKurikulumDoc(\''+doc.id+'\')" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm flex-1">🖨️ Cetak / PDF</button><button onclick="closeModal()" class="bg-slate-500 text-white px-4 py-2 rounded-lg text-sm">Tutup</button></div>');return;}openModal(tl,'<div class="ai-output text-gray-800 dark:text-white">'+marked.parse(doc.content)+'</div><div class="mt-4 flex gap-2"><button onclick="printKurikulumDoc(\''+doc.id+'\')" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm flex-1">🖨️ Cetak / PDF</button><button onclick="closeModal()" class="bg-slate-500 text-white px-4 py-2 rounded-lg text-sm">Tutup</button></div>');}
-function printKurikulumDoc(id){DB.get('kurikulum').then(async function(docs){var doc=docs.find(function(k){return k.id===id;});if(!doc)return;var tl=kurikulumTypes.find(function(t){return t.id===doc.type;})?.label||doc.type;if(doc.type==='lkpd'&&typeof doc.content==='string'&&doc.content.indexOf('__LKPD_JSON__')===0){var lkpdHTML=renderLKPDWorksheetHTML(doc.content.substring(14),tl);var kh=await generateKopHTML();openPrintPreview('<div style="font-family:Arial;color:#000;">'+kh+'<div class="lkpd-worksheet-print">'+lkpdHTML+'</div></div>');return;}var hc=marked.parse(doc.content);var kh=await generateKopHTML();openPrintPreview('<div style="font-family:Times New Roman,Georgia,serif;color:#000;">'+kh+'<div class="ai-output" style="color:#000;"><h3 style="text-align:center;margin:10px 0 15px;">'+tl.toUpperCase()+'</h3>'+hc+'</div></div>');});}
-function renderLKPDWorksheetHTML(jsonStr,typeLabel){var data;try{data=JSON.parse(jsonStr);}catch(e){return '<div class="ai-output text-gray-800 dark:text-white">'+escapeHTML(jsonStr||'')+'</div>';}var esc=function(v){return escapeHTML(v==null?'':v);};var title=esc(data.title||'LEMBAR KERJA PESERTA DIDIK (LKPD)');var subtitle=esc(data.subtitle||'');var konsep=esc(data.konsep||'');var tagline=esc(data.tagline||'Rajin Belajar, Bahasa Menjadi Mudah!');var bacaan=esc(data.bacaan||'');var latihanDirect=Array.isArray(data.latihan_direct)?data.latihan_direct:[];var latihanIndirect=Array.isArray(data.latihan_indirect)?data.latihan_indirect:[];var pertanyaan=Array.isArray(data.pertanyaan)?data.pertanyaan:[];var refleksi=Array.isArray(data.refleksi)?data.refleksi:[];var html='';html+='<div class="lkpd-header">';html+='<div class="lkpd-decor lkpd-decor-left">📚</div>';html+='<div class="lkpd-header-center"><div class="lkpd-title">'+title+'</div>'+(subtitle?'<div class="lkpd-subtitle">'+subtitle+'</div>':'')+'</div>';html+='<div class="lkpd-decor lkpd-decor-right">✏️</div>';html+='</div>';html+='<div class="lkpd-identity">';html+='<div class="lkpd-id-field"><span class="lkpd-id-label">Nama</span><span class="lkpd-id-line"></span></div>';html+='<div class="lkpd-id-field"><span class="lkpd-id-label">Kelas</span><span class="lkpd-id-line"></span></div>';html+='<div class="lkpd-id-field"><span class="lkpd-id-label">No. Absen</span><span class="lkpd-id-line"></span></div>';html+='</div>';html+='<div class="lkpd-section">';html+='<div class="lkpd-section-bar lkpd-bar-a"><span class="lkpd-bar-letter">A</span><span class="lkpd-bar-title">Pemahaman Konsep</span></div>';html+='<div class="lkpd-section-body lkpd-body-a"><p>'+konsep.split(/\n{2,}|\n/).filter(function(p){return p.trim();}).join('</p><p>')+'</p></div>';html+='</div>';if(latihanDirect.length){html+='<div class="lkpd-section">';html+='<div class="lkpd-section-bar lkpd-bar-b"><span class="lkpd-bar-letter">B</span><span class="lkpd-bar-title">Latihan — Ubah menjadi Indirect Speech</span></div>';html+='<div class="lkpd-section-body lkpd-body-b">';html+='<table class="lkpd-table"><thead><tr><th style="width:5%">No</th><th style="width:45%">Kalimat Direct Speech</th><th style="width:50%">Jawaban (Indirect Speech)</th></tr></thead><tbody>';for(var i=0;i<latihanDirect.length;i++){html+='<tr><td class="lkpd-td-center">'+(i+1)+'</td><td>'+esc(latihanDirect[i])+'</td><td class="lkpd-td-answer"></td></tr>';}html+='</tbody></table>';html+='</div></div>';}if(latihanIndirect.length){html+='<div class="lkpd-section">';html+='<div class="lkpd-section-bar lkpd-bar-c"><span class="lkpd-bar-letter">C</span><span class="lkpd-bar-title">Latihan — Ubah menjadi Direct Speech</span></div>';html+='<div class="lkpd-section-body lkpd-body-c">';html+='<table class="lkpd-table"><thead><tr><th style="width:5%">No</th><th style="width:45%">Kalimat Indirect Speech</th><th style="width:50%">Jawaban (Direct Speech)</th></tr></thead><tbody>';for(var j=0;j<latihanIndirect.length;j++){html+='<tr><td class="lkpd-td-center">'+(j+1)+'</td><td>'+esc(latihanIndirect[j])+'</td><td class="lkpd-td-answer"></td></tr>';}html+='</tbody></table>';html+='</div></div>';}if(bacaan||pertanyaan.length){html+='<div class="lkpd-section">';html+='<div class="lkpd-section-bar lkpd-bar-d"><span class="lkpd-bar-letter">D</span><span class="lkpd-bar-title">Bacaan & Pertanyaan</span></div>';html+='<div class="lkpd-section-body lkpd-body-d">';if(bacaan){html+='<div class="lkpd-bacaan-box"><div class="lkpd-bacaan-label">📖 Bacaan</div><p>'+bacaan.split(/\n{2,}|\n/).filter(function(p){return p.trim();}).join('</p><p>')+'</p></div>';}if(pertanyaan.length){html+='<ol class="lkpd-pertanyaan-list">';for(var k=0;k<pertanyaan.length;k++){html+='<li><span class="lkpd-q-num">'+(k+1)+'.</span><span class="lkpd-q-text">'+esc(pertanyaan[k])+'</span><span class="lkpd-q-line"></span></li>';}html+='</ol>';}html+='</div></div>';}if(refleksi.length){html+='<div class="lkpd-section">';html+='<div class="lkpd-section-bar lkpd-bar-e"><span class="lkpd-bar-letter">E</span><span class="lkpd-bar-title">Refleksi Diri</span></div>';html+='<div class="lkpd-section-body lkpd-body-e">';html+='<p class="lkpd-refleksi-info">Beri tanda centang (✓) pada kolom sesuai dengan kondisimu.</p>';html+='<table class="lkpd-table lkpd-refleksi-table"><thead><tr><th style="width:60%">Pernyataan</th><th style="width:13%">Sangat Baik</th><th style="width:13%">Baik</th><th style="width:14%">Perlu Ditingkatkan</th></tr></thead><tbody>';for(var m=0;m<refleksi.length;m++){html+='<tr><td>'+esc(refleksi[m])+'</td><td class="lkpd-td-center lkpd-td-checkbox">☐</td><td class="lkpd-td-center lkpd-td-checkbox">☐</td><td class="lkpd-td-center lkpd-td-checkbox">☐</td></tr>';}html+='</tbody></table>';html+='</div></div>';}html+='<div class="lkpd-tips-box"><div class="lkpd-tips-icon">💡</div><div class="lkpd-tips-content"><strong>Tips:</strong> Perhatikan tanda baca, kata pengantar, dan perubahan kata ganti (pronoun) saat mengubah bentuk kalimat.</div></div>';html+='<div class="lkpd-footer"><div class="lkpd-footer-decor">🎒</div><div class="lkpd-footer-tagline">'+tagline+'</div><div class="lkpd-footer-decor">🌟</div></div>';return html;}
+async function generateKurikulum(type,typeLabel){var results=await Promise.all([DB.get('subjects'),DB.get('classes')]);var sub=results[0],cls=results[1];if(sub.length===0||cls.length===0){showToast('Tambah Mapel & Kelas dulu!','error');return;}var isLKPD=(type==='lkpd');var infoBox=isLKPD?'<div class="bg-rose-50 dark:bg-slate-700 p-3 rounded-lg text-sm text-rose-700 dark:text-rose-300">🎨 AI akan membuatkan <strong>LKPD visual</strong> lengkap dengan section Pemahaman Konsep, Latihan tabel, Bacaan & Pertanyaan, dan Refleksi Diri — tampil seperti gambar worksheet siap cetak.</div>':'<div class="bg-blue-50 dark:bg-slate-700 p-3 rounded-lg text-sm text-blue-700 dark:text-blue-300">💡 AI akan membuatkan <strong>'+typeLabel+'</strong> secara otomatis.</div>';openModal('Buat '+typeLabel,'<form id="kurikulumForm" class="space-y-4">'+infoBox+'<div><label class="block text-sm mb-1">Mata Pelajaran</label><select id="kSubject" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required>'+sub.map(function(s){return '<option value="'+s.id+'">'+s.name+'</option>';}).join('')+'</select></div><div><label class="block text-sm mb-1">Kelas</label><select id="kClass" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required>'+cls.map(function(c){return '<option value="'+c.id+'" data-name="'+c.name+'">'+c.name+'</option>';}).join('')+'</select></div><div><label class="block text-sm mb-1">Topik / Materi</label><input type="text" id="kTopic" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" placeholder="Contoh: Ekosistem" required></div><div><label class="block text-sm mb-1">Fase</label><select id="kPhase" onchange="autoDetectTingkat()" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option>Fase A</option><option>Fase B</option><option>Fase C</option><option>Fase D</option><option>Fase E</option><option>Fase F</option></select></div><div id="kTingkatWrap"><label class="block text-sm mb-1">Tingkat Sekolah <span class="text-xs text-slate-400">(auto-detect dari Fase, bisa ubah manual)</span></label><select id="kTingkat" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option value="SD">🎒 SD (Sekolah Dasar)</option><option value="SMP">🏫 SMP (Sekolah Menengah Pertama)</option><option value="SMA">🎓 SMA/SMK (Sekolah Menengah Atas)</option></select></div><button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 rounded-lg font-semibold">⚡ Generate dengan AI</button></form>');document.getElementById('kurikulumForm').onsubmit=async function(e){e.preventDefault();var btn=document.querySelector('#kurikulumForm button[type="submit"]');btn.disabled=true;btn.innerText='AI Sedang Menyusun...';var sid=document.getElementById('kSubject').value;var cs=document.getElementById('kClass');var cn=cs.options[cs.selectedIndex].dataset.name;var tp=document.getElementById('kTopic').value;var ph=document.getElementById('kPhase').value;var tk=document.getElementById('kTingkat')?document.getElementById('kTingkat').value:'SD';var sj=sub.find(function(x){return x.id===sid;});try{var content;if(isLKPD){var sysLKPD='Anda adalah ahli kurikulum pendidikan Indonesia yang membuat Lembar Kerja Peserta Didik (LKPD) berkualitas. Anda WAJIB membalas HANYA dengan JSON murni (tanpa markdown codeblock, tanpa teks pembuka/penutup). Struktur JSON persis seperti ini: {"title":"LEMBAR KERJA PESERTA DIDIK (LKPD)","subtitle":"<judul materi singkat dalam Bahasa Indonesia>","konsep":"<paragraf 4-6 kalimat penjelasan konsep materi yang jelas dan mudah dipahami siswa>","konsep_points":["<3-5 poin penting/aturan materi>"],"ingat":["<3-5 aturan penting yang harus diingat siswa tentang materi, mis: perubahan kata ganti orang pertama menjadi orang ketiga>"],"latihan_direct":["<8 kalimat direct speech yang bervariasi, contoh: Ibu berkata, \\"Jangan lupa belajar!\\""],"latihan_indirect":["<8 kalimat indirect speech yang bervariasi, contoh: Ibu berpesan agar tidak lupa belajar."],"bacaan":"<paragraf bacaan atau dialog 6-10 kalimat yang relevan dengan materi>","pertanyaan":["<4 pertanyaan terkait bacaan, mulai dari mudah ke analisis>"],"refleksi":["<5 pernyataan refleksi diri tentang pemahaman materi, contoh: Saya memahami konsep materi ini dengan baik."],"tagline":"<tagline motivasi belajar singkat, contoh: Rajin Belajar, Bahasa Menjadi Mudah!>"}. Pastikan latihan_direct dan latihan_indirect masing-masing tepat 8 item bervariasi.';var tingkatLabel=tk==='SD'?'Sekolah Dasar (anak usia 6-12 tahun, gunakan bahasa sederhana, kalimat pendek, contoh dekat dengan keseharian anak)':tk==='SMP'?'Sekolah Menengah Pertama (remaja usia 12-15 tahun, bahasa baku, contoh kontekstual remaja)':tk==='SMA'?'Sekolah Menengah Atas (remaja usia 15-18 tahun, bahasa akademis, contoh aplikatif dan analitis)':'umum';var promptLKPD='Buatkan LKPD mata pelajaran '+sj.name+' untuk kelas '+cn+' Fase '+ph+' tingkat '+tk+' ('+tingkatLabel+') dengan topik: '+tp+'. Sesuaikan tingkat kesulitan, bahasa, dan contoh dengan tingkat '+tk+'. Pastikan 8 soal latihan_direct dan 8 soal latihan_indirect sesuai konteks '+tk+'. Output HANYA JSON valid tanpa teks tambahan.';var resLKPD=await callAIWithAutoUpgrade([{role:'system',content:sysLKPD},{role:'user',content:promptLKPD}]);var raw=typeof resLKPD==='string'?resLKPD:(resLKPD?.message?.content||resLKPD?.text||'');var jsonStr=raw.replace(/```json/gi,'').replace(/```/g,'').trim();content='__LKPD_JSON__|'+tk+'|'+jsonStr;}else{var prompt='Buatkan '+typeLabel+' lengkap untuk mata pelajaran '+sj.name+', kelas '+cn+', Fase '+ph+', topik: '+tp+'. Gunakan format markdown.';var sys='Anda adalah ahli kurikulum pendidikan Indonesia. Buatkan '+typeLabel+' yang sesuai dengan Kurikulum Merdeka. Gunakan markdown.';var res=await callAIWithAutoUpgrade([{role:'system',content:sys},{role:'user',content:prompt}]);content=typeof res==='string'?res:(res?.message?.content||res?.text||'');if(!content)throw new Error('AI tidak memberikan respon.');}await DB.insert('kurikulum',{type:type,title:typeLabel+' - '+tp,subject_id:sid,class_name:cn,content:content});showToast('Dokumen berhasil dibuat!','success');closeModal();loadKurikulumTableDash();}catch(err){showToast('Error: '+err.message,'error');btn.disabled=false;btn.innerText='⚡ Coba Lagi';}};}
+async function viewKurikulum(id){var doc=(await DB.get('kurikulum')).find(function(k){return k.id===id;});if(!doc)return;var tl=kurikulumTypes.find(function(t){return t.id===doc.type;})?.label||doc.type;if(doc.type==='lkpd'&&typeof doc.content==='string'&&doc.content.indexOf('__LKPD_JSON__')===0){var lkpdParsed=parseLKPDContent(doc.content);var lkpdHTML=renderLKPDWorksheetHTML(lkpdParsed.json,lkpdParsed.tingkat);var lkpdButtons='<div class="lkpd-action-bar"><button onclick="exportLKPDAsImage(\''+doc.id+'\')" class="lkpd-btn lkpd-btn-warning">📥 Download PNG</button><button onclick="printKurikulumDoc(\''+doc.id+'\')" class="lkpd-btn lkpd-btn-success">🖨️ Cetak / PDF</button><button onclick="closeModal()" class="lkpd-btn lkpd-btn-secondary">✕ Tutup</button></div>';openModal(tl+' (Visual)','<div class="lkpd-modal-scroll"><div class="lkpd-worksheet-modal"><div class="lkpd-worksheet-canvas">'+lkpdHTML+'</div></div>'+lkpdButtons+'</div>');return;}openModal(tl,'<div class="ai-output text-gray-800 dark:text-white">'+marked.parse(doc.content)+'</div><div class="mt-4 flex gap-2"><button onclick="printKurikulumDoc(\''+doc.id+'\')" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm flex-1">🖨️ Cetak / PDF</button><button onclick="closeModal()" class="bg-slate-500 text-white px-4 py-2 rounded-lg text-sm">Tutup</button></div>');}
+function printKurikulumDoc(id){DB.get('kurikulum').then(async function(docs){var doc=docs.find(function(k){return k.id===id;});if(!doc)return;var tl=kurikulumTypes.find(function(t){return t.id===doc.type;})?.label||doc.type;if(doc.type==='lkpd'&&typeof doc.content==='string'&&doc.content.indexOf('__LKPD_JSON__')===0){var lkpdParsed=parseLKPDContent(doc.content);var lkpdHTML=renderLKPDWorksheetHTML(lkpdParsed.json,lkpdParsed.tingkat);openPrintPreview('<div class="lkpd-print-wrapper">'+lkpdHTML+'</div>');return;}var hc=marked.parse(doc.content);var kh=await generateKopHTML();openPrintPreview('<div style="font-family:Times New Roman,Georgia,serif;color:#000;">'+kh+'<div class="ai-output" style="color:#000;"><h3 style="text-align:center;margin:10px 0 15px;">'+tl.toUpperCase()+'</h3>'+hc+'</div></div>');});}
+function parseLKPDContent(content){
+  // Format baru: __LKPD_JSON__|SD|{json} atau __LKPD_JSON__|SMP|{json} atau __LKPD_JSON__|SMA|{json}
+  // Format lama: __LKPD_JSON__{json}
+  // __LKPD_JSON__ = 13 karakter
+  var body=content.substring(13); // buang __LKPD_JSON__
+  var tingkat='SD';
+  // Cek format baru dengan pipe delimiter
+  if(body.charAt(0)==='|'){
+    var nextPipe=body.indexOf('|',1);
+    if(nextPipe!==-1){
+      var tk=body.substring(1,nextPipe);
+      if(tk==='SD'||tk==='SMP'||tk==='SMA'){
+        tingkat=tk;
+        body=body.substring(nextPipe+1);
+      }
+    }
+  }
+  return {json:body, tingkat:tingkat};
+}
+function autoDetectTingkat(){
+  var ph=document.getElementById('kPhase');
+  var tk=document.getElementById('kTingkat');
+  if(!ph||!tk)return;
+  var phase=ph.value||'';
+  // Fase A,B = SD awal (kelas 1-2)
+  // Fase C,D = SD akhir (kelas 3-6)
+  // Fase E = SMP (kelas 7-9)
+  // Fase F = SMA (kelas 10-12)
+  if(phase==='Fase A'||phase==='Fase B'||phase==='Fase C'||phase==='Fase D'){
+    tk.value='SD';
+  }else if(phase==='Fase E'){
+    tk.value='SMP';
+  }else if(phase==='Fase F'){
+    tk.value='SMA';
+  }
+}
+function renderLKPDWorksheetHTML(jsonStr,tingkat){
+  tingkat=tingkat||'SD';
+  // Parser tangguh
+  var data=null,raw=jsonStr||'';
+  raw=raw.replace(/```json/gi,'').replace(/```/g,'');
+  try{data=JSON.parse(raw);}catch(e){
+    var firstBrace=raw.indexOf('{'),lastBrace=raw.lastIndexOf('}');
+    if(firstBrace!==-1&&lastBrace!==-1&&lastBrace>firstBrace){
+      try{data=JSON.parse(raw.substring(firstBrace,lastBrace+1));}catch(e2){
+        try{data=JSON.parse(raw.substring(firstBrace,lastBrace+1).replace(/,\s*([}\]])/g,'$1'));}catch(e3){data=null;}
+      }
+    }
+  }
+  if(!data){
+    return '<div style="padding:20px;background:#fef2f2;border:2px solid #ef4444;border-radius:12px;color:#991b1b">'+
+      '<div style="font-weight:700;margin-bottom:8px">⚠️ Format JSON dari AI tidak dapat dibaca.</div>'+
+      '<div style="font-size:12px;color:#7f1d1d;white-space:pre-wrap;max-height:200px;overflow:auto">'+escapeHTML(raw.substring(0,500))+(raw.length>500?'\n...':'')+'</div>'+
+      '<div style="margin-top:10px;font-size:12px">Silakan coba generate ulang.</div></div>';
+  }
+  var esc=function(v){return escapeHTML(v==null?'':v);};
+  var nl2p=function(text){
+    if(!text)return '';
+    var parts=String(text).split(/\n{2,}|\n/).filter(function(p){return p&&p.trim();});
+    if(!parts.length)return '';
+    return '<p>'+parts.map(esc).join('</p><p>')+'</p>';
+  };
+  var title=esc(data.title||'LEMBAR KERJA PESERTA DIDIK (LKPD)');
+  var subtitle=esc(data.subtitle||'');
+  var konsep=esc(data.konsep||'');
+  var tagline=esc(data.tagline||(tingkat==='SD'?'Rajin Belajar, Pintar Pasti!':tingkat==='SMP'?'Belajar Hari Ini, Sukses Masa Depan!':'Ilmu Pengetahuan, Bekal Masa Depan!'));
+  var bacaan=esc(data.bacaan||'');
+  var ingat=Array.isArray(data.ingat)?data.ingat:[];
+  var konsepPoints=Array.isArray(data.konsep_points)?data.konsep_points:[];
+  var latihanDirect=Array.isArray(data.latihan_direct)?data.latihan_direct:[];
+  var latihanIndirect=Array.isArray(data.latihan_indirect)?data.latihan_indirect:[];
+  var pertanyaan=Array.isArray(data.pertanyaan)?data.pertanyaan:[];
+  var refleksi=Array.isArray(data.refleksi)?data.refleksi:[];
+  // Tentukan label section sesuai konteks
+  var isBahasa=/speech|kalimat|direct|indirect|bahasa|narasi|cerpen|puisi|pantun|paragraf/i.test(konsep+subtitle+title);
+  var labelB=isBahasa?'Latihan — Ubah ke Indirect Speech':'Latihan Soal (Bagian 1)';
+  var labelC=isBahasa?'Latihan — Ubah ke Direct Speech':'Latihan Soal (Bagian 2)';
+  var tingkatLabel=tingkat==='SD'?'SD':tingkat==='SMP'?'SMP':'SMA';
+  var html='';
+  // Wrapper dengan kelas tingkat untuk tema warna berbeda
+  html+='<div class="lkpd-illust-'+tingkat.toLowerCase()+' lkpd-a4-page lkpd-worksheet-canvas">';
+  html+='<div class="lkpd-watermark">LKPD '+tingkatLabel+'</div>';
+  html+='<div class="lkpd-corner-decor lkpd-corner-tl">📚</div>';
+  html+='<div class="lkpd-corner-decor lkpd-corner-tr">✏️</div>';
+  html+='<div class="lkpd-corner-decor lkpd-corner-bl">🎓</div>';
+  html+='<div class="lkpd-corner-decor lkpd-corner-br">⭐</div>';
+  // Mascot kiri - karakter sesuai tingkat
+  html+=renderLKPDLeftMascot(tingkat);
+  // Header dengan badge tingkat
+  html+='<div class="lkpd-header">';
+  html+='<div class="lkpd-decor">'+(tingkat==='SD'?'🎒':tingkat==='SMP'?'🏫':'🎓')+'</div>';
+  html+='<div class="lkpd-header-center"><div class="lkpd-title">'+title+'</div>'+(subtitle?'<div class="lkpd-subtitle">'+subtitle+'</div>':'')+'</div>';
+  html+='<div class="lkpd-tingkat-badge lkpd-tingkat-'+tingkat.toLowerCase()+'">'+tingkatLabel+'</div>';
+  html+='</div>';
+  // Identity
+  html+='<div class="lkpd-identity">';
+  html+='<div class="lkpd-id-field"><span class="lkpd-id-label">Nama</span><span class="lkpd-id-line"></span></div>';
+  html+='<div class="lkpd-id-field"><span class="lkpd-id-label">Kelas</span><span class="lkpd-id-line"></span></div>';
+  html+='<div class="lkpd-id-field"><span class="lkpd-id-label">No. Absen</span><span class="lkpd-id-line"></span></div>';
+  html+='</div>';
+  // Section A
+  html+='<div class="lkpd-section">';
+  html+='<div class="lkpd-section-bar lkpd-bar-a"><span class="lkpd-bar-letter">A</span><span class="lkpd-bar-title">Pemahaman Konsep</span></div>';
+  html+='<div class="lkpd-section-body lkpd-body-a">';
+  if(konsep){html+='<p>'+nl2p(data.konsep)+'</p>';}
+  if(konsepPoints.length){
+    html+='<div class="lkpd-konsep-title">💡 Poin Penting:</div>';
+    html+='<ul class="lkpd-konsep-list">';
+    for(var p=0;p<konsepPoints.length;p++){
+      html+='<li><span class="lkpd-konsep-bullet">▸</span><span>'+esc(konsepPoints[p])+'</span></li>';
+    }
+    html+='</ul>';
+  }
+  html+='</div></div>';
+  // Section B
+  if(latihanDirect.length){
+    html+='<div class="lkpd-section">';
+    html+='<div class="lkpd-section-bar lkpd-bar-b"><span class="lkpd-bar-letter">B</span><span class="lkpd-bar-title">'+labelB+'</span></div>';
+    html+='<div class="lkpd-section-body lkpd-body-b">';
+    html+='<table class="lkpd-table"><thead><tr><th style="width:5%">No</th><th style="width:45%">Kalimat</th><th style="width:50%">Jawaban</th></tr></thead><tbody>';
+    for(var i=0;i<latihanDirect.length;i++){
+      html+='<tr><td class="lkpd-td-center">'+(i+1)+'</td><td>'+esc(latihanDirect[i])+'</td><td class="lkpd-td-answer"></td></tr>';
+    }
+    html+='</tbody></table>';
+    html+='</div></div>';
+  }
+  // Section C
+  if(latihanIndirect.length){
+    html+='<div class="lkpd-section">';
+    html+='<div class="lkpd-section-bar lkpd-bar-c"><span class="lkpd-bar-letter">C</span><span class="lkpd-bar-title">'+labelC+'</span></div>';
+    html+='<div class="lkpd-section-body lkpd-body-c">';
+    html+='<table class="lkpd-table"><thead><tr><th style="width:5%">No</th><th style="width:45%">Kalimat</th><th style="width:50%">Jawaban</th></tr></thead><tbody>';
+    for(var j=0;j<latihanIndirect.length;j++){
+      html+='<tr><td class="lkpd-td-center">'+(j+1)+'</td><td>'+esc(latihanIndirect[j])+'</td><td class="lkpd-td-answer"></td></tr>';
+    }
+    html+='</tbody></table>';
+    html+='</div></div>';
+  }
+  // Section D
+  if(bacaan||pertanyaan.length){
+    html+='<div class="lkpd-section">';
+    html+='<div class="lkpd-section-bar lkpd-bar-d"><span class="lkpd-bar-letter">D</span><span class="lkpd-bar-title">Bacaan & Pertanyaan</span></div>';
+    html+='<div class="lkpd-section-body lkpd-body-d">';
+    if(bacaan){
+      html+='<div class="lkpd-bacaan-box"><div class="lkpd-bacaan-label">📖 Bacalah Teks Berikut!</div>'+nl2p(data.bacaan)+'</div>';
+    }
+    if(pertanyaan.length){
+      html+='<div style="font-weight:700;color:#6d28d9;margin-bottom:8px;font-size:13.5px">📝 Jawablah pertanyaan berikut!</div>';
+      html+='<ol class="lkpd-pertanyaan-list">';
+      for(var k=0;k<pertanyaan.length;k++){
+        html+='<li><span class="lkpd-q-num">'+(k+1)+'</span><span class="lkpd-q-text">'+esc(pertanyaan[k])+'</span><span class="lkpd-q-line"></span></li>';
+      }
+      html+='</ol>';
+    }
+    html+='</div></div>';
+  }
+  // Section E
+  if(refleksi.length){
+    html+='<div class="lkpd-section">';
+    html+='<div class="lkpd-section-bar lkpd-bar-e"><span class="lkpd-bar-letter">E</span><span class="lkpd-bar-title">Refleksi Diri</span></div>';
+    html+='<div class="lkpd-section-body lkpd-body-e">';
+    html+='<div class="lkpd-refleksi-info">✓ Beri tanda centang pada kolom sesuai dengan kondisimu.</div>';
+    html+='<table class="lkpd-table lkpd-refleksi-table"><thead><tr><th style="width:55%">Pernyataan</th><th style="width:15%">Sangat Baik</th><th style="width:15%">Baik</th><th style="width:15%">Perlu Ditingkatkan</th></tr></thead><tbody>';
+    for(var m=0;m<refleksi.length;m++){
+      html+='<tr><td>'+esc(refleksi[m])+'</td><td class="lkpd-td-center lkpd-td-checkbox">☐</td><td class="lkpd-td-center lkpd-td-checkbox">☐</td><td class="lkpd-td-center lkpd-td-checkbox">☐</td></tr>';
+    }
+    html+='</tbody></table>';
+    html+='</div></div>';
+  }
+  // Tips & Ingat
+  html+='<div class="lkpd-tips-row">';
+  html+='<div class="lkpd-tips-box"><div class="lkpd-tips-icon">💡</div><div class="lkpd-tips-content"><div class="lkpd-tips-title">Tips Belajar</div><div>'+(tingkat==='SD'?'Kerjakan dengan teliti, jangan terburu-buru, dan jangan ragu bertanya kepada guru atau orang tua kalau ada yang belum jelas ya!':tingkat==='SMP'?'Kerjakan dengan teliti, baca soal dengan cermat, dan catat hal-hal penting. Diskusikan dengan teman jika perlu.':'Analisis soal dengan cermat, kaitkan dengan konsep yang dipelajari, dan rumuskan jawaban dengan bahasa yang jelas dan terstruktur.')+'</div></div></div>';
+  if(ingat.length){
+    html+='<div class="lkpd-ingat-box"><div class="lkpd-ingat-icon">🧠</div><div class="lkpd-ingat-content"><div class="lkpd-ingat-title">⚡ Ingat!</div><div>'+ingat.map(function(s){return '<span style="display:block;margin-bottom:2px">• '+esc(s)+'</span>';}).join('')+'</div></div></div>';
+  }else{
+    html+='<div class="lkpd-ingat-box"><div class="lkpd-ingat-icon">🧠</div><div class="lkpd-ingat-content"><div class="lkpd-ingat-title">⚡ Ingat!</div><div><span style="display:block">• Perhatikan tanda baca dan struktur kalimat</span><span style="display:block">• Pahami konteks sebelum menjawab</span><span style="display:block">• Cek ulang jawaban sebelum dikumpulkan</span></div></div></div>';
+  }
+  html+='</div>';
+  // Mascot kanan - karakter sesuai tingkat
+  html+=renderLKPDRightMascot(tingkat);
+  // Footer
+  html+='<div class="lkpd-footer"><div class="lkpd-footer-decor">'+(tingkat==='SD'?'🎒':tingkat==='SMP'?'🚀':'🎓')+'</div><div class="lkpd-footer-tagline">'+tagline+'</div><div class="lkpd-footer-decor">🌟</div></div>';
+  html+='</div>'; // tutup wrapper lkpd-a4-page
+  return html;
+}
+function renderLKPDLeftMascot(tingkat){
+  // Karakter kiri sesuai tingkat
+  if(tingkat==='SMP'){
+    // SMP: remaja dengan buku
+    return '<svg class="lkpd-mascot lkpd-mascot-left lkpd-mascot-smp" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'+
+      '<circle cx="50" cy="50" r="48" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>'+
+      '<circle cx="50" cy="36" r="13" fill="#fbbf24"/>'+
+      '<path d="M 37 32 Q 37 23 50 23 Q 63 23 63 32 L 62 28 Q 58 19 50 19 Q 42 19 38 28 Z" fill="#1e3a8a"/>'+
+      '<circle cx="45" cy="36" r="1.8" fill="#1f2937"/>'+
+      '<circle cx="55" cy="36" r="1.8" fill="#1f2937"/>'+
+      '<path d="M 46 42 Q 50 44 54 42" stroke="#1f2937" stroke-width="1.5" fill="none" stroke-linecap="round"/>'+
+      '<path d="M 28 80 Q 28 58 50 58 Q 72 58 72 80 L 72 95 L 28 95 Z" fill="#3b82f6"/>'+
+      '<rect x="35" y="62" width="30" height="20" fill="#fff" stroke="#1e3a8a" stroke-width="1.2" rx="2"/>'+
+      '<text x="50" y="75" font-size="9" text-anchor="middle" fill="#3b82f6" font-family="Arial" font-weight="bold">SMP</text>'+
+      '</svg>';
+  }
+  if(tingkat==='SMA'){
+    // SMA: dewasa muda dengan toga/laptop
+    return '<svg class="lkpd-mascot lkpd-mascot-left lkpd-mascot-sma" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'+
+      '<circle cx="50" cy="50" r="48" fill="#ede9fe" stroke="#8b5cf6" stroke-width="2"/>'+
+      '<circle cx="50" cy="36" r="13" fill="#fbbf24"/>'+
+      '<path d="M 37 33 Q 37 22 50 22 Q 63 22 63 33 L 62 30 Q 58 18 50 18 Q 42 18 38 30 Z" fill="#1f2937"/>'+
+      '<circle cx="45" cy="36" r="1.8" fill="#1f2937"/>'+
+      '<circle cx="55" cy="36" r="1.8" fill="#1f2937"/>'+
+      '<rect x="44" y="41" width="12" height="3" fill="#fff" stroke="#1f2937" stroke-width="0.8" rx="0.5"/>'+
+      '<path d="M 28 80 Q 28 58 50 58 Q 72 58 72 80 L 72 95 L 28 95 Z" fill="#8b5cf6"/>'+
+      '<path d="M 25 58 L 50 50 L 75 58 L 50 64 Z" fill="#1f2937"/>'+
+      '<line x1="50" y1="50" x2="50" y2="64" stroke="#fbbf24" stroke-width="2"/>'+
+      '<circle cx="50" cy="50" r="2" fill="#fbbf24"/>'+
+      '</svg>';
+  }
+  // SD default: anak kecil dengan buku
+  return '<svg class="lkpd-mascot lkpd-mascot-left lkpd-mascot-sd" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'+
+    '<circle cx="50" cy="50" r="48" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>'+
+    '<circle cx="50" cy="38" r="14" fill="#fbbf24"/>'+
+    '<path d="M 36 36 Q 36 26 50 26 Q 64 26 64 36 L 64 32 Q 60 22 50 22 Q 40 22 36 32 Z" fill="#1f2937"/>'+
+    '<circle cx="45" cy="38" r="2" fill="#1f2937"/>'+
+    '<circle cx="55" cy="38" r="2" fill="#1f2937"/>'+
+    '<circle cx="42" cy="42" r="2.5" fill="#fb7185" opacity="0.6"/>'+
+    '<circle cx="58" cy="42" r="2.5" fill="#fb7185" opacity="0.6"/>'+
+    '<path d="M 44 46 Q 50 50 56 46" stroke="#1f2937" stroke-width="1.5" fill="none" stroke-linecap="round"/>'+
+    '<path d="M 28 80 Q 28 58 50 58 Q 72 58 72 80 L 72 92 L 28 92 Z" fill="#10b981"/>'+
+    '<rect x="36" y="62" width="28" height="18" fill="#fff" stroke="#1e3a8a" stroke-width="1.2" rx="2"/>'+
+    '<line x1="40" y1="67" x2="60" y2="67" stroke="#3b82f6" stroke-width="1"/>'+
+    '<line x1="40" y1="71" x2="56" y2="71" stroke="#3b82f6" stroke-width="1"/>'+
+    '<line x1="40" y1="75" x2="58" y2="75" stroke="#3b82f6" stroke-width="1"/>'+
+    '</svg>';
+}
+function renderLKPDRightMascot(tingkat){
+  // Mascot kanan bawah
+  if(tingkat==='SMP'){
+    // SMP: roket
+    return '<svg class="lkpd-mascot lkpd-mascot-smp" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'+
+      '<circle cx="50" cy="50" r="46" fill="#dbeafe" stroke="#3b82f6" stroke-width="3"/>'+
+      '<path d="M 50 18 L 60 35 L 60 60 L 40 60 L 40 35 Z" fill="#3b82f6" stroke="#1e3a8a" stroke-width="1.5"/>'+
+      '<circle cx="50" cy="40" r="5" fill="#fef3c7" stroke="#1e3a8a" stroke-width="1.5"/>'+
+      '<path d="M 40 55 L 32 70 L 40 65 Z" fill="#fb7185"/>'+
+      '<path d="M 60 55 L 68 70 L 60 65 Z" fill="#fb7185"/>'+
+      '<path d="M 45 60 L 50 75 L 55 60 Z" fill="#fbbf24"/>'+
+      '<text x="50" y="88" font-size="9" text-anchor="middle" fill="#1e3a8a" font-family="Arial" font-weight="bold">SMP</text>'+
+      '</svg>';
+  }
+  if(tingkat==='SMA'){
+    // SMA: topi sarjana
+    return '<svg class="lkpd-mascot lkpd-mascot-sma" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'+
+      '<circle cx="50" cy="50" r="46" fill="#ede9fe" stroke="#8b5cf6" stroke-width="3"/>'+
+      '<path d="M 20 45 L 50 35 L 80 45 L 50 55 Z" fill="#1f2937"/>'+
+      '<path d="M 35 50 L 35 62 Q 50 68 65 62 L 65 50 L 50 55 Z" fill="#1f2937"/>'+
+      '<line x1="80" y1="45" x2="80" y2="60" stroke="#fbbf24" stroke-width="2"/>'+
+      '<circle cx="80" cy="62" r="3" fill="#fbbf24"/>'+
+      '<text x="50" y="85" font-size="9" text-anchor="middle" fill="#1f2937" font-family="Arial" font-weight="bold">SMA</text>'+
+      '</svg>';
+  }
+  // SD default: smiley kuning
+  return '<svg class="lkpd-mascot lkpd-mascot-sd" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'+
+    '<circle cx="50" cy="50" r="46" fill="#fbbf24" stroke="#f59e0b" stroke-width="3"/>'+
+    '<circle cx="38" cy="42" r="4" fill="#1f2937"/>'+
+    '<circle cx="62" cy="42" r="4" fill="#1f2937"/>'+
+    '<path d="M 35 58 Q 50 70 65 58" stroke="#1f2937" stroke-width="3" fill="none" stroke-linecap="round"/>'+
+    '<circle cx="28" cy="52" r="4" fill="#fb7185" opacity="0.7"/>'+
+    '<circle cx="72" cy="52" r="4" fill="#fb7185" opacity="0.7"/>'+
+    '<path d="M 50 12 L 53 22 L 50 18 L 47 22 Z" fill="#10b981"/>'+
+    '<text x="50" y="88" font-size="9" text-anchor="middle" fill="#1f2937" font-family="Arial" font-weight="bold">SD</text>'+
+    '</svg>';
+}
+
+function parseLKPDJsonSafely(raw){
+  if(!raw)return null;
+  raw=String(raw).replace(/```json/gi,'').replace(/```/g,'').trim();
+  try{return JSON.parse(raw);}catch(e){
+    var s=raw.indexOf('{'),t=raw.lastIndexOf('}');
+    if(s!==-1&&t!==-1&&t>s){
+      try{return JSON.parse(raw.substring(s,t+1));}catch(e2){
+        try{return JSON.parse(raw.substring(s,t+1).replace(/,\s*([}\]])/g,'$1'));}catch(e3){return null;}
+      }
+    }
+  }
+  return null;
+}
+function exportLKPDAsImage(docId){
+  if(typeof html2canvas==='undefined'){
+    var s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    s.onload=function(){exportLKPDAsImage(docId);};
+    s.onerror=function(){showToast('Gagal memuat pustaka gambar.','error');};
+    document.head.appendChild(s);
+    showToast('Memuat pustaka gambar...','info');
+    return;
+  }
+  // Cari A4 worksheet (baik di modal preview maupun di print area)
+  var canvas=document.querySelector('#modalContent .lkpd-a4-page')||document.querySelector('#modalContent .lkpd-worksheet-canvas')||document.querySelector('#printArea .lkpd-a4-page')||document.querySelector('#printArea .lkpd-worksheet-canvas');
+  if(!canvas){showToast('Worksheet tidak ditemukan.','error');return;}
+  showToast('Membuat gambar A4...','info');
+  // Pastikan SVG ter-render dengan scale tinggi
+  html2canvas(canvas,{
+    backgroundColor:'#ffffff',
+    scale:2,
+    useCORS:true,
+    allowTaint:false,
+    logging:false,
+    width:canvas.scrollWidth,
+    height:canvas.scrollHeight,
+    windowWidth:canvas.scrollWidth,
+    windowHeight:canvas.scrollHeight
+  }).then(function(c){
+    var link=document.createElement('a');
+    link.download='LKPD_A4_'+Date.now()+'.png';
+    link.href=c.toDataURL('image/png');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast('Gambar LKPD A4 berhasil diunduh!','success');
+  }).catch(function(err){
+    console.error('html2canvas error:',err);
+    showToast('Gagal membuat gambar: '+err.message,'error');
+  });
+}
 async function renderTeachers(){
   var t=await DB.get('teachers');
   document.getElementById('content').innerHTML='<div class="space-y-6">'+
@@ -2517,7 +2999,8 @@ function escapeHTML(s){return String(s).replace(/[&<>"']/g,function(c){return{'&
 var lastAIFormattedHTML='';
 async function sendAI(){var ip=document.getElementById('aiInput');if(!ip||!ip.value.trim())return;var prompt=ip.value.trim();ip.value='';if(aiChatHistory.length>10){aiChatHistory=aiChatHistory.slice(-10);}var btn=document.getElementById('aiSendBtn');btn.disabled=true;btn.innerText='Memproses...';['aiPrintBtn','aiWordBtn','aiPrintKeyBtn'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.add('hidden');});var box=document.getElementById('aiMessages');var ud=document.createElement('div');ud.className='flex justify-end fade-in';ud.innerHTML='<div class="max-w-[90%] rounded-xl px-4 py-3 bg-blue-600 text-white shadow-sm"><div class="text-xs opacity-70 mb-1">Anda</div><div class="whitespace-pre-wrap">'+escapeHTML(prompt)+'</div></div>';box.appendChild(ud);var td=document.createElement('div');td.id='typingIndicator';td.className='flex justify-start fade-in';td.innerHTML='<div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500 dark:text-slate-400">Asisten AI</div><div class="animate-pulse text-blue-600">Sedang mengetik...</div></div>';box.appendChild(td);box.scrollTop=box.scrollHeight;try{var ctx=await getSchoolContext();var isGreeting=/^(hai|halo|hello|hi|tes|test|selamat\s+(pagi|siang|sore|malam)|assalamualaikum|p|woi|woy|apa\s+kabar)\b/i.test(prompt.trim())&&prompt.trim().length<30&&!/(buat|buatkan|soal|pelajaran|materi|rpp|modul|latihan|ujian|ulangan|pertanyaan|essay|pilihan\s*ganda)/i.test(prompt);var sys=isGreeting?'Anda adalah Asisten AI Profesional yang ramah, sopan, dan berwawasan global.':'Anda adalah Asisten AI Profesional yang sangat cerdas, berwawasan internasional, dan ahli dalam bidang pendidikan. Anda menguasai Kurikulum Merdeka. Data sekolah: '+ctx+'. Saat user meminta soal pilihan ganda, WAJIB gunakan format: 1. Pertanyaan? A. Pilihan A B. Pilihan B C. Pilihan C D. Pilihan D Jawaban: B';aiChatHistory.push({role:'user',content:prompt});var res=await callAIWithAutoUpgrade([{role:'system',content:sys}].concat(aiChatHistory));var ans=typeof res==='string'?res:(res?.message?.content||res?.text||'');if(!ans||ans.trim()===''){throw new Error("Respon AI kosong.");}aiChatHistory.push({role:'assistant',content:ans});document.getElementById('typingIndicator')?.remove();var fh=formatSoalHTML(ans);lastAIFormattedHTML=fh;var ad=document.createElement('div');ad.className='flex justify-start fade-in';ad.innerHTML='<div class="max-w-[95%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500 dark:text-slate-400">Asisten AI</div><div class="ai-output text-gray-800 dark:text-white">'+fh+'</div></div>';box.appendChild(ad);box.scrollTop=box.scrollHeight;['aiPrintBtn','aiWordBtn','aiPrintKeyBtn'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('hidden');});}catch(e){document.getElementById('typingIndicator')?.remove();showToast('Error: '+e.message,'error');}finally{btn.disabled=false;btn.innerText='Kirim';}}
 async function handleAIImageUpload(event){var file=event.target.files[0];if(!file)return;var btn=document.getElementById('aiSendBtn');btn.disabled=true;btn.innerText='Memproses Gambar...';var box=document.getElementById('aiMessages');var reader=new FileReader();reader.onload=async function(e){var iu=e.target.result;var ud=document.createElement('div');ud.className='flex justify-end fade-in';ud.innerHTML='<div class="max-w-[80%] rounded-xl px-2 py-2 bg-blue-600 text-white shadow-sm"><div class="text-xs opacity-70 mb-1 px-2">Anda (Gambar)</div><img src="'+iu+'" class="rounded-lg max-w-full h-auto"></div>';box.appendChild(ud);var td=document.createElement('div');td.id='typingIndicator';td.className='flex justify-start fade-in';td.innerHTML='<div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500 dark:text-slate-400">Asisten AI</div><div class="animate-pulse text-blue-600">Membaca teks (OCR)...</div></div>';box.appendChild(td);box.scrollTop=box.scrollHeight;try{var messages=[{role:'user',content:[{type:'text',text:"Baca semua teks di gambar ini."},{type:'image_url',image_url:{url:iu}}]}];var res=await puter.ai.chat(messages);var et=typeof res==='string'?res:(res?.message?.content||res?.text||'');document.getElementById('typingIndicator')?.remove();if(!et||!et.trim()){throw new Error("Tidak ada teks terdeteksi.");}var fh=marked.parse(et);lastAIFormattedHTML=fh;var ad=document.createElement('div');ad.className='flex justify-start fade-in';ad.innerHTML='<div class="max-w-[95%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500 dark:text-slate-400">Asisten AI (Teks hasil Scan)</div><div class="ai-output text-gray-800 dark:text-white">'+fh+'</div></div>';box.appendChild(ad);box.scrollTop=box.scrollHeight;['aiPrintBtn','aiWordBtn'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('hidden');});showToast('Teks dipindai!','success');}catch(err){document.getElementById('typingIndicator')?.remove();showToast('Gagal: '+err.message,'error');}finally{btn.disabled=false;btn.innerText='Kirim';event.target.value='';}};reader.readAsDataURL(file);}
-async function openPrintPreview(htmlContent){var pw=window.open('','_blank');if(!pw){showToast('Pop-up diblokir.','error');document.getElementById('printArea').innerHTML=htmlContent;window.print();return;}pw.document.write('<html lang="id"><head><title>Cetak</title><script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"><\/script><style>body{font-family:Times New Roman,Georgia,serif;margin:20px;color:#000}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}table,th,td{border:1px solid #000!important;border-collapse:collapse!important}.rapor-info-table,.rapor-info-table td,.rapor-info-table tr{border:none!important;background:transparent!important}.card-info-table,.card-info-table td,.card-info-table tr{border:none!important;background:transparent!important}.ai-output h1,.ai-output h2,.ai-output h3{font-weight:bold;margin-top:12px;margin-bottom:6px}.ai-output p{margin-bottom:8px}.ai-output ul,.ai-output ol{margin-left:20px;margin-bottom:8px}.ai-output table{width:100%;border-collapse:collapse;margin-bottom:8px}.ai-output th,.ai-output td{border:1px solid #000;padding:6px;text-align:left}.ai-output img{max-width:100%;height:auto;border-radius:8px;margin:10px 0;box-shadow:0 2px 5px rgba(0,0,0,.1)}.ai-output .soal-item{margin-bottom:18px;padding-bottom:15px;border-bottom:1px solid #eee;page-break-inside:avoid}.ai-output .soal-header{display:flex;align-items:flex-start;gap:6px;margin-bottom:8px}.ai-output .soal-number{font-weight:bold;min-width:28px}.ai-output .soal-text{font-size:14px;line-height:1.7;font-weight:500;flex:1}.ai-output .soal-opts{display:flex;gap:24px;margin:8px 0 8px 34px}.ai-output .opt-col{flex:1;display:flex;flex-direction:column;gap:4px}.ai-output .soal-opt{display:flex;align-items:flex-start;font-size:13px}.ai-output .soal-opt .opt-label{font-weight:bold;margin-right:6px;min-width:20px}.rapor-page{page-break-after:always;break-after:page}.rapor-page:last-child{page-break-after:auto;break-after:auto}@media print{body{margin:0}.no-print{display:none}}</style></head><body><div class="no-print" style="text-align:center;margin-bottom:20px;position:fixed;bottom:10px;left:0;width:100%"><button onclick="window.print()" style="padding:10px 20px;font-size:16px;background:#2563eb;color:white;border:none;border-radius:8px;cursor:pointer">🖨️ Cetak / PDF</button></div><div id="contentArea">'+htmlContent+'</div><script>var ca=document.getElementById("contentArea");var rt=ca.textContent;if(rt.trim().startsWith("#")||rt.includes("**")){ca.innerHTML=marked.parse(rt);}<\/script></body></html>');pw.document.close();pw.focus();pw.print();}
+async function openPrintPreview(htmlContent){var pw=window.open('','_blank');if(!pw){showToast('Pop-up diblokir.','error');document.getElementById('printArea').innerHTML=htmlContent;window.print();return;}pw.document.write('<html lang="id"><head><title>Cetak</title><script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"><\/script><style>body{font-family:Times New Roman,Georgia,serif;margin:20px;color:#000}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}table,th,td{border:1px solid #000!important;border-collapse:collapse!important}.rapor-info-table,.rapor-info-table td,.rapor-info-table tr{border:none!important;background:transparent!important}.card-info-table,.card-info-table td,.card-info-table tr{border:none!important;background:transparent!important}.ai-output h1,.ai-output h2,.ai-output h3{font-weight:bold;margin-top:12px;margin-bottom:6px}.ai-output p{margin-bottom:8px}.ai-output ul,.ai-output ol{margin-left:20px;margin-bottom:8px}.ai-output table{width:100%;border-collapse:collapse;margin-bottom:8px}.ai-output th,.ai-output td{border:1px solid #000;padding:6px;text-align:left}.ai-output img{max-width:100%;height:auto;border-radius:8px;margin:10px 0;box-shadow:0 2px 5px rgba(0,0,0,.1)}.ai-output .soal-item{margin-bottom:18px;padding-bottom:15px;border-bottom:1px solid #eee;page-break-inside:avoid}.ai-output .soal-header{display:flex;align-items:flex-start;gap:6px;margin-bottom:8px}.ai-output .soal-number{font-weight:bold;min-width:28px}.ai-output .soal-text{font-size:14px;line-height:1.7;font-weight:500;flex:1}.ai-output .soal-opts{display:flex;gap:24px;margin:8px 0 8px 34px}.ai-output .opt-col{flex:1;display:flex;flex-direction:column;gap:4px}.ai-output .soal-opt{display:flex;align-items:flex-start;font-size:13px}.ai-output .soal-opt .opt-label{font-weight:bold;margin-right:6px;min-width:20px}.rapor-page{page-break-after:always;break-after:page}.rapor-page:last-child{page-break-after:auto;break-after:auto}@media print{body{margin:0}.no-print{display:none}}</style>'+getLKPDPrintStyle()+'</head><body><div class="no-print" style="text-align:center;margin-bottom:20px;position:fixed;bottom:10px;left:0;width:100%"><button onclick="window.print()" style="padding:10px 20px;font-size:16px;background:#2563eb;color:white;border:none;border-radius:8px;cursor:pointer">🖨️ Cetak / PDF</button></div><div id="contentArea">'+htmlContent+'</div><script>var ca=document.getElementById("contentArea");var rt=ca.textContent;if(rt.trim().startsWith("#")||rt.includes("**")){ca.innerHTML=marked.parse(rt);}<\/script></body></html>');pw.document.close();pw.focus();pw.print();}
+function getLKPDPrintStyle(){var s=document.getElementById('lkpd-worksheet-styles');return s?s.textContent:'';}
 async function printAIResult(includeKey){if(!lastAIFormattedHTML)return;var ch=lastAIFormattedHTML;if(!includeKey){ch=ch.replace(/<div class="kunci-jawaban-section[^"]*"[^>]*>[\s\S]*?<\/div><\/div>/g,'');ch=ch.replace(/<div class="soal-answer[^"]*"[^>]*>[\s\S]*?<\/div>/g,'');ch=ch.replace(/class="soal-opt[^"]*correct[^"]*"/g,'class="soal-opt"');}else{ch=ch.replace(/hide-on-print/g,'');}var kh=await generateKopHTML();openPrintPreview('<div style="font-family:Times New Roman,Georgia,serif;color:#000;padding:0;margin:0;width:100%">'+kh+'<div class="ai-output" style="color:#000;margin:0;padding:0">'+ch+'</div></div>');}
 async function exportToWord(){if(!lastAIFormattedHTML){showToast('Tidak ada teks.','error');return;}var td=document.createElement('div');td.innerHTML=lastAIFormattedHTML;td.querySelectorAll('.kunci-jawaban-section,.soal-answer').forEach(function(el){el.remove();});td.querySelectorAll('.soal-opt.correct').forEach(function(el){el.classList.remove('correct');});td.querySelectorAll('.soal-item').forEach(function(item){item.style.marginBottom='18px';item.style.paddingBottom='15px';item.style.borderBottom='1px solid #eee';item.style.overflow='hidden';});td.querySelectorAll('.soal-header').forEach(function(h){h.style.marginBottom='8px';});td.querySelectorAll('.soal-number').forEach(function(n){n.style.fontWeight='bold';n.style.marginRight='8px';});td.querySelectorAll('.soal-text').forEach(function(t){t.style.fontWeight='600';t.style.lineHeight='1.6';});td.querySelectorAll('.soal-opts').forEach(function(od){od.style.display='block';od.style.width='100%';od.style.marginLeft='25px';od.style.marginTop='8px';var cols=od.querySelectorAll('.opt-col');cols.forEach(function(col){col.style.display='inline-block';col.style.width='48%';col.style.verticalAlign='top';col.style.styleFloat='left';col.style.cssFloat='left';col.style.marginRight='2%';});});var ch=td.innerHTML;var kh=await generateKopHTML();var htmlContent='<div style="font-family:Times New Roman,Georgia,serif;color:#000;padding:0;margin:0;width:100%">'+kh+'<div class="ai-output" style="color:#000;margin:0;padding:0">'+ch+'</div></div>';var header='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Soal - GURU SMART</title><style>@page{size:21cm 29.7cm;margin:2cm}body{font-family:Times New Roman,Georgia,serif;font-size:12pt;color:#000;line-height:1.5}h2{text-align:center;font-size:16pt;margin-bottom:5px}p{text-align:center;font-size:10pt;margin-top:0}img{max-width:100%;height:auto}.ai-output table{width:100%;border-collapse:collapse;margin-bottom:8px}.ai-output th,.ai-output td{border:1px solid #000;padding:6px;text-align:left}.ai-output img{max-width:100%;height:auto;border-radius:8px;margin:10px 0;box-shadow:0 2px 5px rgba(0,0,0,.1)}.ai-output .soal-item{margin-bottom:18px;padding-bottom:15px;border-bottom:1px solid #eee;page-break-inside:avoid}.ai-output .soal-header{display:flex;align-items:flex-start;gap:6px;margin-bottom:8px}.ai-output .soal-number{font-weight:bold;min-width:28px}.ai-output .soal-text{font-size:14px;line-height:1.7;font-weight:500;flex:1}.ai-output .soal-opts{display:flex;gap:24px;margin:8px 0 8px 34px}.ai-output .opt-col{flex:1;display:flex;flex-direction:column;gap:4px}.ai-output .soal-opt{display:flex;align-items:flex-start;font-size:13px}.ai-output .soal-opt .opt-label{font-weight:normal !important;margin-right:6px;min-width:20px}</style></head><body>'+htmlContent+'</body></html>';var blob=new Blob(['\ufeff',header],{type:'application/msword'});var url=URL.createObjectURL(blob);var fd=document.createElement("a");fd.href=url;fd.download='Soal_Guru_Smart.doc';document.body.appendChild(fd);fd.click();document.body.removeChild(fd);URL.revokeObjectURL(url);showToast('Diekspor ke Word!','success');}
 </script><script>
