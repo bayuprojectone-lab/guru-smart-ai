@@ -36,20 +36,17 @@
         '@keyframes bbpulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.92)}}'
       ].join('\n');
       document.documentElement.appendChild(s);
-      // Tampilkan overlay booting buzzer sesegera mungkin
+      // Tampilkan overlay booting buzzer SESGERA MUNGKIN (tidak menunggu DOMContentLoaded)
       function showBoot(){
         if(document.getElementById('__buzzer_boot'))return;
         var boot=document.createElement('div');
         boot.id='__buzzer_boot';
         boot.innerHTML='<div class="bb-inner"><div class="bb-icon">🔔</div><div>Memuat Buzzer Kuis...</div></div>';
-        // Append ke html (bukan body) agar tidak hilang saat body di-clear
+        // Append ke documentElement (bukan body) karena body mungkin belum ada saat ini
+        // position:fixed membuatnya tetap visible di atas apapun
         document.documentElement.appendChild(boot);
       }
-      if(document.readyState==='loading'){
-        document.addEventListener('DOMContentLoaded',showBoot);
-      }else{
-        showBoot();
-      }
+      showBoot(); // Langsung tampil, tidak tunggu event apapun
     }
   } catch(e) { console.warn('Buzzer early-detect error:', e); }
 })();
@@ -3015,157 +3012,163 @@ function kls_stop() {
     }
 }
 // Logika untuk Interface HP Siswa
-window.addEventListener('load', function() {
+// PENTING: Jalankan SECARA LANGSUNG (IIFE), bukan menunggu event 'load'.
+// Event 'load' menunggu SEMUA resource eksternal (Tailwind, Chart.js, fonts,
+// dll) selesai dimuat — di HP koneksi lambat bisa tidak pernah muncul,
+// sehingga UI buzzer tidak pernah di-render dan layar tetap hitam.
+// Script ini ada di akhir body, jadi semua fungsi (sb, kls_unlockAudio,
+// playBuzzerHorn) sudah pasti tersedia saat IIFE ini jalan.
+(function() {
     var hash = window.location.hash || '';
     var buzzerParams = new URLSearchParams(window.location.search || '');
     var isQueryBuzzer = buzzerParams.get('buzzer') === '1';
     
-    if (hash.indexOf('#join-') === 0 || isQueryBuzzer) {
-        var room = '';
-        var initialTeams = [];
-        if (isQueryBuzzer) {
-            room = buzzerParams.get('room') || '';
-            try { initialTeams = JSON.parse(buzzerParams.get('teams') || '[]'); } catch (e) { initialTeams = []; }
-        } else {
-            var joinParts = hash.substring(6).split('--teams-');
-            try { room = decodeURIComponent(joinParts[0] || ''); } catch (e) { room = joinParts[0] || ''; }
-            try { if (joinParts.length > 1) initialTeams = JSON.parse(decodeURIComponent(joinParts.slice(1).join('--teams-'))); } catch (e) { initialTeams = []; }
-        }
-        if (!Array.isArray(initialTeams)) initialTeams = [];
-        document.title = "Buzzer Kuis Siswa";
-        
-        // Matikan aplikasi utama agar tidak balik ke login/dashboard
-        window.initApp = function() {};
-        window.renderContent = function() {};
-        
-        // === STRATEGI BARU: jangan replace documentElement.innerHTML ===
-        // Hapus elemen aplikasi utama dari body, lalu inject UI buzzer ke body.
-        // Ini lebih aman di mobile browser dan tidak mengganggu script context.
-        try {
-            // Hapus elemen utama aplikasi GURU SMART
-            ['authScreen','appScreen','modalContainer','toast','printArea'].forEach(function(id){
-                var el = document.getElementById(id);
-                if(el) el.remove();
-            });
-            // Bersihkan sisa child body yang lain
-            while(document.body.firstChild){ document.body.removeChild(document.body.firstChild); }
-        } catch(e) { console.warn('Buzzer: gagal bersihkan body', e); }
-        
-        // Inject style khusus buzzer ke head
-        var bStyle = document.createElement('style');
-        bStyle.textContent = '*{box-sizing:border-box}html,body{margin:0;min-height:100%;width:100%;font-family:Inter,Arial,sans-serif;background:#0f172a;-webkit-tap-highlight-color:transparent}body{min-height:100dvh;color:#fff}.hidden{display:none!important}#studentApp{min-height:100dvh;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:clamp(14px,4vw,28px);padding-bottom:max(24px,env(safe-area-inset-bottom));text-align:center}#studentLogin,#studentBuzzer{width:100%;max-width:480px}#teamList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%}#teamList button{min-height:108px;width:100%;border:0;border-radius:18px;padding:18px 8px;font-size:clamp(16px,4vw,22px);line-height:1.25;overflow-wrap:anywhere;touch-action:manipulation}#buzzBtn{width:100%;min-height:clamp(230px,48vh,430px);padding:24px 12px;border:3px solid rgba(255,255,255,.25);border-radius:28px;box-shadow:0 12px 30px rgba(0,0,0,.35);user-select:none;-webkit-user-select:none;touch-action:manipulation;cursor:pointer}#buzzBtn span:last-child{font-size:clamp(30px,8vw,48px)}#buzzStatus{min-height:36px;overflow-wrap:anywhere}#changeTeamBtn{min-height:44px;padding:10px 18px}#studentApp p{overflow-wrap:anywhere}@media(max-width:380px){#teamList{gap:8px}#teamList button{min-height:92px;padding:14px 6px}#buzzBtn{min-height:220px}}';
-        document.head.appendChild(bStyle);
-        
-        // Bangun UI buzzer dengan DOM API (lebih andal dari innerHTML string)
-        var appWrap = document.createElement('div');
-        appWrap.id = 'studentApp';
-        appWrap.className = 'min-h-[100vh] bg-slate-900 flex flex-col items-center justify-center p-6 text-center';
-        appWrap.innerHTML =
-            '<div id="studentLogin" class="w-full max-w-md">'
-          +   '<h1 class="text-3xl font-extrabold text-white mb-4">🔔 Buzzer Online</h1>'
-          +   '<p class="text-slate-300 mb-8">Pilih Nama Tim Kamu di bawah ini:</p>'
-          +   '<div id="teamList" class="grid grid-cols-2 gap-4"></div>'
-          + '</div>'
-          + '<div id="studentBuzzer" class="hidden w-full max-w-md">'
-          +   '<div id="buzzBtn" class="bg-gradient-to-br from-red-500 to-rose-600 text-white font-bold py-16 rounded-3xl shadow-lg active:scale-95 transition flex flex-col items-center justify-center cursor-pointer">'
-          +     '<span class="text-6xl mb-2">🔔</span>'
-          +     '<span class="text-3xl">TEKAN</span>'
-          +   '</div>'
-          +   '<div id="buzzStatus" class="mt-6 h-8 text-green-400 font-bold text-lg flex items-center justify-center"></div>'
-          +   '<button id="changeTeamBtn" class="mt-8 text-slate-400 text-sm underline">Ganti Tim</button>'
-          + '</div>'
-          + '<p class="text-slate-500 text-xs mt-12">Tersambung ke Room: <span class="text-green-400 font-mono">' + String(room||'').replace(/[<>&"]/g,function(c){return{'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];}) + '</span></p>';
-        document.body.appendChild(appWrap);
-        
-        // Hapus overlay booting & style hide awal karena UI buzzer sudah siap
-        var boot = document.getElementById('__buzzer_boot');
-        if(boot) boot.remove();
-        var oldHideStyle = document.getElementById('__buzzer_hide_main_app');
-        if(oldHideStyle) oldHideStyle.remove();
-        
-        // Verifikasi Supabase tersedia; jika tidak, tampilkan pesan error di UI
-        if(typeof sb === 'undefined' || !sb || !sb.channel){
-            var errBox = document.createElement('div');
-            errBox.style.cssText = 'margin-top:24px;padding:16px;background:#7f1d1d;color:#fff;border-radius:12px;font-size:13px;text-align:center';
-            errBox.innerHTML = '⚠️ Gagal terhubung ke server kuis. Periksa koneksi internet lalu buka ulang link ini.';
-            appWrap.appendChild(errBox);
-            return;
-        }
-        
-        var studentChannel = sb.channel(room, {
-          config: { broadcast: { self: false } }
-        })
-          .on('broadcast', { event: 'sync' }, function(payload) {
-              if(payload && payload.message && window.renderTeams){
-                  window.renderTeams(payload.message.teams || []);
-              }
-          })
-          .subscribe(function(status) {
-              if (status === 'SUBSCRIBED') {
-                  studentChannel.send({ type: 'broadcast', event: 'request_sync', payload: {} });
-                  setTimeout(function() {
-                      var tl = document.getElementById('teamList');
-                      if (tl && tl.children.length === 0) {
-                          window.renderTeams(initialTeams.length ? initialTeams : ['GARUDA', 'ELANG', 'RAJAWALI', 'MERPATI']);
-                      }
-                  }, 3000);
-              }
-          });
-          
-        window.renderTeams = function(teams) {
-            var list = document.getElementById('teamList');
-            if (!list) return;
-            list.innerHTML = '';
-            var colors = ['from-pink-500 to-rose-600', 'from-cyan-400 to-blue-500', 'from-purple-500 to-fuchsia-600', 'from-orange-400 to-red-500'];
-            teams.forEach(function(t, i) {
-                var col = colors[i % colors.length];
-                var btn = document.createElement('button');
-                btn.className = 'bg-gradient-to-br ' + col + ' text-white font-bold py-8 rounded-2xl shadow-lg hover:scale-105 transition transform active:scale-95';
-                btn.innerHTML = '<span class="block text-3xl mb-1">🔔</span>' + t;
-                btn.onclick = function() {
-                    if(typeof kls_unlockAudio === 'function') kls_unlockAudio();
-                    document.getElementById('studentLogin').classList.add('hidden');
-                    var buzzerUI = document.getElementById('studentBuzzer');
-                    buzzerUI.classList.remove('hidden');
-                    
-                    var bigBtn = document.getElementById('buzzBtn');
-                    bigBtn.className = 'bg-gradient-to-br ' + col + ' text-white font-bold py-16 rounded-3xl shadow-lg active:scale-95 transition flex flex-col items-center justify-center cursor-pointer shadow-lg';
-                    
-                    bigBtn.onclick = function() {
-                        if(typeof playBuzzerHorn === 'function') playBuzzerHorn(); 
-                        bigBtn.style.transform = 'scale(0.95)';
-                        setTimeout(function() { bigBtn.style.transform = ''; }, 200);
-                        
-                        var status = document.getElementById('buzzStatus');
-                        if(status) {
-                            status.innerHTML = '✅ Sinyal Terkirim!';
-                            setTimeout(function() { status.innerHTML = ''; }, 2000);
-                        }
-                        
-                        try {
-                            studentChannel.send({ type: 'broadcast', event: 'buzz', payload: { team: t } });
-                            sb.from('kuis_buzzer').insert([{ room: room, team: t, created_at: new Date().toISOString() }]).then(function(){}).catch(function(e){});
-                        } catch(err) { console.warn('Buzzer send error:', err); }
-                    };
-                };
-                list.appendChild(btn);
-            });
-        };
-        
-        if (initialTeams.length) window.renderTeams(initialTeams);
-        
-        var changeBtn = document.getElementById('changeTeamBtn');
-        if(changeBtn){
-            changeBtn.onclick = function() {
-                document.getElementById('studentLogin').classList.remove('hidden');
-                document.getElementById('studentBuzzer').classList.add('hidden');
-            };
-        }
-        
-        // Stop proses selanjutnya
+    if (hash.indexOf('#join-') !== 0 && !isQueryBuzzer) {
+        // Bukan mode buzzer, tidak perlu lakukan apa-apa
         return;
     }
-});
+    
+    var room = '';
+    var initialTeams = [];
+    if (isQueryBuzzer) {
+        room = buzzerParams.get('room') || '';
+        try { initialTeams = JSON.parse(buzzerParams.get('teams') || '[]'); } catch (e) { initialTeams = []; }
+    } else {
+        var joinParts = hash.substring(6).split('--teams-');
+        try { room = decodeURIComponent(joinParts[0] || ''); } catch (e) { room = joinParts[0] || ''; }
+        try { if (joinParts.length > 1) initialTeams = JSON.parse(decodeURIComponent(joinParts.slice(1).join('--teams-'))); } catch (e) { initialTeams = []; }
+    }
+    if (!Array.isArray(initialTeams)) initialTeams = [];
+    document.title = "Buzzer Kuis Siswa";
+    
+    // Matikan aplikasi utama agar tidak balik ke login/dashboard
+    window.initApp = function() {};
+    window.renderContent = function() {};
+    
+    // === Bersihkan body & bangun UI buzzer ===
+    try {
+        ['authScreen','appScreen','modalContainer','toast','printArea'].forEach(function(id){
+            var el = document.getElementById(id);
+            if(el) el.remove();
+        });
+        while(document.body && document.body.firstChild){ document.body.removeChild(document.body.firstChild); }
+    } catch(e) { console.warn('Buzzer: gagal bersihkan body', e); }
+    
+    // Inject style khusus buzzer ke head
+    var bStyle = document.createElement('style');
+    bStyle.textContent = '*{box-sizing:border-box}html,body{margin:0;min-height:100%;width:100%;font-family:Inter,Arial,sans-serif;background:#0f172a;-webkit-tap-highlight-color:transparent}body{min-height:100dvh;color:#fff}.hidden{display:none!important}#studentApp{min-height:100dvh;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:clamp(14px,4vw,28px);padding-bottom:max(24px,env(safe-area-inset-bottom));text-align:center}#studentLogin,#studentBuzzer{width:100%;max-width:480px}#teamList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%}#teamList button{min-height:108px;width:100%;border:0;border-radius:18px;padding:18px 8px;font-size:clamp(16px,4vw,22px);line-height:1.25;overflow-wrap:anywhere;touch-action:manipulation}#buzzBtn{width:100%;min-height:clamp(230px,48vh,430px);padding:24px 12px;border:3px solid rgba(255,255,255,.25);border-radius:28px;box-shadow:0 12px 30px rgba(0,0,0,.35);user-select:none;-webkit-user-select:none;touch-action:manipulation;cursor:pointer}#buzzBtn span:last-child{font-size:clamp(30px,8vw,48px)}#buzzStatus{min-height:36px;overflow-wrap:anywhere}#changeTeamBtn{min-height:44px;padding:10px 18px}#studentApp p{overflow-wrap:anywhere}@media(max-width:380px){#teamList{gap:8px}#teamList button{min-height:92px;padding:14px 6px}#buzzBtn{min-height:220px}}';
+    document.head.appendChild(bStyle);
+    
+    // Bangun UI buzzer dengan DOM API
+    var appWrap = document.createElement('div');
+    appWrap.id = 'studentApp';
+    appWrap.style.cssText = 'min-height:100vh;background:#0f172a;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:clamp(14px,4vw,28px);padding-bottom:max(24px,env(safe-area-inset-bottom));text-align:center;color:#fff;font-family:Inter,Arial,sans-serif';
+    appWrap.innerHTML =
+        '<div id="studentLogin" style="width:100%;max-width:480px">'
+      +   '<h1 style="font-size:clamp(24px,6vw,32px);font-weight:800;color:#fff;margin:0 0 16px">🔔 Buzzer Online</h1>'
+      +   '<p style="color:#cbd5e1;margin:0 0 32px">Pilih Nama Tim Kamu di bawah ini:</p>'
+      +   '<div id="teamList" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%"></div>'
+      + '</div>'
+      + '<div id="studentBuzzer" class="hidden" style="width:100%;max-width:480px">'
+      +   '<div id="buzzBtn" style="width:100%;min-height:clamp(230px,48vh,430px);padding:24px 12px;border:3px solid rgba(255,255,255,.25);border-radius:28px;box-shadow:0 12px 30px rgba(0,0,0,.35);background:linear-gradient(135deg,#ef4444,#e11d48);color:#fff;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;user-select:none;-webkit-user-select:none;touch-action:manipulation">'
+      +     '<span style="font-size:64px;margin-bottom:8px">🔔</span>'
+      +     '<span style="font-size:clamp(30px,8vw,48px)">TEKAN</span>'
+      +   '</div>'
+      +   '<div id="buzzStatus" style="margin-top:24px;min-height:36px;color:#4ade80;font-weight:700;font-size:18px;display:flex;align-items:center;justify-content:center"></div>'
+      +   '<button id="changeTeamBtn" style="margin-top:32px;color:#94a3b8;font-size:14px;background:none;border:none;text-decoration:underline;cursor:pointer;padding:10px 18px">Ganti Tim</button>'
+      + '</div>'
+      + '<p style="color:#64748b;font-size:12px;margin-top:48px">Tersambung ke Room: <span style="color:#4ade80;font-family:monospace">' + String(room||'').replace(/[<>&"]/g,function(c){return{'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];}) + '</span></p>';
+    document.body.appendChild(appWrap);
+    
+    // Hapus overlay booting & style hide awal karena UI buzzer sudah siap
+    var boot = document.getElementById('__buzzer_boot');
+    if(boot) boot.remove();
+    var oldHideStyle = document.getElementById('__buzzer_hide_main_app');
+    if(oldHideStyle) oldHideStyle.remove();
+    
+    // Verifikasi Supabase tersedia; jika tidak, tampilkan pesan error di UI
+    if(typeof sb === 'undefined' || !sb || !sb.channel){
+        var errBox = document.createElement('div');
+        errBox.style.cssText = 'margin-top:24px;padding:16px;background:#7f1d1d;color:#fff;border-radius:12px;font-size:13px;text-align:center';
+        errBox.innerHTML = '⚠️ Gagal terhubung ke server kuis. Periksa koneksi internet lalu buka ulang link ini.';
+        appWrap.appendChild(errBox);
+        return;
+    }
+    
+    var studentChannel = sb.channel(room, {
+      config: { broadcast: { self: false } }
+    })
+      .on('broadcast', { event: 'sync' }, function(payload) {
+          if(payload && payload.message && window.renderTeams){
+              window.renderTeams(payload.message.teams || []);
+          }
+      })
+      .subscribe(function(status) {
+          if (status === 'SUBSCRIBED') {
+              studentChannel.send({ type: 'broadcast', event: 'request_sync', payload: {} });
+              setTimeout(function() {
+                  var tl = document.getElementById('teamList');
+                  if (tl && tl.children.length === 0) {
+                      window.renderTeams(initialTeams.length ? initialTeams : ['GARUDA', 'ELANG', 'RAJAWALI', 'MERPATI']);
+                  }
+              }, 3000);
+          }
+      });
+      
+    window.renderTeams = function(teams) {
+        var list = document.getElementById('teamList');
+        if (!list) return;
+        list.innerHTML = '';
+        var colors = [
+            'linear-gradient(135deg,#ec4899,#e11d48)',
+            'linear-gradient(135deg,#22d3ee,#3b82f6)',
+            'linear-gradient(135deg,#a855f7,#d946ef)',
+            'linear-gradient(135deg,#fb923c,#ef4444)'
+        ];
+        teams.forEach(function(t, i) {
+            var col = colors[i % colors.length];
+            var btn = document.createElement('button');
+            btn.style.cssText = 'min-height:108px;width:100%;border:0;border-radius:18px;padding:18px 8px;font-size:clamp(16px,4vw,22px);line-height:1.25;overflow-wrap:anywhere;touch-action:manipulation;background:'+col+';color:#fff;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px';
+            btn.innerHTML = '<span style="font-size:28px">🔔</span>' + t;
+            btn.onclick = function() {
+                if(typeof kls_unlockAudio === 'function') kls_unlockAudio();
+                document.getElementById('studentLogin').classList.add('hidden');
+                document.getElementById('studentBuzzer').classList.remove('hidden');
+                
+                var bigBtn = document.getElementById('buzzBtn');
+                bigBtn.style.background = col;
+                
+                bigBtn.onclick = function() {
+                    if(typeof playBuzzerHorn === 'function') playBuzzerHorn(); 
+                    bigBtn.style.transform = 'scale(0.95)';
+                    setTimeout(function() { bigBtn.style.transform = ''; }, 200);
+                    
+                    var status = document.getElementById('buzzStatus');
+                    if(status) {
+                        status.innerHTML = '✅ Sinyal Terkirim!';
+                        setTimeout(function() { status.innerHTML = ''; }, 2000);
+                    }
+                    
+                    try {
+                        studentChannel.send({ type: 'broadcast', event: 'buzz', payload: { team: t } });
+                        sb.from('kuis_buzzer').insert([{ room: room, team: t, created_at: new Date().toISOString() }]).then(function(){}).catch(function(e){});
+                    } catch(err) { console.warn('Buzzer send error:', err); }
+                };
+            };
+            list.appendChild(btn);
+        });
+    };
+    
+    if (initialTeams.length) window.renderTeams(initialTeams);
+    
+    var changeBtn = document.getElementById('changeTeamBtn');
+    if(changeBtn){
+        changeBtn.onclick = function() {
+            document.getElementById('studentLogin').classList.remove('hidden');
+            document.getElementById('studentBuzzer').classList.add('hidden');
+        };
+    }
+})();
 </script>
 
 <script>
