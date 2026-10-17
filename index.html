@@ -10,6 +10,9 @@
    DETEKSI MODE BUZZER SANGAT AWAL (sebelum aplikasi utama jalan)
    Tujuan: saat siswa scan QR Buzzer, halaman login/dashboard GURU
    SMART TIDAK boleh muncul sama sekali. Hanya tampilan Buzzer.
+   Strategi: gunakan OVERLAY FULL-SCREEN (bukan hide body>*),
+   karena hide body>* akan ikut menyembunyikan UI buzzer setelah
+   innerHTML diganti.
    ============================================================ */
 (function(){
   try {
@@ -19,22 +22,34 @@
     var isHashBuzzer = hash.indexOf('#join-') === 0;
     if (isHashBuzzer || isQueryBuzzer) {
       window.__BUZZER_MODE__ = true;
-      window.__BUZZER_INIT_DONE__ = false;
       // Override fungsi aplikasi utama SEKARANG JUGA agar tidak bisa dipanggil
       window.initApp = function(){ console.log('[Buzzer] initApp diblokir'); };
       window.renderContent = function(){ console.log('[Buzzer] renderContent diblokir'); };
-      // Sembunyikan SEMUA konten aplikasi utama secara instan
+      // Sembunyikan HANYA elemen utama aplikasi (bukan body>*)
       var s = document.createElement('style');
       s.id = '__buzzer_hide_main_app';
-      s.textContent = 'html,body{margin:0!important;padding:0!important;background:#0f172a!important;color:#fff!important}body>*{display:none!important}#__buzzer_boot{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0f172a;color:#fff;font-family:Inter,Arial,sans-serif;font-size:18px;z-index:2147483647}';
+      s.textContent = [
+        '#authScreen,#appScreen,#modalContainer,#toast,#printArea{display:none!important}',
+        '#__buzzer_boot{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0f172a;color:#fff;font-family:Inter,Arial,sans-serif;font-size:18px;z-index:2147483647}',
+        '#__buzzer_boot .bb-inner{text-align:center;padding:20px}',
+        '#__buzzer_boot .bb-icon{font-size:48px;margin-bottom:12px;animation:bbpulse 1.2s ease-in-out infinite}',
+        '@keyframes bbpulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.92)}}'
+      ].join('\n');
       document.documentElement.appendChild(s);
-      // Tampilkan layar booting buzzer sambil menunggu Supabase siap
-      document.addEventListener('DOMContentLoaded', function(){
-        var boot = document.createElement('div');
-        boot.id = '__buzzer_boot';
-        boot.innerHTML = '<div style="text-align:center;padding:20px"><div style="font-size:48px;margin-bottom:12px">🔔</div><div>Memuat Buzzer Kuis...</div></div>';
-        document.body.appendChild(boot);
-      });
+      // Tampilkan overlay booting buzzer sesegera mungkin
+      function showBoot(){
+        if(document.getElementById('__buzzer_boot'))return;
+        var boot=document.createElement('div');
+        boot.id='__buzzer_boot';
+        boot.innerHTML='<div class="bb-inner"><div class="bb-icon">🔔</div><div>Memuat Buzzer Kuis...</div></div>';
+        // Append ke html (bukan body) agar tidak hilang saat body di-clear
+        document.documentElement.appendChild(boot);
+      }
+      if(document.readyState==='loading'){
+        document.addEventListener('DOMContentLoaded',showBoot);
+      }else{
+        showBoot();
+      }
     }
   } catch(e) { console.warn('Buzzer early-detect error:', e); }
 })();
@@ -3023,22 +3038,74 @@ window.addEventListener('load', function() {
         window.initApp = function() {};
         window.renderContent = function() {};
         
-        // Tambahkan tanda kutip penutup yang hilang di bagian style CSS #buzzBtn
-        document.documentElement.innerHTML = `<head><title>Buzzer Kuis Siswa</title><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"><style>
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;width:100%;font-family:Inter,Arial,sans-serif;background:#0f172a;-webkit-tap-highlight-color:transparent}body{min-height:100dvh;color:#fff}.hidden{display:none!important}#studentApp{min-height:100dvh;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:clamp(14px,4vw,28px);padding-bottom:max(24px,env(safe-area-inset-bottom));text-align:center}#studentLogin,#studentBuzzer{width:100%;max-width:480px}#teamList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%}#teamList button{min-height:108px;width:100%;border:0;border-radius:18px;padding:18px 8px;font-size:clamp(16px,4vw,22px);line-height:1.25;overflow-wrap:anywhere;touch-action:manipulation}#buzzBtn{width:100%;min-height:clamp(230px,48vh,430px);padding:24px 12px;border:3px solid rgba(255,255,255,.25);border-radius:28px;box-shadow:0 12px 30px rgba(0,0,0,.35);user-select:none;-webkit-user-select:none;touch-action:manipulation;cursor:pointer}#buzzBtn span:last-child{font-size:clamp(30px,8vw,48px)}#buzzStatus{min-height:36px;overflow-wrap:anywhere}#changeTeamBtn{min-height:44px;padding:10px 18px}#studentApp p{overflow-wrap:anywhere}@media(max-width:380px){#teamList{gap:8px}#teamList button{min-height:92px;padding:14px 6px}#buzzBtn{min-height:220px}}
-</style></head><body><div id="studentApp" class="min-h-[100vh] bg-slate-900 flex flex-col items-center justify-center p-6 text-center"><div id="studentLogin" class="w-full max-w-md"><h1 class="text-3xl font-extrabold text-white mb-4">🔔 Buzzer Online</h1><p class="text-slate-300 mb-8">Pilih Nama Tim Kamu di bawah ini:</p><div id="teamList" class="grid grid-cols-2 gap-4"></div></div><div id="studentBuzzer" class="hidden w-full max-w-md"><div id="buzzBtn" class="bg-gradient-to-br from-red-500 to-rose-600 text-white font-bold py-16 rounded-3xl shadow-lg active:scale-95 transition flex flex-col items-center justify-center cursor-pointer"><span class="text-6xl mb-2">🔔</span><span class="text-3xl">TEKAN</span></div><div id="buzzStatus" class="mt-6 h-8 text-green-400 font-bold text-lg flex items-center justify-center"></div><button id="changeTeamBtn" class="mt-8 text-slate-400 text-sm underline">Ganti Tim</button></div><p class="text-slate-500 text-xs mt-12">Tersambung ke Room: <span class="text-green-400 font-mono">${room}</span></p></div></body>`;
+        // === STRATEGI BARU: jangan replace documentElement.innerHTML ===
+        // Hapus elemen aplikasi utama dari body, lalu inject UI buzzer ke body.
+        // Ini lebih aman di mobile browser dan tidak mengganggu script context.
+        try {
+            // Hapus elemen utama aplikasi GURU SMART
+            ['authScreen','appScreen','modalContainer','toast','printArea'].forEach(function(id){
+                var el = document.getElementById(id);
+                if(el) el.remove();
+            });
+            // Bersihkan sisa child body yang lain
+            while(document.body.firstChild){ document.body.removeChild(document.body.firstChild); }
+        } catch(e) { console.warn('Buzzer: gagal bersihkan body', e); }
+        
+        // Inject style khusus buzzer ke head
+        var bStyle = document.createElement('style');
+        bStyle.textContent = '*{box-sizing:border-box}html,body{margin:0;min-height:100%;width:100%;font-family:Inter,Arial,sans-serif;background:#0f172a;-webkit-tap-highlight-color:transparent}body{min-height:100dvh;color:#fff}.hidden{display:none!important}#studentApp{min-height:100dvh;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:clamp(14px,4vw,28px);padding-bottom:max(24px,env(safe-area-inset-bottom));text-align:center}#studentLogin,#studentBuzzer{width:100%;max-width:480px}#teamList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%}#teamList button{min-height:108px;width:100%;border:0;border-radius:18px;padding:18px 8px;font-size:clamp(16px,4vw,22px);line-height:1.25;overflow-wrap:anywhere;touch-action:manipulation}#buzzBtn{width:100%;min-height:clamp(230px,48vh,430px);padding:24px 12px;border:3px solid rgba(255,255,255,.25);border-radius:28px;box-shadow:0 12px 30px rgba(0,0,0,.35);user-select:none;-webkit-user-select:none;touch-action:manipulation;cursor:pointer}#buzzBtn span:last-child{font-size:clamp(30px,8vw,48px)}#buzzStatus{min-height:36px;overflow-wrap:anywhere}#changeTeamBtn{min-height:44px;padding:10px 18px}#studentApp p{overflow-wrap:anywhere}@media(max-width:380px){#teamList{gap:8px}#teamList button{min-height:92px;padding:14px 6px}#buzzBtn{min-height:220px}}';
+        document.head.appendChild(bStyle);
+        
+        // Bangun UI buzzer dengan DOM API (lebih andal dari innerHTML string)
+        var appWrap = document.createElement('div');
+        appWrap.id = 'studentApp';
+        appWrap.className = 'min-h-[100vh] bg-slate-900 flex flex-col items-center justify-center p-6 text-center';
+        appWrap.innerHTML =
+            '<div id="studentLogin" class="w-full max-w-md">'
+          +   '<h1 class="text-3xl font-extrabold text-white mb-4">🔔 Buzzer Online</h1>'
+          +   '<p class="text-slate-300 mb-8">Pilih Nama Tim Kamu di bawah ini:</p>'
+          +   '<div id="teamList" class="grid grid-cols-2 gap-4"></div>'
+          + '</div>'
+          + '<div id="studentBuzzer" class="hidden w-full max-w-md">'
+          +   '<div id="buzzBtn" class="bg-gradient-to-br from-red-500 to-rose-600 text-white font-bold py-16 rounded-3xl shadow-lg active:scale-95 transition flex flex-col items-center justify-center cursor-pointer">'
+          +     '<span class="text-6xl mb-2">🔔</span>'
+          +     '<span class="text-3xl">TEKAN</span>'
+          +   '</div>'
+          +   '<div id="buzzStatus" class="mt-6 h-8 text-green-400 font-bold text-lg flex items-center justify-center"></div>'
+          +   '<button id="changeTeamBtn" class="mt-8 text-slate-400 text-sm underline">Ganti Tim</button>'
+          + '</div>'
+          + '<p class="text-slate-500 text-xs mt-12">Tersambung ke Room: <span class="text-green-400 font-mono">' + String(room||'').replace(/[<>&"]/g,function(c){return{'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];}) + '</span></p>';
+        document.body.appendChild(appWrap);
+        
+        // Hapus overlay booting & style hide awal karena UI buzzer sudah siap
+        var boot = document.getElementById('__buzzer_boot');
+        if(boot) boot.remove();
+        var oldHideStyle = document.getElementById('__buzzer_hide_main_app');
+        if(oldHideStyle) oldHideStyle.remove();
+        
+        // Verifikasi Supabase tersedia; jika tidak, tampilkan pesan error di UI
+        if(typeof sb === 'undefined' || !sb || !sb.channel){
+            var errBox = document.createElement('div');
+            errBox.style.cssText = 'margin-top:24px;padding:16px;background:#7f1d1d;color:#fff;border-radius:12px;font-size:13px;text-align:center';
+            errBox.innerHTML = '⚠️ Gagal terhubung ke server kuis. Periksa koneksi internet lalu buka ulang link ini.';
+            appWrap.appendChild(errBox);
+            return;
+        }
         
         var studentChannel = sb.channel(room, {
           config: { broadcast: { self: false } }
         })
           .on('broadcast', { event: 'sync' }, function(payload) {
-              window.renderTeams(payload.message.teams || []);
+              if(payload && payload.message && window.renderTeams){
+                  window.renderTeams(payload.message.teams || []);
+              }
           })
           .subscribe(function(status) {
               if (status === 'SUBSCRIBED') {
                   studentChannel.send({ type: 'broadcast', event: 'request_sync', payload: {} });
                   setTimeout(function() {
-                      if (document.getElementById('teamList').children.length === 0) {
+                      var tl = document.getElementById('teamList');
+                      if (tl && tl.children.length === 0) {
                           window.renderTeams(initialTeams.length ? initialTeams : ['GARUDA', 'ELANG', 'RAJAWALI', 'MERPATI']);
                       }
                   }, 3000);
@@ -3056,7 +3123,7 @@ window.addEventListener('load', function() {
                 btn.className = 'bg-gradient-to-br ' + col + ' text-white font-bold py-8 rounded-2xl shadow-lg hover:scale-105 transition transform active:scale-95';
                 btn.innerHTML = '<span class="block text-3xl mb-1">🔔</span>' + t;
                 btn.onclick = function() {
-                    kls_unlockAudio();
+                    if(typeof kls_unlockAudio === 'function') kls_unlockAudio();
                     document.getElementById('studentLogin').classList.add('hidden');
                     var buzzerUI = document.getElementById('studentBuzzer');
                     buzzerUI.classList.remove('hidden');
@@ -3065,7 +3132,7 @@ window.addEventListener('load', function() {
                     bigBtn.className = 'bg-gradient-to-br ' + col + ' text-white font-bold py-16 rounded-3xl shadow-lg active:scale-95 transition flex flex-col items-center justify-center cursor-pointer shadow-lg';
                     
                     bigBtn.onclick = function() {
-                        playBuzzerHorn(); 
+                        if(typeof playBuzzerHorn === 'function') playBuzzerHorn(); 
                         bigBtn.style.transform = 'scale(0.95)';
                         setTimeout(function() { bigBtn.style.transform = ''; }, 200);
                         
@@ -3075,8 +3142,10 @@ window.addEventListener('load', function() {
                             setTimeout(function() { status.innerHTML = ''; }, 2000);
                         }
                         
-                        studentChannel.send({ type: 'broadcast', event: 'buzz', payload: { team: t } });
-                        sb.from('kuis_buzzer').insert([{ room: room, team: t, created_at: new Date().toISOString() }]).then(function(){}).catch(function(e){});
+                        try {
+                            studentChannel.send({ type: 'broadcast', event: 'buzz', payload: { team: t } });
+                            sb.from('kuis_buzzer').insert([{ room: room, team: t, created_at: new Date().toISOString() }]).then(function(){}).catch(function(e){});
+                        } catch(err) { console.warn('Buzzer send error:', err); }
                     };
                 };
                 list.appendChild(btn);
@@ -3085,10 +3154,13 @@ window.addEventListener('load', function() {
         
         if (initialTeams.length) window.renderTeams(initialTeams);
         
-        document.getElementById('changeTeamBtn').onclick = function() {
-            document.getElementById('studentLogin').classList.remove('hidden');
-            document.getElementById('studentBuzzer').classList.add('hidden');
-        };
+        var changeBtn = document.getElementById('changeTeamBtn');
+        if(changeBtn){
+            changeBtn.onclick = function() {
+                document.getElementById('studentLogin').classList.remove('hidden');
+                document.getElementById('studentBuzzer').classList.add('hidden');
+            };
+        }
         
         // Stop proses selanjutnya
         return;
