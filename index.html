@@ -5,6 +5,40 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#1e3a8a">
 <title>GURU SMART - Sistem Manajemen Sekolah</title>
+<script>
+/* ============================================================
+   DETEKSI MODE BUZZER SANGAT AWAL (sebelum aplikasi utama jalan)
+   Tujuan: saat siswa scan QR Buzzer, halaman login/dashboard GURU
+   SMART TIDAK boleh muncul sama sekali. Hanya tampilan Buzzer.
+   ============================================================ */
+(function(){
+  try {
+    var hash = window.location.hash || '';
+    var search = window.location.search || '';
+    var isQueryBuzzer = (new URLSearchParams(search)).get('buzzer') === '1';
+    var isHashBuzzer = hash.indexOf('#join-') === 0;
+    if (isHashBuzzer || isQueryBuzzer) {
+      window.__BUZZER_MODE__ = true;
+      window.__BUZZER_INIT_DONE__ = false;
+      // Override fungsi aplikasi utama SEKARANG JUGA agar tidak bisa dipanggil
+      window.initApp = function(){ console.log('[Buzzer] initApp diblokir'); };
+      window.renderContent = function(){ console.log('[Buzzer] renderContent diblokir'); };
+      // Sembunyikan SEMUA konten aplikasi utama secara instan
+      var s = document.createElement('style');
+      s.id = '__buzzer_hide_main_app';
+      s.textContent = 'html,body{margin:0!important;padding:0!important;background:#0f172a!important;color:#fff!important}body>*{display:none!important}#__buzzer_boot{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0f172a;color:#fff;font-family:Inter,Arial,sans-serif;font-size:18px;z-index:2147483647}';
+      document.documentElement.appendChild(s);
+      // Tampilkan layar booting buzzer sambil menunggu Supabase siap
+      document.addEventListener('DOMContentLoaded', function(){
+        var boot = document.createElement('div');
+        boot.id = '__buzzer_boot';
+        boot.innerHTML = '<div style="text-align:center;padding:20px"><div style="font-size:48px;margin-bottom:12px">🔔</div><div>Memuat Buzzer Kuis...</div></div>';
+        document.body.appendChild(boot);
+      });
+    }
+  } catch(e) { console.warn('Buzzer early-detect error:', e); }
+})();
+</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -775,7 +809,7 @@ function navigate(page){currentPage=page;document.getElementById('pageTitle').in
 async function renderContent(page){var c=document.getElementById('content');c.className='flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 lg:p-6 bg-slate-100 dark:bg-slate-900';if(page==='ai'){c.className='flex-1 min-h-0 flex flex-col overflow-hidden p-4 bg-slate-100 dark:bg-slate-900';}c.innerHTML='<div class="text-center py-10 text-slate-500 dark:text-slate-400">Memuat data...</div>';switch(page){case'dashboard':await renderDashboard();break;case'ai':await renderAI();break;case'kuis_kelas':await renderKuisKelas();break;case'teachers':await renderTeachers();break;case'students':await renderStudents();break;case'classes':await renderClasses();break;case'subjects':await renderSubjects();break;case'schedules':await renderSchedules();break;case'attendance':await renderAttendance();break;case'activity_attendance':await renderActivityAttendance();break;case'grades':await renderGrades();break;case'assignments':await renderAssignments();break;case'materi':await renderMateri();break;case'keuangan':await renderKeuangan();break;case'rapor':await renderRapor();break;case'settings':await renderSettings();break;}}
 function statCard(t,c,gradient,i,subtitle){return '<div class="stat-card relative bg-gradient-to-br '+gradient+' p-5 rounded-2xl shadow-lg text-white overflow-hidden slide-up"><div class="relative z-10 flex items-start justify-between"><div><p class="text-xs font-medium opacity-90 uppercase tracking-wider">'+t+'</p><h3 class="text-3xl font-extrabold mt-2 mb-1">'+c+'</h3><p class="text-xs opacity-80">'+subtitle+'</p></div><div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm"><svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="'+i+'"></path></svg></div></div></div>';}
 function initApp(){document.getElementById('authScreen').classList.add('hidden');document.getElementById('appScreen').classList.remove('hidden');document.getElementById('userName').innerText=currentUser.name;document.getElementById('userRole').innerText=currentUser.role;document.getElementById('userAvatar').src=currentUser.avatar_url||AI_IMG;navigate('dashboard');}
-window.onload=async function(){if(await checkSession()){initApp();}};
+window.onload=async function(){if(window.__BUZZER_MODE__){return;}if(await checkSession()){initApp();}};
 </script><script>
 var kurikulumTypes=[
 {id:'cp',label:'Capaian Pembelajaran (CP)',desc:'Kompetensi yang harus dicapai peserta didik',color:'from-blue-500 to-cyan-600',icon:'M13 10V3L4 14h7v7l9-11h-7z'},
