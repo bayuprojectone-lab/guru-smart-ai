@@ -2518,7 +2518,7 @@ async function renderSettings(){
   '<div class="bg-white dark:bg-slate-800 p-6 rounded-xl md:col-span-2 border-t-4 border-green-600"><h3 class="font-bold mb-4 text-slate-800 dark:text-white">Backup & Restore Data (JSON)</h3><div class="flex flex-col sm:flex-row gap-4">'+
   '<button onclick="exportAllDataJSON()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold flex-1 flex items-center justify-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg> Download Semua Data</button>'+
   '<label class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold flex-1 text-center cursor-pointer flex items-center justify-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg> Restore Data (JSON)<input type="file" accept=".json" class="hidden" onchange="importAllDataJSON(event)"></label>'+
-  '</div><p class="text-xs text-slate-500 mt-3">Gunakan fitur ini untuk memindahkan semua data ke akun lain atau sebagai backup.</p></div>'+
+  '<button onclick="gsTestWriteAccess()" class="bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-white px-4 py-2 rounded-lg text-sm font-semibold sm:flex-none">🔌 Uji Izin Tulis</button></div><p class="text-xs text-slate-500 mt-3">Gunakan fitur ini untuk memindahkan semua data ke akun lain atau sebagai backup. Bila restore ditolak database (RLS 42501), klik <b>Uji Izin Tulis</b> untuk diagnosis + SQL perbaikan.</p></div>'+
   
   '<div class="bg-white dark:bg-slate-800 p-6 rounded-xl md:col-span-2 border-t-4 border-indigo-600"><h3 class="font-bold mb-4 text-slate-800 dark:text-white">Kop Surat</h3><div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">'+
   '<div class="lg:col-span-1 space-y-4">'+
@@ -2564,8 +2564,246 @@ async function saveKopData(profileId){
 async function generateKopHTML(){var profile=(await DB.get('school_profile'))[0]||{};if(!profile.kop_line1&&!profile.logo_left)return'';var l1=profile.kop_line1||profile.name||'NAMA SEKOLAH';var l1b=profile.kop_line1b||'';var l2=profile.kop_line2||profile.address||'Alamat Sekolah';var l3=profile.kop_line3||'Email | Telp';var ll=profile.logo_left?'<img src="'+profile.logo_left+'" style="max-width:80px;max-height:80px;object-fit:contain;">':'';var rl=profile.logo_right?'<img src="'+profile.logo_right+'" style="max-width:80px;max-height:80px;object-fit:contain;">':'';var l1bHTML=l1b.trim()?'<p style="margin:2px 0 0;font-size:20px;font-weight:bold;text-transform:uppercase;line-height:1.0;">'+l1b+'</p>':'';return'<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:3px double #000;padding-bottom:10px;margin-bottom:25px;font-family:Arial;"><div style="width:75px;height:75px;display:flex;align-items:center;justify-content:center;">'+ll+'</div><div style="text-align:center;flex:1;padding:0 20px;"><h2 style="margin:0;font-size:16px;font-weight:bold;text-transform:uppercase;line-height:1.0;">'+l1+'</h2>'+l1bHTML+'<p style="margin:4px 0 0;font-size:22px;font-weight:bold;text-transform:uppercase;line-height:1.2;">'+l2+'</p><p style="margin:2px 0 0;font-size:12px;line-height:1.0;">'+l3+'</p></div><div style="width:75px;height:75px;display:flex;align-items:center;justify-content:center;">'+rl+'</div></div>';}
 async function saveSchoolProfileData(profileId){var data={name:document.getElementById('p_name').value,address:document.getElementById('p_address').value,principal:document.getElementById('p_principal').value,principal_nip:document.getElementById('p_principal_nip').value};var s=await saveSchoolProfile(data,profileId||null);if(s)renderSettings();}
 async function saveSchoolProfile(data,id){try{var result;if(id){result=await sb.from('school_profile').update(data).eq('id',id).eq('user_id',currentUser.id).select();}else{result=await sb.from('school_profile').insert([{...data,user_id:currentUser.id}]).select();}if(result.error){showToast('Gagal menyimpan profil: '+result.error.message,'error');return false;}if(!result.data||!result.data.length){showToast('Data tidak tersimpan. Kebijakan RLS tabel school_profile menolak perubahan atau profil tidak cocok dengan akun ini.','error');return false;}showToast('Profil disimpan!','success');return true;}catch(err){showToast('Gagal menyimpan profil: '+(err?.message||String(err)),'error');return false;}}
-async function exportAllDataJSON(){showToast('Mengumpulkan data...','info');var tables=['students','teachers','classes','subjects','schedules','attendance','grades','assignments','materi','keuangan','announcements','activity_attendance','activity_records','kurikulum','kuis_kelas','piket','school_profile'];var backupData={};for(var i=0;i<tables.length;i++){var t=tables[i];backupData[t]=await DB.get(t);}var dataStr=JSON.stringify(backupData,null,2);var blob=new Blob([dataStr],{type:"application/json"});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download="Backup_Guru_Smart_"+new Date().toISOString().split('T')[0]+".json";document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);showToast('Data berhasil diexport ke JSON!','success');}
-window.importAllDataJSON=function(event){var file=event.target.files[0];if(!file)return;var reader=new FileReader();reader.onload=async function(e){try{var data=JSON.parse(e.target.result);showToast('Mengimpor data, mohon tunggu...','info');var tables=Object.keys(data);for(var i=0;i<tables.length;i++){var t=tables[i];var rows=data[t];if(rows&&rows.length>0){var mappedRows=rows.map(function(r){return{...r,user_id:currentUser.id};});var res=await sb.from(t).upsert(mappedRows).select();if(res.error){console.error('Error importing table '+t+':',res.error);}}}showToast('Import data berhasil!','success');navigate('dashboard');}catch(err){showToast('Gagal import: '+err.message,'error');}};reader.readAsText(file);};
+async function exportAllDataJSON(){
+  showToast('Mengumpulkan data...','info');
+  var tables=['students','teachers','classes','subjects','schedules','attendance','grades','assignments','materi','keuangan','announcements','activity_attendance','activity_records','kurikulum','kuis_kelas','piket','school_profile'];
+  var backupData={_meta:{app:'GURU SMART',exported_at:new Date().toISOString(),user:(currentUser&&currentUser.email)||currentUser.name||'',counts:{}}};
+  var totalRows=0;
+  for(var i=0;i<tables.length;i++){
+    var t=tables[i];
+    var rowsArr=await DB.get(t);
+    backupData[t]=rowsArr;
+    backupData._meta.counts[t]=rowsArr.length;
+    totalRows+=rowsArr.length;
+  }
+  if(!totalRows){showToast('Tidak ada data untuk diexport (semua tabel kosong). Pastikan Anda login dengan akun yang benar.','error');return;}
+  var dataStr=JSON.stringify(backupData,null,2);
+  var blob=new Blob([dataStr],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;a.download='Backup_Guru_Smart_'+new Date().toISOString().split('T')[0]+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){try{URL.revokeObjectURL(url);}catch(e){}},4000);
+  showToast('Data berhasil diexport: '+totalRows+' baris dari '+tables.length+' tabel!','success');
+}
+window.gsIdMap={};
+window.gsUuid=function(){
+  try{if(window.crypto&&crypto.randomUUID)return crypto.randomUUID();}catch(eU){}
+  var b=new Uint8Array(16);
+  if(window.crypto&&crypto.getRandomValues){crypto.getRandomValues(b);}else{for(var i0=0;i0<16;i0++)b[i0]=Math.floor(Math.random()*256);}
+  b[6]=(b[6]&0x0f)|0x40;b[8]=(b[8]&0x3f)|0x80;
+  var h=[];for(var j0=0;j0<16;j0++)h.push((b[j0]+0x100).toString(16).slice(1));
+  return h.slice(0,4).join('')+'-'+h.slice(4,6).join('')+'-'+h.slice(6,8).join('')+'-'+h.slice(8,10).join('')+'-'+h.slice(10,16).join('');
+};
+window.gsUpsertRowSmart=async function(t,row){
+  var r1=await window.gsUpsertChunk(t,[row]);
+  if(r1.ok)return{ok:true,returned:r1.returned,remapped:false};
+  if(!r1.rls)return{ok:false,err:r1.err,rls:false};
+  if(row.id){
+    var nr=Object.assign({},row);delete nr.id;
+    var r2=await window.gsUpsertChunk(t,[nr]);
+    if(r2.ok){if(r2.first)window.gsIdMap[String(row.id)]=r2.first;return{ok:true,returned:r2.returned,remapped:true};}
+    return{ok:false,err:r2.err,rls:true};
+  }
+  return{ok:false,err:r1.err,rls:true};
+};
+window.gsUpsertChunk=async function(t,rows){
+  var cur=rows;
+  for(var attempt=0;attempt<5;attempt++){
+    var res=await sb.from(t).upsert(cur,{onConflict:'id'}).select();
+    if(!res.error)return{ok:true,expected:cur.length,returned:(res.data&&res.data.length)||0,first:(res.data&&res.data[0]&&res.data[0].id)||null};
+    var m=String(res.error.message||'');
+    var mc=m.match(/Could not find the '([^']+)' column of '([^']+)'/i)||m.match(/column \"?([a-zA-Z0-9_]+)\"? of relation/i);
+    if(mc&&mc[1]){var col=mc[1];cur=cur.map(function(r){var c=Object.assign({},r);delete c[col];return c;});continue;}
+    var rls=String(res.error.code||'')==='42501'||/row-level security/i.test(m);
+    return{ok:false,err:m+(res.error.code?' ['+res.error.code+']':''),rls:rls};
+  }
+  return{ok:false,err:'Tabel '+t+' menolak data (kolom tidak cocok setelah 5 percobaan).'};
+};
+window.gsImportTable=async function(t,rows){
+  var clean=rows.map(function(r){
+    if(!r||typeof r!=='object'||Array.isArray(r))return null;
+    var c={};for(var k in r){if(k.charAt(0)!=='_')c[k]=r[k];}
+    for(var k2 in c){if(k2!=='id'&&/_id$/.test(k2)&&c[k2]!=null&&window.gsIdMap[String(c[k2])])c[k2]=window.gsIdMap[String(c[k2])];}
+    c.user_id=currentUser.id;return c;
+  }).filter(function(x){return x;});
+  var ok=0,fail=0,err='',anyRls=false,blind=0,remapped=0;
+  var CHUNK=80;
+  for(var i=0;i<clean.length;i+=CHUNK){
+    var chunk=clean.slice(i,i+CHUNK);
+    var at=await window.gsUpsertChunk(t,chunk);
+    if(at.ok){ok+=chunk.length;if((at.returned||0)<chunk.length)blind+=chunk.length-(at.returned||0);continue;}
+    if(at.rls)anyRls=true;
+    if(!err)err=at.err;
+    for(var j=0;j<chunk.length;j++){
+      var one=await window.gsUpsertRowSmart(t,chunk[j]);
+      if(one.ok){ok++;if(!(one.returned>0))blind++;if(one.remapped)remapped++;}
+      else{fail++;if(one.rls)anyRls=true;if(one.err&&!err)err=one.err;}
+    }
+  }
+  return{ok:ok,fail:fail,err:err,rls:anyRls,blind:blind,remapped:remapped,total:clean.length};
+};
+window.gsImpEsc=function(s){return String(s==null?'':s).replace(/[&<>\"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
+window.gsShowImportSummary=function(results,verify,importedTotal,failTables,metaInfo,rlsFlag,anyBlind,anyRemap){
+  var rowsHtml='';
+  results.forEach(function(r){
+    var vrec='-';
+    for(var i=0;i<verify.length;i++){if(verify[i].t===r.t){vrec=verify[i].count;break;}}
+    var bad=r.fail>0;
+    rowsHtml+='<tr>'
+      +'<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;white-space:nowrap">'+window.gsImpEsc(r.t)+'</td>'
+      +'<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:center">'+r.ok+'</td>'
+      +'<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:center">'+(bad?'<span style="color:#dc2626;font-weight:800">'+r.fail+'</span>':'0')+'</td>'
+      +'<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;text-align:center">'+vrec+'</td>'
+      +'<td style="padding:7px 10px;border-bottom:1px solid #e2e8f0;font-size:11px;color:#64748b">'+(bad?(r.rls?'<span style="color:#b45309;font-weight:700">Ditolak kebijakan RLS (42501) — lihat panduan di bawah.</span>':window.gsImpEsc(String(r.err||'').substring(0,140))):(r.blind>0?'<span style="color:#b45309;font-weight:700">'+r.blind+' baris tersimpan tetapi tidak terbaca — policy SELECT RLS bermasalah.</span>':(r.remapped>0?'<span style="color:#0369a1">'+r.remapped+' baris disimpan dengan ID baru (pemetaan otomatis).</span>':'')))+'</td>'
+      +'</tr>';
+  });
+  var metaHtml=metaInfo?'<p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Info file: '+window.gsImpEsc(metaInfo)+'</p>':'';
+  openModal('📥 Ringkasan Restore Data',
+    '<div class="space-y-3">'
+    +metaHtml
+    +'<div class="bg-blue-50 dark:bg-slate-700 border border-blue-200 dark:border-slate-600 rounded-lg p-3 text-sm text-blue-800 dark:text-blue-200">Total baris berhasil diimpor: <b>'+importedTotal+'</b>'+(failTables?' &bull; <b style="color:#dc2626">'+failTables+' tabel bermasalah</b>':' &bull; Semua tabel sukses ✅')+'</div>'
+    +(anyBlind>0?'<div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-3 text-sm text-amber-800 dark:text-amber-200"><b>⚠️ '+anyBlind+' baris TERSIMPAN tetapi TIDAK TERBACA kembali.</b> Inilah kenapa data tidak muncul: kebijakan SELECT (USING) RLS tabel belum benar — tulis lolos, baca ditolak. Salin &amp; jalankan SQL perbaikan di bawah, muat ulang halaman, lalu cek data.</div>':'')
+    +(anyRemap>0?'<div class="bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-700 rounded-lg p-3 text-sm text-sky-800 dark:text-sky-200"><b>ℹ️ '+anyRemap+' baris disimpan dengan ID BARU.</b> ID lama pada file backup ternyata masih dipakai baris lama yang TIDAK terlihat oleh akun ini (sisa data akun sebelumnya) — karena itu upsert ditolak RLS. Solusi otomatis: baris disimpan sebagai baris baru dengan ID segar &amp; semua referensi antar tabel dipetakan ulang. Klik <b>Muat Ulang &amp; Tampilkan Data</b> untuk melihat hasilnya.</div>':'')
+    +(!failTables&&!(anyBlind>0)&&importedTotal>0?'<div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700 rounded-lg p-3 text-sm text-emerald-800 dark:text-emerald-200"><b>✅ Data sudah tersimpan &amp; terbaca di database.</b> Klik tombol hijau <b>Muat Ulang &amp; Tampilkan Data</b> di bawah — semua halaman akan menampilkan data terbaru.</div>':'')
+    +'<div class="overflow-x-auto"><table style="width:100%;border-collapse:collapse;font-size:12px">'
+    +'<thead><tr style="background:#f1f5f9">'
+    +'<th style="padding:7px 10px;text-align:left">Tabel</th><th style="padding:7px 10px">Berhasil</th><th style="padding:7px 10px">Gagal</th><th style="padding:7px 10px">Isi DB Sekarang</th><th style="padding:7px 10px;text-align:left">Pesan Error</th>'
+    +'</tr></thead><tbody>'+rowsHtml+'</tbody></table></div>'
+    +'<p class="text-xs text-slate-500 dark:text-slate-400">"Isi DB Sekarang" = jumlah baris milik akun Anda yang TERBACA di database saat ini. Bila impor tertulis berhasil tapi angka ini 0, policy SELECT RLS tabel bermasalah atau tabel belum dibuat — gunakan SQL perbaikan di bawah. Bila angka sudah benar tetapi halaman aplikasi masih kosong, klik tombol <b>Muat Ulang &amp; Tampilkan Data</b>.</p>'
+    +((rlsFlag||anyBlind>0)?window.gsRlsHelpHtml():'')
+    +'<button onclick="location.reload()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-semibold mb-2">🔄 Muat Ulang &amp; Tampilkan Data</button>'
+    +'<button onclick="closeModal()" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tutup</button>'
+    +'</div>');
+};
+window.gsEnsureAuthSession=async function(){
+  try{
+    var s=await sb.auth.getSession();
+    if(!s||!s.data||!s.data.session)return{ok:false,msg:'Sesi login Supabase tidak ditemukan. Silakan keluar (logout), login kembali, lalu restore ulang.'};
+    try{await sb.auth.refreshSession();}catch(eR){}
+    var gu=await sb.auth.getUser();
+    if(gu&&gu.error)return{ok:false,msg:'Sesi login tidak valid (token kedaluwarsa): '+gu.error.message+'. Keluar lalu login ulang.'};
+    if(!gu||!gu.data||!gu.data.user)return{ok:false,msg:'Sesi login tidak valid. Keluar (logout) lalu login ulang sebelum restore.'};
+    if(currentUser&&gu.data.user.id&&currentUser.id!==gu.data.user.id)currentUser.id=gu.data.user.id;
+    return{ok:true};
+  }catch(e){return{ok:false,msg:'Gagal memeriksa sesi login: '+((e&&e.message)||e)};}
+};
+window.gsRlsProbe=async function(){
+  try{
+    if(!currentUser||!currentUser.id)return{blocked:false};
+    var ins=await sb.from('school_profile').insert([{user_id:currentUser.id,name:'__GSPROBE__'+Date.now()}]).select('id');
+    if(ins.error){
+      var m=String(ins.error.message||'');
+      if(String(ins.error.code||'')==='42501'||/row-level security/i.test(m))return{blocked:true,msg:m+(ins.error.code?' ['+ins.error.code+']':'')};
+      return{blocked:false};
+    }
+    var pid=(ins.data&&ins.data[0]&&ins.data[0].id)||null;
+    if(pid){try{await sb.from('school_profile').delete().eq('id',pid).eq('user_id',currentUser.id);}catch(eD){}}
+    return{blocked:false};
+  }catch(e){return{blocked:false};}
+};
+window.gsRlsSqlText=function(){
+  var tabs=['school_profile','teachers','subjects','classes','students','schedules','attendance','grades','assignments','materi','keuangan','announcements','activity_attendance','activity_records','kurikulum','kuis_kelas','piket','users'];
+  var sql='-- Perbaikan kebijakan RLS GURU SMART\n-- Jalankan di Supabase > SQL Editor. Bila ada tabel yang belum dibuat, jalankan per blok.\n-- Bila masih ditolak, hapus kebijakan lama lainnya di Authentication > Policies.\n\n';
+  for(var i=0;i<tabs.length;i++){
+    var t=tabs[i];var col=(t==='users')?'id':'user_id';
+    sql+='alter table '+t+' enable row level security;\n';
+    sql+='drop policy if exists "'+t+'_user_all" on '+t+';\n';
+    sql+='create policy "'+t+'_user_all" on '+t+' for all to authenticated\n  using (auth.uid() = '+col+') with check (auth.uid() = '+col+');\n\n';
+  }
+  return sql;
+};
+window.gsRlsHelpHtml=function(){
+  return '<div class="mt-3 border border-amber-300 dark:border-amber-600 rounded-lg p-3 bg-amber-50 dark:bg-amber-900/20">'
+    +'<p class="font-bold text-amber-800 dark:text-amber-200 mb-1">Panduan memperbaiki penolakan RLS (42501):</p>'
+    +'<ol class="list-decimal ml-5 text-sm text-slate-700 dark:text-slate-200 space-y-1">'
+    +'<li><b>Keluar (logout) lalu login kembali</b> — sesi/token kedaluwarsa membuat auth.uid() kosong, lalu restore ulang.</li>'
+    +'<li><b>Perbaiki kebijakan tabel:</b> buka Supabase &rarr; SQL Editor, salin &amp; jalankan SQL di bawah, muat ulang halaman, lalu restore ulang.</li>'
+    +'</ol>'
+    +'<pre id="gsRlsSqlText" class="mt-2 p-3 bg-white dark:bg-slate-800 rounded-lg overflow-auto text-[10px] leading-relaxed max-h-56 text-slate-700 dark:text-slate-200">'+window.gsImpEsc(window.gsRlsSqlText())+'</pre>'
+    +'<button onclick="gsCopyRlsSql(this)" class="mt-2 w-full bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-semibold">📋 Salin SQL Perbaikan</button>'
+    +'</div>';
+};
+window.gsCopyRlsFallback=function(txt,done){try{var ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();document.execCommand('copy');document.body.removeChild(ta);done();}catch(e){showToast('Gagal menyalin. Silakan blok manual teks SQL di kotak.','error');}};
+window.gsCopyRlsSql=function(btn){
+  var el=document.getElementById('gsRlsSqlText');if(!el)return;
+  var txt=el.textContent||'';
+  var done=function(){if(btn){var old=btn.innerHTML;btn.innerHTML='✓ SQL tersalin!';setTimeout(function(){try{btn.innerHTML=old;}catch(eB){}},2500);}showToast('SQL perbaikan tersalin! Tempel di Supabase → SQL Editor → Run.','success');};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done).catch(function(){window.gsCopyRlsFallback(txt,done);});}
+  else window.gsCopyRlsFallback(txt,done);
+};
+window.gsShowRlsHelp=function(t,msg,aborted){
+  openModal('🔒 Restore Ditolak Keamanan Database (RLS)',
+    '<div class="text-sm text-slate-600 dark:text-slate-300 space-y-2">'
+    +(aborted?'<div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-3 text-amber-800 dark:text-amber-200"><b>Proses restore dihentikan lebih awal.</b> Database pasti akan menolak semua baris, jadi tidak ada data yang diimpor. Perbaiki dulu penyebabnya di bawah.</div>':'')
+    +'<div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-3 text-red-700 dark:text-red-200">'
+    +(t?('Uji tulis pada tabel <b>'+window.gsImpEsc(t)+'</b> ditolak. '):'')
+    +'Pesan database: <code class="text-xs">'+window.gsImpEsc(msg||'new row violates row-level security policy (USING expression)')+'</code></div>'
+    +'<p>Ini <b>bukan berarti file backup rusak</b> — kebijakan Row Level Security (RLS) Supabase menolak penambahan baris. Setiap baris restore sudah otomatis diberi <code>user_id</code> akun Anda, jadi penyebabnya salah satu dari dua hal berikut:</p>'
+    +window.gsRlsHelpHtml()
+    +'<button onclick="closeModal()" class="w-full bg-slate-600 hover:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tutup</button>'
+    +'</div>');
+};
+window.gsTestWriteAccess=async function(){
+  showToast('Memeriksa sesi & izin tulis database...','info');
+  var chk=await window.gsEnsureAuthSession();
+  if(!chk.ok){window.gsShowRlsHelp('',chk.msg,true);return;}
+  var probe=await window.gsRlsProbe();
+  if(probe&&probe.blocked){window.gsShowRlsHelp('school_profile',probe.msg,false);return;}
+  showToast('Sesi login valid & izin tulis database NORMAL ✅ Silakan restore lagi. Bila tabel lain masih gagal, jalankan SQL perbaikan di panduan RLS.','success');
+};
+window.importAllDataJSON=function(event){
+  var file=event.target.files[0];if(!file)return;
+  var reader=new FileReader();
+  reader.onload=async function(e){
+    try{
+      var data=JSON.parse(e.target.result);
+      if(!data||typeof data!=='object'||Array.isArray(data))throw new Error('File bukan backup JSON GURU SMART yang valid.');
+      var tables=Object.keys(data).filter(function(k){return k.charAt(0)!=='_'&&Array.isArray(data[k]);});
+      if(!tables.length)throw new Error('Tidak ada tabel data di file backup.');
+      var totalRows=0;tables.forEach(function(t){totalRows+=(data[t]||[]).length;});
+      if(!totalRows)throw new Error('File backup KOSONG (0 baris). Kemungkinan data diexport dari akun yang salah — login ke akun pemilik data, export ulang, lalu restore lagi.');
+      var meta=data._meta||{};
+      var metaInfo=[meta.app,meta.exported_at?('diexport '+meta.exported_at):'',meta.user?('oleh '+meta.user):''].filter(Boolean).join(' &bull; ');
+      var chk=await window.gsEnsureAuthSession();
+      if(!chk.ok){showToast('Restore dibatalkan: '+chk.msg,'error');window.gsShowRlsHelp('',chk.msg,true);return;}
+      showToast('Memeriksa izin tulis database...','info');
+      var probe=await window.gsRlsProbe();
+      if(probe&&probe.blocked){window.gsShowRlsHelp('school_profile',probe.msg,true);return;}
+      var ORDER=['school_profile','teachers','subjects','classes','students','schedules','piket','attendance','activity_attendance','activity_records','grades','assignments','materi','keuangan','announcements','kurikulum','kuis_kelas'];
+      tables.sort(function(a,b){var ia=ORDER.indexOf(a),ib=ORDER.indexOf(b);if(ia<0)ia=99;if(ib<0)ib=99;return ia-ib;});
+      showToast('Mengimpor '+totalRows+' baris... mohon tunggu, jangan tutup halaman.','info');
+      window.gsIdMap={};
+      var results=[],importedTotal=0,failTables=0;
+      for(var i=0;i<tables.length;i++){
+        var t=tables[i];
+        var rows=data[t];
+        var r=rows.length?await window.gsImportTable(t,rows):{ok:0,fail:0,err:'',total:0};
+        if(r.ok>0)importedTotal+=r.ok;
+        if(r.fail>0)failTables++;
+        results.push({t:t,ok:r.ok,fail:r.fail,err:r.err,rls:!!r.rls,blind:r.blind||0,remapped:r.remapped||0});
+      }
+      var verify=[];
+      for(var v=0;v<tables.length;v++){
+        try{
+          var c=await sb.from(tables[v]).select('id',{count:'exact',head:true}).eq('user_id',currentUser.id);
+          verify.push({t:tables[v],count:(c&&c.count!=null)?c.count:'-'});
+        }catch(ev){verify.push({t:tables[v],count:'-'});}
+      }
+      var anyRls=false,anyBlind=0,anyRemap=0;
+      for(var rr=0;rr<results.length;rr++){
+        if(results[rr].rls&&results[rr].fail>0)anyRls=true;
+        anyBlind+=results[rr].blind||0;
+        anyRemap+=results[rr].remapped||0;
+      }
+      window.gsShowImportSummary(results,verify,importedTotal,failTables,metaInfo,anyRls,anyBlind,anyRemap);
+      if(failTables===0&&anyBlind>0)showToast('Data tersimpan tetapi '+anyBlind+' baris TIDAK TERBACA — lihat panduan di ringkasan restore.','error');
+      else if(failTables===0)showToast('Restore berhasil: '+importedTotal+' baris! Klik Muat Ulang untuk menampilkan data.','success');
+      else showToast(failTables+' tabel gagal diimpor — lihat ringkasan restore.','error');
+      try{navigate('dashboard');}catch(eN){}
+    }catch(err){showToast('Gagal import: '+(err&&err.message?err.message:err),'error');}
+    finally{try{event.target.value='';}catch(eR){}}
+  };
+  reader.readAsText(file);
+};
 async function uploadAvatar(){
   var fileInput = document.getElementById('avatarFile');
   var file = fileInput.files[0];
