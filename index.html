@@ -254,13 +254,13 @@
    GSAI BRIDGE v3 — Perbaikan "Puter AI tidak bisa generate"
    - Chat/Teks   : Pollinations AI (GRATIS, tanpa login/API key) -> Puter (cadangan)
    - Baca Gambar : Puter AI (cukup klik "Sambungkan AI" sekali saja)
-   - Buat Gambar : PUTER AI IMG (puter.ai.txt2img) = JALUR UTAMA -> Pollinations Image (cadangan gratis)
+   - Buat Gambar : PUTER AI IMG (puter.ai.txt2img) = JALUR TUNGGAL (TANPA cadangan Pollinations)
+   -             Jika Puter gagal -> PEMBERITAHUAN LANGSUNG ke pengguna (tanpa fallback)
    - OCR Darurat : Tesseract.js langsung di browser (tanpa server)
    ================================================================== */
 window.GSAI=(function(){
   var POLL_POST='https://text.pollinations.ai/openai';
   var POLL_GET='https://text.pollinations.ai/';
-  var POLL_IMG='https://image.pollinations.ai/prompt/';
   var lastProvider='-';
   function hasPuter(){try{return (typeof puter!=='undefined')&&puter&&puter.ai&&typeof puter.ai.chat==='function';}catch(e){return false;}}
   function hasImageMsg(ms){try{for(var i=0;i<ms.length;i++){var c=ms[i]&&ms[i].content;if(Array.isArray(c)){for(var j=0;j<c.length;j++){if(c[j]&&c[j].type==='image_url')return true;}}}}catch(e){}return false;}
@@ -333,7 +333,6 @@ window.GSAI=(function(){
     try{return await puterChat(ms);}catch(e3){errs.push('Puter:'+(e3.message||e3));}
     throw new Error('Semua layanan AI gagal — '+errs.join(' | '));
   }
-  function tryImg(url){return new Promise(function(res,rej){var im=new Image();im.onload=function(){res(url);};im.onerror=function(){rej(new Error('gambar gagal dimuat'));};im.src=url;});}
   function hasPuterImg(){try{return (typeof puter!=='undefined')&&puter&&puter.ai&&(typeof puter.ai.txt2img==='function'||typeof puter.ai.txtToImage==='function');}catch(e){return false;}}
   function extractImgSrc(el){
     try{
@@ -368,30 +367,18 @@ window.GSAI=(function(){
     }
     throw lastErr||new Error('Puter AI IMG gagal');
   }
-  async function pollImg(prompt){
-    var seed=Math.floor(Math.random()*1000000);
-    var direct=POLL_IMG+encodeURIComponent(prompt)+'?width=1024&height=1024&nologo=true&seed='+seed;
-    var ctrl=new AbortController();var t=setTimeout(function(){ctrl.abort();},150000);
-    var r;
-    try{r=await fetch(direct,{signal:ctrl.signal});}finally{clearTimeout(t);}
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    var blob=await r.blob();
-    if(!blob||blob.size<1024)throw new Error('Gambar kosong');
-    lastProvider='Pollinations Image (cadangan gratis)';
-    if(typeof URL!=='undefined'&&URL.createObjectURL){try{return URL.createObjectURL(blob);}catch(e){}}
-    return direct;
-  }
-  async function image(prompt){
-    var errs=[];
-    // 1) JALUR UTAMA: PUTER AI IMG (puter.ai.txt2img) — sesuai permintaan
-    try{return await puterImg(prompt);}catch(e1){errs.push('Puter AI IMG: '+(e1.message||e1));}
-    // 2) CADANGAN GRATIS: Pollinations Image (agar fitur tetap jalan walau Puter gagal/belum tersambung)
-    try{return await pollImg(prompt);}catch(e2){errs.push('Pollinations: '+(e2.message||e2));}
-    // 3) CADANGAN TERAKHIR: URL Pollinations langsung
-    var seed3=Math.floor(Math.random()*1000000);
-    var direct3=POLL_IMG+encodeURIComponent(prompt)+'?width=1024&height=1024&nologo=true&seed='+seed3;
-    try{await tryImg(direct3);lastProvider='Pollinations Image (langsung)';return direct3;}catch(e3){errs.push(e3.message||e3);}
-    throw new Error('Gagal membuat gambar — '+errs.join(' | '));
+  async function image(prompt,w,h){
+    // JALUR TUNGGAL: PUTER AI IMG (puter.ai.txt2img) — TANPA cadangan Pollinations.
+    // Parameter w/h dipertahankan demi kompatibilitas pemanggil lama; ukuran akhir
+    // ditentukan oleh Puter AI IMG sendiri. Jika gagal -> pemberitahuan langsung.
+    try{
+      var src=await puterImg(prompt);
+      if(src)return src;
+      throw new Error('Puter AI IMG tidak mengembalikan gambar');
+    }catch(e1){
+      var m1=(e1&&(e1.message||e1))||'tidak diketahui';
+      throw new Error('Puter AI gagal membuat gambar — '+m1+'. Klik tombol "🔗 Sambungkan AI" di bagian atas halaman (izinkan popup yang muncul), lalu coba lagi.');
+    }
   }
   return {chat:chat,image:image,provider:function(){return lastProvider;}};
 })();
@@ -457,7 +444,7 @@ window.gsLocalOCR=function(dataUrl){
     }catch(e){finish('');}
   });
 };
-console.log('%c GSAI Bridge v2 aktif — Chat & Gambar GRATIS tanpa login (Puter sebagai cadangan) ','background:#10b981;color:#fff;border-radius:4px');
+console.log('%c GSAI Bridge v3 aktif — Chat: Pollinations+Puter | Buat Gambar: Puter AI IMG (tanpa cadangan) ','background:#10b981;color:#fff;border-radius:4px');
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:['Inter','sans-serif']}}}</script>
@@ -1377,6 +1364,7 @@ async function renderTeachers(){
             '<thead class="bg-slate-100 dark:bg-slate-700 text-xs uppercase text-slate-600 dark:text-slate-300">'+
               '<tr>'+
                 '<th class="px-3 py-3 text-center">No</th>'+
+                '<th class="px-3 py-3 text-center">Foto</th>'+
                 '<th class="px-3 py-3">NIP</th>'+
                 '<th class="px-3 py-3">Nama Guru</th>'+
                 '<th class="px-3 py-3 text-center">L/P</th>'+
@@ -1391,6 +1379,11 @@ async function renderTeachers(){
               (t.length?t.map(function(x,i){
                 return '<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">'+
                   '<td class="px-3 py-3 text-center text-slate-500 font-medium">'+(i+1)+'</td>'+
+                  '<td class="px-3 py-3 text-center">'+
+                    (x.photo
+                      ?'<img src="'+x.photo+'" alt="Foto guru" title="Lihat foto" class="w-10 h-10 rounded-full object-cover border-2 border-emerald-300 shadow-sm mx-auto cursor-pointer hover:scale-110 transition-transform" onclick="teacherPhotoAction(\''+x.id+'\')">'
+                      :'<button type="button" title="Belum ada foto — klik untuk menambahkan" onclick="teacherPhotoAction(\''+x.id+'\')" class="w-10 h-10 rounded-full bg-gradient-to-br from-slate-300 to-slate-400 dark:from-slate-600 dark:to-slate-700 text-white flex items-center justify-center text-xs font-bold mx-auto hover:from-emerald-400 hover:to-teal-500 hover:scale-110 transition-all">'+gsTeacherInitials(x.name)+'</button>')+
+                  '</td>'+
                   '<td class="px-3 py-3 font-mono text-slate-600 dark:text-slate-300">'+x.nip+'</td>'+
                   '<td class="px-3 py-3 font-semibold text-slate-800 dark:text-white">'+x.name+'</td>'+
                   '<td class="px-3 py-3 text-center"><span class="inline-flex items-center justify-center w-7 h-7 rounded-full '+(x.gender==='L'?'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300':'bg-pink-100 dark:bg-pink-900/40 text-pink-600 dark:text-pink-300')+' text-xs font-bold">'+x.gender+'</span></td>'+
@@ -1405,7 +1398,7 @@ async function renderTeachers(){
                     '</div>'+
                   '</td>'+
                 '</tr>';
-              }).join(''):'<tr><td colspan="9" class="text-center py-12 text-slate-500"><div class="flex flex-col items-center gap-2"><svg class="w-12 h-12 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-5a4 4 0 11-8 0 4 4 0 018 0zm6 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg><p class="text-sm">Belum ada data guru. Klik "Tambah Guru" untuk memulai.</p></div></td></tr>')+
+              }).join(''):'<tr><td colspan="10" class="text-center py-12 text-slate-500"><div class="flex flex-col items-center gap-2"><svg class="w-12 h-12 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-5a4 4 0 11-8 0 4 4 0 018 0zm6 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg><p class="text-sm">Belum ada data guru. Klik "Tambah Guru" untuk memulai.</p></div></td></tr>')+
             '</tbody>'+
           '</table>'+
         '</div>'+
@@ -1413,7 +1406,7 @@ async function renderTeachers(){
     '</div>'+
   '</div>';
 }
-async function teacherForm(id){var t=null;if(id){t=(await DB.get('teachers')).find(function(x){return x.id===id;});}openModal(id?'Edit Guru':'Tambah Guru','<form id="teacherForm" class="space-y-4"><div><label class="block text-sm mb-1">NIP</label><input type="text" id="tch_nip" value="'+(t?.nip||'')+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Nama</label><input type="text" id="tch_name" value="'+(t?.name||'')+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Gender</label><select id="tch_gender" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option value="L" '+(t?.gender=='L'?'selected':'')+'>L</option><option value="P" '+(t?.gender=='P'?'selected':'')+'>P</option></select></div><div><label class="block text-sm mb-1">No HP</label><input type="text" id="tch_phone" value="'+(t?.phone||'')+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Email</label><input type="email" id="tch_email" value="'+(t?.email||'')+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Alamat</label><textarea id="tch_address" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">'+(t?.address||'')+'</textarea></div><div><label class="block text-sm mb-1">Tanggal Lahir</label><input type="date" id="tch_birthdate" value="'+(t?.birthdate||'')+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" style="color-scheme:light;"></div><div><label class="block text-sm mb-1">Mapel</label><input type="text" id="tch_subject" value="'+(t?.subject||'')+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button></form>');document.getElementById('teacherForm').onsubmit=async function(e){e.preventDefault();var p={nip:document.getElementById('tch_nip').value,name:document.getElementById('tch_name').value,gender:document.getElementById('tch_gender').value,phone:document.getElementById('tch_phone').value,email:document.getElementById('tch_email').value,address:document.getElementById('tch_address').value,birthdate:document.getElementById('tch_birthdate').value,subject:document.getElementById('tch_subject').value};await saveData('teachers',p,id);closeModal();renderTeachers();};}
+async function teacherForm(id){var t=null;if(id){t=(await DB.get('teachers')).find(function(x){return x.id===id;});}openModal(id?'Edit Guru':'Tambah Guru','<form id="teacherForm" class="space-y-4"><div><label class="block text-sm mb-1">Foto Guru</label><div class="flex items-center gap-3"><img id="tch_photo_preview" src="'+(t&&t.photo?t.photo:TCH_PHOTO_PLACEHOLDER)+'" alt="Foto guru" class="w-20 h-20 rounded-full object-cover border-2 border-slate-200 dark:border-slate-600 bg-slate-100 dark:bg-slate-700"><div class="flex flex-col gap-1.5"><input type="file" id="tch_photo_file" accept="image/*" class="hidden" onchange="tchPhotoPicked(event)"><button type="button" onclick="document.getElementById(\'tch_photo_file\').click()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold">📷 Pilih Foto</button><button type="button" onclick="tchPhotoClear()" class="bg-slate-200 dark:bg-slate-600 hover:bg-red-100 dark:hover:bg-red-900/40 text-slate-700 dark:text-white px-3 py-1.5 rounded-lg text-xs font-semibold">🗑️ Hapus Foto</button></div></div><input type="hidden" id="tch_photo" value=""><p class="text-[10px] text-slate-400 mt-1">JPG/PNG/WEBP • otomatis dikecilkan (sisi maks 400px) agar hemat penyimpanan. Jika gagal simpan, kolom "photo" (teks) perlu ditambahkan di Supabase.</p></div><div><label class="block text-sm mb-1">NIP</label><input type="text" id="tch_nip" value="'+(t?.nip||'')+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Nama</label><input type="text" id="tch_name" value="'+(t?.name||'')+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" required></div><div><label class="block text-sm mb-1">Gender</label><select id="tch_gender" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"><option value="L" '+(t?.gender=='L'?'selected':'')+'>L</option><option value="P" '+(t?.gender=='P'?'selected':'')+'>P</option></select></div><div><label class="block text-sm mb-1">No HP</label><input type="text" id="tch_phone" value="'+(t?.phone||'')+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Email</label><input type="email" id="tch_email" value="'+(t?.email||'')+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><div><label class="block text-sm mb-1">Alamat</label><textarea id="tch_address" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white">'+(t?.address||'')+'</textarea></div><div><label class="block text-sm mb-1">Tanggal Lahir</label><input type="date" id="tch_birthdate" value="'+(t?.birthdate||'')+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white" style="color-scheme:light;"></div><div><label class="block text-sm mb-1">Mapel</label><input type="text" id="tch_subject" value="'+(t?.subject||'')+'" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold">Simpan</button></form>');document.getElementById('teacherForm').onsubmit=async function(e){e.preventDefault();var p={nip:document.getElementById('tch_nip').value,name:document.getElementById('tch_name').value,gender:document.getElementById('tch_gender').value,phone:document.getElementById('tch_phone').value,email:document.getElementById('tch_email').value,address:document.getElementById('tch_address').value,birthdate:document.getElementById('tch_birthdate').value,subject:document.getElementById('tch_subject').value};var phv=(document.getElementById('tch_photo')||{}).value||'';if(phv.indexOf('data:image')===0){p.photo=phv;}else if(phv==='__GS_CLEAR__'&&t&&t.photo){p.photo='';}var res=id?await DB.update('teachers',id,p):await DB.insert('teachers',p);if(res){showToast('Data guru disimpan!','success');closeModal();renderTeachers();}else{if(p.photo!==undefined)gsPhotoColumnHelp();}};}
 async function renderStudents(){
   var results=await Promise.all([DB.get('students'),DB.get('classes')]);
   var st=results[0],cl=results[1];
@@ -1620,29 +1613,173 @@ async function renderPiket(){
         if(r.error){tblError=r.error.message||'Tabel piket belum dibuat.';}
         else{pk=r.data||[];}
     }
-    var html='<div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm">';
-    html+='<div class="flex justify-between mb-4 flex-wrap gap-2"><h3 class="font-semibold text-slate-800 dark:text-white">Jadwal Piket Kelas</h3><div class="flex gap-2 flex-wrap"><button onclick="generatePiketImage()" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-md transition"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>🎨 Generate Gambar Piket</button><button onclick="piketForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Piket</button></div></div>';
+    // Cache data piket untuk fitur ketik & edit langsung di tabel
+    window.__pkItems={};window.__pkEditing=false;
+    (pk||[]).forEach(function(x){if(x&&x.id!=null)window.__pkItems[String(x.id)]=x;});
+    var selId=window.__pkClassSel||'';
+    var selObj=null;
+    for(var ci=0;ci<classes.length;ci++){if(classes[ci].id===selId)selObj=classes[ci];}
+    if(!selObj){selObj=classes[0]||null;selId=selObj?selObj.id:'';window.__pkClassSel=selId;}
+    var now=new Date();var yy=now.getFullYear();var tp=(now.getMonth()>=6?yy+'/'+(yy+1):(yy-1)+'/'+yy);
+    var dayColors=['#1e40af','#16a34a','#ea780c','#7e22ce','#dc2626','#f59e0b'];
+    var calIcon='<svg viewBox="0 0 24 24" style="width:22px;height:22px;flex:none" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2.5"></rect><path d="M8 3v4M16 3v4M3 10h18"></path><circle cx="8" cy="14.5" r="0.7" fill="#ffffff" stroke="none"></circle><circle cx="12" cy="14.5" r="0.7" fill="#ffffff" stroke="none"></circle><circle cx="16" cy="14.5" r="0.7" fill="#ffffff" stroke="none"></circle></svg>';
+    var icoBroom='<svg viewBox="0 0 48 48" style="width:46px;height:46px" fill="none" stroke="#1e3a8a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M37 5L22 27"></path><path d="M22 27l-8 4-9 14c5 3 13 1 16-4l1-14z"></path><path d="M9 39l10-4M7 43l12-5"></path></svg>';
+    var icoBucket='<svg viewBox="0 0 48 48" style="width:40px;height:40px" fill="none" stroke="#1e3a8a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="24" cy="13" rx="12" ry="4"></ellipse><path d="M12.5 14l2.5 24c0 3 18 3 18 0l2.5-24"></path><path d="M14 11c0-7 20-7 20 0"></path></svg>';
+    var icoSponge='<svg viewBox="0 0 48 48" style="width:46px;height:46px" fill="none" stroke="#1e3a8a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="15" width="34" height="19" rx="6" transform="rotate(-7 24 24)"></rect><circle cx="17" cy="25" r="1.2" fill="#1e3a8a" stroke="none"></circle><circle cx="24" cy="23" r="1.2" fill="#1e3a8a" stroke="none"></circle><circle cx="31" cy="21" r="1.2" fill="#1e3a8a" stroke="none"></circle><circle cx="21" cy="30" r="1.2" fill="#1e3a8a" stroke="none"></circle><circle cx="29" cy="28" r="1.2" fill="#1e3a8a" stroke="none"></circle></svg>';
+    var icoSpray='<svg viewBox="0 0 48 48" style="width:40px;height:40px" fill="none" stroke="#1e3a8a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h9v-5h3l3 4h-4"></path><path d="M19 17c-2 2-3 4-3 7v15c0 2 1 3 3 3h9c2 0 3-1 3-3V24c0-3-1-5-3-7"></path><path d="M37 8h5M37 12h5M38 16h4"></path></svg>';
+    var html='<div class="bg-white dark:bg-slate-800 p-4 md:p-6 rounded-xl shadow-sm">';
+    html+='<div class="flex justify-between mb-4 flex-wrap gap-2 items-center"><h3 class="font-semibold text-slate-800 dark:text-white">Jadwal Piket Kelas</h3><div class="flex gap-2 flex-wrap items-center"><label class="text-sm font-medium text-slate-500 dark:text-slate-300">Kelas:</label><select id="pk_class_sel" onchange="pkSelectClass(this.value)" class="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 dark:text-white">'+classes.map(function(c){return '<option value="'+c.id+'" '+(c.id===selId?'selected':'')+'>'+pkEsc(c.name)+'</option>';}).join('')+'</select><button onclick="generatePiketImage()" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-md transition"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>🎨 Generate Gambar Piket</button><button onclick="piketForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Tambah Piket</button></div></div>';
     if(tblError){
         html+='<div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 text-red-600 p-4 rounded-lg text-sm mb-4"><b>Tabel piket belum dibuat di database Supabase.</b><p class="mt-1">Buka dashboard Supabase → SQL Editor → jalankan SQL berikut, lalu muat ulang halaman ini:</p><pre class="mt-2 p-3 bg-white dark:bg-slate-800 rounded-lg overflow-x-auto text-[11px] leading-relaxed text-slate-700 dark:text-slate-200">create table if not exists piket (\n  id uuid primary key default gen_random_uuid(),\n  user_id uuid not null,\n  day text not null,\n  class_id uuid,\n  student_name text,\n  task text,\n  created_at timestamptz default now()\n);\nalter table piket enable row level security;\ncreate policy "piket_user_all" on piket for all\n  using (auth.uid() = user_id)\n  with check (auth.uid() = user_id);</pre><p class="mt-2 text-xs">Pesan error database: '+pkEsc(tblError)+'</p></div>';
     }
     if(classes.length===0){html+='<div class="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-300 p-3 rounded-lg text-sm mb-4">Tambahkan data Kelas dulu di menu Kelas, lalu tambahkan siswa piket per hari.</div>';}
-    var head='<th class="px-4 py-3 border dark:border-slate-600">Hari</th>'+classes.map(function(c){return '<th class="px-4 py-3 border dark:border-slate-600 text-xs min-w-[140px]">'+pkEsc(c.name)+'</th>';}).join('');
-    var body=piketDays.map(function(day){
-        var cells=classes.map(function(c){
-            var items=pk.filter(function(x){return x.day===day&&x.class_id===c.id;});
-            if(!items.length)return '<td class="px-4 py-3 border dark:border-slate-600 text-xs text-slate-400">-</td>';
-            var inner=items.map(function(it){
-                var sid=String(it.id==null?'':it.id).replace(/'/g,"\\'");
-                return '<div class="flex items-start justify-between gap-2 mb-1 pb-1 border-b border-dashed border-slate-100 dark:border-slate-700 last:border-0 last:pb-0"><span><b>'+pkEsc(it.student_name)+'</b>'+(it.task?'<br><span class="text-purple-500">🧹 '+pkEsc(it.task)+'</span>':'')+'</span><button onclick="deleteData(\'piket\',\''+sid+'\',\'renderPiket\')" class="text-red-400 hover:text-red-600 text-xs flex-none" title="Hapus">✕</button></div>';
-            }).join('');
-            return '<td class="px-4 py-3 border dark:border-slate-600 text-xs">'+inner+'</td>';
+    html+='<div class="relative text-center mt-1 mb-6 px-2">'
+        +'<div class="hidden md:flex items-end gap-1 absolute left-3 top-0">'+icoBroom+icoBucket+'</div>'
+        +'<div class="hidden md:flex items-end gap-1 absolute right-3 top-0">'+icoSponge+icoSpray+'</div>'
+        +'<span class="hidden sm:inline absolute" style="left:27%;top:-4px;color:#fbbf24;font-size:18px">✦</span>'
+        +'<span class="hidden sm:inline absolute" style="right:28%;top:12px;color:#fbbf24;font-size:13px">✦</span>'
+        +'<h2 class="text-3xl md:text-4xl font-black" style="color:#1e3a8a;letter-spacing:.02em">JADWAL PIKET KELAS</h2>'
+        +'<div class="flex items-center justify-center gap-2 mt-2">'
+        +'<span style="display:inline-block;height:3px;width:88px;background:#1e3a8a;border-radius:99px"></span>'
+        +'<span class="flex gap-1.5"><span class="w-2 h-2 rounded-full inline-block" style="background:#1e3a8a"></span><span class="w-2 h-2 rounded-full inline-block" style="background:#1e3a8a"></span><span class="w-2 h-2 rounded-full inline-block" style="background:#1e3a8a"></span></span>'
+        +'<span style="display:inline-block;height:3px;width:88px;background:#1e3a8a;border-radius:99px"></span>'
+        +'</div>'
+        +'<p class="mt-2 text-lg md:text-xl font-bold" style="color:#334155">Tahun Pelajaran '+tp+'</p>'
+        +'</div>';
+    var selPk=pk.filter(function(x){return !selId||(x.class_id===selId);});
+    var counts=piketDays.map(function(day){return selPk.filter(function(x){return x.day===day;}).length;});
+    var maxRows=Math.max.apply(null,counts.concat([5]));
+    var cardsHtml=piketDays.map(function(day,di){
+        var col=dayColors[di%dayColors.length];
+        var items=selPk.filter(function(x){return x.day===day;});
+        var rows=items.map(function(it,idx){
+            var sid=String(it.id==null?'':it.id).replace(/'/g,"\\'");
+            return '<div class="pk-item flex items-center" style="border-bottom:1px solid #e8edf3;min-height:42px">'
+                +'<div class="pk-no text-center text-sm font-semibold flex-none" style="width:52px;color:#334155">'+(idx+1)+'</div>'
+                +'<span class="pk-edit flex-1 pl-1 pr-1 py-1.5 cursor-pointer text-sm font-medium hover:bg-blue-50 dark:hover:bg-slate-700 rounded transition" style="color:#1e293b" title="Klik untuk mengedit nama" onclick="pkStartEdit(\''+sid+'\',this)"><b>'+pkEsc(it.student_name)+'</b>'+(it.task?'<br><span class="text-[10px] font-normal" style="color:#a855f7">🧹 '+pkEsc(it.task)+'</span>':'')+'</span>'
+                +'<button onclick="deleteData(\'piket\',\''+sid+'\',\'renderPiket\')" class="pk-del flex-none px-2 text-slate-300 hover:text-red-500 text-sm transition" title="Hapus">✕</button>'
+                +'</div>';
         }).join('');
-        return '<tr><td class="px-4 py-3 border dark:border-slate-600 font-semibold">'+day+'</td>'+cells+'</tr>';
+        for(var f=items.length;f<maxRows;f++){
+            rows+='<div class="pk-filler flex items-center" style="border-bottom:1px solid #eef2f7;min-height:42px"><div class="flex-none" style="width:52px"></div><div class="flex-1"></div></div>';
+        }
+        var dkey=String(day).replace(/'/g,"\\'");
+        var cid=String(selId).replace(/'/g,"\\'");
+        var typeRow='<div class="flex items-center" style="border-top:2px solid #e5e9f0;min-height:42px">'
+            +'<div class="text-center text-base font-bold flex-none" style="width:52px;color:#94a3b8">+</div>'
+            +'<input type="text" class="pk-input flex-1 pl-1 pr-2 py-2 text-sm bg-transparent outline-none placeholder-slate-400" style="color:#1e293b" placeholder="Ketik nama siswa, tekan Enter" onkeydown="pkQuickKey(event,\''+dkey+'\',\''+cid+'\',this)">'
+            +'</div>';
+        return '<div class="pk-card rounded-xl overflow-hidden shadow-md flex flex-col" style="background:#ffffff;border:1px solid #e5e9f0">'
+            +'<div class="flex items-center justify-center gap-2.5 py-3 px-3" style="background:'+col+'">'+calIcon+'<span class="text-white font-extrabold text-xl" style="letter-spacing:.09em">'+day.toUpperCase()+'</span></div>'
+            +'<div class="flex text-[13px] font-bold" style="border-bottom:2px solid #e5e9f0;color:#0f172a"><div class="py-2 text-center flex-none" style="width:52px">No</div><div class="py-2 flex-1 text-center" style="padding-right:44px">Nama Siswa</div></div>'
+            +'<div data-pk-list class="flex-1">'+rows+'</div>'
+            +typeRow
+            +'</div>';
     }).join('');
-    html+='<div class="overflow-x-auto"><table class="w-full text-sm text-left border-collapse"><thead class="bg-slate-50 dark:bg-slate-700"><tr>'+head+'</tr></thead><tbody>'+(classes.length?body:'')+'</tbody></table></div>';
-    html+='<p class="text-xs text-slate-400 mt-3">💡 Piket dikelola per kelas & per hari (Senin–Sabtu). Klik ✕ untuk menghapus siswa piket. Tombol 🎨 membuat poster piket dengan Puter AI IMG.</p>';
+    html+='<div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 items-stretch">'+(classes.length?cardsHtml:'')+'</div>';
+    html+='<p class="text-xs text-slate-400 mt-4">💡 <b>Ketik nama siswa pada kolom "+ Ketik nama siswa..." di kartu hari, tekan Enter untuk menyimpan</b> — tanpa perlu buka form. Klik nama siswa untuk mengedit langsung, klik ✕ untuk menghapus. Trik: tulis <b>Nama | Tugas</b> (contoh: <i>Budi | Menyapu lantai</i>) agar tugas piket ikut tersimpan. Tombol 🎨 membuat poster piket dengan Puter AI IMG.</p>';
     html+='</div>';
     document.getElementById('content').innerHTML=html;
+}
+// ===== KETIK NAMA SISWA LANGSUNG DI TABEL PIKET =====
+// Ganti kelas yang ditampilkan pada poster
+function pkSelectClass(v){window.__pkClassSel=v;renderPiket();}
+// Penomoran ulang baris siswa pada satu kartu hari
+function pkRenumber(listWrap){
+    var n=1;var kids=listWrap.children;
+    for(var i=0;i<kids.length;i++){
+        var el=kids[i];
+        if(el.classList&&el.classList.contains('pk-item')){
+            var no=el.querySelector('.pk-no');
+            if(no)no.textContent=n;
+            n++;
+        }else if(el.classList&&el.classList.contains('pk-empty')){
+            el.remove();
+        }
+    }
+}
+// Tekan Enter pada kolom ketik -> simpan siswa piket baru tanpa modal
+function pkQuickKey(e,day,classId,el){if(e.key==='Enter'){e.preventDefault();pkQuickAdd(day,classId,el);}}
+async function pkQuickAdd(day,classId,el){
+    var raw=(el.value||'').trim();
+    if(!raw)return;
+    var student=raw,task='';
+    var sep=raw.indexOf('|');
+    if(sep>-1){student=raw.substring(0,sep).trim();task=raw.substring(sep+1).trim();}
+    if(!student){el.value='';return;}
+    el.disabled=true;el.classList.add('opacity-50');
+    var res=await DB.insert('piket',{day:day,class_id:classId,student_name:student,task:task});
+    el.disabled=false;el.classList.remove('opacity-50');
+    if(!res||!res.length)return;
+    var it=res[0];
+    var sid=String(it.id==null?'':it.id).replace(/'/g,"\\'");
+    if(window.__pkItems)window.__pkItems[String(it.id)]=it;
+    var card=el.closest('.pk-card');
+    var listWrap=card?card.querySelector('[data-pk-list]'):null;
+    if(listWrap){
+        var rowDiv=document.createElement('div');
+        rowDiv.className='pk-item flex items-center';
+        rowDiv.style.borderBottom='1px solid #e8edf3';
+        rowDiv.style.minHeight='42px';
+        rowDiv.innerHTML='<div class="pk-no text-center text-sm font-semibold flex-none" style="width:52px;color:#334155"></div><span class="pk-edit flex-1 pl-1 pr-1 py-1.5 cursor-pointer text-sm font-medium hover:bg-blue-50 dark:hover:bg-slate-700 rounded transition" style="color:#1e293b" title="Klik untuk mengedit nama" onclick="pkStartEdit(\''+sid+'\',this)"><b>'+pkEsc(it.student_name||'')+'</b>'+(it.task?'<br><span class="text-[10px] font-normal" style="color:#a855f7">🧹 '+pkEsc(it.task)+'</span>':'')+'</span><button onclick="deleteData(\'piket\',\''+sid+'\',\'renderPiket\')" class="pk-del flex-none px-2 text-slate-300 hover:text-red-500 text-sm transition" title="Hapus">✕</button>';
+        var filler=listWrap.querySelector('.pk-filler');
+        if(filler){listWrap.insertBefore(rowDiv,filler);}else{listWrap.appendChild(rowDiv);}
+        var fillers=listWrap.querySelectorAll('.pk-filler');
+        if(fillers.length){fillers[fillers.length-1].remove();}
+        pkRenumber(listWrap);
+        el.value='';el.focus();
+    }else{
+        el.value='';
+        renderPiket();
+        return;
+    }
+    showToast('Siswa piket ditambahkan!','success');
+}
+// Klik nama siswa di tabel -> edit langsung (Enter=simpan, Esc=batal)
+function pkStartEdit(id,nameSpan){
+    if(window.__pkEditing)return;
+    var it=(window.__pkItems||{})[String(id)];
+    if(!it)return;
+    var rowDiv=nameSpan.closest('.pk-item');
+    if(!rowDiv)return;
+    window.__pkEditing=true;
+    var cur=String(it.student_name==null?'':it.student_name);
+    if(it.task)cur+=' | '+String(it.task);
+    var inp=document.createElement('input');
+    inp.type='text';
+    inp.value=cur;
+    inp.className='w-full px-2 py-1 border border-blue-400 rounded text-xs bg-white dark:bg-slate-700 dark:text-white text-slate-700 focus:outline-none';
+    nameSpan.style.display='none';
+    rowDiv.insertBefore(inp,nameSpan);
+    inp.focus();inp.select();
+    var finished=false;
+    async function pkCommitEdit(){
+        if(finished)return;finished=true;window.__pkEditing=false;
+        var v=(inp.value||'').trim();
+        if(!v||v===cur){inp.remove();nameSpan.style.display='';return;}
+        var student=v,task='';
+        var s2=v.indexOf('|');
+        if(s2>-1){student=v.substring(0,s2).trim();task=v.substring(s2+1).trim();}
+        if(!student){inp.remove();nameSpan.style.display='';showToast('Nama siswa tidak boleh kosong!','error');return;}
+        var ok=await DB.update('piket',id,{student_name:student,task:task});
+        if(ok){
+            it.student_name=student;it.task=task;
+            nameSpan.innerHTML='<b>'+pkEsc(student)+'</b>'+(task?'<br><span class="text-[10px] font-normal" style="color:#a855f7">🧹 '+pkEsc(task)+'</span>':'');
+            showToast('Nama piket diperbarui!','success');
+        }else{
+            showToast('Gagal memperbarui nama piket.','error');
+        }
+        inp.remove();nameSpan.style.display='';
+    }
+    inp.onkeydown=function(e){
+        if(e.key==='Enter'){e.preventDefault();pkCommitEdit();}
+        else if(e.key==='Escape'){
+            if(finished)return;finished=true;window.__pkEditing=false;
+            inp.onblur=null;
+            inp.remove();nameSpan.style.display='';
+        }
+    };
+    inp.onblur=pkCommitEdit;
 }
 async function piketForm(id){
     var cl=await DB.get('classes');
@@ -1663,7 +1800,12 @@ async function generatePiketImage(){
     var results=await Promise.all([DB.get('classes'),DB.get('piket')]);
     var classes=results[0],pk=results[1];
     if(!pk.length){showToast('Belum ada jadwal piket. Tambahkan piket dulu!','error');return;}
-    var piketText='JADWAL PIKET KELAS MINGGUAN. ';var hasData=false;
+    var selId2=window.__pkClassSel||'';
+    if(selId2){pk=pk.filter(function(x){return x.class_id===selId2;});}
+    if(!pk.length){showToast('Belum ada jadwal piket untuk kelas yang dipilih. Tambahkan piket dulu!','error');return;}
+    var clsName='';
+    classes.forEach(function(c){if(c.id===selId2)clsName=c.name||'';});
+    var piketText='JADWAL PIKET KELAS'+(clsName?' '+clsName:'')+' MINGGUAN. ';var hasData=false;
     piketDays.forEach(function(day){
         var dayItems=pk.filter(function(x){return x.day===day;});
         if(!dayItems.length)return;
@@ -2736,8 +2878,8 @@ var kls_team_colors = [
 ];
 
 /* ASISTEN AI diselaraskan dengan versi GURU SMART AI PRO 78 */
-async function renderAI(){var isSignedIn=false;var ud=await sb.from('users').select('*').eq('id',currentUser.id).maybeSingle();if(ud.data){currentUser.is_premium=ud.data.is_premium;currentUser.payment_status=ud.data.payment_status;currentUser.payment_sender=ud.data.payment_sender;}var isPremium=currentUser.is_premium||false;try{isSignedIn=puter.auth.isSignedIn();}catch(e){isSignedIn=false;}if(!isPremium){var info='';if(currentUser.payment_status==='Menunggu Verifikasi'){info='<div class="mt-4 bg-yellow-50 border border-yellow-200 text-yellow-800 p-4 rounded-lg text-sm"><strong>Menunggu Verifikasi</strong><br>Pembayaran Rp 25.000 atas nama <strong>'+(currentUser.payment_sender||'-')+'</strong> sedang ditinjau.</div>';}document.getElementById('content').innerHTML='<div class="flex items-center justify-center min-h-[80vh] p-4"><div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl text-center max-w-md w-full border border-slate-100 dark:border-slate-700"><img src="'+AI_IMG+'" onerror="imgFallback(this)" class="w-24 h-24 rounded-2xl mx-auto mb-5 object-cover shadow-md"><h3 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Aktifkan Asisten AI</h3><p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Dapatkan akses <strong>AI GRATIS</strong> ke semua fitur AI, Chat AI & Kuis Kelas.</p><div class="bg-slate-50 dark:bg-slate-700 p-4 rounded-xl mb-6 border border-slate-100 dark:border-slate-600"><p class="text-sm text-slate-600 dark:text-slate-300 mb-1">Biaya Aktivasi:</p><p class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-emerald-600 mb-4">Rp 25.000</p><div class="border-t border-slate-200 dark:border-slate-600 pt-3 mt-3"><p class="text-sm font-semibold text-slate-700 dark:text-slate-200">Via DANA:</p><p class="text-2xl font-mono font-bold text-blue-600 dark:text-blue-400 tracking-wider mt-1">081212514747</p><p class="text-xs font-semibold text-slate-500 mt-1">a.n BAYU PRATAMA</p></div></div>'+(currentUser.payment_status!=='Menunggu Verifikasi'?'<button onclick="confirmPaymentAI()" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 rounded-lg shadow-md flex items-center justify-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Saya Sudah Bayar</button><p class="text-xs text-slate-400 mt-4">Transfer Rp 25.000 ke DANA di atas.</p>':'')+info+'</div></div>';return;}document.getElementById('content').innerHTML='<div class="flex flex-col flex-1 min-h-0 max-w-6xl w-full mx-auto bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden"><div class="p-3 flex-none border-b dark:border-slate-700 flex justify-between items-center bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700 flex-wrap gap-2"><div class="flex items-center gap-3"><img src="'+AI_IMG+'" onerror="imgFallback(this)" alt="GURU SMART AI" class="w-10 h-10 rounded-xl object-cover shadow-sm bg-slate-200"><div><h3 class="font-bold text-slate-800 dark:text-white">Asisten AI Guru</h3><p class="text-xs text-slate-500 dark:text-slate-400">Chat AI Gratis + Papan Tulis 😊</p></div></div><div class="flex gap-1 bg-slate-100 dark:bg-slate-700 rounded-lg p-1 flex-wrap"><button id="tabChatAI" onclick="switchAITab(\'chat\')" class="px-3 py-1.5 text-xs font-semibold rounded-md bg-blue-600 text-white">💬 Chat</button><button id="tabPapanAI" onclick="switchAITab(\'papan\')" class="px-3 py-1.5 text-xs font-semibold rounded-md text-slate-600 dark:text-slate-300">🖌️ Papan Tulis</button><button id="gsAIAuthChip" onclick="gsConnectPuter()" class="px-3 py-1.5 text-xs font-semibold rounded-md bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-300 dark:border-amber-700 hover:bg-amber-200">🔗 Sambungkan AI</button></div></div><div id="aiChatPanel" class="flex flex-col flex-1 min-h-0"><div id="aiMessages" class="flex-1 min-h-0 overflow-y-auto overscroll-contain p-5 space-y-4 bg-slate-50 dark:bg-slate-900"></div><div class="p-3 flex-none border-t dark:border-slate-700 bg-white dark:bg-slate-800"><div class="flex gap-2 items-end"><input type="file" id="aiImageInput" accept="image/*" class="hidden" onchange="handleAIImageUpload(event)"><button onclick="document.getElementById(\'aiImageInput\').click()" class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-white p-2.5 rounded-xl flex-none" title="Upload Gambar"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></button><button id="aiMicBtn" onclick="toggleVoiceInput()" class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-white p-2.5 rounded-xl flex-none" title="Voice Input"><svg id="micIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg></button><textarea id="aiInput" rows="2" placeholder="Tulis perintah..." class="flex-1 px-4 py-2 rounded-xl border dark:bg-slate-700 dark:text-white resize-none focus:ring-2 focus:ring-blue-500 outline-none text-sm"></textarea><button id="aiSendBtn" onclick="sendAI()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold flex items-center gap-1 text-sm flex-none"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9 2zm0 0v-8"/></svg><span class="hidden sm:inline">Kirim</span></button></div><div class="flex justify-end gap-2 mt-2 flex-wrap"><button onclick="openSoalCameraModal()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.072 4h3.856a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Foto Soal</button><button onclick="uploadSoalImage()" class="bg-teal-500 hover:bg-teal-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Galeri Soal</button><button id="aiWordBtn" onclick="exportToWord()" class="hidden bg-blue-500 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>Word</button><button id="aiPrintBtn" onclick="printAIResult(false)" class="hidden bg-slate-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>PDF</button><button id="aiPrintKeyBtn" onclick="printAIResult(true)" class="hidden bg-green-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>Kunci</button></div></div></div><div id="aiPapanPanel" class="hidden flex-1 min-h-0 flex flex-col overflow-hidden p-3 bg-slate-100 dark:bg-slate-900"><div class="flex-none p-2 mb-2 bg-white dark:bg-slate-800 rounded-lg shadow-sm border dark:border-slate-700 flex flex-wrap items-center gap-3"><div class="flex gap-1"><button onclick="wbSetTool(\'pen\')" id="wbToolPen" class="wb-tool-btn active bg-blue-600 text-white p-2 rounded-lg" title="Pena"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m0 0l-3.536 3.536m3.536-3.536L5 19V5h14z"/></svg></button><button onclick="wbSetTool(\'eraser\')" id="wbToolEraser" class="wb-tool-btn bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-white p-2 rounded-lg" title="Penghapus"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg></button><button onclick="wbSetTool(\'line\')" id="wbToolLine" class="wb-tool-btn bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-white p-2 rounded-lg" title="Garis"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19l14-14"/></svg></button><button onclick="wbSetTool(\'rect\')" id="wbToolRect" class="wb-tool-btn bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-white p-2 rounded-lg" title="Kotak"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4h16v16H4z"/></svg></button><button onclick="wbSetTool(\'circle\')" id="wbToolCircle" class="wb-tool-btn bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-white p-2 rounded-lg" title="Lingkaran"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="2"/></svg></button></div><div class="w-px h-8 bg-slate-300 dark:bg-slate-600"></div><div class="flex gap-1 items-center"><span class="text-xs text-slate-500 mr-1">Warna:</span><button onclick="wbSetColor(\'#1e3a8a\')" class="w-7 h-7 rounded-full border-2 border-white shadow" style="background:#1e3a8a"></button><button onclick="wbSetColor(\'#dc2626\')" class="w-7 h-7 rounded-full border-2 border-white shadow" style="background:#dc2626"></button><button onclick="wbSetColor(\'#16a34a\')" class="w-7 h-7 rounded-full border-2 border-white shadow" style="background:#16a34a"></button><button onclick="wbSetColor(\'#000000\')" class="w-7 h-7 rounded-full border-2 border-white shadow" style="background:#000000"></button><input type="color" id="wbColorPicker" value="#1e3a8a" onchange="wbSetColor(this.value)" class="w-8 h-8 rounded cursor-pointer border-0"></div><div class="w-px h-8 bg-slate-300 dark:bg-slate-600"></div><div class="flex gap-2 items-center"><span class="text-xs text-slate-500">Ukuran:</span><input type="range" id="wbSizeRange" min="1" max="30" value="3" onchange="wbSetSize(parseInt(this.value))" class="w-20 cursor-pointer"><span id="wbSizeLabel" class="text-xs font-bold text-slate-700 dark:text-white w-6">3</span></div><div class="w-px h-8 bg-slate-300 dark:bg-slate-600"></div><button onclick="wbUndo()" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-1" title="Undo"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg></button><button onclick="wbClear()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-semibold">🗑️ Hapus</button><button onclick="wbSaveImage()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-semibold">💾 Simpan</button><button onclick="wbAskAI()" class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-1.5 shadow-md ml-auto">🤖 Tanya AI</button></div><div class="flex-1 min-h-0 overflow-auto flex justify-center items-start"><canvas id="whiteboardCanvas" style="width:100%;max-width:1000px;height:auto;aspect-ratio:5/3;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.08);touch-action:none;"></canvas></div><div id="wbAIResponse" class="hidden mt-2 bg-white dark:bg-slate-800 rounded-lg border border-green-300 dark:border-green-700 p-4 max-h-[30vh] overflow-y-auto modal-scroll shadow-md"><div class="flex justify-between items-center mb-2"><h4 class="font-bold text-sm text-green-700 dark:text-green-400 flex items-center gap-2">🤖 Jawaban AI</h4><button onclick="document.getElementById(\'wbAIResponse\').classList.add(\'hidden\')" class="text-slate-400 hover:text-red-500 text-xs">✕ Tutup</button></div><div id="wbAIContent" class="ai-output text-gray-800 dark:text-white text-sm"></div></div></div></div>';loadAIChat();setupEnterKey();setTimeout(function(){try{gsUpdateAuthChip();}catch(e){}},1200);}
-window.switchAITab=function(tab){var tabs={chat:'tabChatAI',papan:'tabPapanAI'};var panels={chat:'aiChatPanel',papan:'aiPapanPanel'};Object.keys(tabs).forEach(function(k){var btn=document.getElementById(tabs[k]);if(btn){btn.className='px-3 py-1.5 text-xs font-semibold rounded-md text-slate-600 dark:text-slate-300';}var panel=document.getElementById(panels[k]);if(panel){panel.classList.add('hidden');panel.classList.remove('flex');}});var activeBtn=document.getElementById(tabs[tab]);if(activeBtn){activeBtn.className='px-3 py-1.5 text-xs font-semibold rounded-md bg-blue-600 text-white';}var activePanel=document.getElementById(panels[tab]);if(activePanel){activePanel.classList.remove('hidden');activePanel.classList.add('flex');}if(tab==='papan'){setTimeout(function(){initWhiteboard();},200);}};
+async function renderAI(){var isSignedIn=false;var ud=await sb.from('users').select('*').eq('id',currentUser.id).maybeSingle();if(ud.data){currentUser.is_premium=ud.data.is_premium;currentUser.payment_status=ud.data.payment_status;currentUser.payment_sender=ud.data.payment_sender;}var isPremium=currentUser.is_premium||false;try{isSignedIn=puter.auth.isSignedIn();}catch(e){isSignedIn=false;}if(!isPremium){var info='';if(currentUser.payment_status==='Menunggu Verifikasi'){info='<div class="mt-4 bg-yellow-50 border border-yellow-200 text-yellow-800 p-4 rounded-lg text-sm"><strong>Menunggu Verifikasi</strong><br>Pembayaran Rp 25.000 atas nama <strong>'+(currentUser.payment_sender||'-')+'</strong> sedang ditinjau.</div>';}document.getElementById('content').innerHTML='<div class="flex items-center justify-center min-h-[80vh] p-4"><div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl text-center max-w-md w-full border border-slate-100 dark:border-slate-700"><img src="'+AI_IMG+'" onerror="imgFallback(this)" class="w-24 h-24 rounded-2xl mx-auto mb-5 object-cover shadow-md"><h3 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Aktifkan Asisten AI</h3><p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Dapatkan akses <strong>AI GRATIS</strong> ke semua fitur AI, Chat AI & Kuis Kelas.</p><div class="bg-slate-50 dark:bg-slate-700 p-4 rounded-xl mb-6 border border-slate-100 dark:border-slate-600"><p class="text-sm text-slate-600 dark:text-slate-300 mb-1">Biaya Aktivasi:</p><p class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-emerald-600 mb-4">Rp 25.000</p><div class="border-t border-slate-200 dark:border-slate-600 pt-3 mt-3"><p class="text-sm font-semibold text-slate-700 dark:text-slate-200">Via DANA:</p><p class="text-2xl font-mono font-bold text-blue-600 dark:text-blue-400 tracking-wider mt-1">081212514747</p><p class="text-xs font-semibold text-slate-500 mt-1">a.n BAYU PRATAMA</p></div></div>'+(currentUser.payment_status!=='Menunggu Verifikasi'?'<button onclick="confirmPaymentAI()" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 rounded-lg shadow-md flex items-center justify-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Saya Sudah Bayar</button><p class="text-xs text-slate-400 mt-4">Transfer Rp 25.000 ke DANA di atas.</p>':'')+info+'</div></div>';return;}document.getElementById('content').innerHTML='<div class="flex flex-col flex-1 min-h-0 max-w-6xl w-full mx-auto bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden"><div class="p-3 flex-none border-b dark:border-slate-700 flex justify-between items-center bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700 flex-wrap gap-2"><div class="flex items-center gap-3"><img src="'+AI_IMG+'" onerror="imgFallback(this)" alt="GURU SMART AI" class="w-10 h-10 rounded-xl object-cover shadow-sm bg-slate-200"><div><h3 class="font-bold text-slate-800 dark:text-white">Asisten AI Guru</h3><p class="text-xs text-slate-500 dark:text-slate-400">Chat AI Gratis + Papan Tulis + Buat Gambar 🎨</p></div></div><div class="flex gap-1 bg-slate-100 dark:bg-slate-700 rounded-lg p-1 flex-wrap"><button id="tabChatAI" onclick="switchAITab(\'chat\')" class="px-3 py-1.5 text-xs font-semibold rounded-md bg-blue-600 text-white">💬 Chat</button><button id="tabPapanAI" onclick="switchAITab(\'papan\')" class="px-3 py-1.5 text-xs font-semibold rounded-md text-slate-600 dark:text-slate-300">🖌️ Papan Tulis</button><button id="gsAIAuthChip" onclick="gsConnectPuter()" class="px-3 py-1.5 text-xs font-semibold rounded-md bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-300 dark:border-amber-700 hover:bg-amber-200">🔗 Sambungkan AI</button></div></div><div id="aiChatPanel" class="flex flex-col flex-1 min-h-0"><div id="aiMessages" class="flex-1 min-h-0 overflow-y-auto overscroll-contain p-5 space-y-4 bg-slate-50 dark:bg-slate-900"></div><div class="p-3 flex-none border-t dark:border-slate-700 bg-white dark:bg-slate-800"><div class="flex gap-2 items-end"><input type="file" id="aiImageInput" accept="image/*" class="hidden" onchange="handleAIImageUpload(event)"><button onclick="document.getElementById(\'aiImageInput\').click()" class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-white p-2.5 rounded-xl flex-none" title="Upload Gambar"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></button><button id="aiMicBtn" onclick="toggleVoiceInput()" class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-white p-2.5 rounded-xl flex-none" title="Voice Input"><svg id="micIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg></button><textarea id="aiInput" rows="2" placeholder="Tulis perintah..." class="flex-1 px-4 py-2 rounded-xl border dark:bg-slate-700 dark:text-white resize-none focus:ring-2 focus:ring-blue-500 outline-none text-sm"></textarea><button id="aiSendBtn" onclick="sendAI()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-semibold flex items-center gap-1 text-sm flex-none"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9 2zm0 0v-8"/></svg><span class="hidden sm:inline">Kirim</span></button></div><div class="flex justify-end gap-2 mt-2 flex-wrap"><button onclick="openSoalCameraModal()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.072 4h3.856a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Foto Soal</button><button onclick="uploadSoalImage()" class="bg-teal-500 hover:bg-teal-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Galeri Soal</button><button id="aiWordBtn" onclick="exportToWord()" class="hidden bg-blue-500 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>Word</button><button id="aiPrintBtn" onclick="printAIResult(false)" class="hidden bg-slate-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>PDF</button><button id="aiPrintKeyBtn" onclick="printAIResult(true)" class="hidden bg-green-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>Kunci</button></div></div></div><div id="aiPapanPanel" class="hidden flex-1 min-h-0 flex flex-col overflow-hidden p-3 bg-slate-100 dark:bg-slate-900"><div class="flex-none p-2 mb-2 bg-white dark:bg-slate-800 rounded-lg shadow-sm border dark:border-slate-700 flex flex-wrap items-center gap-3"><div class="flex gap-1"><button onclick="wbSetTool(\'pen\')" id="wbToolPen" class="wb-tool-btn active bg-blue-600 text-white p-2 rounded-lg" title="Pena"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m0 0l-3.536 3.536m3.536-3.536L5 19V5h14z"/></svg></button><button onclick="wbSetTool(\'eraser\')" id="wbToolEraser" class="wb-tool-btn bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-white p-2 rounded-lg" title="Penghapus"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg></button><button onclick="wbSetTool(\'line\')" id="wbToolLine" class="wb-tool-btn bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-white p-2 rounded-lg" title="Garis"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19l14-14"/></svg></button><button onclick="wbSetTool(\'rect\')" id="wbToolRect" class="wb-tool-btn bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-white p-2 rounded-lg" title="Kotak"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4h16v16H4z"/></svg></button><button onclick="wbSetTool(\'circle\')" id="wbToolCircle" class="wb-tool-btn bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-white p-2 rounded-lg" title="Lingkaran"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="2"/></svg></button></div><div class="w-px h-8 bg-slate-300 dark:bg-slate-600"></div><div class="flex gap-1 items-center"><span class="text-xs text-slate-500 mr-1">Warna:</span><button onclick="wbSetColor(\'#1e3a8a\')" class="w-7 h-7 rounded-full border-2 border-white shadow" style="background:#1e3a8a"></button><button onclick="wbSetColor(\'#dc2626\')" class="w-7 h-7 rounded-full border-2 border-white shadow" style="background:#dc2626"></button><button onclick="wbSetColor(\'#16a34a\')" class="w-7 h-7 rounded-full border-2 border-white shadow" style="background:#16a34a"></button><button onclick="wbSetColor(\'#000000\')" class="w-7 h-7 rounded-full border-2 border-white shadow" style="background:#000000"></button><input type="color" id="wbColorPicker" value="#1e3a8a" onchange="wbSetColor(this.value)" class="w-8 h-8 rounded cursor-pointer border-0"></div><div class="w-px h-8 bg-slate-300 dark:bg-slate-600"></div><div class="flex gap-2 items-center"><span class="text-xs text-slate-500">Ukuran:</span><input type="range" id="wbSizeRange" min="1" max="30" value="3" onchange="wbSetSize(parseInt(this.value))" class="w-20 cursor-pointer"><span id="wbSizeLabel" class="text-xs font-bold text-slate-700 dark:text-white w-6">3</span></div><div class="w-px h-8 bg-slate-300 dark:bg-slate-600"></div><button onclick="wbUndo()" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-1" title="Undo"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg></button><button onclick="wbClear()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-semibold">🗑️ Hapus</button><button onclick="wbSaveImage()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-semibold">💾 Simpan</button><button onclick="wbAskAI()" class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-1.5 shadow-md ml-auto">🤖 Tanya AI</button></div><div class="flex-1 min-h-0 overflow-auto flex justify-center items-start"><canvas id="whiteboardCanvas" style="width:100%;max-width:1000px;height:auto;aspect-ratio:5/3;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.08);touch-action:none;"></canvas></div><div id="wbAIResponse" class="hidden mt-2 bg-white dark:bg-slate-800 rounded-lg border border-green-300 dark:border-green-700 p-4 max-h-[30vh] overflow-y-auto modal-scroll shadow-md"><div class="flex justify-between items-center mb-2"><h4 class="font-bold text-sm text-green-700 dark:text-green-400 flex items-center gap-2">🤖 Jawaban AI</h4><button onclick="document.getElementById(\'wbAIResponse\').classList.add(\'hidden\')" class="text-slate-400 hover:text-red-500 text-xs">✕ Tutup</button></div><div id="wbAIContent" class="ai-output text-gray-800 dark:text-white text-sm"></div></div></div></div>';loadAIChat();setupEnterKey();try{gsInitGambarPanel();}catch(eGSIG){console.warn('Studio Gambar init:',eGSIG);}setTimeout(function(){try{gsUpdateAuthChip();}catch(e){}},1200);}
+window.switchAITab=function(tab){var tabs={chat:'tabChatAI',papan:'tabPapanAI',gambar:'tabGambarAI'};var panels={chat:'aiChatPanel',papan:'aiPapanPanel',gambar:'aiGambarPanel'};Object.keys(tabs).forEach(function(k){var btn=document.getElementById(tabs[k]);if(btn){btn.className='px-3 py-1.5 text-xs font-semibold rounded-md text-slate-600 dark:text-slate-300';}var panel=document.getElementById(panels[k]);if(panel){panel.classList.add('hidden');panel.classList.remove('flex');}});var activeBtn=document.getElementById(tabs[tab]);if(activeBtn){activeBtn.className='px-3 py-1.5 text-xs font-semibold rounded-md bg-blue-600 text-white';}var activePanel=document.getElementById(panels[tab]);if(activePanel){activePanel.classList.remove('hidden');activePanel.classList.add('flex');}if(tab==='papan'){setTimeout(function(){initWhiteboard();},200);}};
 var wbCanvas=null,wbCtx=null,wbDrawing=false,wbLastX=0,wbLastY=0,wbStartX=0,wbStartY=0;var wbColor='#1e3a8a',wbSize=3,wbTool='pen',wbHistory=[],wbSnapshot=null;
 function initWhiteboard(){wbCanvas=document.getElementById('whiteboardCanvas');if(!wbCanvas)return;var newCanvas=wbCanvas.cloneNode(false);wbCanvas.parentNode.replaceChild(newCanvas,wbCanvas);wbCanvas=newCanvas;wbCanvas.width=1000;wbCanvas.height=600;wbCtx=wbCanvas.getContext('2d');wbCtx.fillStyle='#ffffff';wbCtx.fillRect(0,0,1000,600);wbCtx.lineCap='round';wbCtx.lineJoin='round';wbSnapshot=wbCanvas.toDataURL();wbHistory=[];wbCanvas.addEventListener('mousedown',function(e){e.preventDefault();var p=wbGetPos(e);wbStartDraw(p.x,p.y);});wbCanvas.addEventListener('mousemove',function(e){var p=wbGetPos(e);wbDraw(p.x,p.y);});wbCanvas.addEventListener('mouseup',function(){wbStopDraw();});wbCanvas.addEventListener('mouseleave',function(){wbStopDraw();});wbCanvas.addEventListener('touchstart',function(e){e.preventDefault();var t=e.touches[0];var p=wbGetPosTouch(t);wbStartDraw(p.x,p.y);},{passive:false});wbCanvas.addEventListener('touchmove',function(e){e.preventDefault();var t=e.touches[0];var p=wbGetPosTouch(t);wbDraw(p.x,p.y);},{passive:false});wbCanvas.addEventListener('touchend',function(e){e.preventDefault();wbStopDraw();},{passive:false});}
 function wbGetPos(e){var rect=wbCanvas.getBoundingClientRect();var scaleX=wbCanvas.width/rect.width;var scaleY=wbCanvas.height/rect.height;return{x:(e.clientX-rect.left)*scaleX,y:(e.clientY-rect.top)*scaleY};}
@@ -3738,6 +3880,432 @@ function applyExactStudentCardPrintColors(root){
     return originalWriteFile.call(this,wb,filename,opts);
   };
   XLSX.__guruExcelFormatInstalled=true;
+})();
+</script>
+<script>
+/* ==================================================================
+   FOTO GURU — Upload & tampilkan foto di halaman Data Guru
+   - Kolom Foto di tabel + avatar inisial jika belum ada foto
+   - Upload via form Tambah/Edit Guru (otomatis dikompres, sisi maks 400px)
+   - Klik foto di tabel = pratinjau • klik avatar kosong = tambah foto
+   - Disimpan sebagai dataURL di kolom 'photo' (teks) tabel teachers
+   ================================================================== */
+(function(){
+  var TCH_PLACEHOLDER='data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="50" fill="#e2e8f0"/><circle cx="50" cy="38" r="17" fill="#94a3b8"/><path d="M15 94c4-19 19-27 35-27s31 8 35 27z" fill="#94a3b8"/></svg>');
+  window.TCH_PHOTO_PLACEHOLDER=TCH_PLACEHOLDER;
+  window.gsTeacherInitials=function(n){var s=String(n||'').trim();if(!s)return '?';var p=s.split(/\s+/).slice(0,2);return p.map(function(w){return w.charAt(0).toUpperCase();}).join('')||'?';};
+  function gsCompressImage(file,maxSide,quality){
+    return new Promise(function(res,rej){
+      if(!file){rej(new Error('Tidak ada file'));return;}
+      if(file.type&&file.type.indexOf('image/')!==0){rej(new Error('File bukan gambar'));return;}
+      var fr=new FileReader();
+      fr.onload=function(){
+        var img=new Image();
+        img.onload=function(){
+          try{
+            var w=img.naturalWidth||img.width||1,h=img.naturalHeight||img.height||1;
+            var sc=Math.min(1,(parseInt(maxSide,10)||400)/Math.max(w,h));
+            var cw=Math.max(1,Math.round(w*sc)),ch=Math.max(1,Math.round(h*sc));
+            var cv=document.createElement('canvas');cv.width=cw;cv.height=ch;
+            var ctx=cv.getContext('2d');
+            ctx.fillStyle='#ffffff';ctx.fillRect(0,0,cw,ch);
+            ctx.drawImage(img,0,0,cw,ch);
+            var du=cv.toDataURL('image/jpeg',(typeof quality==='number'?quality:0.85));
+            if(!du||du.indexOf('data:image')!==0){rej(new Error('Hasil kompresi kosong'));return;}
+            res(du);
+          }catch(e){rej(e);}
+        };
+        img.onerror=function(){rej(new Error('Format gambar tidak didukung browser'));};
+        img.src=fr.result;
+      };
+      fr.onerror=function(){rej(new Error('Gagal membaca file'));};
+      fr.readAsDataURL(file);
+    });
+  }
+  window.gsCompressImage=gsCompressImage;
+  window.tchPhotoPicked=async function(ev){
+    var inp=ev&&ev.target;var f=inp&&inp.files&&inp.files[0];
+    if(!f)return;
+    var hid=document.getElementById('tch_photo'),pv=document.getElementById('tch_photo_preview');
+    if(!hid||!pv){showToast('Formulir foto tidak ditemukan.','error');return;}
+    try{
+      showToast('Memproses foto...','info');
+      var du=await gsCompressImage(f,400,0.85);
+      hid.value=du;pv.src=du;
+      showToast('Foto siap. Klik "Simpan" untuk menyimpan.','success');
+    }catch(e){showToast('Gagal memproses foto: '+(e.message||e),'error');}
+    finally{if(inp)inp.value='';}
+  };
+  window.tchPhotoClear=function(){
+    var hid=document.getElementById('tch_photo'),pv=document.getElementById('tch_photo_preview');
+    if(hid)hid.value='__GS_CLEAR__';
+    if(pv)pv.src=TCH_PLACEHOLDER;
+  };
+  window.teacherPhotoAction=function(id){
+    return DB.get('teachers').then(function(list){
+      var t=null;for(var i=0;i<(list||[]).length;i++){if(list[i].id===id){t=list[i];break;}}
+      if(!t)return;
+      if(t.photo){
+        openModal('📷 Foto Guru',
+          '<div class="text-center">'
+          +'<img src="'+t.photo+'" alt="Foto guru" class="max-w-full rounded-xl mx-auto shadow-md bg-slate-100 dark:bg-slate-700" style="max-height:60vh;object-fit:contain">'
+          +'<p class="text-sm font-semibold text-slate-700 dark:text-slate-200 mt-3">'+String(t.name||'')+(t.subject?' • '+String(t.subject):'')+'</p>'
+          +'<div class="flex justify-center gap-2 mt-4"><button onclick="closeModal();teacherForm(\''+id+'\')" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">✏️ Ganti Foto</button></div>'
+          +'</div>');
+      }else{
+        showToast('Guru ini belum punya foto. Unggah lewat formulir berikut.','info');
+        teacherForm(id);
+      }
+    }).catch(function(e){showToast('Gagal memuat data guru: '+(e.message||e),'error');});
+  };
+  window.gsPhotoColumnHelp=function(){
+    openModal('⚠️ Kolom "photo" Belum Ada',
+      '<div class="text-sm text-slate-600 dark:text-slate-300 space-y-2">'
+      +'<p>Fitur <b>Foto Guru</b> membutuhkan kolom <b>photo</b> (bertipe teks) pada tabel <b>teachers</b> di Supabase.</p>'
+      +'<p class="font-semibold">Cara memperbaiki:</p>'
+      +'<p>1. Buka <b>Supabase → SQL Editor</b>.</p>'
+      +'<p>2. Jalankan SQL berikut:</p>'
+      +'<pre class="p-3 bg-slate-100 dark:bg-slate-900 rounded-lg overflow-x-auto text-[11px] leading-relaxed whitespace-pre-wrap">alter table teachers add column if not exists photo text;</pre>'
+      +'<p>3. Muat ulang halaman, lalu ulangi unggah foto.</p>'
+      +'</div>');
+  };
+})();
+</script>
+<script>
+/* ==================================================================
+   STUDIO GAMBAR AI — Panel Generate Gambar di halaman Asisten AI
+   - Tab baru: 🎨 Buat Gambar (di samping 💬 Chat & 🖌️ Papan Tulis)
+   - Mesin tunggal: Puter AI IMG (puter.ai.txt2img)
+   - TANPA mesin cadangan: jika Puter AI gagal -> pemberitahuan langsung
+   - Gaya cepat, ide prompt, rasio ukuran, galeri tersimpan di perangkat
+   - Tombol: Unduh, Buat Ulang, Pratinjau, Kirim ke Chat
+   ================================================================== */
+(function(){
+  var GS_IMG_KEY='gsAIImageHistory_v1';
+  var RATIOS={
+    persegi:{w:1024,h:1024,label:'1:1 Persegi',note:'1024×1024'},
+    lanskap:{w:1280,h:720,label:'16:9 Lanskap',note:'1280×720'},
+    potret:{w:720,h:1280,label:'9:16 Potret',note:'720×1280'}
+  };
+  var STYLES=[
+    {id:'kartun',icon:'🧒',label:'Kartun Anak',text:'gaya kartun anak edukatif, ceria, warna-warni, ramah anak'},
+    {id:'realistis',icon:'🖼️',label:'Realistis',text:'gaya fotografi realistis, detail tinggi, pencahayaan natural'},
+    {id:'poster',icon:'📋',label:'Poster Sekolah',text:'desain poster sekolah rapi, menarik, teks besar mudah dibaca'},
+    {id:'buku',icon:'📚',label:'Ilustrasi Buku',text:'ilustrasi buku pelajaran yang jelas, informatif, warna lembut'},
+    {id:'anime',icon:'🎌',label:'Anime',text:'gaya anime Jepang, garis bersih, warna cerah'},
+    {id:'info',icon:'📊',label:'Infografis',text:'infografis edukatif rapi dengan ikon, diagram, dan teks jelas'},
+    {id:'air',icon:'🌈',label:'Cat Air',text:'gaya lukisan cat air (watercolor) yang lembut dan artistik'},
+    {id:'komik',icon:'🎭',label:'Komik',text:'gaya panel komik dengan garis tegas dan ekspresi lucu'}
+  ];
+  var IDEAS=[
+    'Poster antar kelas bertema luar angkasa dengan astronot dan roket, warna biru cerah',
+    'Ilustrasi siklus air (evaporasi, kondensasi, presipitasi) untuk siswa kelas 5 SD',
+    'Maskot buku yang sedang membaca dengan ekspresi gembira untuk perpustakaan sekolah',
+    'Spanduk kegiatan manasik haji anak-anak, lucu, berwarna-warni, penuh balon',
+    'Ilustrasi angka 1 sampai 10 dengan buah-buahan untuk pembelajaran anak TK',
+    'Poster menjaga kebersihan lingkungan sekolah dengan karakter anak yang ceria'
+  ];
+  var ratio='persegi';
+  var styleActive=null;
+  var busy=false;
+  var current=null; /* {url,prompt} */
+  var history=[];
+
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function slug(s){return String(s||'').replace(/[^a-zA-Z0-9]+/g,'_').replace(/^_+|_+$/g,'').substring(0,40);}
+
+  function loadHistory(){
+    var arr=[];
+    try{arr=JSON.parse(localStorage.getItem(GS_IMG_KEY)||'[]');}catch(e){arr=[];}
+    history=(Array.isArray(arr)?arr:[]).filter(function(x){return x&&x.url&&x.url.indexOf('blob:')!==0;}).slice(0,8);
+  }
+  function saveHistory(){
+    try{localStorage.setItem(GS_IMG_KEY,JSON.stringify(history.slice(0,8)));}
+    catch(e){
+      history=history.slice(0,3);
+      try{localStorage.setItem(GS_IMG_KEY,JSON.stringify(history));}catch(e2){}
+    }
+  }
+  async function persistUrl(url){
+    try{
+      if(url&&url.indexOf('blob:')===0){
+        var b=await (await fetch(url)).blob();
+        var du=await new Promise(function(res,rej){var fr=new FileReader();fr.onload=function(){res(fr.result);};fr.onerror=function(){rej(new Error('gagal baca'));};fr.readAsDataURL(b);});
+        if(du)return du;
+      }
+    }catch(e){}
+    return url;
+  }
+  window.gsImgHistoryUrl=function(i){return (history[i]||{}).url||'';};
+  window.gsImgHistoryName=function(i){var it=history[i]||{};return 'GambarAI_'+(slug(it.prompt)||String(Date.now()))+'.png';};
+
+  function renderGallery(){
+    var g=document.getElementById('gsImgGallery');if(!g)return;
+    if(!history.length){
+      g.innerHTML='<p class="col-span-full text-xs text-slate-400 dark:text-slate-500 text-center py-3">Belum ada gambar tersimpan. Setiap gambar yang Anda buat akan otomatis muncul di sini.</p>';
+      return;
+    }
+    g.innerHTML='';
+    history.forEach(function(it,i){
+      var d=document.createElement('div');
+      d.className='relative group';
+      d.innerHTML='<img src="'+it.url+'" alt="Gambar '+(i+1)+'" title="'+esc(String(it.prompt||'')).substring(0,90)+'" class="w-full h-20 object-cover rounded-lg cursor-pointer border-2 border-transparent hover:border-purple-500 transition-all" onclick="gsImgViewHistory('+i+')">'
+        +'<button title="Unduh" onclick="event.stopPropagation();gsDownloadImage(gsImgHistoryUrl('+i+'),gsImgHistoryName('+i+'))" class="absolute top-1 right-1 bg-black/60 hover:bg-black/80 text-white rounded-md w-6 h-6 text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">⬇</button>';
+      g.appendChild(d);
+    });
+  }
+
+  function setProviderText(t){
+    var pv=document.getElementById('gsImgProvider');
+    if(pv)pv.textContent=t||'';
+  }
+  function showEmpty(){
+    var r=document.getElementById('gsImgResult');if(!r)return;
+    r.innerHTML='<div class="text-center py-10 px-4 w-full">'
+      +'<div class="text-6xl mb-3 floating">🎨</div>'
+      +'<p class="text-sm font-semibold text-slate-600 dark:text-slate-300">Belum ada gambar</p>'
+      +'<p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Tulis prompt di panel kiri, pilih gaya &amp; ukuran, lalu klik tombol <b>Buat Gambar Sekarang</b>.</p>'
+      +'</div>';
+    setProviderText('');
+  }
+  function showLoading(){
+    var r=document.getElementById('gsImgResult');if(!r)return;
+    r.innerHTML='<div class="text-center py-12 px-4 w-full">'
+      +'<div class="relative w-20 h-20 mb-4 mx-auto"><div class="absolute inset-0 rounded-full border-4 border-purple-200"></div><div class="absolute inset-0 rounded-full border-4 border-purple-600 border-t-transparent animate-spin"></div></div>'
+      +'<p class="text-slate-600 dark:text-slate-300 text-sm font-semibold">🎨 AI sedang menggambar...</p>'
+      +'<p class="text-xs text-slate-400 mt-1">Biasanya 15–60 detik • jangan tutup atau pindah halaman</p>'
+      +'<p class="text-[11px] text-slate-400 mt-3">Jika lama: pastikan popup tidak diblokir dan tetap di halaman ini (tanpa mesin cadangan).</p>'
+      +'</div>';
+  }
+  function showResult(url,prompt,providerText){
+    current={url:url,prompt:prompt};
+    var r=document.getElementById('gsImgResult');if(!r)return;
+    r.innerHTML='<div class="w-full space-y-3">'
+      +'<div class="rounded-xl overflow-hidden border-2 border-purple-200 dark:border-slate-600 shadow-lg bg-white">'
+      +'<img src="'+url+'" alt="Hasil gambar AI" class="w-full h-auto block cursor-zoom-in" onclick="gsImgPreviewCurrent()">'
+      +'</div>'
+      +'<p class="text-xs text-slate-500 dark:text-slate-400 italic break-words"><b>Prompt:</b> '+esc(prompt)+'</p>'
+      +'<div class="flex flex-wrap gap-2 justify-center">'
+      +'<button onclick="gsImgDownloadCurrent()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5">💾 Unduh</button>'
+      +'<button onclick="gsGenerateImage()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5">🔄 Buat Ulang</button>'
+      +'<button onclick="gsImgSendToChatCurrent()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5">💬 Kirim ke Chat</button>'
+      +'</div></div>';
+    setProviderText(providerText||'');
+  }
+  function showError(msg){
+    var r=document.getElementById('gsImgResult');if(!r)return;
+    r.innerHTML='<div class="text-center py-8 px-4 w-full">'
+      +'<div class="text-5xl mb-3">😕</div>'
+      +'<p class="text-red-600 dark:text-red-400 font-semibold mb-1">Puter AI gagal membuat gambar</p>'
+      +'<p class="text-xs text-slate-500 dark:text-slate-400 mb-3 break-words">'+esc(msg)+'</p>'
+      +'<p class="text-xs text-amber-600 dark:text-amber-400 mb-4">Tips: klik tombol <b>🔗 Sambungkan AI</b> di atas (izinkan popup yang muncul), pastikan koneksi stabil, lalu coba lagi. Gambar hanya dibuat oleh Puter AI — tidak ada mesin cadangan.</p>'
+      +'<button onclick="gsGenerateImage()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-semibold">🔄 Coba Lagi</button>'
+      +'</div>';
+  }
+
+  function renderStyles(){
+    var box=document.getElementById('gsImgStyles');if(!box)return;
+    box.innerHTML='';
+    STYLES.forEach(function(s){
+      var b=document.createElement('button');
+      var on=(styleActive===s.id);
+      b.className='px-2.5 py-1.5 rounded-full text-[11px] font-semibold border transition-all '+(on
+        ?'bg-purple-600 border-purple-600 text-white shadow'
+        :'bg-slate-100 dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-200 hover:border-purple-400');
+      b.textContent=s.icon+' '+s.label;
+      b.title=s.text;
+      b.onclick=function(){styleActive=(styleActive===s.id?null:s.id);renderStyles();};
+      box.appendChild(b);
+    });
+  }
+  function renderRatios(){
+    var box=document.getElementById('gsImgRatios');if(!box)return;
+    box.innerHTML='';
+    Object.keys(RATIOS).forEach(function(k){
+      var rr=RATIOS[k];
+      var on=(ratio===k);
+      var b=document.createElement('button');
+      b.className='rounded-lg px-2 py-2 text-[11px] font-semibold border text-center leading-tight transition-all '+(on
+        ?'bg-purple-600 border-purple-600 text-white shadow'
+        :'bg-slate-100 dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-200 hover:border-purple-400');
+      b.innerHTML=rr.label+'<br><span class="'+(on?'text-purple-100':'text-slate-400 dark:text-slate-500')+' font-normal">'+rr.note+'</span>';
+      b.onclick=function(){ratio=k;renderRatios();};
+      box.appendChild(b);
+    });
+  }
+  function renderIdeas(){
+    var box=document.getElementById('gsImgIdeas');if(!box)return;
+    box.innerHTML='';
+    IDEAS.forEach(function(t){
+      var b=document.createElement('button');
+      b.className='w-full text-left px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-700/60 hover:bg-purple-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600 text-[11px] text-slate-600 dark:text-slate-200 transition-colors';
+      b.textContent='💡 '+t;
+      b.onclick=function(){var ip=document.getElementById('gsImgPrompt');if(ip){ip.value=t;ip.focus();}};
+      box.appendChild(b);
+    });
+  }
+
+  /* ===== Aksi global (dipakai onclick di HTML panel) ===== */
+  window.gsImgPreviewCurrent=function(){
+    if(!current||!current.url){showToast('Belum ada gambar untuk dipratinjau.','error');return;}
+    openModal('🖼️ Pratinjau Gambar',
+      '<div class="text-center"><img src="'+current.url+'" alt="Pratinjau" class="max-w-full rounded-xl mx-auto" style="max-height:65vh;object-fit:contain"></div>'
+      +'<p class="text-xs text-slate-500 dark:text-slate-400 text-center mt-3 italic break-words">'+esc(current.prompt)+'</p>'
+      +'<div class="flex justify-center mt-3"><button onclick="gsImgDownloadCurrent()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold">💾 Unduh Gambar</button></div>');
+  };
+  window.gsImgDownloadCurrent=function(){
+    if(!current||!current.url){showToast('Belum ada gambar untuk diunduh.','error');return;}
+    gsDownloadImage(current.url,'GambarAI_'+(slug(current.prompt)||String(Date.now()))+'.png');
+  };
+  window.gsImgSendToChatCurrent=function(){
+    if(!current||!current.url){showToast('Belum ada gambar.','error');return;}
+    gsImgSendToChat(current.url,current.prompt);
+  };
+  window.gsImgSendToChat=function(src,prompt){
+    try{
+      var box=document.getElementById('aiMessages');
+      if(!box){showToast('Panel chat tidak ditemukan.','error');return;}
+      var ud=document.createElement('div');ud.className='flex justify-end fade-in';
+      var meta=(prompt?'<div class="text-[11px] px-1 mb-1 opacity-90">'+esc(String(prompt).substring(0,160))+'</div>':'');
+      ud.innerHTML='<div class="max-w-[80%] rounded-xl px-3 py-2 bg-blue-600 text-white shadow-sm"><div class="text-xs opacity-70 mb-1 px-1">🖼️ Gambar dari Studio Gambar</div>'+meta+'<img src="'+src+'" class="rounded-lg max-w-full h-auto mt-1"></div>';
+      box.appendChild(ud);box.scrollTop=box.scrollHeight;
+      if(typeof switchAITab==='function')switchAITab('chat');
+      showToast('Gambar dikirim ke Chat AI!','success');
+    }catch(e){showToast('Gagal kirim ke chat: '+(e.message||e),'error');}
+  };
+  window.gsImgViewHistory=function(i){
+    var it=history[i];if(!it)return;
+    showResult(it.url,it.prompt||'','Dari galeri');
+  };
+  window.gsImgClearHistory=function(){
+    if(!history.length){showToast('Galeri masih kosong.','success');return;}
+    history=[];saveHistory();renderGallery();showToast('Galeri gambar dibersihkan.','success');
+  };
+  window.gsImgClearPrompt=function(){
+    var ip=document.getElementById('gsImgPrompt');if(ip)ip.value='';
+    styleActive=null;renderStyles();
+  };
+
+  /* ===== Fungsi utama: generate gambar ===== */
+  window.gsGenerateImage=async function(){
+    if(busy){showToast('Masih ada proses berjalan. Mohon tunggu...','error');return;}
+    var ip=document.getElementById('gsImgPrompt');
+    var prompt=(ip&&ip.value?ip.value:'').trim();
+    if(!prompt){showToast('Tulis dulu deskripsi gambar (prompt) Anda.','error');if(ip)ip.focus();return;}
+    var sel=null;
+    for(var i=0;i<STYLES.length;i++){if(STYLES[i].id===styleActive){sel=STYLES[i];break;}}
+    var suffix=(sel&&sel.text)?sel.text:'';
+    var fullPrompt=prompt+(suffix?', '+suffix:'');
+    var dim=RATIOS[ratio]||RATIOS.persegi;
+    busy=true;
+    var btn=document.getElementById('gsImgGenBtn');
+    if(btn){btn.disabled=true;btn.classList.add('opacity-60','pointer-events-none');btn.innerHTML='⏳ Sedang Membuat...';}
+    showLoading();
+    try{
+      var src=await GSAI.image(fullPrompt,dim.w,dim.h);
+      if(!src)throw new Error('AI tidak mengembalikan gambar.');
+      showResult(src,fullPrompt,GSAI.provider());
+      var purl=await persistUrl(src);
+      history.unshift({url:purl,prompt:fullPrompt,ts:Date.now()});
+      saveHistory();renderGallery();
+      showToast('Gambar berhasil dibuat! ('+GSAI.provider()+')','success');
+    }catch(err){
+      console.error('Studio Gambar:',err);
+      showError(err.message||String(err));
+      showToast('Puter AI gagal membuat gambar.','error');
+    }finally{
+      busy=false;
+      if(btn){btn.disabled=false;btn.classList.remove('opacity-60','pointer-events-none');btn.innerHTML='🎨 Buat Gambar Sekarang';}
+    }
+  };
+
+  /* ===== HTML panel ===== */
+  var PANEL_HTML=
+    '<div class="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 lg:p-5 bg-slate-50 dark:bg-slate-900">'
+    +'<div class="grid grid-cols-1 lg:grid-cols-5 gap-4 max-w-6xl mx-auto">'
+    /* KIRI: FORM */
+    +'<div class="lg:col-span-2 space-y-3">'
+      +'<div class="bg-white dark:bg-slate-800 rounded-xl p-4 border dark:border-slate-700 shadow-sm space-y-3">'
+        +'<div>'
+          +'<h4 class="font-bold text-slate-800 dark:text-white text-sm flex items-center gap-1.5">🎨 Studio Gambar AI</h4>'
+          +'<p class="text-xs text-slate-500 dark:text-slate-400 mt-1">AI membuat gambar sesuai prompt Anda — sepenuhnya menggunakan <b>Puter AI IMG</b>, tanpa mesin cadangan.</p>'
+        +'</div>'
+        +'<div>'
+          +'<div class="flex items-center justify-between mb-1">'
+            +'<label class="block text-xs font-bold text-slate-600 dark:text-slate-300">✏️ Deskripsi Gambar (Prompt) <span class="text-red-500">*</span></label>'
+            +'<button onclick="gsImgClearPrompt()" class="text-[10px] text-slate-400 hover:text-red-500 underline">bersihkan</button>'
+          +'</div>'
+          +'<textarea id="gsImgPrompt" rows="4" placeholder="Contoh: Poster antar kelas bertema luar angkasa, ada astronot dan roket, warna biru cerah..." class="w-full px-3 py-2 rounded-xl border dark:bg-slate-700 dark:text-white resize-none focus:ring-2 focus:ring-purple-500 outline-none text-sm"></textarea>'
+          +'<p class="text-[10px] text-slate-400 mt-1">Tips: tekan Ctrl+Enter untuk langsung membuat gambar.</p>'
+        +'</div>'
+        +'<div>'
+          +'<label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">🎭 Gaya Cepat <span class="font-normal text-slate-400">(klik untuk pilih, klik lagi untuk lepas)</span></label>'
+          +'<div id="gsImgStyles" class="flex flex-wrap gap-1.5"></div>'
+        +'</div>'
+        +'<div>'
+          +'<label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">📐 Ukuran / Rasio</label>'
+          +'<div id="gsImgRatios" class="grid grid-cols-3 gap-1.5"></div>'
+          +'<p class="text-[10px] text-slate-400 mt-1">Puter AI IMG menghasilkan ukuran standarnya sendiri; pilihan rasio menjadi panduan komposisi pada prompt.</p>'
+        +'</div>'
+        +'<button id="gsImgGenBtn" onclick="gsGenerateImage()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 rounded-xl shadow-md flex items-center justify-center gap-2 text-sm transition-all">🎨 Buat Gambar Sekarang</button>'
+        +'<p class="text-[11px] text-slate-400 text-center">Proses 15–60 detik. Gambar otomatis tersimpan ke galeri di samping.</p>'
+      +'</div>'
+      +'<div class="bg-white dark:bg-slate-800 rounded-xl p-4 border dark:border-slate-700 shadow-sm">'
+        +'<p class="text-xs font-bold text-slate-700 dark:text-slate-200 mb-2">💡 Ide Prompt Praktis <span class="font-normal text-slate-400">(klik untuk pakai)</span></p>'
+        +'<div id="gsImgIdeas" class="space-y-1.5"></div>'
+      +'</div>'
+    +'</div>'
+    /* KANAN: HASIL + GALERI */
+    +'<div class="lg:col-span-3 space-y-3">'
+      +'<div class="bg-white dark:bg-slate-800 rounded-xl p-4 border dark:border-slate-700 shadow-sm flex flex-col min-h-[340px]">'
+        +'<div class="flex items-center justify-between mb-2 flex-none">'
+          +'<h4 class="font-bold text-slate-800 dark:text-white text-sm">🖼️ Hasil Gambar</h4>'
+          +'<span id="gsImgProvider" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 max-w-[60%] truncate"></span>'
+        +'</div>'
+        +'<div id="gsImgResult" class="flex-1 flex flex-col items-center justify-center"></div>'
+      +'</div>'
+      +'<div class="bg-white dark:bg-slate-800 rounded-xl p-4 border dark:border-slate-700 shadow-sm">'
+        +'<div class="flex items-center justify-between mb-2">'
+          +'<h4 class="font-bold text-slate-800 dark:text-white text-sm">🗄️ Galeri Gambar <span class="text-[10px] font-normal text-slate-400">(tersimpan di perangkat ini)</span></h4>'
+          +'<button onclick="gsImgClearHistory()" class="text-[11px] text-red-500 hover:underline">Hapus Semua</button>'
+        +'</div>'
+        +'<div id="gsImgGallery" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2"></div>'
+      +'</div>'
+    +'</div>'
+    +'</div>'
+  +'</div>';
+
+  /* ===== Inisialisasi: sisipkan tab + panel ke halaman Asisten AI ===== */
+  window.gsInitGambarPanel=function(){
+    try{
+      var papan=document.getElementById('aiPapanPanel');
+      if(!papan||!papan.parentElement)return;
+      /* 1) Tombol tab, disisipkan sebelum chip Sambungkan AI */
+      var chip=document.getElementById('gsAIAuthChip');
+      if(chip&&!document.getElementById('tabGambarAI')){
+        var tb=document.createElement('button');
+        tb.id='tabGambarAI';
+        tb.setAttribute('onclick',"switchAITab('gambar')");
+        tb.className='px-3 py-1.5 text-xs font-semibold rounded-md text-slate-600 dark:text-slate-300';
+        tb.innerHTML='🎨 Buat Gambar';
+        chip.parentNode.insertBefore(tb,chip);
+      }
+      /* 2) Panel, disisipkan setelah panel papan tulis */
+      if(!document.getElementById('aiGambarPanel')){
+        var wrap=document.createElement('div');
+        wrap.id='aiGambarPanel';
+        wrap.className='hidden flex-1 min-h-0 flex-col overflow-hidden';
+        wrap.innerHTML=PANEL_HTML;
+        papan.parentElement.appendChild(wrap);
+      }
+      loadHistory();
+      showEmpty();
+      renderStyles();renderRatios();renderIdeas();renderGallery();
+      /* Ctrl/Cmd+Enter untuk generate cepat */
+      var ta=document.getElementById('gsImgPrompt');
+      if(ta&&!ta.__gsBound){ta.__gsBound=true;ta.addEventListener('keydown',function(ev){if((ev.ctrlKey||ev.metaKey)&&(ev.key==='Enter'||ev.keyCode===13)){ev.preventDefault();gsGenerateImage();}});}
+    }catch(e){console.warn('Studio Gambar init:',e);}
+  };
 })();
 </script>
 </body>
