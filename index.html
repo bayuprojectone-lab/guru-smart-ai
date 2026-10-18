@@ -344,37 +344,109 @@ window.GSAI=(function(){
     }catch(e){}
     return '';
   }
-  function puterImgOnce(fn,prompt){
+  function puterImgOnce(fn,args){
     return new Promise(function(res,rej){
       var to=setTimeout(function(){rej(new Error('Puter AI IMG timeout (180s)'));},180000);
-      Promise.resolve().then(function(){return fn(prompt,false);}).then(function(el){
+      Promise.resolve().then(function(){return fn.apply(null,args);}).then(function(el){
         clearTimeout(to);
         var s=extractImgSrc(el);
         if(s)res(s);else rej(new Error('Puter AI IMG tidak mengembalikan gambar'));
       }).catch(function(e){clearTimeout(to);rej(e);});
     });
   }
-  async function puterImg(prompt){
+  function gsGcd(a,b){while(b){var t=a%b;a=b;b=t;}return a;}
+  async function puterImg(prompt,rq){
     if(!hasPuterImg())throw new Error('Pustaka Puter IMG belum termuat');
     var signed=false;try{signed=puter.auth.isSignedIn();}catch(e){signed=false;}
     if(!signed){await puter.auth.signIn();}
     var fns=[];
     if(typeof puter.ai.txt2img==='function')fns.push(puter.ai.txt2img.bind(puter.ai));
     if(typeof puter.ai.txtToImage==='function')fns.push(puter.ai.txtToImage.bind(puter.ai));
+    /* Opsi rasio RESMI Puter (docs.puter.com/AI/txt2img): bentuk objek
+       txt2img({prompt, ratio:{w,h}, width, height, test_mode:false}).
+       Jika pustaka tidak mendukung -> otomatis jatuh ke bentuk lama
+       txt2img(prompt,false); rasio tetap dijamin oleh fitRatio (canvas). */
+    var tries=[];
+    if(rq&&rq.w&&rq.h){
+      var g=gsGcd(rq.w,rq.h)||1;
+      tries.push([{prompt:String(prompt),test_mode:false,ratio:{w:Math.round(rq.w/g),h:Math.round(rq.h/g)},width:rq.w,height:rq.h}]);
+    }
+    tries.push([prompt,false]);
     var lastErr=null;
     for(var i=0;i<fns.length;i++){
-      try{var s=await puterImgOnce(fns[i],prompt);if(s){lastProvider='Puter AI IMG';return s;}}catch(e){lastErr=e;}
+      for(var t=0;t<tries.length;t++){
+        try{var s=await puterImgOnce(fns[i],tries[t]);if(s){lastProvider='Puter AI IMG';return s;}}catch(e){lastErr=e;}
+      }
     }
     throw lastErr||new Error('Puter AI IMG gagal');
   }
+  /* ===== Petunjuk rasio pada prompt ===== */
+  function ratioHint(w,h){
+    if(!w||!h)return '';
+    var t=w/h,d;
+    if(Math.abs(t-1)<0.04)d='persegi 1:1 (square)';
+    else if(t>1)d='landscape mendatar '+w+'x'+h+' piksel (wide horizontal 16:9)';
+    else d='portrait tegak '+w+'x'+h+' piksel (tall vertical 9:16)';
+    return '. PENTING: buat seluruh komposisi gambar dalam format '+d+', objek utama lengkap di dalam bingkai, tanpa tepi kosong (no border, no letterbox).';
+  }
+  function canvasToUrl(cv){
+    try{var du=cv.toDataURL('image/png');if(du&&du.length<2600000)return du;}catch(e){}
+    try{return cv.toDataURL('image/jpeg',0.92);}catch(e2){return '';}
+  }
+  /* Jaminan rasio hasil akhir:
+     - rasio sudah sesuai (toleransi 3%) -> biarkan apa adanya
+     - selisih kecil (korong <=12%)      -> potong tengah, tanpa distorsi
+     - selisih besar                     -> gambar utuh dipertahankan, sisi kosong
+                                            diisi latar blur (tidak ada konten terbuang) */
+  function fitRatio(src,w,h){
+    return new Promise(function(res){
+      if(!src||!w||!h){res(src);return;}
+      var img=new Image(),done=false;
+      var fin=function(v){if(!done){done=true;res(v||src);}};
+      var to=setTimeout(function(){fin(src);},15000);
+      img.onload=function(){
+        clearTimeout(to);
+        try{
+          var iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height;
+          if(!iw||!ih){fin(src);return;}
+          var t=w/h,a=iw/ih;
+          if(Math.abs(t-a)/t<0.01){fin(src);return;}
+          var cv=document.createElement('canvas');
+          var ctx=cv.getContext('2d');
+          if(!ctx){fin(src);return;}
+          if(a>t){
+            var cw=Math.round(ih*t),ch=ih,loss=(iw-cw)/iw;
+            if(loss<=0.12){cv.width=cw;cv.height=ch;ctx.drawImage(img,(iw-cw)/2,0,cw,ch,0,0,cw,ch);fin(canvasToUrl(cv));return;}
+          }else{
+            var cw2=iw,ch2=Math.round(iw/t),loss2=(ih-ch2)/ih;
+            if(loss2<=0.12){cv.width=cw2;cv.height=ch2;ctx.drawImage(img,0,(ih-ch2)/2,cw2,ch2,0,0,cw2,ch2);fin(canvasToUrl(cv));return;}
+          }
+          cv.width=w;cv.height=h;
+          ctx.filter='blur(28px)';
+          var sc=Math.max(w/iw,h/ih)*1.18,bw=iw*sc,bh=ih*sc;
+          ctx.drawImage(img,(w-bw)/2,(h-bh)/2,bw,bh);
+          ctx.filter='none';
+          ctx.fillStyle='rgba(15,23,42,0.22)';ctx.fillRect(0,0,w,h);
+          var fc=Math.min(w/iw,h/ih),fw=iw*fc,fh=ih*fc;
+          ctx.drawImage(img,(w-fw)/2,(h-fh)/2,fw,fh);
+          fin(canvasToUrl(cv));
+        }catch(e){fin(src);}
+      };
+      img.onerror=function(){clearTimeout(to);fin(src);};
+      img.src=src;
+    });
+  }
   async function image(prompt,w,h){
     // JALUR TUNGGAL: PUTER AI IMG (puter.ai.txt2img) — TANPA cadangan Pollinations.
-    // Parameter w/h dipertahankan demi kompatibilitas pemanggil lama; ukuran akhir
-    // ditentukan oleh Puter AI IMG sendiri. Jika gagal -> pemberitahuan langsung.
+    // Jika w & h diberikan: opsi rasio RESMI Puter dikirim (ratio/width/height) +
+    // instruksi rasio pada prompt, lalu hasil akhir DIJAMIN ber-rasio tepat oleh
+    // fitRatio (potong tengah / latar blur). Jika gagal -> pemberitahuan langsung.
     try{
-      var src=await puterImg(prompt);
-      if(src)return src;
-      throw new Error('Puter AI IMG tidak mengembalikan gambar');
+      var wanted=prompt+ratioHint(w,h);
+      var src=await puterImg(wanted,(w&&h)?{w:w,h:h}:null);
+      if(!src)throw new Error('Puter AI IMG tidak mengembalikan gambar');
+      var fitted=await fitRatio(src,w,h);
+      return fitted||src;
     }catch(e1){
       var m1=(e1&&(e1.message||e1))||'tidak diketahui';
       throw new Error('Puter AI gagal membuat gambar — '+m1+'. Klik tombol "🔗 Sambungkan AI" di bagian atas halaman (izinkan popup yang muncul), lalu coba lagi.');
@@ -4339,7 +4411,7 @@ function applyExactStudentCardPrintColors(root){
       +'<div class="bg-white dark:bg-slate-800 rounded-xl p-4 border dark:border-slate-700 shadow-sm space-y-3">'
         +'<div>'
           +'<h4 class="font-bold text-slate-800 dark:text-white text-sm flex items-center gap-1.5">🎨 Studio Gambar AI</h4>'
-          +'<p class="text-xs text-slate-500 dark:text-slate-400 mt-1">AI membuat gambar sesuai prompt Anda — sepenuhnya menggunakan <b>Puter AI IMG</b>, tanpa mesin cadangan.</p>'
+          +'<p class="text-xs text-slate-500 dark:text-slate-400 mt-1">AI Akan Membuat Gambar Sesuai Prompt Anda.<b></b></p>'
         +'</div>'
         +'<div>'
           +'<div class="flex items-center justify-between mb-1">'
@@ -4356,10 +4428,10 @@ function applyExactStudentCardPrintColors(root){
         +'<div>'
           +'<label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">📐 Ukuran / Rasio</label>'
           +'<div id="gsImgRatios" class="grid grid-cols-3 gap-1.5"></div>'
-          +'<p class="text-[10px] text-slate-400 mt-1">Puter AI IMG menghasilkan ukuran standarnya sendiri; pilihan rasio menjadi panduan komposisi pada prompt.</p>'
+          +'<p class="text-[10px] text-slate-400 mt-1"></p>'
         +'</div>'
         +'<button id="gsImgGenBtn" onclick="gsGenerateImage()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 rounded-xl shadow-md flex items-center justify-center gap-2 text-sm transition-all">🎨 Buat Gambar Sekarang</button>'
-        +'<p class="text-[11px] text-slate-400 text-center">Proses 15–60 detik. Gambar otomatis tersimpan ke galeri di samping.</p>'
+        +'<p class="text-[11px] text-slate-400 text-center">Proses 15–60 detik. Gambar otomatis tersimpan ke galeri.</p>'
       +'</div>'
       +'<div class="bg-white dark:bg-slate-800 rounded-xl p-4 border dark:border-slate-700 shadow-sm">'
         +'<p class="text-xs font-bold text-slate-700 dark:text-slate-200 mb-2">💡 Ide Prompt Praktis <span class="font-normal text-slate-400">(klik untuk pakai)</span></p>'
