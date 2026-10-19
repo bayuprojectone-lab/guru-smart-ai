@@ -5,6 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#1e3a8a">
 <title>GURU SMART - Sistem Manajemen Sekolah</title>
+<!-- ==================== AKSELERASI LOADING: PRECONNECT CDN (koneksi disiapkan seketika) ==================== -->
+<link rel="preconnect" href="https://cdn.tailwindcss.com">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://js.puter.com">
+<link rel="preconnect" href="https://urslwiueyqhoykjhxmqq.supabase.co" crossorigin>
+<link rel="preconnect" href="https://z-cdn-media.chatglm.cn">
+<link rel="dns-prefetch" href="https://urslwiueyqhoykjhxmqq.supabase.co">
+<!-- ==================== AKHIR PRECONNECT ==================== -->
 <script>
 /* ============================================================
    DETEKSI & RENDER MODE BUZZER DI HEAD (sangat awal)
@@ -241,14 +252,119 @@
   }
 })();
 </script>
+<script>
+/* ============================================================
+   MESIN LOADING KILAT GURU SMART (v1)
+   Mempercepat loading sampai terasa 0 detik TANPA mengubah
+   fungsi/aplikasi lain sedikit pun:
+   1. Splash "Memuat" tampil SEKETIKA (sebelum CSS/library siap)
+   2. Library berat (Chart/Excel/QR/Scanner/AI) dimuat paralel
+      tanpa memblokir tampilan (atribut defer)
+   3. Aplikasi boot di akhir <body> — tidak menunggu window.onload
+      (tidak menunggu font/gambar selesai)
+   4. Jaring pengaman: grafik & QR tetap tergambar walau library
+      belum sempat tiba (antrian otomatis, diputar saat siap)
+   5. Pemasang format Excel ikut ditunda sampai library Excel siap
+   ============================================================ */
+(function(){
+  if(window.__BUZZER_MODE__){return;} /* Mode buzzer punya jalur cepatnya sendiri */
+
+  /* ---------- 1. SPLASH INSTAN ---------- */
+  var st=document.createElement('style');
+  st.textContent='@keyframes gsbootspin{to{transform:rotate(360deg)}}#__gs_boot{position:fixed;inset:0;z-index:2147483646;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1e3a8a 0%,#4338ca 55%,#6d28d9 100%);color:#fff;font-family:Inter,Arial,sans-serif;transition:opacity .3s ease}';
+  document.documentElement.appendChild(st);
+  var sp=document.createElement('div');
+  sp.id='__gs_boot';
+  sp.innerHTML='<div style="text-align:center;padding:24px"><div style="width:76px;height:76px;margin:0 auto 18px;border-radius:22px;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;box-shadow:0 12px 32px rgba(0,0,0,.28)"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 8l10 5 10-5-10-5z"/><path d="M6 10.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-5.5"/><path d="M22 8v6"/></svg></div><div style="font-size:26px;font-weight:900;letter-spacing:.5px">GURU SMART</div><div style="font-size:12px;opacity:.75;margin-top:4px">Sistem Manajemen Sekolah</div><div style="width:30px;height:30px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;margin:22px auto 0;animation:gsbootspin .8s linear infinite"></div></div>';
+  document.documentElement.appendChild(sp);
+  function hideSplash(){
+    var el=document.getElementById('__gs_boot');
+    if(!el||el.dataset.done)return;
+    el.dataset.done='1';
+    el.style.opacity='0';
+    setTimeout(function(){try{el.remove();st.remove();}catch(e){}},350);
+  }
+  var t0=Date.now(),twAt=0;
+  var splashIv=setInterval(function(){
+    var hide=false;
+    try{
+      if(!twAt&&window.tailwind)twAt=Date.now();
+      var as=document.getElementById('authScreen');
+      var ap=document.getElementById('appScreen');
+      var av=as&&!as.classList.contains('hidden');
+      var pv=ap&&!ap.classList.contains('hidden');
+      if(window.tailwind&&(av||pv)&&twAt&&Date.now()-twAt>=300)hide=true;
+    }catch(e){hide=true;}
+    if(Date.now()-t0>20000)hide=true; /* jaring pengaman: splash hilang maks 20 dtk */
+    if(hide){clearInterval(splashIv);hideSplash();}
+  },80);
+
+  /* ---------- 2. JARING PENGAMAN CHART (antrian + putar ulang) ---------- */
+  (function(){
+    if(typeof window.Chart!=='undefined')return;
+    var q=[];
+    window.Chart=function(ctx,cfg){q.push([ctx,cfg]);return{destroy:function(){},update:function(){},resize:function(){},data:(cfg&&cfg.data)||{}};};
+    window.Chart.__gsStub=true;
+    window.__gsFlushChart=function(){
+      var C=window.Chart;
+      if(!C||C.__gsStub)return;
+      var Q=q.splice(0,q.length);
+      setTimeout(function(){for(var i=0;i<Q.length;i++){try{new C(Q[i][0],Q[i][1]);}catch(e){console.warn('Chart replay:',e);}}},0);
+    };
+  })();
+
+  /* ---------- 3. JARING PENGAMAN QRCODE (antrian + putar ulang) ---------- */
+  (function(){
+    if(typeof window.QRCode!=='undefined')return;
+    var q=[];
+    window.QRCode=function(el,opts){q.push([el,opts]);return{};};
+    window.QRCode.__gsStub=true;
+    window.QRCode.CorrectLevel={L:1,M:0,Q:3,H:2};
+    window.__gsFlushQR=function(){
+      var C=window.QRCode;
+      if(!C||C.__gsStub)return;
+      var Q=q.splice(0,q.length);
+      setTimeout(function(){for(var i=0;i<Q.length;i++){try{new C(Q[i][0],Q[i][1]);}catch(e){console.warn('QR replay:',e);}}},0);
+    };
+  })();
+
+  /* ---------- 4. BOOT CEPAT (dipanggil dari akhir <body>) ---------- */
+  window.__gsFastBoot=function(){
+    if(window.__gsBooted)return;
+    window.__gsBooted=true;
+    if(window.__BUZZER_MODE__)return;
+    try{
+      if(typeof checkSession==='function'&&typeof initApp==='function'){
+        Promise.resolve(checkSession()).then(function(ok){if(ok)initApp();}).catch(function(e){console.warn('Boot cepat:',e);});
+      }
+    }catch(e){console.warn('Boot cepat:',e);}
+  };
+
+  /* ---------- 5. PENGAWAS LIBRARY (pasang format Excel + flush chart/QR) ---------- */
+  var excelDone=false,tick=0;
+  var libIv=setInterval(function(){
+    tick++;
+    try{
+      if(!excelDone&&window.XLSX&&typeof XLSX.writeFile==='function'){
+        if(typeof window.__gsInstallExcelFormat==='function'){try{window.__gsInstallExcelFormat();}catch(e){console.warn('Format Excel:',e);}}
+        excelDone=true;
+      }
+      if(window.Chart&&!window.Chart.__gsStub&&window.__gsFlushChart){window.__gsFlushChart();}
+      if(window.QRCode&&!window.QRCode.__gsStub&&window.__gsFlushQR){window.__gsFlushQR();}
+    }catch(e){console.warn('Pengawas library:',e);}
+    if(tick>500)clearInterval(libIv); /* berhenti setelah 30 dtk */
+  },60);
+})();
+</script>
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-<script src="https://js.puter.com/v2/"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js" defer></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"></noscript>
+<script src="https://js.puter.com/v2/" defer></script>
 <script>
 /* ==================================================================
    GSAI BRIDGE v3 — Perbaikan "Puter AI tidak bisa generate"
@@ -1281,7 +1397,7 @@ function navigate(page){currentPage=page;document.getElementById('pageTitle').in
 async function renderContent(page){var c=document.getElementById('content');c.className='flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 lg:p-6 bg-slate-100 dark:bg-slate-900';if(page==='ai'){c.className='flex-1 min-h-0 flex flex-col overflow-hidden p-4 bg-slate-100 dark:bg-slate-900';}c.innerHTML='<div class="text-center py-10 text-slate-500 dark:text-slate-400">Memuat data...</div>';switch(page){case'dashboard':await renderDashboard();break;case'ai':await renderAI();break;case'kuis_kelas':await renderKuisKelas();break;case'teachers':await renderTeachers();break;case'students':await renderStudents();break;case'classes':await renderClasses();break;case'subjects':await renderSubjects();break;case'schedules':await renderSchedules();break;case'piket':await renderPiket();break;case'attendance':await renderAttendance();break;case'activity_attendance':await renderActivityAttendance();break;case'grades':await renderGrades();break;case'assignments':await renderAssignments();break;case'materi':await renderMateri();break;case'keuangan':await renderKeuangan();break;case'rapor':await renderRapor();break;case'settings':await renderSettings();break;}}
 function statCard(t,c,gradient,i,subtitle){return '<div class="stat-card relative bg-gradient-to-br '+gradient+' p-5 rounded-2xl shadow-lg text-white overflow-hidden slide-up"><div class="relative z-10 flex items-start justify-between"><div><p class="text-xs font-medium opacity-90 uppercase tracking-wider">'+t+'</p><h3 class="text-3xl font-extrabold mt-2 mb-1">'+c+'</h3><p class="text-xs opacity-80">'+subtitle+'</p></div><div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm"><svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="'+i+'"></path></svg></div></div></div>';}
 function initApp(){document.getElementById('authScreen').classList.add('hidden');document.getElementById('appScreen').classList.remove('hidden');document.getElementById('userName').innerText=currentUser.name;document.getElementById('userRole').innerText=currentUser.role;document.getElementById('userAvatar').src=currentUser.avatar_url||AI_IMG;navigate('dashboard');}
-window.onload=async function(){if(window.__BUZZER_MODE__){return;}if(await checkSession()){initApp();}};
+/* Boot dipindah ke akhir <body> (window.__gsFastBoot) agar aplikasi menyala lebih awal — tidak menunggu window.onload */
 </script><script>
 var kurikulumTypes=[
 {id:'cp',label:'Capaian Pembelajaran (CP)',desc:'Kompetensi yang harus dicapai peserta didik',color:'from-blue-500 to-cyan-600',icon:'M13 10V3L4 14h7v7l9-11h-7z'},
@@ -4265,7 +4381,8 @@ function applyExactStudentCardPrintColors(root){
 </style>
 <script>
 /* Format profesional untuk seluruh ekspor Excel; data dan proses ekspor asli tetap dipertahankan. */
-(function(){
+/* (Ditunda sampai library Excel siap — dipanggil otomatis oleh Mesin Loading Kilat) */
+window.__gsInstallExcelFormat=function(){
   if(typeof XLSX==='undefined'||!XLSX.writeFile||XLSX.__guruExcelFormatInstalled)return;
   var originalWriteFile=XLSX.writeFile;
   XLSX.writeFile=function(wb,filename,opts){
@@ -4301,7 +4418,7 @@ function applyExactStudentCardPrintColors(root){
     return originalWriteFile.call(this,wb,filename,opts);
   };
   XLSX.__guruExcelFormatInstalled=true;
-})();
+};
 </script>
 <script>
 /* ==================================================================
@@ -4754,5 +4871,7 @@ function applyExactStudentCardPrintColors(root){
 .student-card-front-photo{border-color:var(--card-line-color,#16804a)!important}
 @media print{.student-card-front-photo{border-color:var(--card-line-color,#16804a)!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
 </style>
+<!-- AKSELERASI: boot seketika setelah seluruh kode aplikasi siap (tanpa menunggu window.onload) -->
+<script>if(window.__gsFastBoot)window.__gsFastBoot();</script>
 </body>
 </html>
