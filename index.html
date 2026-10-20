@@ -3726,7 +3726,7 @@ var td=document.createElement('div');td.innerHTML=ch;
 var lem=gsLembarTransform(td);
 if(!includeKey&&lem.footer)td.insertAdjacentHTML('beforeend',lem.footer);
 var kh=await generateKopHTML();
-openPrintPreview('<div style="font-family:Times New Roman,Georgia,serif;color:#000;padding:0;margin:0;width:100%">'+kh+lem.header+'<div class="ai-output" style="color:#000;margin:0;padding:0">'+td.innerHTML+'</div><style>.ai-output .soal-opts{display:block;margin:6px 0 6px 34px}.ai-output .opt-col{display:block}.ai-output .soal-opt{display:flex;align-items:flex-start;font-size:13px;margin:3px 0}.ai-output .soal-opt .opt-label{text-transform:lowercase}</style></div>');}
+openPrintPreview('<div style="font-family:Times New Roman,Georgia,serif;color:#000;padding:0;margin:0;width:100%">'+kh+lem.header+'<div class="ai-output" style="color:#000;margin:0;padding:0">'+td.innerHTML+'</div><style>@page{size:A4;margin:14mm 16mm 9mm 16mm}.ai-output .soal-item{margin-bottom:8px;padding-bottom:6px}.ai-output .soal-header{margin-bottom:4px}.ai-output .soal-text{font-size:12.5px;line-height:1.35;font-weight:400;text-align:justify}.ai-output .soal-text p{margin:0 0 2px 0}.ai-output .soal-opts{display:block;margin:3px 0 3px 34px}.ai-output .opt-col{display:block}.ai-output .soal-opt{display:flex;align-items:flex-start;font-size:12px;margin:1px 0;line-height:1.3;text-align:left}.ai-output .soal-opt .opt-label{text-transform:lowercase}.ai-output p{margin-bottom:3px;text-align:justify}.ai-output img{margin:6px 0;border-radius:0;box-shadow:none}</style></div>');}
 function gsWordLogoSrc(src,encMax){return new Promise(function(res){
 if(!src)return res('');
 function attempt(useCors){return new Promise(function(done){
@@ -3770,9 +3770,9 @@ var t=null,sub=keep;var w0=keep[0].split(' ');
 if(keep[0].length<=60&&w0.length<=8&&/^(lembar|soal|latihan|ulangan|penilaian|ujian|kuis|evaluasi|tes)\b/i.test(keep[0])){t=keep[0].toUpperCase();sub=keep.slice(1);}
 return{title:t||'LEMBAR LATIHAN SOAL',sub:sub,body:false};}
 function gsLembarHeaderHTML(title,sub){var dots='..............................................................................................';var sh='';var arr=sub||[];
-arr.forEach(function(l,i){sh+='<div style="text-align:center;font-weight:bold;font-size:12pt;margin:'+(i===0?'2px':'1px')+' 0 '+(i===arr.length-1?'12px':'1px')+' 0;">'+l+'</div>';});
-return '<div style="text-align:center;margin:0 0 12px 0;"><div style="font-size:14pt;font-weight:bold;margin:0 0 4px 0;">'+(title||'LEMBAR LATIHAN SOAL')+'</div>'+sh+'</div>'
-+'<table class="rapor-info-table" width="100%" border="0" cellpadding="0" cellspacing="0" style="border:none;border-collapse:collapse;width:100%;margin:0 0 12px 0;">'
+arr.forEach(function(l,i){sh+='<div style="text-align:center;font-weight:bold;font-size:12pt;margin:'+(i===0?'2px':'1px')+' 0 '+(i===arr.length-1?'8px':'1px')+' 0;">'+l+'</div>';});
+return '<div style="text-align:center;margin:0 0 8px 0;"><div style="font-size:14pt;font-weight:bold;margin:0 0 3px 0;">'+(title||'LEMBAR LATIHAN SOAL')+'</div>'+sh+'</div>'
++'<table class="rapor-info-table" width="100%" border="0" cellpadding="0" cellspacing="0" style="border:none;border-collapse:collapse;width:100%;margin:0 0 8px 0;">'
 +'<tr><td width="110" style="width:110px;border:none;padding:2px 0;vertical-align:top;">Nama Lengkap</td><td width="14" style="width:14px;border:none;padding:2px 0;">:</td><td style="border:none;padding:2px 0;">'+dots+'</td></tr>'
 +'<tr><td style="border:none;padding:2px 0;vertical-align:top;">Kelas</td><td style="border:none;padding:2px 0;">:</td><td style="border:none;padding:2px 0;">'+dots+'</td></tr></table>';}
 function gsLembarFooterHTML(){function fc(w,extra){return '<td width="'+w+'" style="border:1px solid #000000;padding:6px;vertical-align:top;'+(extra||'')+'">';}
@@ -3802,11 +3802,11 @@ function gsIns(anchor,txt){var d=document.createElement('div');d.innerHTML='<p s
 if(firstPG&&subAll.indexOf('tanda silang')<0)gsIns(firstPG,'Berilah tanda silang (X) huruf a, b, c, atau d pada jawaban yang benar!');
 if(firstEssay&&subAll.indexOf('jawablah')<0&&subAll.indexOf('isilah')<0)gsIns(firstEssay,'Jawablah pertanyaan-pertanyaan di bawah ini dengan benar!');
 return{header:header,footer:gsLembarFooterHTML()};}
-function gsOptCell(o){if(!o)return '<td style="border:none;font-size:12pt;padding:0;"></td><td style="border:none;font-size:12pt;padding:0;"></td>';
+function gsOptCell(o){if(!o)return '<td style="border:none;font-size:11pt;padding:0;"></td><td style="border:none;font-size:11pt;padding:0;"></td>';
 var lb=o.querySelector('.opt-label'),tx=o.querySelector('.opt-text');
 var lbl=(lb?lb.innerHTML:'').toLowerCase();
 var txt=tx?tx.innerHTML:o.innerHTML;
-return '<td width="26" style="width:26px;border:none;font-size:12pt;padding:0 6px 0 0;font-weight:bold;vertical-align:top;white-space:nowrap;text-align:left;">'+lbl+'</td>'+'<td style="border:none;font-size:12pt;padding:0;vertical-align:top;text-align:left;">'+txt+'</td>';}
+return '<td width="26" style="width:26px;border:none;font-size:11pt;padding:0 6px 0 0;font-weight:bold;vertical-align:top;white-space:nowrap;text-align:left;">'+lbl+'</td>'+'<td style="border:none;font-size:11pt;padding:0;vertical-align:top;text-align:left;">'+txt+'</td>';}
 function gsSplitDataUrl(u){var m=String(u||'').match(/^data:([^;,]+)(;[^,]*)?,(.*)$/);if(!m||String(m[2]||'').indexOf('base64')<0)return null;return{mime:m[1],b64:m[3].replace(/\s+/g,'')};}
 function gsB64Utf8(s){try{return btoa(unescape(encodeURIComponent(String(s))));}catch(e){try{return Buffer.from(String(s),'utf8').toString('base64');}catch(e2){return '';}}}
 function gsB64Chunk(b64){return String(b64||'').replace(/(.{76})/g,'$1\r\n');}
@@ -3837,11 +3837,11 @@ var rows='';
 items.forEach(function(o){rows+='<tr>'+gsOptCell(o)+'</tr>';});
 var tbl=document.createElement('table');
 tbl.setAttribute('width','100%');tbl.setAttribute('cellpadding','0');tbl.setAttribute('cellspacing','0');tbl.setAttribute('border','0');
-tbl.style.marginLeft='34px';tbl.style.marginTop='8px';tbl.style.marginBottom='8px';tbl.style.border='none';tbl.style.borderCollapse='collapse';
+tbl.style.marginLeft='34px';tbl.style.marginTop='4px';tbl.style.marginBottom='4px';tbl.style.border='none';tbl.style.borderCollapse='collapse';
 tbl.innerHTML=rows;
 if(od.parentNode)od.parentNode.replaceChild(tbl,od);});
 // SUSUNAN SOAL: jarak antar soal, nomor tebal, teks rata kiri
-td.querySelectorAll('.soal-item').forEach(function(item){item.style.marginBottom='16px';item.style.paddingBottom='12px';item.style.borderBottom='1px solid #dddddd';});
+td.querySelectorAll('.soal-item').forEach(function(item){item.style.marginBottom='10px';item.style.paddingBottom='8px';item.style.borderBottom='1px solid #dddddd';});
 // SUSUNAN NOMER & TEKS = PDF: nomor di kolom tetap 34px (PDF: min-width 28px + gap 6px), teks soal selalu mulai di posisi sama & baris lanjutan sejajar teks (bukan ke tepi kiri) - tabel Word-native tanpa garis
 td.querySelectorAll('.soal-header').forEach(function(h){
 var num=h.querySelector('.soal-number'),txt=h.querySelector('.soal-text');
@@ -3850,10 +3850,10 @@ var numHTML=num?num.outerHTML:'';
 var txtHTML=txt?txt.outerHTML:h.innerHTML;
 var tbl=document.createElement('table');
 tbl.setAttribute('width','100%');tbl.setAttribute('cellpadding','0');tbl.setAttribute('cellspacing','0');tbl.setAttribute('border','0');
-tbl.style.width='100%';tbl.style.border='none';tbl.style.borderCollapse='collapse';tbl.style.margin='0 0 6px 0';
-tbl.innerHTML='<tr><td width="34" style="width:34px;border:none;padding:0;font-weight:bold;vertical-align:top;white-space:nowrap;text-align:left;">'+numHTML+'</td><td style="border:none;padding:0;vertical-align:top;text-align:left;line-height:1.6;">'+txtHTML+'</td></tr>';
+tbl.style.width='100%';tbl.style.border='none';tbl.style.borderCollapse='collapse';tbl.style.margin='0 0 4px 0';
+tbl.innerHTML='<tr><td width="34" style="width:34px;border:none;padding:0;font-weight:bold;vertical-align:top;white-space:nowrap;text-align:left;">'+numHTML+'</td><td style="border:none;padding:0;vertical-align:top;text-align:justify;line-height:1.35;">'+txtHTML+'</td></tr>';
 if(h.parentNode)h.parentNode.replaceChild(tbl,h);});
-td.querySelectorAll('.soal-text').forEach(function(t){t.style.lineHeight='1.6';});
+td.querySelectorAll('.soal-text').forEach(function(t){t.style.lineHeight='1.35';t.style.textAlign='justify';});
 // TABEL DOKUMEN (markdown): TANPA garis tabel sesuai permintaan pengguna - cukup jarak sel agar tetap terbaca rapi (tabel pilihan dilewati)
 td.querySelectorAll('table').forEach(function(tb){if(tb.getAttribute('border')==='0')return;tb.setAttribute('border','0');tb.setAttribute('cellspacing','0');tb.setAttribute('cellpadding','5');tb.style.border='none';tb.style.borderCollapse='collapse';tb.style.width='100%';});
 td.querySelectorAll('th,td').forEach(function(c){if(c.style.border&&String(c.style.border).indexOf('none')===0)return;c.style.border='none';c.style.padding='5px 8px';c.style.verticalAlign='top';});
@@ -3874,7 +3874,7 @@ if(sp&&sp.b64){gsSeq++;var ext2=sp.mime==='image/png'?'png':(sp.mime==='image/gi
 }
 var ch=td.innerHTML;
 var htmlContent='<div style="font-family:Times New Roman,Georgia,serif;color:#000;padding:0;margin:0;width:100%">'+'<div class="ai-output" style="color:#000;margin:0;padding:0">'+ch+'</div></div>';
-var header='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Soal - GURU SMART</title><style>@page{size:21cm 29.7cm;margin:2cm}body{font-family:Times New Roman,Georgia,serif;font-size:12pt;color:#000;line-height:1.5}h1,h2,h3{color:#000}.ai-output table{width:100%;border-collapse:collapse;margin-bottom:8px}.ai-output img{margin:10px 0}.ai-output .soal-item{margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #dddddd;page-break-inside:avoid}</style></head><body>'+htmlContent+'</body></html>';
+var header='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Soal - GURU SMART</title><style>@page{size:21cm 29.7cm;margin:1.5cm 1.8cm 1cm 1.8cm}body{font-family:Times New Roman,Georgia,serif;font-size:11pt;color:#000;line-height:1.35}h1,h2,h3{color:#000}.ai-output table{width:100%;border-collapse:collapse;margin-bottom:6px}.ai-output img{margin:6px 0}.ai-output p{margin:0 0 4px 0;text-align:justify}.ai-output .soal-item{margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #dddddd;page-break-inside:avoid}</style></head><body>'+htmlContent+'</body></html>';
 var blob;
 if(gsParts.length){blob=new Blob([gsBuildMHTML(header,gsParts)],{type:'application/msword'});}
 else{blob=new Blob(['\ufeff',header],{type:'application/msword'});}
