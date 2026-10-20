@@ -3847,12 +3847,47 @@ function gsRowKids(c){return Array.prototype.slice.call(c.childNodes).filter(fun
 var L=gsRowKids(cells[0]),R=gsRowKids(cells[1]);var n=Math.max(L.length,R.length);if(n<2)return;
 var nt=document.createElement('table');
 nt.setAttribute('width','100%');nt.setAttribute('cellpadding','0');nt.setAttribute('cellspacing','0');nt.setAttribute('border','0');
-nt.className='soal-dua-kolom';nt.style.cssText=tbl.style.cssText;nt.style.marginTop='0px';
+nt.className='soal-dua-kolom';nt.style.cssText=tbl.style.cssText;nt.style.marginTop='0px';nt.style.marginBottom='4px';
 for(var i=0;i<n;i++){var row=nt.insertRow(-1);var c1=row.insertCell(0),c2=row.insertCell(1);
 c1.style.cssText='width:50%;border:none;padding:0 14px 0 0;vertical-align:top;text-align:left;';
 c2.style.cssText='width:50%;border:none;padding:0 0 0 14px;vertical-align:top;text-align:left;';
 if(L[i])c1.appendChild(L[i]);if(R[i])c2.appendChild(R[i]);}
 if(tbl.parentNode)tbl.parentNode.replaceChild(nt,tbl);});}
+// WORD: soal di dalam blok 2 kolom memakai PARAGRAF hanging-indent (bukan tabel bersarang).
+// Tabel bersarang di dalam sel yang dipecah Word di batas halaman bisa hilang saat dicetak;
+// paragraf murni dipecah Word seperti teks biasa -> tidak ada soal yang hilang. Tampilan sama:
+// nomor di 0px, teks soal sejajar 34px; label pilihan di 34px, teks pilihan sejajar 66px (persis PDF).
+function gsWordBlokParagraf(td){
+function gsSegPush(segs,s){if(String(s).replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim())segs.push(s);}
+td.querySelectorAll('table.soal-dua-kolom .soal-header').forEach(function(h){
+var num=h.querySelector('.soal-number'),txt=h.querySelector('.soal-text');
+if(!num&&!txt)return;
+var numHTML=num?'<b>'+num.innerHTML+'</b> ':'';
+var segs=[];
+if(txt){var buf='';
+Array.prototype.slice.call(txt.childNodes).forEach(function(n){
+if(n.nodeType===1&&String(n.tagName).toLowerCase()==='p'){gsSegPush(segs,buf);buf='';gsSegPush(segs,n.innerHTML);}
+else{buf+=(n.outerHTML!=null?n.outerHTML:(n.textContent||''));}});
+gsSegPush(segs,buf);}
+if(!segs.length)segs=[''];
+var out='';
+segs.forEach(function(s,i){out+='<p style="margin:0 0 3px 0;margin-left:34px;text-indent:-34px;text-align:justify;line-height:135%;">'+(i===0?numHTML:'')+s+'</p>';});
+var d=document.createElement('div');d.innerHTML=out;
+while(d.firstChild)h.parentNode.insertBefore(d.firstChild,h);
+if(h.parentNode)h.parentNode.removeChild(h);});
+td.querySelectorAll('table.soal-dua-kolom .soal-opts').forEach(function(od){
+var opts=[];
+od.querySelectorAll('.opt-col').forEach(function(col){col.querySelectorAll('.soal-opt').forEach(function(o){opts.push(o);});});
+if(!opts.length)opts=Array.prototype.slice.call(od.querySelectorAll('.soal-opt'));
+var out2='';
+opts.forEach(function(o){var lb=o.querySelector('.opt-label'),tx=o.querySelector('.opt-text');
+var lbl=(lb?lb.innerHTML:'').toLowerCase();
+var tx2=tx?tx.innerHTML:o.innerHTML;
+out2+='<p style="margin:1px 0 1px 0;margin-left:66px;text-indent:-32px;text-align:left;line-height:135%;"><b>'+lbl+'</b> '+tx2+'</p>';});
+var d2=document.createElement('div');d2.innerHTML=out2;
+while(d2.firstChild)od.parentNode.insertBefore(d2.firstChild,od);
+if(od.parentNode)od.parentNode.removeChild(od);});
+}
 function gsSplitDataUrl(u){var m=String(u||'').match(/^data:([^;,]+)(;[^,]*)?,(.*)$/);if(!m||String(m[2]||'').indexOf('base64')<0)return null;return{mime:m[1],b64:m[3].replace(/\s+/g,'')};}
 function gsB64Utf8(s){try{return btoa(unescape(encodeURIComponent(String(s))));}catch(e){try{return Buffer.from(String(s),'utf8').toString('base64');}catch(e2){return '';}}}
 function gsB64Chunk(b64){return String(b64||'').replace(/(.{76})/g,'$1\r\n');}
@@ -3874,9 +3909,13 @@ else if(nw>0){img.setAttribute('width',String(nw));img.setAttribute('height',Str
 img.style.maxWidth='100%';img.style.height='auto';});
 // LEMBAR SOAL STANDAR: judul + identitas Nama/Kelas + instruksi pengerjaan - persis contoh lembar
 var lem=gsLembarTransform(td);
+// WORD-ONLY: rapatkan identitas & instruksi (slack halaman 1 ~1cm) agar kop+judul+identitas+5 baris soal pertama pasti muat 1 halaman
+td.querySelectorAll('.rapor-info-table').forEach(function(tb){tb.style.marginBottom='2px';});
+td.querySelectorAll('p').forEach(function(pp){if(String(pp.style.marginBottom)==='10px')pp.style.marginBottom='4px';});
 // 10 SOAL 5 KIRI 5 KANAN: PG dibagi 2 kolom (tabel Word-native tanpa garis) - persis contoh
 gsSoalDuaKolom(td);
 gsWordSoalRows(td); // WORD-ONLY: pecah blok jadi pasangan baris pendek agar kop & soal selalu satu halaman
+gsWordBlokParagraf(td); // WORD-ONLY: soal di blok jadi paragraf hanging-indent (tanpa tabel bersarang) - anti soal hilang saat print
 // PILIHAN SOAL: satu opsi per baris (a. b. c. d.) persis contoh lembar soal - label huruf kecil di kolom tetap
 td.querySelectorAll('.soal-opts').forEach(function(od){
 var items=[];
