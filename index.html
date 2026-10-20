@@ -3809,27 +3809,30 @@ var lb=o.querySelector('.opt-label'),tx=o.querySelector('.opt-text');
 var lbl=(lb?lb.innerHTML:'').toLowerCase();
 var txt=tx?tx.innerHTML:o.innerHTML;
 return '<td width="26" style="width:26px;border:none;font-size:11pt;padding:0 6px 0 0;font-weight:bold;vertical-align:top;white-space:nowrap;text-align:left;">'+lbl+'</td>'+'<td style="border:none;font-size:11pt;padding:0;vertical-align:top;text-align:left;">'+txt+'</td>';}
-// SUSUNAN 2 KOLOM: soal PG dibagi dua - 5 kiri + 5 kanan dalam 1 kertas (persis contoh lembar guru)
+// SUSUNAN 2 KOLOM: soal PG dibagi dua - 5 kiri + 5 kanan per halaman (persis contoh lembar guru)
+// Lebih dari 10 soal: dikelompokkan 10 soal per halaman - halaman 2 dst disusun SAMA dengan halaman 1
 function gsSoalDuaKolom(td){
 var items=[];
 td.querySelectorAll('.soal-item').forEach(function(it){
 if(it.closest&&it.closest('.kunci-jawaban-section'))return;
 if(it.querySelector('.soal-opt'))items.push(it);});
 if(items.length<2)return;
-var half=Math.ceil(items.length/2);
 function gsKolomHTML(arr){var h='';arr.forEach(function(it){h+=it.outerHTML;});return h;}
 items.forEach(function(it){it.querySelectorAll('img').forEach(function(im){
 var w=parseInt(im.getAttribute('width')||'0',10)||0;
 if(w>300){var h2=parseInt(im.getAttribute('height')||'0',10)||0;
 im.setAttribute('width','300');im.setAttribute('height',String(h2>0?Math.max(20,Math.round(h2*300/w)):200));}
 im.style.maxWidth='100%';});});
-var tbl=document.createElement('table');
-tbl.className='soal-dua-kolom';
-tbl.setAttribute('width','100%');tbl.setAttribute('cellpadding','0');tbl.setAttribute('cellspacing','0');tbl.setAttribute('border','0');
-tbl.style.width='100%';tbl.style.border='none';tbl.style.borderCollapse='collapse';tbl.style.margin='4px 0 8px 0';
-tbl.innerHTML='<tr><td width="50%" style="width:50%;border:none;padding:0 14px 0 0;vertical-align:top;text-align:left;">'+gsKolomHTML(items.slice(0,half))+'</td>'+'<td width="50%" style="width:50%;border:none;padding:0 0 0 14px;vertical-align:top;text-align:left;">'+gsKolomHTML(items.slice(half))+'</td></tr>';
-var first=items[0];
-if(first.parentNode)first.parentNode.insertBefore(tbl,first);
+var PER=10,out='',pg=0;
+for(var s=0;s<items.length;s+=PER){
+var chunk=items.slice(s,s+PER);
+var half=Math.ceil(chunk.length/2);
+if(pg>0)out+='<p style="margin:0;font-size:1px;line-height:1px;page-break-before:always;">&nbsp;</p>';
+out+='<table class="soal-dua-kolom" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border:none;border-collapse:collapse;margin:4px 0 8px 0;">'
++'<tr><td width="50%" style="width:50%;border:none;padding:0 14px 0 0;vertical-align:top;text-align:left;">'+gsKolomHTML(chunk.slice(0,half))+'</td>'
++'<td width="50%" style="width:50%;border:none;padding:0 0 0 14px;vertical-align:top;text-align:left;">'+gsKolomHTML(chunk.slice(half))+'</td></tr></table>';
+pg++;}
+items[0].insertAdjacentHTML('beforebegin',out);
 items.forEach(function(it){if(it.parentNode)it.parentNode.removeChild(it);});
 }
 function gsSplitDataUrl(u){var m=String(u||'').match(/^data:([^;,]+)(;[^,]*)?,(.*)$/);if(!m||String(m[2]||'').indexOf('base64')<0)return null;return{mime:m[1],b64:m[3].replace(/\s+/g,'')};}
@@ -3888,7 +3891,7 @@ td.querySelectorAll('th,td').forEach(function(c){if(c.style.border&&String(c.sty
 if(lem.header)td.insertAdjacentHTML('afterbegin',lem.header);
 var kopHTML=await gsKopHTMLForWord();
 if(kopHTML)td.insertAdjacentHTML('afterbegin',kopHTML);
-if(lem.footer)td.insertAdjacentHTML('beforeend',lem.footer);
+if(lem.footer)td.insertAdjacentHTML('beforeend','<p style="margin:0;font-size:1px;line-height:1px;">&nbsp;</p>'+lem.footer);
 // GAMBAR -> PART MIME: logo kop & gambar soal disematkan sebagai berkas nyata
 var gsParts=[];var gsSeq=0;
 var gsImgs=[];td.querySelectorAll('img').forEach(function(im){gsImgs.push(im);});
