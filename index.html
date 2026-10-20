@@ -3730,7 +3730,6 @@ var lem=gsLembarTransform(td);
 gsSoalDuaKolom(td);
 if(!includeKey&&lem.footer)td.insertAdjacentHTML('beforeend',lem.footer);
 var kh=await generateKopHTML();
-gsRepeatPageHead(td,kh+lem.header); // PDF: halaman 2 dst diawali kop+judul+identitas sama seperti halaman 1
 openPrintPreview('<div style="font-family:Times New Roman,Georgia,serif;color:#000;padding:0;margin:0;width:100%">'+kh+lem.header+'<div class="ai-output" style="color:#000;margin:0;padding:0">'+td.innerHTML+'</div><style>@page{size:A4;margin:14mm 16mm 9mm 16mm}.ai-output .soal-item{margin-bottom:8px;padding-bottom:6px}.ai-output .soal-header{margin-bottom:4px}.ai-output .soal-text{font-size:12.5px;line-height:1.35;font-weight:400;text-align:justify}.ai-output .soal-text p{margin:0 0 2px 0}.ai-output .soal-opts{display:block;margin:3px 0 3px 34px}.ai-output .opt-col{display:block}.ai-output .soal-opt{display:flex;align-items:flex-start;font-size:12px;margin:1px 0;line-height:1.3;text-align:left}.ai-output .soal-opt .opt-label{text-transform:lowercase}.ai-output p{margin-bottom:3px;text-align:justify}.ai-output img{margin:6px 0;border-radius:0;box-shadow:none}.soal-dua-kolom,.soal-dua-kolom td,.lembar-footer-table,.lembar-footer-table td{border:none!important;background:transparent!important}.gs-page-break{page-break-before:always!important;break-before:page!important}</style></div>');}
 function gsWordLogoSrc(src,encMax){return new Promise(function(res){
 if(!src)return res('');
@@ -3813,7 +3812,7 @@ var lbl=(lb?lb.innerHTML:'').toLowerCase();
 var txt=tx?tx.innerHTML:o.innerHTML;
 return '<td width="26" style="width:26px;border:none;font-size:9.5pt;padding:0 6px 0 0;font-weight:bold;vertical-align:top;white-space:nowrap;text-align:left;">'+lbl+'</td>'+'<td style="border:none;font-size:9.5pt;padding:0;vertical-align:top;text-align:left;">'+txt+'</td>';}
 // SUSUNAN 2 KOLOM: soal PG dibagi dua - 5 kiri + 5 kanan per halaman (persis contoh lembar guru)
-// Lebih dari 10 soal: dikelompokkan 10 soal per halaman - halaman 2 dst disusun SAMA dengan halaman 1 (kop+judul+identitas diulang via gsRepeatPageHead)
+// Lebih dari 10 soal: dikelompokkan 10 soal per halaman - halaman 2 dst disusun SAMA dengan halaman 1 (susunan 2 kolom berlanjut; KOP hanya di halaman pertama)
 function gsSoalDuaKolom(td){
 var items=[];
 td.querySelectorAll('.soal-item').forEach(function(it){
@@ -3838,11 +3837,8 @@ pg++;}
 items[0].insertAdjacentHTML('beforebegin',out);
 items.forEach(function(it){if(it.parentNode)it.parentNode.removeChild(it);});
 }
-// HALAMAN 2 dst DISUSUN SAMA DENGAN HALAMAN 1: setiap kelompok 10 soal (setelah pemisah halaman)
-// diawali LAGI kop + judul + identitas persis halaman 1 - dipakai jalur PDF (generateKopHTML)
-// dan jalur Word (gsKopHTMLForWord) sehingga susunan tiap halaman cetak identik
-function gsRepeatPageHead(cont,headHTML){if(!headHTML)return;
-cont.querySelectorAll('p.gs-page-break').forEach(function(pb){pb.insertAdjacentHTML('afterend',headHTML);});}
+// KOP HANYA DI HALAMAN PERTAMA (permintaan pengguna): kelompok soal ke-2 dst
+// berlanjut tanpa kop ulang - susunan 2 kolom (5 kiri + 5 kanan) tetap sama.
 // WORD: bangun ulang tabel blok 2 kolom menjadi PASANGAN BARIS (baris i = soal kiri i + soal kanan i+n/2)
 // sehingga Word (desktop/mobile/online) dapat memecah halaman DI ANTARA baris soal -
 // kop tidak pernah terpisah dari soal; bila semua muat, tampilan tetap 5 baris x 2 kolom seperti PDF.
@@ -3955,7 +3951,6 @@ td.querySelectorAll('th,td').forEach(function(c){if(c.style.border&&String(c.sty
 if(lem.header)td.insertAdjacentHTML('afterbegin',lem.header);
 var kopHTML=await gsKopHTMLForWord();
 if(kopHTML)td.insertAdjacentHTML('afterbegin',kopHTML);
-gsRepeatPageHead(td,kopHTML+lem.header); // WORD: halaman 2 dst diawali kop+judul+identitas sama seperti halaman 1 (logo ikut disematkan pass gambar MIME)
 if(lem.footer)td.insertAdjacentHTML('beforeend','<p style="margin:0;font-size:1px;line-height:1px;">&nbsp;</p>'+lem.footer);
 // GAMBAR -> PART MIME: logo kop & gambar soal disematkan sebagai berkas nyata
 var gsParts=[];var gsSeq=0;
