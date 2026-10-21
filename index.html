@@ -3761,7 +3761,7 @@ attempt(true).then(function(r1){if(r1==='__GS_RETRY__'){attempt(false).then(res)
 // Normalisasi logo kop utk Word: WebP/data URL raksasa/gambar remote -> JPEG inline kecil
 // (kiri 200px, kanan 201px agar src kedua logo SELALU unik di mata Word)
 function gsWordImgTag(src,max){return new Promise(function(res){if(!src)return res('');var im;try{im=new Image();}catch(e){return res('');}im.onload=function(){var r=(im.naturalHeight?(im.naturalWidth/im.naturalHeight):1)||1;var w,h;if(r>=1){w=max;h=Math.max(1,Math.round(max/r));}else{h=max;w=Math.max(1,Math.round(max*r));}res('<img src="'+src+'" width="'+w+'" height="'+h+'" style="border:none;">');};im.onerror=function(){res('');};im.src=src;});}
-async function gsKopHTMLForWord(){var profile=(await DB.get('school_profile'))[0]||{};if(!profile.kop_line1&&!profile.logo_left)return '';var l1=profile.kop_line1||profile.name||'NAMA SEKOLAH';var l1b=profile.kop_line1b||'';var l2=profile.kop_line2||profile.address||'Alamat Sekolah';var l3=profile.kop_line3||'Email | Telp';var lSrc=await gsWordLogoSrc(profile.logo_left,200);var rSrc=await gsWordLogoSrc(profile.logo_right,201);var ll=await gsWordImgTag(lSrc,80);var rl=await gsWordImgTag(rSrc,80);var l1bHTML=l1b.trim()?'<div style="font-size:15pt;font-weight:bold;text-transform:uppercase;line-height:1.1;">'+l1b+'</div>':'';return '<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border-bottom:3px double #000000;margin-bottom:12px;font-family:Arial,Helvetica,sans-serif;"><tr><td width="90" style="width:90px;text-align:center;vertical-align:middle;border:none;padding:4px;">'+ll+'</td><td style="text-align:center;vertical-align:middle;border:none;padding:4px;"><div style="font-size:12pt;font-weight:bold;text-transform:uppercase;line-height:1.15;">'+l1+'</div>'+l1bHTML+'<div style="font-size:16.5pt;font-weight:bold;text-transform:uppercase;line-height:1.2;">'+l2+'</div><div style="font-size:9pt;line-height:1.3;">'+l3+'</div></td><td width="90" style="width:90px;text-align:center;vertical-align:middle;border:none;padding:4px;">'+rl+'</td></tr></table>';}
+async function gsKopHTMLForWord(){var profile=(await DB.get('school_profile'))[0]||{};if(!profile.kop_line1&&!profile.logo_left)return '';var l1=profile.kop_line1||profile.name||'NAMA SEKOLAH';var l1b=profile.kop_line1b||'';var l2=profile.kop_line2||profile.address||'Alamat Sekolah';var l3=profile.kop_line3||'Email | Telp';var lSrc=await gsWordLogoSrc(profile.logo_left,200);var rSrc=await gsWordLogoSrc(profile.logo_right,201);var ll=await gsWordImgTag(lSrc,80);var rl=await gsWordImgTag(rSrc,80);var l1bHTML=l1b.trim()?'<div style="font-size:15pt;font-weight:bold;text-transform:uppercase;line-height:1.1;">'+l1b+'</div>':'';return '<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border-bottom:3px double #000000;margin-bottom:8px;font-family:Arial,Helvetica,sans-serif;"><tr><td width="90" style="width:90px;text-align:center;vertical-align:middle;border:none;padding:4px;">'+ll+'</td><td style="text-align:center;vertical-align:middle;border:none;padding:4px;"><div style="font-size:12pt;font-weight:bold;text-transform:uppercase;line-height:1.15;">'+l1+'</div>'+l1bHTML+'<div style="font-size:16.5pt;font-weight:bold;text-transform:uppercase;line-height:1.2;">'+l2+'</div><div style="font-size:9pt;line-height:1.3;">'+l3+'</div></td><td width="90" style="width:90px;text-align:center;vertical-align:middle;border:none;padding:4px;">'+rl+'</td></tr></table>';}
 // ===== LEMBAR SOAL STANDAR (persis contoh: judul - identitas Nama/Kelas - instruksi - soal - Nilai/Paraf) =====
 function gsLembarPickIntro(introText){var lines=String(introText||'').split(/\r?\n/).map(function(l){return String(l).replace(/\s+/g,' ').trim();}).filter(function(l){return l;});
 var keep=[];lines.forEach(function(l){
@@ -3873,7 +3873,7 @@ else{buf+=(n.outerHTML!=null?n.outerHTML:(n.textContent||''));}});
 gsSegPush(segs,buf);}
 if(!segs.length)segs=[''];
 var out='';
-segs.forEach(function(s,i){out+='<p style="margin:0 0 3px 0;margin-left:34px;text-indent:-34px;text-align:justify;line-height:135%;">'+(i===0?numHTML:'')+s+'</p>';});
+segs.forEach(function(s,i){out+='<p style="margin:0 0 3px 0;margin-left:34px;text-indent:-34px;text-align:justify;font-size:12.5px;line-height:12.7pt;mso-line-height-rule:exactly;">'+(i===0?numHTML:'')+s+'</p>';});
 var d=document.createElement('div');d.innerHTML=out;
 while(d.firstChild)h.parentNode.insertBefore(d.firstChild,h);
 if(h.parentNode)h.parentNode.removeChild(h);});
@@ -3885,7 +3885,7 @@ var out2='';
 opts.forEach(function(o){var lb=o.querySelector('.opt-label'),tx=o.querySelector('.opt-text');
 var lbl=(lb?lb.innerHTML:'').toLowerCase();
 var tx2=tx?tx.innerHTML:o.innerHTML;
-out2+='<p style="margin:1px 0 1px 0;margin-left:66px;text-indent:-32px;text-align:left;line-height:135%;"><b>'+lbl+'</b> '+tx2+'</p>';});
+out2+='<p style="margin:1px 0 1px 0;margin-left:66px;text-indent:-32px;text-align:left;font-size:12px;line-height:11.7pt;mso-line-height-rule:exactly;"><b>'+lbl+'</b> '+tx2+'</p>';});
 var d2=document.createElement('div');d2.innerHTML=out2;
 while(d2.firstChild)od.parentNode.insertBefore(d2.firstChild,od);
 if(od.parentNode)od.parentNode.removeChild(od);});
@@ -3951,6 +3951,8 @@ td.querySelectorAll('th,td').forEach(function(c){if(c.style.border&&String(c.sty
 if(lem.header)td.insertAdjacentHTML('afterbegin',lem.header);
 var kopHTML=await gsKopHTMLForWord();
 if(kopHTML)td.insertAdjacentHTML('afterbegin',kopHTML);
+// WORD-ONLY: rapatkan margin tabel identitas 8->2px SETELAH header disisipkan (niat Task 27 M4 yang belum kena karena posisi lama sebelum penyisipan) - tambah slack halaman 1
+td.querySelectorAll('.rapor-info-table').forEach(function(tb){tb.style.marginBottom='2px';});
 if(lem.footer)td.insertAdjacentHTML('beforeend','<p style="margin:0;font-size:1px;line-height:1px;">&nbsp;</p>'+lem.footer);
 // GAMBAR -> PART MIME: logo kop & gambar soal disematkan sebagai berkas nyata
 var gsParts=[];var gsSeq=0;
