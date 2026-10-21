@@ -3779,7 +3779,7 @@ var lem=gsLembarTransform(td);
 gsSoalMulticolPDF(td);
 if(!includeKey&&lem.footer)td.insertAdjacentHTML('beforeend',lem.footer);
 var kh=await generateKopHTML();
-openPrintPreview('<div style="font-family:Times New Roman,Georgia,serif;color:#000;padding:0;margin:0;width:100%">'+kh+lem.header+'<div class="ai-output" style="color:#000;margin:0;padding:0">'+td.innerHTML+'</div><style>@page{size:A4;margin:14mm 16mm 9mm 16mm}.ai-output .soal-item{margin-bottom:8px;padding-bottom:6px}.ai-output .soal-header{display:block;margin-bottom:4px;text-align:justify}.ai-output .soal-number{display:inline;min-width:0;margin-right:6px}.ai-output .soal-text{display:inline;font-size:12.5px;line-height:1.35;font-weight:400}.ai-output .soal-text p{margin:0 0 2px 0}.ai-output .soal-opts{display:block;margin:3px 0 3px 34px}.ai-output .opt-col{display:block}.ai-output .soal-opt{display:flex;align-items:flex-start;font-size:12px;margin:1px 0;line-height:1.3;text-align:left}.ai-output .soal-opt .opt-label{text-transform:lowercase}.ai-output p{margin-bottom:3px;text-align:justify}.ai-output img{margin:6px 0;border-radius:0;box-shadow:none}.lembar-footer-table,.lembar-footer-table td{border:none!important;background:transparent!important}.gs-soal-cols{column-count:2;column-gap:28px}.gs-soal-cols .soal-item{break-inside:avoid;page-break-inside:avoid}</style></div>');}finally{gsBtnsPdf.forEach(function(b){b.disabled=false;});}}
+openPrintPreview('<div style="font-family:Times New Roman,Georgia,serif;color:#000;padding:0;margin:0;width:100%">'+kh+lem.header+'<div class="ai-output" style="color:#000;margin:0;padding:0">'+td.innerHTML+'</div><style>@page{size:A4;margin:14mm 16mm 9mm 16mm}.ai-output .soal-item{margin-bottom:8px;padding-bottom:6px}.ai-output .soal-header{margin-bottom:4px}.ai-output .soal-text{font-size:12.5px;line-height:1.35;font-weight:400;text-align:justify}.ai-output .soal-text p{margin:0 0 2px 0}.ai-output .soal-opts{display:block;margin:3px 0 3px 34px}.ai-output .opt-col{display:block}.ai-output .soal-opt{display:flex;align-items:flex-start;font-size:12px;margin:1px 0;line-height:1.3;text-align:left}.ai-output .soal-opt .opt-label{text-transform:lowercase}.ai-output p{margin-bottom:3px;text-align:justify}.ai-output img{margin:6px 0;border-radius:0;box-shadow:none}.lembar-footer-table,.lembar-footer-table td{border:none!important;background:transparent!important}.gs-soal-cols{column-count:2;column-gap:28px}.gs-soal-cols .soal-item{break-inside:avoid;page-break-inside:avoid}</style></div>');}finally{gsBtnsPdf.forEach(function(b){b.disabled=false;});}}
 function gsWordLogoSrc(src,encMax){return new Promise(function(res){
 if(!src)return res('');
 function attempt(useCors){return new Promise(function(done){
@@ -5502,5 +5502,84 @@ window.__gsInstallExcelFormat=function(){
 </style>
 <!-- AKSELERASI: boot seketika setelah seluruh kode aplikasi siap (tanpa menunggu window.onload) -->
 <script>if(window.__gsFastBoot)window.__gsFastBoot();</script>
+<!-- ====== PATCH CETAK SOAL GURU SMART (tempel DI ATAS </body>) ====== -->
+<style id="gsSoalPrintFixStyle">
+@media print{
+  #printArea.gs-print-soal,
+  #printArea.gs-print-soal *{border:none!important;outline:none!important;box-shadow:none!important}
+  #printArea.gs-print-soal table,
+  #printArea.gs-print-soal tr,
+  #printArea.gs-print-soal th,
+  #printArea.gs-print-soal td{border:none!important;outline:none!important;background:transparent!important;box-shadow:none!important}
+  #printArea.gs-print-soal .gs-soal-item{display:flex!important;align-items:flex-start!important;text-align:left!important}
+  #printArea.gs-print-soal .gs-soal-num{flex:0 0 auto;white-space:nowrap;margin-right:.45em}
+  #printArea.gs-print-soal .gs-soal-txt{flex:1 1 auto;min-width:0}
+}
+</style>
+<script>
+(function(){
+  if(window.__gsSoalPrintFix)return;window.__gsSoalPrintFix=true;
+  function isSoalContext(pa){
+    var t=(pa.innerText||pa.textContent||'').toUpperCase();
+    var h=pa.innerHTML||'';
+    if(!t.replace(/\s/g,''))return false;
+    if(/KISI[-\s]?KISI|RAPOR|LEGER|ABSENSI|DAFTAR\s+HADIR|KARTU\s+(PELAJAR|UJIAN|SISWA|RAPOR)|DAFTAR\s+NILAI|JADWAL|PIAGAM|SERTIFIKAT|SLIP|PENGUMUMAN|IJAZAH/.test(t))return false;
+    if(/\bSOAL\b|\bNASKAH\b|\bUJIAN\b|\bULANGAN\b|\bLATIHAN\b|\bPAS\b|\bPAT\b|\bPTS\b|\bASAS\b|\bSUMATIF\b|\bQUIS\b|\bKUIS\b/.test(t))return true;
+    var opts=0;
+    'ABCDE'.split('').forEach(function(L){try{if(new RegExp('(^|[\\s>\\u00a0])'+L+'[\\.\\)]').test(h))opts++;}catch(e){}});
+    return opts>=4;
+  }
+  var BLOCK_TEST=/^(TABLE|THEAD|TBODY|TFOOT|TR|UL|OL|SECTION|ARTICLE|FORM|H[1-6]|BLOCKQUOTE)$/;
+  function leafBlock(el){
+    if(BLOCK_TEST.test(el.tagName))return false;
+    if(el.querySelector('div,p,li,td,th,table,ul,ol,section,article,blockquote,h1,h2,h3,h4,h5,h6'))return false;
+    return true;
+  }
+  function hangFix(root){
+    var els=root.querySelectorAll('div,p,li,td,span');
+    for(var i=0;i<els.length;i++){
+      var el=els[i];
+      if(el.closest&&el.closest('.gs-soal-item'))continue;
+      if(!leafBlock(el))continue;
+      var fc=el.firstChild,num=null,isEl=false;
+      if(fc&&fc.nodeType===1&&/^(B|STRONG|SPAN|I|EM|U|LABEL)$/.test(fc.tagName)){
+        var m=(fc.textContent||'').replace(/\u00a0/g,' ').trim().match(/^(\d{1,3}|[A-Ea-e])([\.\)])$/);
+        if(m&&fc.nextSibling){num=fc;isEl=true;}
+      }
+      if(!num&&fc&&fc.nodeType===3){
+        var mm=(fc.nodeValue||'').replace(/\u00a0/g,' ').match(/^(\s{0,6})(\d{1,3}|[A-Ea-e])([\.\)])(\s+|$)/);
+        if(mm){
+          num=document.createElement('span');
+          num.className='gs-soal-num';
+          num.textContent=mm[2]+mm[3];
+          el.insertBefore(num,fc);
+          var left=fc.nodeValue.slice(mm[0].length);
+          if(left&&left.replace(/\s/g,'')){fc.nodeValue=left;}else{el.removeChild(fc);}
+        }
+      }
+      if(!num)continue;
+      var wrap=document.createElement('span');
+      wrap.className='gs-soal-txt';
+      var n=num.nextSibling;
+      while(n){var nx=n.nextSibling;wrap.appendChild(n);n=nx;}
+      el.appendChild(wrap);
+      if(isEl)num.classList.add('gs-soal-num');
+      el.classList.add('gs-soal-item');
+    }
+  }
+  function prepareSoalPrint(){
+    var pa=document.getElementById('printArea');
+    if(!pa)return;
+    try{
+      if(isSoalContext(pa)){pa.classList.add('gs-print-soal');hangFix(pa);}
+      else{pa.classList.remove('gs-print-soal');}
+    }catch(e){console.warn('Patch cetak soal:',e);}
+  }
+  window.addEventListener('beforeprint',prepareSoalPrint);
+  var __origPrint=window.print;
+  window.print=function(){try{prepareSoalPrint();}catch(e){}return __origPrint.apply(window,arguments);};
+})();
+</script>
+<!-- ====== AKHIR PATCH ====== -->
 </body>
 </html>
