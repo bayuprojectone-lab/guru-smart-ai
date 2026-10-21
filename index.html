@@ -865,7 +865,7 @@ input,textarea,select{font-size:16px!important}
 .ai-output .kunci-jawaban-section{margin-top:20px;padding:12px 16px;background:#1e3a8a;border-radius:8px;color:white;font-family:'Inter',sans-serif}
 .ai-output .kunci-jawaban-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:4px;margin-top:8px}
 .ai-output .kunci-jawaban-grid span{background:rgba(255,255,255,.15);padding:4px 8px;border-radius:4px;text-align:center}
-@media print{.ai-output .soal-item{background:white!important;border-left:none!important;padding:0 0 15px 0!important;margin-bottom:15px;border-bottom:1px solid #eee}.ai-output .soal-opt.correct{background:transparent!important;font-weight:normal!important;box-shadow:none!important}.hide-on-print{display:none!important}}
+@media print{.ai-output .soal-item{background:white!important;border-left:none!important;padding:0 0 15px 0!important;margin-bottom:15px}.ai-output .soal-opt.correct{background:transparent!important;font-weight:normal!important;box-shadow:none!important}.hide-on-print{display:none!important}}
 #whiteboardCanvas{touch-action:none;cursor:crosshair;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.08)}
 .wb-tool-btn{transition:all .2s}
 .wb-tool-btn.active{background:#2563eb!important;color:white!important}
@@ -3769,7 +3769,7 @@ function openPromptSoalModal(){var h='<div class="bg-blue-50 dark:bg-slate-700 p
 function gsPakaiPrompt(i){var it=window.GS_PROMPT_SOAL[i];if(!it)return;var ip=document.getElementById('aiInput');if(!ip){showToast('Panel chat tidak aktif. Buka menu Chat AI dulu.','error');return;}ip.value=it.p;closeModal();ip.focus();showToast('Prompt terisi - ganti [MAPEL]/[KELAS]/[TOPIK] lalu kirim','info');}
 async function sendAI(){var ip=document.getElementById('aiInput');if(!ip||!ip.value.trim())return;var prompt=ip.value.trim();ip.value='';if(aiChatHistory.length>10){aiChatHistory=aiChatHistory.slice(-10);}var btn=document.getElementById('aiSendBtn');btn.disabled=true;btn.innerText='Memproses...';['aiPrintBtn','aiWordBtn','aiPrintKeyBtn'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.add('hidden');});var box=document.getElementById('aiMessages');var ud=document.createElement('div');ud.className='flex justify-end fade-in';ud.innerHTML='<div class="max-w-[90%] rounded-xl px-4 py-3 bg-blue-600 text-white shadow-sm"><div class="text-xs opacity-70 mb-1">Anda</div><div class="whitespace-pre-wrap">'+escapeHTML(prompt)+'</div></div>';box.appendChild(ud);var td=document.createElement('div');td.id='typingIndicator';td.className='flex justify-start fade-in';td.innerHTML='<div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500 dark:text-slate-400">Asisten AI</div><div class="animate-pulse text-blue-600">Sedang mengetik...</div></div>';box.appendChild(td);box.scrollTop=box.scrollHeight;var liveBox=null,liveTextEl=null,lastPaint=0;function ensureLiveBox(){if(liveBox)return;document.getElementById('typingIndicator')?.remove();liveBox=document.createElement('div');liveBox.className='flex justify-start fade-in';liveBox.innerHTML='<div class="max-w-[95%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500 dark:text-slate-400">Asisten AI</div><div class="ai-output text-gray-800 dark:text-white whitespace-pre-wrap" id="gsLiveText"></div></div>';box.appendChild(liveBox);liveTextEl=document.getElementById('gsLiveText');box.scrollTop=box.scrollHeight;}function paintDelta(full){ensureLiveBox();var now=Date.now();if(now-lastPaint<50&&full)return;lastPaint=now;if(liveTextEl){liveTextEl.textContent=full;box.scrollTop=box.scrollHeight;}}try{var ctx=await getSchoolContext();var isGreeting=/^(hai|halo|hello|hi|tes|test|selamat\s+(pagi|siang|sore|malam)|assalamualaikum|p|woi|woy|apa\s+kabar)\b/i.test(prompt.trim())&&prompt.trim().length<30&&!/(buat|buatkan|soal|pelajaran|materi|rpp|modul|latihan|ujian|ulangan|pertanyaan|essay|pilihan\s*ganda)/i.test(prompt);var sys=isGreeting?'Anda adalah Asisten AI Profesional yang ramah, sopan, dan berwawasan global.':'Anda adalah Asisten AI Profesional yang sangat cerdas, berwawasan internasional, dan ahli dalam bidang pendidikan. Anda menguasai Kurikulum Merdeka dan seluruh mata pelajaran kurikulum Indonesia (PAUD/TK, SD/MI, SMP/MTs, SMA/MA, SMK, madrasah/diniyah) serta bahasa daerah Nusantara (Jawa, Sunda, Betawi, Madura, Batak, Minangkabau, Melayu, Palembang, Bali, Sasak, Bugis, Dayak, Banjar, Aceh, Lampung, dan lainnya); Anda TETAP membuat soal, latihan, atau pembahasan untuk mapel apa pun yang diminta meskipun mapel itu tidak ada di data sekolah pengguna - dilarang menolak dengan alasan data pelajaran belum ada. KERJA TELITI: untuk permintaan soal hitungan, kerjakan langkah demi langkah dan periksa ulang hasil sebelum menjawab; jangan pernah mengarang kunci jawaban; pembahasan harus menghasilkan angka yang sama dengan kunci. Data sekolah: '+ctx+'. Saat user meminta soal pilihan ganda, WAJIB gunakan format: 1. Pertanyaan? A. Pilihan A B. Pilihan B C. Pilihan C D. Pilihan D Jawaban: B. DILARANG memakai tanda bintang * atau ** (bold markdown) di dalam soal, pilihan, dan jawaban.'+window.GS_SOAL_STANDAR;aiChatHistory.push({role:'user',content:prompt});gsLogChat({t:'u',k:'text',c:prompt});var ans=await callAIStream([{role:'system',content:sys}].concat(aiChatHistory),paintDelta);if(!ans||ans.trim()===''){throw new Error("Respon AI kosong.");}aiChatHistory.push({role:'assistant',content:ans});gsLogChat({t:'a',k:'soal',c:ans});if(liveBox){liveBox.remove();liveBox=null;}document.getElementById('typingIndicator')?.remove();var fh=formatSoalHTML(ans);lastAIFormattedHTML=fh;var ad=document.createElement('div');ad.className='flex justify-start fade-in';ad.innerHTML='<div class="max-w-[95%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500 dark:text-slate-400">Asisten AI</div><div class="ai-output text-gray-800 dark:text-white">'+fh+'</div></div>';box.appendChild(ad);box.scrollTop=box.scrollHeight;['aiPrintBtn','aiWordBtn','aiPrintKeyBtn'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('hidden');});try{gsPrewarmKop();}catch(ePW1){}}catch(e){if(liveBox){liveBox.remove();liveBox=null;}document.getElementById('typingIndicator')?.remove();if(/Low Balance|Kuota\/saldo/i.test((e&&e.message)||'')){var gd=document.createElement('div');gd.className='flex justify-start fade-in';gd.innerHTML='<div class="max-w-[95%] rounded-xl px-4 py-3 bg-amber-50 border border-amber-300 shadow-sm"><div class="text-xs font-semibold text-amber-700 mb-1">⚠️ Kuota AI Puter habis (Low Balance)</div><div class="text-sm text-amber-900 whitespace-pre-wrap">'+escapeHTML(e.message)+'</div><div class="mt-2 text-xs text-amber-800">Klik tombol di bawah untuk langsung ganti ke akun Puter gratis yang baru; setelah tersambung, ulangi pesan Anda.</div><button onclick="gsGantiAkunAI()" class="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2 px-3 rounded-lg">🔄 Ganti Akun AI Sekarang</button></div>';box.appendChild(gd);box.scrollTop=box.scrollHeight;}showToast('Error: '+e.message,'error');}finally{btn.disabled=false;btn.innerText='Kirim';}}
 async function handleAIImageUpload(event){var file=event.target.files[0];if(!file)return;var btn=document.getElementById('aiSendBtn');btn.disabled=true;btn.innerText='Memproses Gambar...';var box=document.getElementById('aiMessages');var reader=new FileReader();reader.onload=async function(e){var iu=e.target.result;var ud=document.createElement('div');ud.className='flex justify-end fade-in';ud.innerHTML='<div class="max-w-[80%] rounded-xl px-2 py-2 bg-blue-600 text-white shadow-sm"><div class="text-xs opacity-70 mb-1 px-2">Anda (Gambar)</div><img src="'+iu+'" class="rounded-lg max-w-full h-auto"></div>';box.appendChild(ud);gsLogChat({t:'u',k:'img',c:iu,label:'Anda (Gambar)'});var td=document.createElement('div');td.id='typingIndicator';td.className='flex justify-start fade-in';td.innerHTML='<div class="max-w-[90%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500 dark:text-slate-400">Asisten AI</div><div class="animate-pulse text-blue-600">Membaca teks (OCR)...</div></div>';box.appendChild(td);box.scrollTop=box.scrollHeight;try{var messages=[{role:'user',content:[{type:'text',text:"Baca semua teks di gambar ini."},{type:'image_url',image_url:{url:iu}}]}];var res=null;try{res=await GSAI.chat(messages);}catch(eOCR){console.warn('OCR AI gagal, coba OCR lokal:',eOCR);res=await gsLocalOCR(iu);}var et=typeof res==='string'?res:(res?.message?.content||res?.text||'');document.getElementById('typingIndicator')?.remove();if(!et||!et.trim()){throw new Error("Tidak ada teks terdeteksi.");}var fh=marked.parse(et);lastAIFormattedHTML=fh;gsLogChat({t:'a',k:'md',c:et,label:'Asisten AI (Teks hasil Scan)'});var ad=document.createElement('div');ad.className='flex justify-start fade-in';ad.innerHTML='<div class="max-w-[95%] rounded-xl px-4 py-3 bg-white shadow-sm"><div class="text-xs opacity-70 mb-1 text-gray-500 dark:text-slate-400">Asisten AI (Teks hasil Scan)</div><div class="ai-output text-gray-800 dark:text-white">'+fh+'</div></div>';box.appendChild(ad);box.scrollTop=box.scrollHeight;['aiPrintBtn','aiWordBtn'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('hidden');});try{gsPrewarmKop();}catch(ePW2){}showToast('Teks dipindai!','success');}catch(err){document.getElementById('typingIndicator')?.remove();showToast('Gagal: '+err.message,'error');}finally{btn.disabled=false;btn.innerText='Kirim';event.target.value='';}};reader.readAsDataURL(file);}
-async function openPrintPreview(htmlContent){var pw=window.open('','_blank');if(!pw){showToast('Pop-up diblokir.','error');document.getElementById('printArea').innerHTML=htmlContent;window.print();return;}pw.document.write('<html lang="id"><head><title>Cetak</title><script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"><\/script><style>body{font-family:Times New Roman,Georgia,serif;margin:20px;color:#000}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}table,th,td{border:1px solid #000!important;border-collapse:collapse!important}.rapor-info-table,.rapor-info-table td,.rapor-info-table tr{border:none!important;background:transparent!important}.card-info-table,.card-info-table td,.card-info-table tr{border:none!important;background:transparent!important}.ai-output h1,.ai-output h2,.ai-output h3{font-weight:bold;margin-top:12px;margin-bottom:6px}.ai-output p{margin-bottom:8px}.ai-output ul,.ai-output ol{margin-left:20px;margin-bottom:8px}.ai-output table{width:100%;border-collapse:collapse;margin-bottom:8px}.ai-output th,.ai-output td{border:1px solid #000;padding:6px;text-align:left}.ai-output img{max-width:100%;height:auto;border-radius:8px;margin:10px 0;box-shadow:0 2px 5px rgba(0,0,0,.1)}.ai-output .soal-item{margin-bottom:18px;padding-bottom:15px;border-bottom:1px solid #eee;page-break-inside:avoid}.ai-output .soal-header{display:flex;align-items:flex-start;gap:6px;margin-bottom:8px}.ai-output .soal-number{font-weight:bold;min-width:28px}.ai-output .soal-text{font-size:14px;line-height:1.7;font-weight:500;flex:1}.ai-output .soal-opts{display:flex;gap:24px;margin:8px 0 8px 34px}.ai-output .opt-col{flex:1;display:flex;flex-direction:column;gap:4px}.ai-output .soal-opt{display:flex;align-items:flex-start;font-size:13px}.ai-output .soal-opt .opt-label{font-weight:bold;margin-right:6px;min-width:20px}.rapor-page{page-break-after:always;break-after:page}.rapor-page:last-child{page-break-after:auto;break-after:auto}@media print{body{margin:0}.no-print{display:none}}</style></head><body><div class="no-print" style="text-align:center;margin-bottom:20px;position:fixed;bottom:10px;left:0;width:100%"><button onclick="window.print()" style="padding:10px 20px;font-size:16px;background:#2563eb;color:white;border:none;border-radius:8px;cursor:pointer">🖨️ Cetak / PDF</button></div><div id="contentArea">'+htmlContent+'</div><script>var ca=document.getElementById("contentArea");var rt=ca.textContent;if(ca.children.length===0&&(rt.trim().startsWith("#")||rt.includes("**"))){ca.innerHTML=marked.parse(rt);}<\/script></body></html>');pw.document.close();pw.focus();setTimeout(function(){pw.print();},500);}
+async function openPrintPreview(htmlContent){var pw=window.open('','_blank');if(!pw){showToast('Pop-up diblokir.','error');document.getElementById('printArea').innerHTML=htmlContent;window.print();return;}pw.document.write('<html lang="id"><head><title>Cetak</title><script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"><\/script><style>body{font-family:Times New Roman,Georgia,serif;margin:20px;color:#000}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}table,th,td{border:1px solid #000!important;border-collapse:collapse!important}.rapor-info-table,.rapor-info-table td,.rapor-info-table tr{border:none!important;background:transparent!important}.card-info-table,.card-info-table td,.card-info-table tr{border:none!important;background:transparent!important}.ai-output h1,.ai-output h2,.ai-output h3{font-weight:bold;margin-top:12px;margin-bottom:6px}.ai-output p{margin-bottom:8px}.ai-output ul,.ai-output ol{margin-left:20px;margin-bottom:8px}.ai-output table{width:100%;border-collapse:collapse;margin-bottom:8px}.ai-output th,.ai-output td{border:1px solid #000;padding:6px;text-align:left}.ai-output img{max-width:100%;height:auto;border-radius:8px;margin:10px 0;box-shadow:0 2px 5px rgba(0,0,0,.1)}.ai-output .soal-item{margin-bottom:18px;padding-bottom:15px;page-break-inside:avoid}.ai-output .soal-header{display:flex;align-items:flex-start;gap:6px;margin-bottom:8px}.ai-output .soal-number{font-weight:bold;min-width:28px}.ai-output .soal-text{font-size:14px;line-height:1.7;font-weight:500;flex:1}.ai-output .soal-opts{display:flex;gap:24px;margin:8px 0 8px 34px}.ai-output .opt-col{flex:1;display:flex;flex-direction:column;gap:4px}.ai-output .soal-opt{display:flex;align-items:flex-start;font-size:13px}.ai-output .soal-opt .opt-label{font-weight:bold;margin-right:6px;min-width:20px}.rapor-page{page-break-after:always;break-after:page}.rapor-page:last-child{page-break-after:auto;break-after:auto}@media print{body{margin:0}.no-print{display:none}}</style></head><body><div class="no-print" style="text-align:center;margin-bottom:20px;position:fixed;bottom:10px;left:0;width:100%"><button onclick="window.print()" style="padding:10px 20px;font-size:16px;background:#2563eb;color:white;border:none;border-radius:8px;cursor:pointer">🖨️ Cetak / PDF</button></div><div id="contentArea">'+htmlContent+'</div><script>var ca=document.getElementById("contentArea");var rt=ca.textContent;if(ca.children.length===0&&(rt.trim().startsWith("#")||rt.includes("**"))){ca.innerHTML=marked.parse(rt);}<\/script></body></html>');pw.document.close();pw.focus();setTimeout(function(){pw.print();},500);}
 async function printAIResult(includeKey){if(!lastAIFormattedHTML)return;var gsBtnsPdf=['aiPrintBtn','aiWordBtn','aiPrintKeyBtn'].map(function(id){return document.getElementById(id);}).filter(Boolean);gsBtnsPdf.forEach(function(b){b.disabled=true;});showToast('Menyiapkan pratinjau PDF...','info');try{var ch=lastAIFormattedHTML;if(!includeKey){ch=ch.replace(/<div class="kunci-jawaban-section[^"]*"[^>]*>[\s\S]*?<\/div><\/div>/g,'');ch=ch.replace(/<div class="soal-answer[^"]*"[^>]*>[\s\S]*?<\/div>/g,'');ch=ch.replace(/class="soal-opt[^"]*correct[^"]*"/g,'class="soal-opt"');ch=ch.replace(/<div class="soal-pembahasan[^"]*"[^>]*>[\s\S]*?<\/div>/g,'');}else{ch=ch.replace(/hide-on-print/g,'');}
 // LEMBAR SOAL STANDAR: judul + identitas Nama/Kelas + instruksi + pilihan satu per baris - persis contoh lembar
 var td=document.createElement('div');td.innerHTML=ch;
@@ -3901,16 +3901,18 @@ items.forEach(function(it){if(it.parentNode)it.parentNode.removeChild(it);});}
 // slack 10% agar Word tidak meluber; tiap blok dipaksa mulai halaman baru sehingga
 // urutan soal SELALU benar walau estimasi meleset (hanya menyisakan ruang kosong kecil).
 // KOP HANYA DI HALAMAN PERTAMA (Task 29): blok berada setelah kop, pemisah tanpa kop ulang.
-// Konversi 1 soal -> PARAGRAF hanging-indent keep-together (T27 anti soal hilang saat
-// print + T30 exact-pt): nomor di 0px, teks soal sejajar 34px; label pilihan di 34px,
-// teks pilihan sejajar 66px (persis PDF).
+// Konversi 1 soal -> TABEL Word-native keep-together (T27 anti soal hilang saat
+// print + T30 exact-pt): nomor di kolom tetap 34px, teks soal di sel sendiri -> baris
+// lanjutan soal panjang SELALU sejajar teks soal di atasnya (bukan lurus ke tepi nomor)
+// di SEMUA pembaca Word (desktop/HP/WPS/Docs); label pilihan di 34px, teks pilihan
+// sejajar 66px (persis PDF). Semua tabel TANPA garis.
 function gsWordParagrafItem(it){
 function gsSegOk(s){return String(s).replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim();}
 var h=it.querySelector('.soal-header');
 if(h){
 var num=h.querySelector('.soal-number'),txt=h.querySelector('.soal-text');
 if(num||txt){
-var numHTML=num?'<b>'+num.innerHTML+'</b> ':'';
+var numHTML=num?'<b>'+num.innerHTML+'</b>':'';
 var segs=[],buf='';
 if(txt){Array.prototype.slice.call(txt.childNodes).forEach(function(n){
 if(n.nodeType===1&&String(n.tagName).toLowerCase()==='p'){if(gsSegOk(buf))segs.push(buf);buf='';if(gsSegOk(n.innerHTML))segs.push(n.innerHTML);}
@@ -3918,23 +3920,32 @@ else{buf+=(n.outerHTML!=null?n.outerHTML:(n.textContent||''));}
 });
 if(gsSegOk(buf))segs.push(buf);}
 if(!segs.length)segs=[''];
-var out='';
-segs.forEach(function(s,i){out+='<p style="margin:0 0 3px 0;margin-left:34px;text-indent:-34px;text-align:justify;font-size:12.5px;line-height:12.7pt;mso-line-height-rule:exactly;page-break-inside:avoid;mso-keep-with-next:yes;">'+(i===0?numHTML:'')+s+'</p>';});
-var d=document.createElement('div');d.innerHTML=out;
-while(d.firstChild)h.parentNode.insertBefore(d.firstChild,h);
+var segHTML='';
+segs.forEach(function(s){segHTML+='<p style="margin:0 0 3px 0;font-size:12.5px;line-height:12.7pt;mso-line-height-rule:exactly;text-align:justify;">'+s+'</p>';});
+// NOMOR|TEKS = TABEL Word-native (BUKAN lagi paragraf hanging-indent): banyak pembaca
+// Word (HP/WPS/Docs) mengabaikan margin-left + text-indent negatif sehingga baris
+// kedua soal panjang lurus ke tepi nomor. Dengan sel terpisah, baris lanjutan PASTI
+// sejajar dengan teks soal di atasnya di SEMUA pembaca Word.
+var tblH=document.createElement('table');
+tblH.setAttribute('width','100%');tblH.setAttribute('cellpadding','0');tblH.setAttribute('cellspacing','0');tblH.setAttribute('border','0');
+tblH.style.width='100%';tblH.style.border='none';tblH.style.borderCollapse='collapse';tblH.style.margin='0 0 4px 0';
+tblH.innerHTML='<tr><td width="34" style="width:34px;border:none;padding:0;font-weight:bold;font-size:12.5px;line-height:12.7pt;vertical-align:top;white-space:nowrap;text-align:left;">'+numHTML+'</td><td style="border:none;padding:0;font-size:12.5px;line-height:12.7pt;vertical-align:top;text-align:justify;">'+segHTML+'</td></tr>';
+h.parentNode.insertBefore(tblH,h);
 if(h.parentNode)h.parentNode.removeChild(h);}}
 var od=it.querySelector('.soal-opts');
 if(od){
 var opts=[];
 od.querySelectorAll('.opt-col').forEach(function(col){col.querySelectorAll('.soal-opt').forEach(function(o){opts.push(o);});});
 if(!opts.length)opts=Array.prototype.slice.call(od.querySelectorAll('.soal-opt'));
-var out2='';
-opts.forEach(function(o,oi){var lb=o.querySelector('.opt-label'),tx=o.querySelector('.opt-text');
-var lbl=(lb?lb.innerHTML:'').toLowerCase();
-var tx2=tx?tx.innerHTML:o.innerHTML;
-out2+='<p style="margin:1px 0 1px 0;margin-left:66px;text-indent:-32px;text-align:left;font-size:12px;line-height:11.7pt;mso-line-height-rule:exactly;page-break-inside:avoid;'+(oi<opts.length-1?'mso-keep-with-next:yes;':'')+'"><b>'+lbl+'</b> '+tx2+'</p>';});
-var d2=document.createElement('div');d2.innerHTML=out2;
-while(d2.firstChild)od.parentNode.insertBefore(d2.firstChild,od);
+var rowsO='';
+opts.forEach(function(o){rowsO+='<tr>'+gsOptCell(o)+'</tr>';});
+// PILIHAN juga tabel Word-native: label huruf di 34px, teks pilihan sejajar 66px
+// (persis PDF), baris lanjutan pilihan panjang ikut sejajar teks pilihan. TANPA garis.
+var tblO=document.createElement('table');
+tblO.setAttribute('width','100%');tblO.setAttribute('cellpadding','0');tblO.setAttribute('cellspacing','0');tblO.setAttribute('border','0');
+tblO.style.width='100%';tblO.style.border='none';tblO.style.borderCollapse='collapse';tblO.style.margin='3px 0 3px 34px';
+tblO.innerHTML=rowsO;
+od.parentNode.insertBefore(tblO,od);
 if(od.parentNode)od.parentNode.removeChild(od);}
 }
 // UKUR tinggi nyata elemen pada lebar w px (wadah tersembunyi di document.body;
@@ -4018,7 +4029,7 @@ var kopHTMLw=await gsKopHTMLForWord();
 var gsExtraPx=8;
 if(kopHTMLw){var dK=document.createElement('div');dK.innerHTML='<div>'+kopHTMLw+'</div>';gsExtraPx+=gsMeasurePx(dK.firstChild,672)+8;}
 if(lem.header){var dH=document.createElement('div');dH.innerHTML='<div>'+lem.header+'</div>';gsExtraPx+=gsMeasurePx(dH.firstChild,672)+8;}
-gsChunkSoalWord(td,gsExtraPx); // WORD-ONLY: paragraf hanging-indent keep-together (anti soal hilang T27) + tabel blok adaptif - rapi di SEMUA pembaca Word
+gsChunkSoalWord(td,gsExtraPx); // WORD-ONLY: tabel Word-native (nomor|teks, baris lanjutan sejajar teks) keep-together (anti soal hilang T27) + tabel blok adaptif - rapi di SEMUA pembaca Word
 // PILIHAN SOAL: satu opsi per baris (a. b. c. d.) persis contoh lembar soal - label huruf kecil di kolom tetap
 td.querySelectorAll('.soal-opts').forEach(function(od){
 var items=[];
@@ -4032,7 +4043,7 @@ tbl.style.marginLeft='34px';tbl.style.marginTop='3px';tbl.style.marginBottom='3p
 tbl.innerHTML=rows;
 if(od.parentNode)od.parentNode.replaceChild(tbl,od);});
 // SUSUNAN SOAL: jarak antar soal, nomor tebal, teks rata kiri
-td.querySelectorAll('.soal-item').forEach(function(item){item.style.marginBottom='8px';item.style.paddingBottom='6px';item.style.borderBottom='1px solid #dddddd';});
+td.querySelectorAll('.soal-item').forEach(function(item){item.style.marginBottom='8px';item.style.paddingBottom='6px';item.style.borderBottom='none';}); // TANPA garis abu-abu antar soal (permintaan pengguna)
 // SUSUNAN NOMER & TEKS = PDF: nomor di kolom tetap 34px (PDF: min-width 28px + gap 6px), teks soal selalu mulai di posisi sama & baris lanjutan sejajar teks (bukan ke tepi kiri) - tabel Word-native tanpa garis
 td.querySelectorAll('.soal-header').forEach(function(h){
 var num=h.querySelector('.soal-number'),txt=h.querySelector('.soal-text');
@@ -4074,7 +4085,7 @@ if(sp&&sp.b64){gsSeq++;var ext2=sp.mime==='image/png'?'png':(sp.mime==='image/gi
 // KOP tetap hanya halaman 1 (Task 29) - hanya ada di awal dokumen.
 var gsW='<div style="font-family:Times New Roman,Georgia,serif;color:#000;padding:0;margin:0;width:100%">'+'<div class="ai-output" style="color:#000;margin:0;padding:0">';
 var bodyHTML='<div class="Section1">'+gsW+td.innerHTML+'</div></div></div>';
-var header='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Soal - GURU SMART</title><style>@page{size:21cm 29.7cm;margin:1.4cm 1.6cm 0.9cm 1.6cm}@page Section1{size:21cm 29.7cm;margin:1.4cm 1.6cm 0.9cm 1.6cm;mso-header-margin:0cm;mso-footer-margin:0cm}div.Section1{page:Section1}body{font-family:Times New Roman,Georgia,serif;font-size:9.5pt;color:#000;line-height:135%}h1,h2,h3{color:#000}.ai-output table{width:100%;border-collapse:collapse;margin-bottom:4px}.ai-output img{margin:6px 0}.ai-output p{margin:0 0 3px 0;text-align:justify}.ai-output .soal-item{margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #dddddd;page-break-inside:avoid}.ai-output .soal-header{margin-bottom:4px}.ai-output .soal-text p{margin:0 0 2px 0}.ai-output .soal-opts{margin:3px 0 3px 34px}</style></head><body>'+bodyHTML+'</body></html>';
+var header='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Soal - GURU SMART</title><style>@page{size:21cm 29.7cm;margin:1.4cm 1.6cm 0.9cm 1.6cm}@page Section1{size:21cm 29.7cm;margin:1.4cm 1.6cm 0.9cm 1.6cm;mso-header-margin:0cm;mso-footer-margin:0cm}div.Section1{page:Section1}body{font-family:Times New Roman,Georgia,serif;font-size:9.5pt;color:#000;line-height:135%}h1,h2,h3{color:#000}.ai-output table{width:100%;border-collapse:collapse;margin-bottom:4px}.ai-output img{margin:6px 0}.ai-output p{margin:0 0 3px 0;text-align:justify}.ai-output .soal-item{margin-bottom:8px;padding-bottom:6px;page-break-inside:avoid}.ai-output .soal-header{margin-bottom:4px}.ai-output .soal-text p{margin:0 0 2px 0}.ai-output .soal-opts{margin:3px 0 3px 34px}</style></head><body>'+bodyHTML+'</body></html>';
 var blob;
 if(gsParts.length){blob=new Blob([gsBuildMHTML(header,gsParts)],{type:'application/msword'});}
 else{blob=new Blob(['\ufeff',header],{type:'application/msword'});}
@@ -5502,84 +5513,5 @@ window.__gsInstallExcelFormat=function(){
 </style>
 <!-- AKSELERASI: boot seketika setelah seluruh kode aplikasi siap (tanpa menunggu window.onload) -->
 <script>if(window.__gsFastBoot)window.__gsFastBoot();</script>
-<!-- ====== PATCH CETAK SOAL GURU SMART (tempel DI ATAS </body>) ====== -->
-<style id="gsSoalPrintFixStyle">
-@media print{
-  #printArea.gs-print-soal,
-  #printArea.gs-print-soal *{border:none!important;outline:none!important;box-shadow:none!important}
-  #printArea.gs-print-soal table,
-  #printArea.gs-print-soal tr,
-  #printArea.gs-print-soal th,
-  #printArea.gs-print-soal td{border:none!important;outline:none!important;background:transparent!important;box-shadow:none!important}
-  #printArea.gs-print-soal .gs-soal-item{display:flex!important;align-items:flex-start!important;text-align:left!important}
-  #printArea.gs-print-soal .gs-soal-num{flex:0 0 auto;white-space:nowrap;margin-right:.45em}
-  #printArea.gs-print-soal .gs-soal-txt{flex:1 1 auto;min-width:0}
-}
-</style>
-<script>
-(function(){
-  if(window.__gsSoalPrintFix)return;window.__gsSoalPrintFix=true;
-  function isSoalContext(pa){
-    var t=(pa.innerText||pa.textContent||'').toUpperCase();
-    var h=pa.innerHTML||'';
-    if(!t.replace(/\s/g,''))return false;
-    if(/KISI[-\s]?KISI|RAPOR|LEGER|ABSENSI|DAFTAR\s+HADIR|KARTU\s+(PELAJAR|UJIAN|SISWA|RAPOR)|DAFTAR\s+NILAI|JADWAL|PIAGAM|SERTIFIKAT|SLIP|PENGUMUMAN|IJAZAH/.test(t))return false;
-    if(/\bSOAL\b|\bNASKAH\b|\bUJIAN\b|\bULANGAN\b|\bLATIHAN\b|\bPAS\b|\bPAT\b|\bPTS\b|\bASAS\b|\bSUMATIF\b|\bQUIS\b|\bKUIS\b/.test(t))return true;
-    var opts=0;
-    'ABCDE'.split('').forEach(function(L){try{if(new RegExp('(^|[\\s>\\u00a0])'+L+'[\\.\\)]').test(h))opts++;}catch(e){}});
-    return opts>=4;
-  }
-  var BLOCK_TEST=/^(TABLE|THEAD|TBODY|TFOOT|TR|UL|OL|SECTION|ARTICLE|FORM|H[1-6]|BLOCKQUOTE)$/;
-  function leafBlock(el){
-    if(BLOCK_TEST.test(el.tagName))return false;
-    if(el.querySelector('div,p,li,td,th,table,ul,ol,section,article,blockquote,h1,h2,h3,h4,h5,h6'))return false;
-    return true;
-  }
-  function hangFix(root){
-    var els=root.querySelectorAll('div,p,li,td,span');
-    for(var i=0;i<els.length;i++){
-      var el=els[i];
-      if(el.closest&&el.closest('.gs-soal-item'))continue;
-      if(!leafBlock(el))continue;
-      var fc=el.firstChild,num=null,isEl=false;
-      if(fc&&fc.nodeType===1&&/^(B|STRONG|SPAN|I|EM|U|LABEL)$/.test(fc.tagName)){
-        var m=(fc.textContent||'').replace(/\u00a0/g,' ').trim().match(/^(\d{1,3}|[A-Ea-e])([\.\)])$/);
-        if(m&&fc.nextSibling){num=fc;isEl=true;}
-      }
-      if(!num&&fc&&fc.nodeType===3){
-        var mm=(fc.nodeValue||'').replace(/\u00a0/g,' ').match(/^(\s{0,6})(\d{1,3}|[A-Ea-e])([\.\)])(\s+|$)/);
-        if(mm){
-          num=document.createElement('span');
-          num.className='gs-soal-num';
-          num.textContent=mm[2]+mm[3];
-          el.insertBefore(num,fc);
-          var left=fc.nodeValue.slice(mm[0].length);
-          if(left&&left.replace(/\s/g,'')){fc.nodeValue=left;}else{el.removeChild(fc);}
-        }
-      }
-      if(!num)continue;
-      var wrap=document.createElement('span');
-      wrap.className='gs-soal-txt';
-      var n=num.nextSibling;
-      while(n){var nx=n.nextSibling;wrap.appendChild(n);n=nx;}
-      el.appendChild(wrap);
-      if(isEl)num.classList.add('gs-soal-num');
-      el.classList.add('gs-soal-item');
-    }
-  }
-  function prepareSoalPrint(){
-    var pa=document.getElementById('printArea');
-    if(!pa)return;
-    try{
-      if(isSoalContext(pa)){pa.classList.add('gs-print-soal');hangFix(pa);}
-      else{pa.classList.remove('gs-print-soal');}
-    }catch(e){console.warn('Patch cetak soal:',e);}
-  }
-  window.addEventListener('beforeprint',prepareSoalPrint);
-  var __origPrint=window.print;
-  window.print=function(){try{prepareSoalPrint();}catch(e){}return __origPrint.apply(window,arguments);};
-})();
-</script>
-<!-- ====== AKHIR PATCH ====== -->
 </body>
 </html>
