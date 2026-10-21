@@ -3835,11 +3835,11 @@ function gsLembarFooterHTML(){function fc(w,extra){return '<td width="'+w+'" sty
 return '<table class="lembar-footer-table" width="100%" border="0" cellpadding="6" cellspacing="0" style="border:none;border-collapse:collapse;width:100%;margin-top:24px;">'
 +'<tr>'+fc('15%','font-weight:bold;')+'Nilai</td>'+fc('30%','font-weight:bold;')+'Catatan</td>'+fc('27%','font-weight:bold;')+'Paraf Guru</td>'+fc('28%','font-weight:bold;')+'Paraf Orang Tua</td></tr>'
 +'<tr>'+fc('15%','height:60px;')+'&nbsp;</td>'+fc('30%','height:60px;')+'&nbsp;</td>'+fc('27%','height:60px;')+'&nbsp;</td>'+fc('28%','height:60px;')+'&nbsp;</td></tr></table>';}
-function gsLembarTransform(td){
+function gsLembarTransform(td,forWord){
 var cont=td.querySelector('.soal-container');
 if(!cont){var nl=(td.textContent||'').match(/(^|\n)\s*\d{1,3}[.)]\s+\S/g)||[];
 if(nl.length<2)return{header:'',footer:''};
-return{header:gsLembarHeaderHTML('LEMBAR LATIHAN SOAL',[]),footer:gsLembarFooterHTML()};}
+return{header:forWord?gsLembarHeaderWordHTML('LEMBAR LATIHAN SOAL',[]):gsLembarHeaderHTML('LEMBAR LATIHAN SOAL',[]),footer:forWord?gsLembarFooterWordHTML():gsLembarFooterHTML()};}
 var introEls=[];
 Array.prototype.slice.call(td.children).forEach(function(el){
 if(el===cont)return;
@@ -3848,7 +3848,7 @@ introEls.push(el);});
 var introText=introEls.map(function(el){return el.textContent||'';}).join('\n');
 var pick=gsLembarPickIntro(introText);
 if(!pick.body)introEls.forEach(function(el){if(el.parentNode)el.parentNode.removeChild(el);});
-var header=gsLembarHeaderHTML(pick.title,pick.body?[]:pick.sub);
+var header=forWord?gsLembarHeaderWordHTML(pick.title,pick.body?[]:pick.sub):gsLembarHeaderHTML(pick.title,pick.body?[]:pick.sub);
 var subAll=((pick.body?introText:pick.sub.join(' '))||'').toLowerCase();
 var firstPG=null,firstEssay=null;
 Array.prototype.slice.call(td.querySelectorAll('.soal-item')).forEach(function(it){
@@ -3857,15 +3857,115 @@ else if(!firstEssay)firstEssay=it;});
 function gsIns(anchor,txt){var d=document.createElement('div');d.innerHTML='<p style="margin:0 0 10px 0;">'+txt+'</p>';if(d.firstChild&&anchor.parentNode)anchor.parentNode.insertBefore(d.firstChild,anchor);}
 if(firstPG&&subAll.indexOf('tanda silang')<0)gsIns(firstPG,'Berilah tanda silang (X) huruf a, b, c, atau d pada jawaban yang benar!');
 if(firstEssay&&subAll.indexOf('jawablah')<0&&subAll.indexOf('isilah')<0)gsIns(firstEssay,'Jawablah pertanyaan-pertanyaan di bawah ini dengan benar!');
-return{header:header,footer:gsLembarFooterHTML()};}
-// PILIHAN = PERSIS PDF: label huruf kotak 26px (34->60px) -> teks pilihan mulai 60px
-// (PDF: min-width 20px + margin-right 6px di dalam wadah 34px), font 12px, line-height 1.3,
-// jarak antar pilihan 1px atas/bawah (PDF .soal-opt margin:1px 0) - TANPA garis.
-function gsOptCell(o){if(!o)return '<td width="26" style="width:26px;border:none;padding:1px 0;font-size:12px;line-height:1.3;"></td><td width="262" style="width:262px;border:none;padding:1px 0;font-size:12px;line-height:1.3;"></td>';
+return{header:header,footer:forWord?gsLembarFooterWordHTML():gsLembarFooterHTML()};}
+// ==== WORD v28 BEBAS-TABEL ====
+// Permintaan pengguna: (1) tampilan Word = persis PDF, (2) PDF 2 halaman -> Word
+// 2 halaman, (3) HILANGKAN garis tabel di Word. Akar masalah: tabel layout
+// Word-native (nomor|teks 322px, baris pilihan, tabel pasangan 672px, identitas,
+// footer) tampil sebagai gridline abu-abu di MS Word dan memicu selisih halaman.
+// Kini SEMUA tabel layout area soal DIHAPUS:
+//  - Nomor/teks/pilihan/essay = PARAGRAF hanging-indent + tab stop (format asli
+//    Word: margin-left + text-indent negatif + padding nbsp terukur) -> baris lanjutan
+//    SELALU sejajar teks soal/pilihan di atasnya, di SEMUA pembaca, tanpa tabel.
+//  - 2 kolom = SECTION Word native top-level berdampingan (@page Section2
+//    mso-columns utk MS Word/WPS) + CSS column-count:2 (terbukti dirender LO):
+//    pemaginan halaman dikerjakan engine sendiri secara kontinu -> jumlah
+//    halaman mengikuti PDF secara alami (tidak ada lagi perkiraan kapasitas).
+//  - Sisa tabel: kop (logo) + tabel markdown (bergaris = PDF). Identitas & footer
+//    Nilai/Paraf jadi paragraf tab-stop -> tanpa garis sama sekali.
+// PENGUKUR LEBAR di browser saat export (metrik Times New Roman = identik di
+// Chrome/Word/WPS/LO karena Liberation Serif metric-compatible) -> padding nbsp
+// deterministik di SEMUA pembaca TANPA tab (import tab LO terbukti tidak reliable:
+// span mso-tab-count dilipat jadi spasi, deklarasi tab-stops diabaikan).
+function gsWMeasure(text,fontCss){
+var d=document.createElement('span');
+d.style.cssText='position:absolute;left:-9999px;top:0;visibility:hidden;white-space:pre;margin:0;padding:0;border:none;font:'+fontCss;
+d.innerHTML=text;document.body.appendChild(d);
+var w=d.offsetWidth;document.body.removeChild(d);return w;}
+function gsWPadNbsp(targetPx,text,fontCss){
+var w=gsWMeasure(text,fontCss),sp=gsWMeasure('&nbsp;',fontCss);
+var n=Math.round((targetPx-w)/sp);
+return n>0?new Array(n+1).join('\u00a0'):'';}
+// Nomor+teks soal -> paragraf hanging: nomor 12pt bold di 0px, teks 12.5px mulai
+// 34px (padding nbsp terukur), baris lanjutan tetap 34px (= PDF). Segmen <p> dalam
+// .soal-text jadi paragraf sendiri, jarak 2px (= PDF .soal-text p{margin:0 0 2px}).
+function gsWHeaderParas(h,moreFollows){
+function gsSegOk(s){return String(s).replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim();}
+var num=h.querySelector('.soal-number'),txt=h.querySelector('.soal-text');
+var numHTML=num?'<b style="font-size:12pt;">'+num.innerHTML+'</b>':'';
+var segs=[],buf='';
+if(txt){Array.prototype.slice.call(txt.childNodes).forEach(function(n){
+if(n.nodeType===1&&String(n.tagName).toLowerCase()==='p'){if(gsSegOk(buf))segs.push(buf);buf='';if(gsSegOk(n.innerHTML))segs.push(n.innerHTML);}
+else{buf+=(n.outerHTML!=null?n.outerHTML:(n.textContent||''));}});
+if(gsSegOk(buf))segs.push(buf);}
+if(!segs.length)segs=[''];
+var out='';
+for(var i=0;i<segs.length;i++){
+var first=(i===0),last=(i===segs.length-1);
+var st='margin:0 0 '+(last?(moreFollows?'9px':'16px'):'2px')+' 34px;'
++(first?'text-indent:-34px;':'')
++'font-size:12.5px;line-height:12.7pt;mso-line-height-rule:exactly;text-align:justify;page-break-inside:avoid;'
++(moreFollows?'page-break-after:avoid;':'');
+out+='<p style="'+st+'">'+(first?numHTML+gsWPadNbsp(34,numHTML,'bold 12pt "Times New Roman",Georgia,serif'):'')+segs[i]+'</p>';}
+return out;}
+// Pilihan -> paragraf hanging: label bold di 34px (indent -26px dari margin 60px),
+// teks mulai 60px (padding nbsp 26px), baris lanjutan 60px (= PDF), 12px/11.7pt exact,
+// jarak antar pilihan 1px (= PDF .soal-opt{margin:1px 0}), akhir soal 18px.
+function gsWOptParas(opts){
+var out='';
+opts.forEach(function(o,i){
+var last=(i===opts.length-1);
 var lb=o.querySelector('.opt-label'),tx=o.querySelector('.opt-text');
 var lbl=(lb?lb.innerHTML:'').toLowerCase();
-var txt=tx?tx.innerHTML:o.innerHTML;
-return '<td width="26" style="width:26px;border:none;padding:1px 0;font-size:12px;line-height:1.3;font-weight:bold;vertical-align:top;white-space:nowrap;text-align:left;">'+lbl+'</td>'+'<td width="262" style="width:262px;border:none;padding:1px 0;font-size:12px;line-height:1.3;vertical-align:top;text-align:left;">'+txt+'</td>';}
+var txt2=tx?tx.innerHTML:(lb?'':o.innerHTML);
+var lblHTML=lbl?'<b>'+lbl+'</b>':'';
+out+='<p style="margin:1px 0 '+(last?'18px':'1px')+' 60px;text-indent:-26px;font-size:12px;line-height:11.7pt;mso-line-height-rule:exactly;text-align:left;page-break-inside:avoid;'+(last?'':'page-break-after:avoid;')+'">'+lblHTML+(lbl?gsWPadNbsp(26,lblHTML,'bold 9pt "Times New Roman",Georgia,serif'):'')+txt2+'</p>';});
+return out;}
+// Item PG -> paragraf (header + pilihan + konten lain: gambar dll.)
+function gsWSoalItemParas(it){
+var h=it.querySelector('.soal-header'),od=it.querySelector('.soal-opts');
+var other='';
+Array.prototype.slice.call(it.children).forEach(function(c){if(c===h||c===od)return;other+=c.outerHTML;});
+var opts=[];
+if(od){od.querySelectorAll('.opt-col').forEach(function(col){col.querySelectorAll('.soal-opt').forEach(function(o){opts.push(o);});});
+if(!opts.length)opts=Array.prototype.slice.call(od.querySelectorAll('.soal-opt'));}
+var out='';
+if(h)out+=gsWHeaderParas(h,opts.length>0||!!other);
+out+=gsWOptParas(opts);
+out+=other;
+if(!out)out='<div>'+it.innerHTML+'</div>';
+return out;}
+// Item essay (tanpa pilihan) -> paragraf + konten lain (gambar maks 620px)
+function gsWEssayItemParas(it){
+var h=it.querySelector('.soal-header'),od=it.querySelector('.soal-opts');
+var other='';
+Array.prototype.slice.call(it.children).forEach(function(c){if(c===h||c===od)return;other+=c.outerHTML;});
+var out=h?gsWHeaderParas(h,!!other):'';
+out+=other;
+if(!out)out='<div>'+it.innerHTML+'</div>';
+return out;}
+// Identitas Word = paragraf tab-stop (label 0px, ':' 110px=82.5pt, titik-titik
+// 124px=93pt) - TANPA tabel -> tanpa garis. Judul/sub tetap paragraf tengah (= PDF).
+function gsLembarHeaderWordHTML(title,sub){
+var dots='..............................................................................................';
+var sh='';var arr=sub||[];
+arr.forEach(function(l,i){sh+='<div style="text-align:center;font-weight:bold;font-size:12pt;margin:'+(i===0?'2px':'1px')+' 0 '+(i===arr.length-1?'8px':'1px')+' 0;">'+l+'</div>';});
+var fi='12pt "Times New Roman",Georgia,serif';
+return '<div style="text-align:center;margin:0 0 8px 0;"><div style="font-size:14pt;font-weight:bold;margin:0 0 3px 0;">'+(title||'LEMBAR LATIHAN SOAL')+'</div>'+sh+'</div>'
++'<p style="margin:2px 0;font-size:12pt;">Nama Lengkap'+gsWPadNbsp(110,'Nama Lengkap',fi)+': '+dots+'</p>'
++'<p style="margin:2px 0 8px 0;font-size:12pt;">Kelas'+gsWPadNbsp(110,'Kelas',fi)+': '+dots+'</p>';}
+// Footer Nilai/Paraf Word = 2 paragraf tab-stop (75.75/227.25/363pt = PDF 101/303/484px),
+// baris kosong 45pt(=60px) exact utk area tanda tangan (= PDF height:60px).
+function gsLembarFooterWordHTML(){
+var f='bold 12pt "Times New Roman",Georgia,serif';
+var sp=gsWMeasure('&nbsp;',f);
+var x=0,out='',labels=['Nilai','Catatan','Paraf Guru','Paraf Orang Tua'],targets=[101,303,484];
+labels.forEach(function(lb,i){
+if(i>0){var n=Math.round((targets[i-1]-x)/sp);if(n<1)n=1;out+=new Array(n+1).join('\u00a0');x+=n*sp;}
+out+=lb;x+=gsWMeasure(lb,f);});
+return '<p style="margin:24px 0 0 0;font-size:12pt;font-weight:bold;">'+out+'</p>'
++'<p style="margin:0;font-size:12pt;line-height:45pt;mso-line-height-rule:exactly;">&nbsp;</p>';}
+
 // SUSUNAN SOAL 2 KOLOM (Task 34): PDF memakai CSS multicol (Chrome mengisi halaman
 // sendiri); WORD memakai TABEL per halaman berkapasitas terukur nyata (adaptif
 // 10/11/12+ soal - semangat Task 31) agar RAPI & urutan baca benar di SEMUA pembaca
@@ -3912,117 +4012,6 @@ items.forEach(function(it){if(it.parentNode)it.parentNode.removeChild(it);});}
 // lanjutan soal panjang SELALU sejajar teks soal di atasnya (bukan lurus ke tepi nomor)
 // di SEMUA pembaca Word (desktop/HP/WPS/Docs); label pilihan di 34px, teks pilihan
 // sejajar 66px (persis PDF). Semua tabel TANPA garis.
-function gsWordParagrafItem(it){
-function gsSegOk(s){return String(s).replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim();}
-var h=it.querySelector('.soal-header');
-if(h){
-var num=h.querySelector('.soal-number'),txt=h.querySelector('.soal-text');
-if(num||txt){
-var numHTML=num?'<b>'+num.innerHTML+'</b>':'';
-var segs=[],buf='';
-if(txt){Array.prototype.slice.call(txt.childNodes).forEach(function(n){
-if(n.nodeType===1&&String(n.tagName).toLowerCase()==='p'){if(gsSegOk(buf))segs.push(buf);buf='';if(gsSegOk(n.innerHTML))segs.push(n.innerHTML);}
-else{buf+=(n.outerHTML!=null?n.outerHTML:(n.textContent||''));}
-});
-if(gsSegOk(buf))segs.push(buf);}
-if(!segs.length)segs=[''];
-var segHTML='';
-// margin antar paragraf soal 2px = PERSIS PDF (.soal-text p{margin:0 0 2px 0})
-segs.forEach(function(s){segHTML+='<p style="margin:0 0 2px 0;font-size:12.5px;line-height:12.7pt;mso-line-height-rule:exactly;text-align:justify;">'+s+'</p>';});
-// NOMOR|TEKS = TABEL Word-native (BUKAN lagi paragraf hanging-indent): banyak pembaca
-// Word (HP/WPS/Docs) mengabaikan margin-left + text-indent negatif sehingga baris
-// kedua soal panjang lurus ke tepi nomor. Dengan sel terpisah, baris lanjutan PASTI
-// sejajar dengan teks soal di atasnya di SEMUA pembaca Word.
-var tblH=document.createElement('table');
-// LEBAR EKSPLISIT 322px + table-layout:fixed + LEBAR SETIAP SEL dinyatakan -> geometri
-// kolom TIDAK diubah-ulang lagi oleh engine Word (kolom nomor PASTI 34px, teks 288px = PDF).
-tblH.setAttribute('width','322');tblH.setAttribute('cellpadding','0');tblH.setAttribute('cellspacing','0');tblH.setAttribute('border','0');
-// setAttribute (BUKAN style.cssText) agar properti mso-* TIDAK dibuang CSSOM browser
-tblH.setAttribute('style','width:322px;border:none;border-collapse:collapse;table-layout:fixed;margin:0 0 4px 0;mso-table-lspace:0pt;mso-table-rspace:0pt;');
-// nomor 12pt(=16px) bold = PERSIS PDF (.soal-number{font-weight:bold} mewarisi 16px body)
-tblH.innerHTML='<tr><td width="34" style="width:34px;border:none;padding:0cm 0cm 0cm 0cm;font-weight:bold;font-size:12pt;line-height:12.7pt;vertical-align:top;white-space:nowrap;text-align:left;">'+numHTML+'</td><td width="288" style="width:288px;border:none;padding:0cm 0cm 0cm 0cm;font-size:12.5px;line-height:12.7pt;vertical-align:top;text-align:justify;">'+segHTML+'</td></tr>';
-h.parentNode.insertBefore(tblH,h);
-if(h.parentNode)h.parentNode.removeChild(h);}}
-var od=it.querySelector('.soal-opts');
-if(od){
-var opts=[];
-od.querySelectorAll('.opt-col').forEach(function(col){col.querySelectorAll('.soal-opt').forEach(function(o){opts.push(o);});});
-if(!opts.length)opts=Array.prototype.slice.call(od.querySelectorAll('.soal-opt'));
-var rowsO='';
-opts.forEach(function(o){rowsO+='<tr><td width="34" style="width:34px;border:none;padding:0cm 0cm 0cm 0cm;"></td>'+gsOptCell(o)+'</tr>';});
-// PILIHAN tabel Word-native fixed: kolom kosong 34px (indent = PDF 34px; margin-left tabel
-// diabaikan sebagian engine), label 26px, teks 262px -> teks pilihan mulai 34+26=60px
-// PERSIS PDF; baris lanjutan pilihan panjang ikut sejajar teksnya. TANPA garis.
-var tblO=document.createElement('table');
-tblO.setAttribute('width','322');tblO.setAttribute('cellpadding','0');tblO.setAttribute('cellspacing','0');tblO.setAttribute('border','0');
-tblO.setAttribute('style','width:322px;border:none;border-collapse:collapse;table-layout:fixed;margin:3px 0;mso-table-lspace:0pt;mso-table-rspace:0pt;');
-tblO.innerHTML=rowsO;
-od.parentNode.insertBefore(tblO,od);
-if(od.parentNode)od.parentNode.removeChild(od);}
-}
-// UKUR tinggi nyata elemen pada lebar w px (wadah tersembunyi di document.body;
-// memakai KLON agar node asli tidak berpindah dari dokumen).
-function gsMeasurePx(el,w){
-try{if(!el||!document.body)return 0;
-var md=document.createElement('div');
-md.style.cssText='position:absolute;left:-99999px;top:0;visibility:hidden;width:'+w+'px;padding:0;margin:0;border:none;';
-document.body.appendChild(md);
-var cl=el.cloneNode(true);md.appendChild(cl);
-var h=cl.offsetHeight;
-document.body.removeChild(md);
-return h>0?h:0;}catch(eM){return 0;}}
-// BLOK SOAL WORD: konversi paragraf keep-together -> ukur tinggi -> kemas per halaman ->
-// tabel 2 kolom. extraPx = tinggi kepala halaman 1 (kop+judul+identitas+instruksi) px.
-function gsChunkSoalWord(td,extraPx){
-var items=gsSoalPick(td);
-if(items.length<2)return;
-items.forEach(gsWordParagrafItem);
-// SPACING INLINE = PERSIS PDF (.soal-item margin-bottom:8px + padding-bottom:6px):
-// diset INLINE sebelum pengukuran agar offsetHeight mencakup padding 6px -> tinggi
-// terukur = tinggi nyata di Word, kapasitas halaman akurat (dulu kurang 6px/soal).
-items.forEach(function(it){it.style.marginBottom='8px';it.style.paddingBottom='6px';});
-// SPACING INLINE = PERSIS PDF (.soal-item margin-bottom:8px + padding-bottom:6px):
-// diset INLINE sebelum pengukuran agar offsetHeight mencakup padding 6px -> tinggi
-// terukur = tinggi nyata di Word, kapasitas halaman akurat (dulu kurang 6px/soal).
-items.forEach(function(it){it.style.marginBottom='8px';it.style.paddingBottom='6px';});
-var extra=(extraPx||0);
-for(var cn=td.firstChild;cn&&cn!==items[0]&&!(cn.contains&&cn.contains(items[0]));cn=cn.nextSibling){if(cn.nodeType===1)extra+=gsMeasurePx(cn,672)+8;}
-var COL=322,PAGE=1036,GAP=8;
-var hs=items.map(function(it){var m=gsMeasurePx(it,COL);return (m>0?m:150)+GAP;});
-// SLACK 3% (dulu 10%): halaman Word terisi 97% tinggi nyata = KEPADATAN PERSIS PDF.
-// Pengukuran kini eksak (padding inline + margin via GAP), jadi slack kecil aman.
-var cap1=Math.max(160,(PAGE-extra)*0.97),capN=Math.max(160,PAGE*0.97);
-var pages=[],i=0,cap=cap1,guard=0;
-while(i<items.length&&guard++<500){
-var L=[],R=[],s=0;
-while(i<items.length&&s+hs[i]<=cap){L.push(i);s+=hs[i];i++;}
-s=0;
-while(i<items.length&&s+hs[i]<=cap){R.push(i);s+=hs[i];i++;}
-if(!L.length&&!R.length){L.push(i);i++;}
-pages.push({L:L,R:R});cap=capN;}
-var html='';
-pages.forEach(function(pg,pi){
-var n=Math.max(pg.L.length,pg.R.length);
-if(pi>0)html+='<p style="margin:0;font-size:1px;line-height:1px;page-break-before:always;">&nbsp;</p>';
-for(var r=0;r<n;r++){
-var lc=pg.L[r]!=null?items[pg.L[r]].outerHTML:'';
-var rc=pg.R[r]!=null?items[pg.R[r]].outerHTML:'';
-// SATU TABEL 1-BARIS per pasangan soal (bukan 1 tabel besar per halaman): engine yang
-// mengabaikan page-break-inside:avoid pada <tr> (mis. LibreOffice) jadi tidak PERNAH
-// membelah soal di tengah baris - pemenggalan halaman terjadi ANTAR tabel pasangan.
-// Word/WPS justru MENGGABUNGKAN tabel berurutan = tampilan sama dgn 1 tabel besar.
-// LEBAR EKSPLISIT 672px + fixed + semua sel dinyatakan (322|28 gap|322 = PDF gap 28px)
-// -> kolom kiri/kanan tidak diubah-ulang engine; jarak antarkolom PASTI 28px.
-html+='<table width="672" cellpadding="0" cellspacing="0" border="0" style="width:672px;border:none;border-collapse:collapse;table-layout:fixed;margin:0;mso-table-lspace:0pt;mso-table-rspace:0pt;">'
-+'<tr style="page-break-inside:avoid;">'
-+'<td width="322" style="width:322px;border:none;padding:0cm 0cm 0cm 0cm;vertical-align:top;text-align:left;">'+lc+'</td>'
-+'<td width="28" style="width:28px;border:none;padding:0cm 0cm 0cm 0cm;"></td>'
-+'<td width="322" style="width:322px;border:none;padding:0cm 0cm 0cm 0cm;vertical-align:top;text-align:left;">'+rc+'</td>'
-+'</tr></table>';}
-});
-items[0].insertAdjacentHTML('beforebegin',html);
-items.forEach(function(it){if(it.parentNode)it.parentNode.removeChild(it);});
-}
 function gsSplitDataUrl(u){var m=String(u||'').match(/^data:([^;,]+)(;[^,]*)?,(.*)$/);if(!m||String(m[2]||'').indexOf('base64')<0)return null;return{mime:m[1],b64:m[3].replace(/\s+/g,'')};}
 function gsB64Utf8(s){try{return btoa(unescape(encodeURIComponent(String(s))));}catch(e){try{return Buffer.from(String(s),'utf8').toString('base64');}catch(e2){return '';}}}
 function gsB64Chunk(b64){return String(b64||'').replace(/(.{76})/g,'$1\r\n');}
@@ -4036,8 +4025,7 @@ var td=document.createElement('div');
 td.innerHTML=lastAIFormattedHTML;
 td.querySelectorAll('.kunci-jawaban-section,.soal-answer,.soal-pembahasan').forEach(function(el){el.remove();});
 td.querySelectorAll('.soal-opt.correct').forEach(function(el){el.classList.remove('correct');});
-// TUNGGU gambar selesai termuat (data URL pada node lepas) agar naturalWidth terbaca ->
-// ukuran eksplisit akurat di Word & pengukuran tinggi soal Task 34 akurat (batas 1,5 dtk)
+// TUNGGU gambar selesai termuat (data URL pada node lepas) agar naturalWidth terbaca
 await Promise.all(Array.prototype.slice.call(td.querySelectorAll('img')).map(function(img){
 if(img.complete)return null;
 return Promise.race([new Promise(function(rI){img.onload=rI;img.onerror=rI;}),new Promise(function(rI){setTimeout(rI,1500);})]);
@@ -4049,66 +4037,32 @@ img.removeAttribute('width');img.removeAttribute('height');
 if(nw>620){img.setAttribute('width','620');img.setAttribute('height',String(Math.max(40,Math.round(nh*620/nw))));}
 else if(nw>0){img.setAttribute('width',String(nw));img.setAttribute('height',String(nh));}
 img.style.maxWidth='100%';img.style.height='auto';});
-// LEMBAR SOAL STANDAR: judul + identitas Nama/Kelas + instruksi pengerjaan - persis contoh lembar
-var lem=gsLembarTransform(td);
-// KEPADATAN & UKURAN FONT = PERSIS PDF (permintaan pengguna): pemadatan Word-only
-// (margin identitas 2px, instruksi 4px) DIHAPUS - Word kini memakai margin & ukuran
-// yang sama dengan PDF (identitas 12pt, instruksi 10px bawah).
-// SOAL 2 KOLOM WORD (Task 34): TABEL per halaman berkapasitas terukur. Kop & lembar
-// (judul+identitas+instruksi) diukur dulu sbg "kepala halaman 1", tiap soal diukur pada
-// lebar kolom nyata (322px), lalu dikemas adaptif 10/11/12+ soal per halaman -
-// kiri=paruh pertama, kanan=paruh kedua (urutan baca kiri atas-bawah lalu kanan = PDF).
-var kopHTMLw=await gsKopHTMLForWord();
-var gsExtraPx=8;
-if(kopHTMLw){var dK=document.createElement('div');dK.innerHTML='<div>'+kopHTMLw+'</div>';gsExtraPx+=gsMeasurePx(dK.firstChild,672)+8;}
-if(lem.header){var dH=document.createElement('div');dH.innerHTML='<div>'+lem.header+'</div>';gsExtraPx+=gsMeasurePx(dH.firstChild,672)+8;}
-gsChunkSoalWord(td,gsExtraPx); // WORD-ONLY: tabel Word-native (nomor|teks, baris lanjutan sejajar teks) keep-together (anti soal hilang T27) + tabel blok adaptif - rapi di SEMUA pembaca Word
-// PILIHAN SOAL: satu opsi per baris (a. b. c. d.) persis contoh lembar soal - label huruf kecil di kolom tetap
-td.querySelectorAll('.soal-opts').forEach(function(od){
-var items=[];
-od.querySelectorAll('.opt-col').forEach(function(col){col.querySelectorAll('.soal-opt').forEach(function(o){items.push(o);});});
-if(!items.length){items=Array.prototype.slice.call(od.querySelectorAll('.soal-opt'));}
-var rows='';
-items.forEach(function(o){rows+='<tr><td width="34" style="width:34px;border:none;padding:0cm 0cm 0cm 0cm;"></td>'+gsOptCell(o)+'</tr>';});
-var tbl=document.createElement('table');
-tbl.setAttribute('width','672');tbl.setAttribute('cellpadding','0');tbl.setAttribute('cellspacing','0');tbl.setAttribute('border','0');
-tbl.setAttribute('style','width:672px;border:none;border-collapse:collapse;table-layout:fixed;margin:3px 0;mso-table-lspace:0pt;mso-table-rspace:0pt;');
-tbl.innerHTML=rows;
-if(od.parentNode)od.parentNode.replaceChild(tbl,od);});
-// SUSUNAN SOAL: jarak antar soal, nomor tebal, teks rata kiri
-td.querySelectorAll('.soal-item').forEach(function(item){item.style.marginBottom='8px';item.style.paddingBottom='6px';item.style.borderBottom='none';}); // TANPA garis abu-abu antar soal (permintaan pengguna)
-// SUSUNAN NOMER & TEKS = PDF: nomor di kolom tetap 34px (PDF: min-width 28px + gap 6px), teks soal selalu mulai di posisi sama & baris lanjutan sejajar teks (bukan ke tepi kiri) - tabel Word-native tanpa garis
-td.querySelectorAll('.soal-header').forEach(function(h){
-var num=h.querySelector('.soal-number'),txt=h.querySelector('.soal-text');
-if(!num&&!txt)return;
-var numHTML=num?num.outerHTML:'';
-var txtHTML=txt?txt.outerHTML:h.innerHTML;
-var tbl=document.createElement('table');
-tbl.setAttribute('width','672');tbl.setAttribute('cellpadding','0');tbl.setAttribute('cellspacing','0');tbl.setAttribute('border','0');
-tbl.setAttribute('style','width:672px;border:none;border-collapse:collapse;table-layout:fixed;margin:0 0 4px 0;mso-table-lspace:0pt;mso-table-rspace:0pt;');
-tbl.innerHTML='<tr><td width="34" style="width:34px;border:none;padding:0cm 0cm 0cm 0cm;font-weight:bold;font-size:12pt;line-height:16.9px;vertical-align:top;white-space:nowrap;text-align:left;">'+numHTML+'</td><td width="638" style="width:638px;border:none;padding:0cm 0cm 0cm 0cm;font-size:12.5px;vertical-align:top;text-align:justify;line-height:135%;">'+txtHTML+'</td></tr>';
-if(h.parentNode)h.parentNode.replaceChild(tbl,h);});
-td.querySelectorAll('.soal-text').forEach(function(t){t.style.fontSize='12.5px';t.style.lineHeight='135%';t.style.textAlign='justify';});
-// TABEL DOKUMEN (markdown) = PERSIS PDF: bergaris hitam 1px + padding 6px + rata kiri
-// (PDF: .ai-output th,td{border:1px solid #000;padding:6px;text-align:left}).
-// Tabel layout (kop/identitas/pilihan/blok soal) punya border="0" -> dilewati.
+// LEMBAR (judul+identitas+instruksi) varian WORD: identitas & footer PARAGRAF
+// (tanpa tabel -> tanpa garis). Instruksi otomatis tetap disisipkan sama PDF.
+var lem=gsLembarTransform(td,true);
+// PILIH soal PG (dipakai PDF & Word) + kecilkan gambar dalam soal (maks 280px = PDF)
+var gsItems=gsSoalPick(td);
+// FLATTEN .soal-container: section div Word harus top-level, marker split tidak
+// boleh berada di dalam div pembungkus (HTML terpotong di tengah tag = rusak).
+var gsCont=td.querySelector('.soal-container');
+if(gsCont){while(gsCont.firstChild)gsCont.parentNode.insertBefore(gsCont.firstChild,gsCont);gsCont.parentNode.removeChild(gsCont);}
+// MARKER: posisi blok soal 2 kolom = tepat sebelum soal PG pertama (sama PDF multicol)
+if(gsItems.length)gsItems[0].insertAdjacentHTML('beforebegin','<!--GURUSMART-SEC2-->');
+// SOAL PG -> PARAGRAF hanging (dikumpulkan utk section 2 kolom)
+var gsPG='';
+gsItems.forEach(function(it){gsPG+=gsWSoalItemParas(it);if(it.parentNode)it.parentNode.removeChild(it);});
+// SISA .soal-item (essay) -> paragraf di tempat (section 1 kolom, sama PDF)
+Array.prototype.slice.call(td.querySelectorAll('.soal-item')).forEach(function(it){
+it.insertAdjacentHTML('beforebegin',gsWEssayItemParas(it));
+if(it.parentNode)it.parentNode.removeChild(it);});
+// TABEL MARKDOWN = PERSIS PDF: bergaris hitam 1px + padding 6px + rata kiri
+td.querySelectorAll('.rapor-info-table,.lembar-footer-table,.card-info-table').forEach(function(tb){tb.setAttribute('border','0');});
 td.querySelectorAll('table').forEach(function(tb){if(tb.getAttribute('border')==='0')return;tb.setAttribute('border','1');tb.setAttribute('cellspacing','0');tb.setAttribute('cellpadding','0');tb.style.border='1px solid #000000';tb.style.borderCollapse='collapse';tb.style.width='100%';});
 td.querySelectorAll('th,td').forEach(function(c){if(String(c.style.border).indexOf('none')===0)return;c.style.border='1px solid #000000';c.style.padding='6px';c.style.verticalAlign='top';c.style.textAlign='left';});
-// KOP: versi Word-native berbasis tabel (dimasukkan ke td agar SEMUA gambar diproses seragam)
+// KOP + JUDUL/IDENTITAS dimasukkan ke td agar logo ikut diproses jadi part MIME
 if(lem.header)td.insertAdjacentHTML('afterbegin',lem.header);
 var kopHTML=await gsKopHTMLForWord();
 if(kopHTML)td.insertAdjacentHTML('afterbegin',kopHTML);
-if(lem.footer)td.insertAdjacentHTML('beforeend','<p style="margin:0;font-size:1px;line-height:1px;">&nbsp;</p>'+lem.footer);
-// IDENTITAS & FOOTER = TABEL FIXED 672px dgn LEBAR SEL EKSPLISIT (geometri stabil di semua
-// engine Word): identitas 110|14|548 (persis PDF), footer 101|202|181|188 (15/30/27/28%).
-td.querySelectorAll('.rapor-info-table').forEach(function(tb){
-tb.setAttribute('width','672');tb.setAttribute('style',(tb.getAttribute('style')||'')+';width:672px;table-layout:fixed;mso-table-lspace:0pt;mso-table-rspace:0pt;');
-tb.querySelectorAll('tr').forEach(function(tr){var ws=[110,14,548];
-tr.querySelectorAll('td').forEach(function(c,i){var w=ws[Math.min(i,2)];c.setAttribute('width',String(w));c.style.width=w+'px';c.style.padding='2px 0';c.style.border='none';c.style.verticalAlign='top';});});});
-td.querySelectorAll('.lembar-footer-table').forEach(function(tb){
-tb.setAttribute('width','672');tb.setAttribute('style',(tb.getAttribute('style')||'')+';width:672px;table-layout:fixed;mso-table-lspace:0pt;mso-table-rspace:0pt;');
-tb.querySelectorAll('tr').forEach(function(tr){var ws=[101,202,181,188];
-tr.querySelectorAll('td').forEach(function(c,i){var w=ws[Math.min(i,3)];c.setAttribute('width',String(w));c.style.width=w+'px';c.style.border='none';c.style.verticalAlign='top';});});});
 // GAMBAR -> PART MIME: logo kop & gambar soal disematkan sebagai berkas nyata
 var gsParts=[];var gsSeq=0;
 var gsImgs=[];td.querySelectorAll('img').forEach(function(im){gsImgs.push(im);});
@@ -4119,16 +4073,38 @@ var sp=gsSplitDataUrl(s);
 if(!sp){var nn=await gsWordLogoSrc(s,800);if(nn&&String(nn).indexOf('data:')===0)sp=gsSplitDataUrl(nn);}
 if(sp&&sp.b64){gsSeq++;var ext2=sp.mime==='image/png'?'png':(sp.mime==='image/gif'?'gif':'jpg');var fname='doc_files/image'+(gsSeq<10?'0'+gsSeq:gsSeq)+'.'+ext2;gsParts.push({name:fname,type:sp.mime,b64:sp.b64});im.setAttribute('src',fname);}
 }
-// SUSUNAN DOKUMEN (Task 34): SATU section saja dan SEMUA div DITUTUP RAPI (bug Task 31:
-// div section pertama tidak tertutup sehingga div section kedua/ketiga BERSARANG di
-// dalamnya - Word tidak pernah menyimpan section bersarang sehingga setelannya
-// ditolak/diabaikan).
-// Isi: kop+judul+identitas (lebar penuh) -> tabel blok soal 2 kolom per halaman (adaptif,
-// pemisah paksa halaman baru) -> essay + footer Nilai/Paraf (lebar penuh).
-// KOP tetap hanya halaman 1 (Task 29) - hanya ada di awal dokumen.
-var gsW='<div style="font-family:Times New Roman,Georgia,serif;color:#000;padding:0;margin:0;width:100%">'+'<div class="ai-output" style="color:#000;margin:0;padding:0">';
-var bodyHTML='<div class="Section1">'+gsW+td.innerHTML+'</div></div></div>';
-var header='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Soal - GURU SMART</title><style>@page{size:21cm 29.7cm;margin:1.4cm 1.6cm 0.9cm 1.6cm}@page Section1{size:21cm 29.7cm;margin:1.4cm 1.6cm 0.9cm 1.6cm;mso-header-margin:0cm;mso-footer-margin:0cm}div.Section1{page:Section1}p.MsoNormal,li.MsoNormal,div.MsoNormal{margin:0cm 0cm 0cm 0cm;font-size:12pt;font-family:"Times New Roman",Georgia,serif;line-height:115%;mso-line-height-rule:auto}body{font-family:Times New Roman,Georgia,serif;font-size:12pt;color:#000;line-height:115%}h1,h2,h3{color:#000}.ai-output table{width:100%;border-collapse:collapse;margin-bottom:8px}.ai-output img{margin:6px 0}.ai-output p{margin:1em 0 3px 0;text-align:justify}.ai-output .soal-item{margin-bottom:8px;padding-bottom:6px;page-break-inside:avoid}.ai-output .soal-header{margin-bottom:4px}.ai-output .soal-text{font-size:12.5px}.ai-output .soal-text p{margin:0 0 2px 0;font-size:12.5px}.ai-output .soal-opts{margin:3px 0 3px 34px}.ai-output .rapor-info-table td{font-size:12pt}.ai-output .lembar-footer-table td{font-size:12pt}</style></head><body>'+bodyHTML+'</body></html>';
+// SUSUN SECTION top-level BERDAMPINGAN (tanpa nesting - syarat section Word):
+// Section1 = kop+judul+identitas+intro (1 kolom) -> Section2 = soal PG 2 kolom
+// (@page mso-columns utk MS Word/WPS; column-count:2 utk LibreOffice) ->
+// Section3 = essay + footer Nilai/Paraf (1 kolom). Section berdampingan = continuous
+// break: pemaginan halaman oleh engine Word sendiri -> jumlah halaman = PDF
+// (PDF 2 halaman -> Word 2 halaman), tanpa tabel, tanpa garis.
+var gsAll=td.innerHTML,gsMark='<!--GURUSMART-SEC2-->',gsIdx=gsAll.indexOf(gsMark);
+var gsPre=gsIdx>=0?gsAll.slice(0,gsIdx):gsAll;
+var gsPost=gsIdx>=0?gsAll.slice(gsIdx+gsMark.length):'';
+var AO='<div class="ai-output" style="color:#000;margin:0;padding:0;width:100%">';
+var gsBody;
+if(gsItems.length>=2){
+// LO butuh atribut id pada div agar membuat SECTION baru (penutup region kolom
+// sebelumnya - terbukti empiris); MS Word memakai class+@page mso-columns.
+gsBody='<div class="Section1" id="GSSection1" style="column-count:1;">'+AO+gsPre+'</div></div>'
++'<div class="Section2" id="GSSection2" dir="ltr" gutter="28" style="column-count:2;column-gap:28px;">'+AO+gsPG+'</div></div>'
++'<div class="Section3" id="GSSection3" dir="ltr" gutter="0" style="column-count:1;">'+AO+gsPost+(lem.footer||'')+'</div></div>';
+}else{
+gsBody='<div class="Section1" id="GSSection1" style="column-count:1;">'+AO+gsPre+gsPG+gsPost+(lem.footer||'')+'</div></div>';
+}
+var gsCss='@page{size:21cm 29.7cm;margin:1.4cm 1.6cm 0.9cm 1.6cm}'
++'@page Section1{size:21cm 29.7cm;margin:1.4cm 1.6cm 0.9cm 1.6cm;mso-header-margin:0cm;mso-footer-margin:0cm}'
++'@page Section2{size:21cm 29.7cm;margin:1.4cm 1.6cm 0.9cm 1.6cm;mso-columns:2 even 21.0pt;mso-header-margin:0cm;mso-footer-margin:0cm}'
++'@page Section3{size:21cm 29.7cm;margin:1.4cm 1.6cm 0.9cm 1.6cm;mso-header-margin:0cm;mso-footer-margin:0cm}'
++'div.Section1{page:Section1}div.Section2{page:Section2}div.Section3{page:Section3}'
++'p.MsoNormal,li.MsoNormal,div.MsoNormal{margin:0cm 0cm 0cm 0cm;font-size:12pt;font-family:"Times New Roman",Georgia,serif;line-height:115%;mso-line-height-rule:auto}'
++'body{font-family:Times New Roman,Georgia,serif;font-size:12pt;color:#000;line-height:115%}'
++'h1,h2,h3{color:#000;font-weight:bold;margin:12px 0 6px 0}'
++'.ai-output table{width:100%;border-collapse:collapse;margin-bottom:8px}'
++'.ai-output img{margin:6px 0}'
++'.ai-output p{margin:1em 0 3px 0;text-align:justify}';
+var header='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Soal - GURU SMART</title><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom><w:DoNotOptimizeForBrowser/></w:WordDocument></xml><![endif]--><style>'+gsCss+'</style></head><body>'+gsBody+'</body></html>';
 var blob;
 if(gsParts.length){blob=new Blob([gsBuildMHTML(header,gsParts)],{type:'application/msword'});}
 else{blob=new Blob(['\ufeff',header],{type:'application/msword'});}
