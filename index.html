@@ -3860,12 +3860,16 @@ var lb=o.querySelector('.opt-label'),tx=o.querySelector('.opt-text');
 var lbl=(lb?lb.innerHTML:'').toLowerCase();
 var txt=tx?tx.innerHTML:o.innerHTML;
 return '<td width="26" style="width:26px;border:none;font-size:9.5pt;padding:0 6px 0 0;font-weight:bold;vertical-align:top;white-space:nowrap;text-align:left;">'+lbl+'</td>'+'<td style="border:none;font-size:9.5pt;padding:0;vertical-align:top;text-align:left;">'+txt+'</td>';}
-// SUSUNAN 2 KOLOM ALAMI (Task 31): TIDAK ada lagi kelompok paksa 10 soal/halaman -
-// SEMUA soal PG ditaruh dalam SATU wadah kolom; mesin cetak mengisi halaman 1 sebisanya
-// (bisa 10/11/12 soal tergantung panjang soal), sisanya OTOMATIS lanjut ke halaman 2 dst.
-// Urutan baca tetap benar: kolom kiri atas-bawah lalu kolom kanan atas-bawah, per halaman.
-// KOP HANYA DI HALAMAN PERTAMA (permintaan pengguna): wadah kolom berada SETELAH
-// kop+judul+identitas, jadi halaman 2 dst berisi soal saja tanpa kop ulang.
+// SUSUNAN SOAL 2 KOLOM (Task 34): PDF memakai CSS multicol (Chrome mengisi halaman
+// sendiri); WORD memakai TABEL per halaman berkapasitas terukur nyata (adaptif
+// 10/11/12+ soal - semangat Task 31) agar RAPI & urutan baca benar di SEMUA pembaca
+// Word (desktop/HP/WPS/Docs). Latar: section kolom native Word dari Task 31 ternyata
+// rapuh - div section tak tertutup membuat section kedua bersarang di section pertama
+// (Word tidak pernah menyimpan section bersarang -> setelan kolomnya ditolak) dan
+// banyak pembaca Word mengabaikan setelan kolom section sama sekali -> pengguna
+// melaporkan "tampilan Word ngacak tidak rapi seperti PDF".
+// KOP HANYA DI HALAMAN PERTAMA (permintaan pengguna, Task 29): tabel blok berada
+// SETELAH kop+judul+identitas; pemisah antar blok hanya memecah halaman tanpa kop ulang.
 // PEMILIH SOAL PG (dipakai PDF & Word): .soal-item ber-opsi di luar kunci jawaban + kecilkan gambar
 function gsSoalPick(td){
 var items=[];
@@ -3885,41 +3889,42 @@ if(items.length<2)return;
 var out='<div class="gs-soal-cols">';items.forEach(function(it){out+=it.outerHTML;});out+='</div>';
 items[0].insertAdjacentHTML('beforebegin',out);
 items.forEach(function(it){if(it.parentNode)it.parentNode.removeChild(it);});}
-// WORD: wadah SECTION kolom (div.Section2 + @page mso-columns:2) - Word mengisi halaman sendiri
-function gsSoalMulticolWord(td){
-var items=gsSoalPick(td);
-if(items.length<2)return;
-var out='<div class="Section2">';items.forEach(function(it){out+=it.outerHTML;});out+='</div>';
-items[0].insertAdjacentHTML('beforebegin',out);
-items.forEach(function(it){if(it.parentNode)it.parentNode.removeChild(it);});}
-// KOP HANYA DI HALAMAN PERTAMA (permintaan pengguna): halaman 2 dst berlanjut
-// tanpa kop ulang - susunan 2 kolom alami (Task 31) tetap sama.
-// (pasangan baris tabel blok lama DICABUT: tidak ada lagi tabel blok - Word memecah
-// halaman sendiri di dalam section kolom native @page mso-columns:2, antar soal/paragraf.)
-// WORD: soal di dalam section kolom (div.Section2) memakai PARAGRAF hanging-indent (bukan tabel bersarang).
-// Tabel bersarang yang dipecah Word di batas kolom/halaman bisa hilang saat dicetak;
-// paragraf murni dipecah Word seperti teks biasa -> tidak ada soal yang hilang. Tampilan sama:
-// nomor di 0px, teks soal sejajar 34px; label pilihan di 34px, teks pilihan sejajar 66px (persis PDF).
-// mso-keep-with-next + page-break-inside:avoid menjaga tiap soal UTUH (tidak terpotong antar kolom/halaman).
-function gsWordBlokParagraf(td){
-function gsSegPush(segs,s){if(String(s).replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim())segs.push(s);}
-td.querySelectorAll('div.Section2 .soal-header').forEach(function(h){
+// WORD (Task 34): SOAL 2 KOLOM = TABEL per halaman berkapasitas TERUKUR (bukan lagi
+// section kolom native Word dari Task 31 yang tampil ACAK di banyak pembaca Word: div
+// section yang tak tertutup membuat section kolom bersarang sehingga setelan kolomnya
+// ditolak, dan Word HP/WPS/Google Docs mengabaikan setelan kolom section sama sekali).
+// Tabel Word-native tampil
+// IDENTIK di semua pembaca. Tiap halaman = 1 tabel 2 kolom sel: kiri = paruh pertama
+// soal, kanan = paruh kedua (urutan baca kiri atas-bawah lalu kanan, persis PDF).
+// Kapasitas diukur NYATA di browser (tinggi tiap soal pada lebar kolom 322px + kepala
+// halaman 1) -> halaman tetap terisi adaptif 10/11/12+ soal (semangat Task 31) dengan
+// slack 10% agar Word tidak meluber; tiap blok dipaksa mulai halaman baru sehingga
+// urutan soal SELALU benar walau estimasi meleset (hanya menyisakan ruang kosong kecil).
+// KOP HANYA DI HALAMAN PERTAMA (Task 29): blok berada setelah kop, pemisah tanpa kop ulang.
+// Konversi 1 soal -> PARAGRAF hanging-indent keep-together (T27 anti soal hilang saat
+// print + T30 exact-pt): nomor di 0px, teks soal sejajar 34px; label pilihan di 34px,
+// teks pilihan sejajar 66px (persis PDF).
+function gsWordParagrafItem(it){
+function gsSegOk(s){return String(s).replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim();}
+var h=it.querySelector('.soal-header');
+if(h){
 var num=h.querySelector('.soal-number'),txt=h.querySelector('.soal-text');
-if(!num&&!txt)return;
+if(num||txt){
 var numHTML=num?'<b>'+num.innerHTML+'</b> ':'';
-var segs=[];
-if(txt){var buf='';
-Array.prototype.slice.call(txt.childNodes).forEach(function(n){
-if(n.nodeType===1&&String(n.tagName).toLowerCase()==='p'){gsSegPush(segs,buf);buf='';gsSegPush(segs,n.innerHTML);}
-else{buf+=(n.outerHTML!=null?n.outerHTML:(n.textContent||''));}});
-gsSegPush(segs,buf);}
+var segs=[],buf='';
+if(txt){Array.prototype.slice.call(txt.childNodes).forEach(function(n){
+if(n.nodeType===1&&String(n.tagName).toLowerCase()==='p'){if(gsSegOk(buf))segs.push(buf);buf='';if(gsSegOk(n.innerHTML))segs.push(n.innerHTML);}
+else{buf+=(n.outerHTML!=null?n.outerHTML:(n.textContent||''));}
+});
+if(gsSegOk(buf))segs.push(buf);}
 if(!segs.length)segs=[''];
 var out='';
 segs.forEach(function(s,i){out+='<p style="margin:0 0 3px 0;margin-left:34px;text-indent:-34px;text-align:justify;font-size:12.5px;line-height:12.7pt;mso-line-height-rule:exactly;page-break-inside:avoid;mso-keep-with-next:yes;">'+(i===0?numHTML:'')+s+'</p>';});
 var d=document.createElement('div');d.innerHTML=out;
 while(d.firstChild)h.parentNode.insertBefore(d.firstChild,h);
-if(h.parentNode)h.parentNode.removeChild(h);});
-td.querySelectorAll('div.Section2 .soal-opts').forEach(function(od){
+if(h.parentNode)h.parentNode.removeChild(h);}}
+var od=it.querySelector('.soal-opts');
+if(od){
 var opts=[];
 od.querySelectorAll('.opt-col').forEach(function(col){col.querySelectorAll('.soal-opt').forEach(function(o){opts.push(o);});});
 if(!opts.length)opts=Array.prototype.slice.call(od.querySelectorAll('.soal-opt'));
@@ -3930,7 +3935,49 @@ var tx2=tx?tx.innerHTML:o.innerHTML;
 out2+='<p style="margin:1px 0 1px 0;margin-left:66px;text-indent:-32px;text-align:left;font-size:12px;line-height:11.7pt;mso-line-height-rule:exactly;page-break-inside:avoid;'+(oi<opts.length-1?'mso-keep-with-next:yes;':'')+'"><b>'+lbl+'</b> '+tx2+'</p>';});
 var d2=document.createElement('div');d2.innerHTML=out2;
 while(d2.firstChild)od.parentNode.insertBefore(d2.firstChild,od);
-if(od.parentNode)od.parentNode.removeChild(od);});
+if(od.parentNode)od.parentNode.removeChild(od);}
+}
+// UKUR tinggi nyata elemen pada lebar w px (wadah tersembunyi di document.body;
+// memakai KLON agar node asli tidak berpindah dari dokumen).
+function gsMeasurePx(el,w){
+try{if(!el||!document.body)return 0;
+var md=document.createElement('div');
+md.style.cssText='position:absolute;left:-99999px;top:0;visibility:hidden;width:'+w+'px;padding:0;margin:0;border:none;';
+document.body.appendChild(md);
+var cl=el.cloneNode(true);md.appendChild(cl);
+var h=cl.offsetHeight;
+document.body.removeChild(md);
+return h>0?h:0;}catch(eM){return 0;}}
+// BLOK SOAL WORD: konversi paragraf keep-together -> ukur tinggi -> kemas per halaman ->
+// tabel 2 kolom. extraPx = tinggi kepala halaman 1 (kop+judul+identitas+instruksi) px.
+function gsChunkSoalWord(td,extraPx){
+var items=gsSoalPick(td);
+if(items.length<2)return;
+items.forEach(gsWordParagrafItem);
+var extra=(extraPx||0);
+for(var cn=td.firstChild;cn&&cn!==items[0]&&!(cn.contains&&cn.contains(items[0]));cn=cn.nextSibling){if(cn.nodeType===1)extra+=gsMeasurePx(cn,672)+8;}
+var COL=322,PAGE=1036,GAP=8;
+var hs=items.map(function(it){var m=gsMeasurePx(it,COL);return (m>0?m:150)+GAP;});
+var cap1=Math.max(160,(PAGE-extra)*0.90),capN=Math.max(160,PAGE*0.90);
+var pages=[],i=0,cap=cap1,guard=0;
+while(i<items.length&&guard++<500){
+var L=[],R=[],s=0;
+while(i<items.length&&s+hs[i]<=cap){L.push(i);s+=hs[i];i++;}
+s=0;
+while(i<items.length&&s+hs[i]<=cap){R.push(i);s+=hs[i];i++;}
+if(!L.length&&!R.length){L.push(i);i++;}
+pages.push({L:L,R:R});cap=capN;}
+var html='';
+pages.forEach(function(pg,pi){
+var n=Math.max(pg.L.length,pg.R.length),rows='';
+for(var r=0;r<n;r++){
+var lc=pg.L[r]!=null?items[pg.L[r]].outerHTML:'';
+var rc=pg.R[r]!=null?items[pg.R[r]].outerHTML:'';
+rows+='<tr style="page-break-inside:avoid;">'+'<td width="322" style="width:322px;border:none;padding:0 14px 0 0;vertical-align:top;text-align:left;">'+lc+'</td>'+'<td width="322" style="width:322px;border:none;padding:0 0 0 14px;vertical-align:top;text-align:left;">'+rc+'</td></tr>';}
+if(pi>0)html+='<p style="margin:0;font-size:1px;line-height:1px;page-break-before:always;">&nbsp;</p>';
+html+='<table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border:none;border-collapse:collapse;">'+rows+'</table>';});
+items[0].insertAdjacentHTML('beforebegin',html);
+items.forEach(function(it){if(it.parentNode)it.parentNode.removeChild(it);});
 }
 function gsSplitDataUrl(u){var m=String(u||'').match(/^data:([^;,]+)(;[^,]*)?,(.*)$/);if(!m||String(m[2]||'').indexOf('base64')<0)return null;return{mime:m[1],b64:m[3].replace(/\s+/g,'')};}
 function gsB64Utf8(s){try{return btoa(unescape(encodeURIComponent(String(s))));}catch(e){try{return Buffer.from(String(s),'utf8').toString('base64');}catch(e2){return '';}}}
@@ -3945,6 +3992,12 @@ var td=document.createElement('div');
 td.innerHTML=lastAIFormattedHTML;
 td.querySelectorAll('.kunci-jawaban-section,.soal-answer,.soal-pembahasan').forEach(function(el){el.remove();});
 td.querySelectorAll('.soal-opt.correct').forEach(function(el){el.classList.remove('correct');});
+// TUNGGU gambar selesai termuat (data URL pada node lepas) agar naturalWidth terbaca ->
+// ukuran eksplisit akurat di Word & pengukuran tinggi soal Task 34 akurat (batas 1,5 dtk)
+await Promise.all(Array.prototype.slice.call(td.querySelectorAll('img')).map(function(img){
+if(img.complete)return null;
+return Promise.race([new Promise(function(rI){img.onload=rI;img.onerror=rI;}),new Promise(function(rI){setTimeout(rI,1500);})]);
+})).catch(function(eI){});
 // GAMBAR: Word mengabaikan max-width -> set width/height EKSPLISIT (maks 620px, rasio terjaga)
 td.querySelectorAll('img').forEach(function(img){
 var nw=img.naturalWidth||0,nh=img.naturalHeight||0;
@@ -3957,10 +4010,15 @@ var lem=gsLembarTransform(td);
 // WORD-ONLY: rapatkan identitas & instruksi (slack halaman 1 ~1cm) agar kop+judul+identitas+5 baris soal pertama pasti muat 1 halaman
 td.querySelectorAll('.rapor-info-table').forEach(function(tb){tb.style.marginBottom='2px';});
 td.querySelectorAll('p').forEach(function(pp){if(String(pp.style.marginBottom)==='10px')pp.style.marginBottom='4px';});
-// SOAL 2 KOLOM ALAMI (SECTION KOLOM WORD): semua PG masuk div.Section2 (@page mso-columns:2) -
-// Word mengisi halaman 1 sebisanya (10/11/12 soal), sisanya otomatis lanjut ke halaman 2 dst
-gsSoalMulticolWord(td);
-gsWordBlokParagraf(td); // WORD-ONLY: soal di kolom jadi paragraf hanging-indent + keep-together (tanpa tabel bersarang) - anti soal hilang saat print
+// SOAL 2 KOLOM WORD (Task 34): TABEL per halaman berkapasitas terukur. Kop & lembar
+// (judul+identitas+instruksi) diukur dulu sbg "kepala halaman 1", tiap soal diukur pada
+// lebar kolom nyata (322px), lalu dikemas adaptif 10/11/12+ soal per halaman -
+// kiri=paruh pertama, kanan=paruh kedua (urutan baca kiri atas-bawah lalu kanan = PDF).
+var kopHTMLw=await gsKopHTMLForWord();
+var gsExtraPx=8;
+if(kopHTMLw){var dK=document.createElement('div');dK.innerHTML='<div>'+kopHTMLw+'</div>';gsExtraPx+=gsMeasurePx(dK.firstChild,672)+8;}
+if(lem.header){var dH=document.createElement('div');dH.innerHTML='<div>'+lem.header+'</div>';gsExtraPx+=gsMeasurePx(dH.firstChild,672)+8;}
+gsChunkSoalWord(td,gsExtraPx); // WORD-ONLY: paragraf hanging-indent keep-together (anti soal hilang T27) + tabel blok adaptif - rapi di SEMUA pembaca Word
 // PILIHAN SOAL: satu opsi per baris (a. b. c. d.) persis contoh lembar soal - label huruf kecil di kolom tetap
 td.querySelectorAll('.soal-opts').forEach(function(od){
 var items=[];
@@ -4007,24 +4065,16 @@ var sp=gsSplitDataUrl(s);
 if(!sp){var nn=await gsWordLogoSrc(s,800);if(nn&&String(nn).indexOf('data:')===0)sp=gsSplitDataUrl(nn);}
 if(sp&&sp.b64){gsSeq++;var ext2=sp.mime==='image/png'?'png':(sp.mime==='image/gif'?'gif':'jpg');var fname='doc_files/image'+(gsSeq<10?'0'+gsSeq:gsSeq)+'.'+ext2;gsParts.push({name:fname,type:sp.mime,b64:sp.b64});im.setAttribute('src',fname);}
 }
-// SUSUNAN SECTION WORD (Task 31): Section1 = kop+judul+identitas (lebar penuh) ->
-// SECTION BREAK KONTINU (page-break-before:auto;mso-break-type:section-break, markup asli Word) ->
-// Section2 = soal PG 2 kolom (@page mso-columns:2; halaman terisi otomatis 10/11/12 dst) ->
-// Section3 = essay + footer Nilai/Paraf (lebar penuh). TANPA page break paksa 10 soal.
+// SUSUNAN DOKUMEN (Task 34): SATU section saja dan SEMUA div DITUTUP RAPI (bug Task 31:
+// div section pertama tidak tertutup sehingga div section kedua/ketiga BERSARANG di
+// dalamnya - Word tidak pernah menyimpan section bersarang sehingga setelannya
+// ditolak/diabaikan).
+// Isi: kop+judul+identitas (lebar penuh) -> tabel blok soal 2 kolom per halaman (adaptif,
+// pemisah paksa halaman baru) -> essay + footer Nilai/Paraf (lebar penuh).
+// KOP tetap hanya halaman 1 (Task 29) - hanya ada di awal dokumen.
 var gsW='<div style="font-family:Times New Roman,Georgia,serif;color:#000;padding:0;margin:0;width:100%">'+'<div class="ai-output" style="color:#000;margin:0;padding:0">';
-var gsSec2=td.querySelector('div.Section2');var bodyHTML='';
-if(gsSec2){
-var gsSB='<br clear="all" style="page-break-before:auto;mso-break-type:section-break">';
-var gsS1='',gsS3='',gsMode=0;
-Array.prototype.slice.call(td.childNodes).forEach(function(n){
-if(n===gsSec2){gsMode=1;return;}
-if(n.nodeType===1){if(gsMode===0)gsS1+=n.outerHTML;else gsS3+=n.outerHTML;}
-else if(n.nodeType===3){var tx=String(n.textContent||'');if(tx.replace(/\s+/g,'')){if(gsMode===0)gsS1+=tx.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');else gsS3+=tx.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}}
-});
-bodyHTML='<div class="Section1">'+gsW+gsS1+'</div></div>'+gsSB+'<div class="Section2">'+gsW+gsSec2.innerHTML+'</div></div>';
-if(gsS3)bodyHTML+=gsSB+'<div class="Section3">'+gsW+gsS3+'</div></div>';
-}else{bodyHTML='<div class="Section1">'+gsW+td.innerHTML+'</div></div>';}
-var header='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Soal - GURU SMART</title><style>@page{size:21cm 29.7cm;margin:1.4cm 1.6cm 0.9cm 1.6cm}@page Section1{size:21cm 29.7cm;margin:1.4cm 1.6cm 0.9cm 1.6cm;mso-header-margin:0cm;mso-footer-margin:0cm}div.Section1{page:Section1}@page Section2{size:21cm 29.7cm;margin:1.4cm 1.6cm 0.9cm 1.6cm;mso-header-margin:0cm;mso-footer-margin:0cm;mso-columns:2 not-even 21pt 241.75pt 241.75pt}div.Section2{page:Section2}@page Section3{size:21cm 29.7cm;margin:1.4cm 1.6cm 0.9cm 1.6cm;mso-header-margin:0cm;mso-footer-margin:0cm}div.Section3{page:Section3}body{font-family:Times New Roman,Georgia,serif;font-size:9.5pt;color:#000;line-height:135%}h1,h2,h3{color:#000}.ai-output table{width:100%;border-collapse:collapse;margin-bottom:4px}.ai-output img{margin:6px 0}.ai-output p{margin:0 0 3px 0;text-align:justify}.ai-output .soal-item{margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #dddddd;page-break-inside:avoid}.ai-output .soal-header{margin-bottom:4px}.ai-output .soal-text p{margin:0 0 2px 0}.ai-output .soal-opts{margin:3px 0 3px 34px}</style></head><body>'+bodyHTML+'</body></html>';
+var bodyHTML='<div class="Section1">'+gsW+td.innerHTML+'</div></div></div>';
+var header='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Soal - GURU SMART</title><style>@page{size:21cm 29.7cm;margin:1.4cm 1.6cm 0.9cm 1.6cm}@page Section1{size:21cm 29.7cm;margin:1.4cm 1.6cm 0.9cm 1.6cm;mso-header-margin:0cm;mso-footer-margin:0cm}div.Section1{page:Section1}body{font-family:Times New Roman,Georgia,serif;font-size:9.5pt;color:#000;line-height:135%}h1,h2,h3{color:#000}.ai-output table{width:100%;border-collapse:collapse;margin-bottom:4px}.ai-output img{margin:6px 0}.ai-output p{margin:0 0 3px 0;text-align:justify}.ai-output .soal-item{margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #dddddd;page-break-inside:avoid}.ai-output .soal-header{margin-bottom:4px}.ai-output .soal-text p{margin:0 0 2px 0}.ai-output .soal-opts{margin:3px 0 3px 34px}</style></head><body>'+bodyHTML+'</body></html>';
 var blob;
 if(gsParts.length){blob=new Blob([gsBuildMHTML(header,gsParts)],{type:'application/msword'});}
 else{blob=new Blob(['\ufeff',header],{type:'application/msword'});}
