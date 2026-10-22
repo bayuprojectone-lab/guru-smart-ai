@@ -3813,7 +3813,7 @@ function gsWordImgTag(src,max){return new Promise(function(res){if(!src)return r
 async function gsKopHTMLForWord(){var profile=(await gsGetProfilSekolah())[0]||{};var ck='';try{ck=JSON.stringify([profile.kop_line1,profile.kop_line1b,profile.kop_line2,profile.kop_line3,profile.name,profile.address,profile.logo_left,profile.logo_right]);}catch(eK){}if(ck&&_gsKopWordCache.key===ck&&_gsKopWordCache.html)return _gsKopWordCache.html;if(!profile.kop_line1&&!profile.logo_left)return '';var l1=profile.kop_line1||profile.name||'NAMA SEKOLAH';var l1b=profile.kop_line1b||'';var l2=profile.kop_line2||profile.address||'Alamat Sekolah';var l3=profile.kop_line3||'Email | Telp';var lSrc=await gsWordLogoSrc(profile.logo_left,200);var rSrc=await gsWordLogoSrc(profile.logo_right,201);var ll=await gsWordImgTag(lSrc,75);var rl=await gsWordImgTag(rSrc,75);// KOP WORD = PERSIS generateKopHTML (PDF): sel kiri/kanan 75px, tengah padding 20px,
 // padding-bawah 10px sebelum garis double, margin-bawah 25px, margin antar baris teks
 // (l1b 2px, l2 4px, l3 2px) & line-height identik PDF - beda ukuran px->pt KONVERSI EXACT.
-var l1bHTML=l1b.trim()?'<div style="font-size:15pt;font-weight:bold;text-transform:uppercase;line-height:1.0;margin:2px 0 0;">'+l1b+'</div>':'';var out='<table width="672" cellpadding="0" cellspacing="0" style="width:672px;border-collapse:collapse;table-layout:fixed;border-bottom:3px double #000000;margin-bottom:25px;font-family:Arial,Helvetica,sans-serif;mso-table-lspace:0pt;mso-table-rspace:0pt;"><tr><td width="75" style="width:75px;text-align:center;vertical-align:middle;border:none;padding:0cm 0cm 10px 0cm;">'+ll+'</td><td width="522" style="width:522px;text-align:center;vertical-align:middle;border:none;padding:0cm 20px 10px 20px;"><div style="font-size:12pt;font-weight:bold;text-transform:uppercase;line-height:1.0;">'+l1+'</div>'+l1bHTML+'<div style="font-size:16.5pt;font-weight:bold;text-transform:uppercase;line-height:1.2;margin:4px 0 0;">'+l2+'</div><div style="font-size:9pt;line-height:1.0;margin:2px 0 0;">'+l3+'</div></td><td width="75" style="width:75px;text-align:center;vertical-align:middle;border:none;padding:0cm 0cm 10px 0cm;">'+rl+'</td></tr></table>';_gsKopWordCache.key=ck;_gsKopWordCache.html=out;return out;}
+var l1bHTML=l1b.trim()?'<div style="font-size:15pt;font-weight:bold;text-transform:uppercase;line-height:1.0;margin:2px 0 0;">'+l1b+'</div>':'';var out='<div style="border-bottom:3px double #000000;margin-bottom:25px;font-family:Arial,Helvetica,sans-serif;">'+'<table width="672" cellpadding="0" cellspacing="0" style="width:672px;border-collapse:collapse;table-layout:fixed;border-bottom:3px double #000000;font-family:Arial,Helvetica,sans-serif;mso-table-lspace:0pt;mso-table-rspace:0pt;"><tr><td width="75" style="width:75px;text-align:center;vertical-align:middle;border:none;padding:0cm 0cm 10px 0cm;">'+ll+'</td><td width="522" style="width:522px;text-align:center;vertical-align:middle;border:none;padding:0cm 20px 10px 20px;"><div style="font-size:12pt;font-weight:bold;text-transform:uppercase;line-height:1.0;">'+l1+'</div>'+l1bHTML+'<div style="font-size:16.5pt;font-weight:bold;text-transform:uppercase;line-height:1.2;margin:4px 0 0;">'+l2+'</div><div style="font-size:9pt;line-height:1.0;margin:2px 0 0;">'+l3+'</div></td><td width="75" style="width:75px;text-align:center;vertical-align:middle;border:none;padding:0cm 0cm 10px 0cm;">'+rl+'</td></tr></table></div>';_gsKopWordCache.key=ck;_gsKopWordCache.html=out;return out;}
 // ===== LEMBAR SOAL STANDAR (persis contoh: judul - identitas Nama/Kelas - instruksi - soal - Nilai/Paraf) =====
 function gsLembarPickIntro(introText){var lines=String(introText||'').split(/\r?\n/).map(function(l){return String(l).replace(/\s+/g,' ').trim();}).filter(function(l){return l;});
 var keep=[];lines.forEach(function(l){
@@ -3858,6 +3858,22 @@ function gsIns(anchor,txt){var d=document.createElement('div');d.innerHTML='<p s
 if(firstPG&&subAll.indexOf('tanda silang')<0)gsIns(firstPG,'Berilah tanda silang (X) huruf a, b, c, atau d pada jawaban yang benar!');
 if(firstEssay&&subAll.indexOf('jawablah')<0&&subAll.indexOf('isilah')<0)gsIns(firstEssay,'Jawablah pertanyaan-pertanyaan di bawah ini dengan benar!');
 return{header:header,footer:forWord?gsLembarFooterWordHTML():gsLembarFooterHTML()};}
+// ==== WORD v29 KOP PALING ATAS (= PDF) ====
+// Keluhan user: "di word kop suratnya ditarok paling atas persis seperti di pdf".
+// Akar masalah (MS Office HTML/XML Reference, "Section break types"): Word mewakili
+// section break dgn BR eksplisit SEBELUM <div class=SectionN> dan tipe break disimpan
+// pd style BR tsb. v28 tidak punya BR di antara div Section -> MS Word pakai default
+// OOXML (nextPage) -> Section1 (kop+judul+identitas) jadi halaman 1 sendiri, soal
+// terdorong ke halaman 2 -> kop tidak nempel paling atas di halaman soal spt PDF.
+// FIX 1: BR continuous section break eksplisit (BR clear=all + page-break-before:auto
+// + mso-break-type:section-break, persis markup ekspor asli MS Word) di 1->2 dan
+// 2->3; semua @page SectionN size+margin identik -> continuous sah, aliran kontinu:
+// kop paling atas, soal 2 kolom langsung di bawahnya, jumlah halaman = PDF.
+// FIX 2: garis double bawah kop pindah ke DIV pembungkus (meniru DOM PDF). Empiris
+// harness: border level TABEL diabaikan LO saat sel border:none; border level SEL
+// menaikkan kop +9.7pt di LO -> melewati ambang tipis balance kolom (16pt) -> kolom
+// balance per halaman (4+4) bukan fill spt PDF (5+5). DIV border = biaya 0pt,
+// dirender Word/WPS/LO, geometri garis = PDF (10px di bawah isi via padding sel).
 // ==== WORD v28 BEBAS-TABEL ====
 // Permintaan pengguna: (1) tampilan Word = persis PDF, (2) PDF 2 halaman -> Word
 // 2 halaman, (3) HILANGKAN garis tabel di Word. Akar masalah: tabel layout
@@ -4088,7 +4104,9 @@ if(gsItems.length>=2){
 // LO butuh atribut id pada div agar membuat SECTION baru (penutup region kolom
 // sebelumnya - terbukti empiris); MS Word memakai class+@page mso-columns.
 gsBody='<div class="Section1" id="GSSection1" style="column-count:1;">'+AO+gsPre+'</div></div>'
++'<br clear=all style="page-break-before:auto;mso-break-type:section-break">'
 +'<div class="Section2" id="GSSection2" dir="ltr" gutter="28" style="column-count:2;column-gap:28px;">'+AO+gsPG+'</div></div>'
++'<br clear=all style="page-break-before:auto;mso-break-type:section-break">'
 +'<div class="Section3" id="GSSection3" dir="ltr" gutter="0" style="column-count:1;">'+AO+gsPost+(lem.footer||'')+'</div></div>';
 }else{
 gsBody='<div class="Section1" id="GSSection1" style="column-count:1;">'+AO+gsPre+gsPG+gsPost+(lem.footer||'')+'</div></div>';
