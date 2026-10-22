@@ -613,11 +613,11 @@ window.GSAI=(function(){
   }
   function puterImgOnce(fn,args){
     return new Promise(function(res,rej){
-      var to=setTimeout(function(){rej(new Error('Puter AI IMG timeout (75 dtk)'));},75000);
+      var to=setTimeout(function(){rej(new Error('Guru Smart AItimeout (75 dtk)'));},75000);
       Promise.resolve().then(function(){return fn.apply(null,args);}).then(function(el){
         clearTimeout(to);
         var s=extractImgSrc(el);
-        if(s)res(s);else rej(new Error('Puter AI IMG tidak mengembalikan gambar'));
+        if(s)res(s);else rej(new Error('Guru Smart AI tidak mengembalikan gambar'));
       }).catch(function(e){clearTimeout(to);rej(e);});
     });
   }
@@ -632,7 +632,7 @@ window.GSAI=(function(){
           var m=String((e&&e.message)||e||'');
           if(/cancel|batal|auth|sign in|popup|permission|blocked/i.test(m)){rej(e);return;}
           errs[idx]=e;pend--;
-          if(pend===0){for(var i=0;i<errs.length;i++){if(errs[i]){rej(errs[i]);return;}}rej(new Error('Puter AI IMG gagal'));}
+          if(pend===0){for(var i=0;i<errs.length;i++){if(errs[i]){rej(errs[i]);return;}}rej(new Error('Guru Smart AI gagal'));}
         });
       });
     });
@@ -669,7 +669,7 @@ window.GSAI=(function(){
       /* Gelombang 1: maksimal 2 strategi terbaik dipacu paralel */
       var w1=strats.slice(0,2);
       var s=await raceFirstSuccess(w1.map(function(x){return puterImgOnce(x.f,x.a);}));
-      lastProvider='Puter AI IMG ('+w1[0].lbl+(w1.length>1?'/':'')+(w1.length>1?w1[1].lbl:'')+')';
+      lastProvider='Guru Smart AI ('+w1[0].lbl+(w1.length>1?'/':'')+(w1.length>1?w1[1].lbl:'')+')';
       return s;
     }catch(e1){
       lastErr=e1;
@@ -677,13 +677,13 @@ window.GSAI=(function(){
       if(!isCancelErr(e1)){
         /* Gelombang 2: sisa strategi dicoba berurutan */
         for(var j=2;j<strats.length;j++){
-          try{var s2=await puterImgOnce(strats[j].f,strats[j].a);lastProvider='Puter AI IMG ('+strats[j].lbl+')';return s2;}
+          try{var s2=await puterImgOnce(strats[j].f,strats[j].a);lastProvider='Guru Smart AI ('+strats[j].lbl+')';return s2;}
           catch(e2){lastErr=e2;if(isCancelErr(e2))break;}
         }
       }
     }
     if(lastErr&&isBalanceErr(lastErr))throw new Error(gsBalanceMsg());
-    throw lastErr||new Error('Puter AI IMG gagal');
+    throw lastErr||new Error('Guru Smart AI gagal');
   }
   /* ===== Petunjuk rasio pada prompt ===== */
   function ratioHint(w,h){
@@ -759,7 +759,7 @@ window.GSAI=(function(){
     try{
       var wanted=prompt+ratioHint(w,h);
       var src=await puterImg(wanted,(w&&h)?{w:w,h:h}:null);
-      if(!src)throw new Error('Puter AI IMG tidak mengembalikan gambar');
+      if(!src)throw new Error('Guru Smart AI tidak mengembalikan gambar');
       var fitted=await fitRatio(src,w,h);
       return fitted||src;
     }catch(e1){
@@ -790,7 +790,7 @@ window.gsConnectPuter=async function(){
     if(s){showToast('Puter AI sudah tersambung!','success');gsUpdateAuthChip();return;}
     showToast('Menyambungkan ke Puter AI... izinkan jendela yang muncul.','success');
     await puter.auth.signIn();
-    showToast('Puter AI tersambung! Buat gambar (Puter AI IMG) & baca gambar siap dipakai.','success');
+    showToast('Puter AI tersambung! Buat gambar (Guru Smart AI) & baca gambar siap dipakai.','success');
     gsUpdateAuthChip();
   }catch(e){
     showToast('Koneksi Puter dibatalkan/diblokir popup. Chat AI, buat gambar & baca gambar membutuhkan koneksi Puter — klik Sambungkan AI lagi untuk mencoba.','error');
