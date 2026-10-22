@@ -4090,7 +4090,7 @@ for(var i=0;i<segs.length;i++){
 var first=(i===0),last=(i===segs.length-1);
 var st='margin:0 0 '+(last?(moreFollows?'9px':'16px'):'2px')+' 34px;'
 +(first?'text-indent:-34px;':'')
-+'font-size:12.5px;line-height:12.7pt;mso-line-height-rule:exactly;text-align:justify;page-break-inside:avoid;'
++'font-size:12.5px;line-height:12.7pt;mso-line-height-rule:exactly;text-align:left;page-break-inside:avoid;'
 +(moreFollows?'page-break-after:avoid;':'');
 out+='<p style="'+st+'">'+(first?numHTML+gsWPadNbsp(34,numHTML,'bold 12pt "Times New Roman",Georgia,serif'):'')+segs[i]+'</p>';}
 return out;}
