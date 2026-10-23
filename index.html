@@ -3218,6 +3218,60 @@ async function buildRaporHTML(studentId,results){var student=results[0].find(fun
 async function printRapor(studentId){try{var results=await Promise.all([DB.get('students'),DB.get('classes'),DB.get('grades'),DB.get('subjects'),DB.get('school_profile')]);var html=await buildRaporHTML(studentId,results);if(!html){showToast('Data siswa tidak ditemukan.','error');return;}html=html.replace('page-break-after:always;break-after:page;','page-break-after:auto;break-after:auto;');openPrintPreview(html);}catch(e){console.error('Cetak rapor gagal:',e);showToast('Gagal menyiapkan rapor.','error');}}
 async function printAllRapor(){try{var results=await Promise.all([DB.get('students'),DB.get('classes'),DB.get('grades'),DB.get('subjects'),DB.get('school_profile')]);var students=results[0]||[];if(!students.length){showToast('Belum ada data siswa untuk dicetak.','error');return;}var pages=[];for(var i=0;i<students.length;i++){var page=await buildRaporHTML(students[i].id,results);if(page)pages.push(page);}if(!pages.length){showToast('Rapor tidak dapat dibuat.','error');return;}openPrintPreview(pages.join(''));}catch(e){console.error('Cetak semua rapor gagal:',e);showToast('Gagal menyiapkan semua rapor.','error');}}
 </script><script>
+/* ===== Panel Tutorial Lengkap Aplikasi (tampil di bawah panel Pengaturan) ===== */
+window.gsAppTutorialHTML=function(){
+  var D=function(t,b){return '<details class="group bg-slate-50 dark:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-600"><summary class="px-4 py-3 text-sm font-semibold text-slate-700 dark:text-white cursor-pointer select-none hover:bg-slate-100 dark:hover:bg-slate-600 rounded-lg">'+t+'</summary><div class="px-4 pb-4 pt-1 text-sm text-slate-600 dark:text-slate-300 space-y-2">'+b+'</div></details>';};
+  var L=function(x){return '<p class="flex gap-2"><span class="text-blue-600 dark:text-blue-400 font-bold flex-none">•</span><span>'+x+'</span></p>';};
+  var it='';
+  it+=D('🚀 Mulai Cepat',
+    L('Langkah 1 - Isi data induk lebih dulu: Data Guru, Data Siswa, Kelas, dan Mata Pelajaran. Semua fitur lain memakai data ini.')+
+    L('Langkah 2 - Buka menu Pengaturan: lengkapi Profil Sekolah dan Kop Surat agar setiap dokumen cetak otomatis berkop sekolah Anda.')+
+    L('Langkah 3 - Pastikan AI tersambung: buka menu Asisten AI Guru lalu klik tombol Sambungkan AI (izinkan popup yang muncul).')+
+    L('Langkah 4 - Sudah siap! Buat dokumen di Perangkat Ajar, kuis di Kuis Kelas, catat absensi, dan lakukan Backup data secara berkala.'));
+  it+=D('📊 Dashboard',
+    L('Menampilkan ringkasan sekolah: jumlah guru, siswa, kelas, jadwal hari ini, dan akses cepat ke fitur utama.')+
+    L('Klik kartu atau tombol aksi cepat untuk melompat ke menu terkait.'));
+  it+=D('🤖 Asisten AI Guru + Studio Gambar',
+    L('Ketik permintaan apa pun: membuat soal, menyusun naskah, ide kegiatan, hingga perbaikan teks. Mode Akurat otomatis dipakai untuk soal dan hitungan agar kunci jawaban benar.')+
+    L('Bila sesi AI belum aktif, klik Sambungkan AI (izinkan popup). Tombol Ganti Akun AI dipakai bila kuota/saldo habis.')+
+    L('Studio Gambar: tulis prompt, pilih gaya (Kartun Anak, Realistis, Poster, dll), pilih rasio (1:1, 16:9, 9:16), lalu buat. Hasil bisa diunduh; galeri menyimpan riwayat gambar.'));
+  it+=D('📚 Perangkat Ajar (CP, TP, ATP, Modul, RPP, Prota, LKPD)',
+    L('Pilih jenis dokumen, mata pelajaran, kelas, fase, dan topik, lalu klik Generate dengan AI - dokumen tersusun otomatis dengan tabel rapi.')+
+    L('Buka dokumen yang sudah jadi, lalu klik tombol 🎨 Generate Gambar (9:16) untuk membuat ilustrasi potret HD 1080×1920 dari isi dokumen: hasil tampil UTUH tanpa terpotong, teks tajam, bisa diunduh atau dibuat ulang.')+
+    L('Klik 🖨️ Cetak / PDF untuk mencetak dokumen lengkap dengan kop sekolah.'));
+  it+=D('🛡️ Kuis Kelas',
+    L('Buat kuis interaktif per kelas dengan bantuan AI: pilih kelas, topik, dan jumlah soal.')+
+    L('Bagikan kuis ke siswa; jawaban terkumpul otomatis untuk diperiksa guru.'));
+  it+=D('👥 Data Induk: Guru, Siswa, Kelas, Mata Pelajaran',
+    L('Data Guru & Data Siswa: tambah, ubah, atau hapus lewat tombol di tabel; identitas dipakai di absensi, penilaian, dan rapor.')+
+    L('Kelas: buat kelas dan tentukan wali kelas. Mata Pelajaran: daftar mapel (termasuk mapel daerah) yang dipakai jadwal, penilaian, dan perangkat ajar.'));
+  it+=D('🗓️ Jadwal & Jadwal Piket',
+    L('Jadwal: atur hari, jam, mata pelajaran, guru, dan kelas; tersedia tombol generate gambar poster jadwal yang ceria.')+
+    L('Jadwal Piket: susun piket harian siswa per hari; bisa juga dibuatkan gambar poster piket otomatis.'));
+  it+=D('✅ Absensi & Absensi Kegiatan',
+    L('Absensi: catat kehadiran harian per kelas (hadir, sakit, izin, alfa); rekap tersimpan otomatis.')+
+    L('Absensi Kegiatan: catat kehadiran untuk kegiatan atau acara khusus sekolah.'));
+  it+=D('📝 Penilaian & Tugas',
+    L('Penilaian: input nilai per kelas, mapel, dan komponen penilaian; data ini terhubung ke Cetak Rapor.')+
+    L('Tugas: buat tugas, pantau pengumpulan, lalu beri nilai.'));
+  it+=D('📁 Materi Ajar',
+    L('Simpan materi bahan ajar per mata pelajaran; materi bisa dibuatkan dengan AI lalu dibagikan ke siswa.'));
+  it+=D('💰 Keuangan SPP',
+    L('Catat pembayaran SPP per siswa: tagihan, pelunasan, dan rekap keuangan per kelas maupun seluruh sekolah.'));
+  it+=D('🧾 Cetak Rapor',
+    L('Pilih kelas dan siswa; aplikasi merangkum nilai, absensi, dan identitas menjadi rapor siap cetak dengan kop sekolah.'));
+  it+=D('⚙️ Pengaturan',
+    L('Profil Sekolah: nama, alamat, kepala sekolah, dan NIP - dipakai di semua dokumen cetak.')+
+    L('Pengaturan Akun: ganti foto profil Anda.')+
+    L('Backup & Restore: unduh semua data (JSON) atau pulihkan dari file; tombol Uji Izin Tulis membantu diagnosis bila restore ditolak database.')+
+    L('Kop Surat: logo kiri/kanan plus baris identitas sekolah dengan pratinjau langsung.'));
+  return '<div class="bg-white dark:bg-slate-800 p-6 rounded-xl md:col-span-2 border-t-4 border-amber-600">'
+    +'<h3 class="font-bold mb-2 text-slate-800 dark:text-white">📖 Tutorial Lengkap Aplikasi GURU Smart AI</h3>'
+    +'<p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Panduan singkat seluruh panel aplikasi - klik salah satu bagian di bawah untuk membuka panduannya.</p>'
+    +'<div class="space-y-2">'+it+'</div>'
+    +'<p class="text-xs text-slate-400 mt-4">Catatan: beberapa menu hanya tampil sesuai peran (admin/guru/siswa). Seluruh data tersimpan otomatis - lakukan Backup berkala di menu Pengaturan.</p>'
+    +'</div>';
+};
 async function renderSettings(){
   /* KILAT PENGATURAN: form digambar SEKETIKA tanpa menunggu jaringan; nilai profil
      diisi begitu data school_profile tiba. Perilaku & tampilan tetap sama. */
@@ -3249,7 +3303,7 @@ async function renderSettings(){
   '<div><label class="block text-sm mb-1">Baris 2 (Nama Sekolah)</label><input type="text" id="kop_line2" value="" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>'+
   '<div><label class="block text-sm mb-1">Baris 3 (Alamat/Telp/Email)</label><input type="text" id="kop_line3" value="" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white"></div>'+
   '<button id="btnSaveKop" disabled onclick="saveKopData(window.__gsSetPid||\'\')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Simpan Kop</button></div>'+
-  '<div class="lg:col-span-2"><p class="text-sm font-semibold mb-2">Pratinjau:</p><div class="border p-4 bg-white rounded-lg shadow-sm w-full" id="kopPreviewArea" style="aspect-ratio:3/1;"></div></div></div></div></div>';
+  '<div class="lg:col-span-2"><p class="text-sm font-semibold mb-2">Pratinjau:</p><div class="border p-4 bg-white rounded-lg shadow-sm w-full" id="kopPreviewArea" style="aspect-ratio:3/1;"></div></div></div></div>'+window.gsAppTutorialHTML()+'</div>';
   
   document.getElementById('content').innerHTML = html;
   
