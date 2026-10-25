@@ -6142,70 +6142,176 @@ window.__gsInstallExcelFormat=function(){
 <script>if(window.__gsFastBoot)window.__gsFastBoot();</script>
 <!-- ================= GURU SMART AI — GESTURE CONTROL (MediaPipe Hands) ================= -->
 <style id="gs-gesture-style">
-#gsGestureBtn{position:fixed;right:16px;bottom:16px;z-index:99980;width:54px;height:54px;border-radius:9999px;background:linear-gradient(135deg,#2563eb,#4f46e5);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 25px rgba(37,99,235,.45);cursor:pointer;border:3px solid #fff;transition:transform .15s ease,background .2s;user-select:none}
+#gsGestureBtn{position:fixed;right:16px;bottom:16px;z-index:99980;width:56px;height:56px;border-radius:9999px;background:linear-gradient(135deg,#2563eb,#4f46e5);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 25px rgba(37,99,235,.45);cursor:pointer;border:3px solid #fff;transition:transform .15s ease,background .2s,right .35s ease,opacity .35s ease,width .2s ease,height .2s;user-select:none;-webkit-user-select:none}
 #gsGestureBtn:hover{transform:scale(1.08)}
-#gsGestureBtn.gs-on{background:linear-gradient(135deg,#059669,#10b981)}
-#gsGesturePanel{position:fixed;right:16px;bottom:80px;z-index:99980;width:240px;background:rgba(15,23,42,.96);border:1px solid #334155;border-radius:16px;padding:10px;display:none;color:#e2e8f0;font-size:12px;box-shadow:0 15px 35px rgba(0,0,0,.4)}
+#gsGestureBtn.gs-on{background:linear-gradient(135deg,#059669,#10b981);animation:none}
+/* mode tersembunyi tetap terlihat — denyut halus agar mudah ditemukan lagi */
+#gsGestureBtn.gs-mini{width:34px;height:34px;right:0;bottom:14px;opacity:.45;border-width:1px;box-shadow:none;border-radius:8px 0 0 8px;transform:none;animation:gsMiniPulse 2.6s ease-in-out infinite}
+#gsGestureBtn.gs-mini:hover{opacity:.95;transform:none;animation:none}
+#gsGestureBtn.gs-mini svg{width:17px;height:17px}
+@keyframes gsMiniPulse{0%,100%{opacity:.45}50%{opacity:.85}}
+/* v13.1: panel SIMPEL — kecil, sedikit teks */
+#gsGesturePanel{position:fixed;right:16px;bottom:84px;z-index:99980;width:196px;background:rgba(15,23,42,.97);border:1px solid #334155;border-radius:16px;padding:10px;display:none;color:#e2e8f0;font-size:12px;box-shadow:0 15px 35px rgba(0,0,0,.4);font-family:Inter,Arial,sans-serif}
 #gsGesturePanel.gs-show{display:block}
+.gs-ghead{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.gs-ghead b{font-size:12px;color:#fff}
+#gsGestureCam{width:9px;height:9px;border-radius:9999px;background:#475569;display:inline-block;flex:0 0 auto;transition:background .2s}
+#gsGestureCam.gs-cam-on{background:#10b981;box-shadow:0 0 8px rgba(16,185,129,.9);animation:gsDotPulse 1.6s ease-in-out infinite}
+#gsGestureCam.gs-cam-err{background:#ef4444;box-shadow:0 0 8px rgba(239,68,68,.9)}
+@keyframes gsDotPulse{50%{opacity:.45}}
 .gs-gvideo-wrap{position:relative;width:100%;aspect-ratio:4/3;border-radius:10px;overflow:hidden;background:#000}
 #gsGestureVideo{width:100%;height:100%;object-fit:fill;transform:scaleX(-1);display:block}
 #gsGestureCanvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-#gsGestureStatus{margin-top:8px;background:rgba(37,99,235,.15);border:1px solid rgba(59,130,246,.35);color:#bfdbfe;border-radius:8px;padding:6px 8px;line-height:1.35;min-height:30px}
-.gs-glegend{margin-top:8px;display:grid;grid-template-columns:1fr;gap:3px;color:#94a3b8;line-height:1.3}
-.gs-glegend b{color:#e2e8f0;font-weight:600}
-#gsGestureStop{margin-top:8px;width:100%;background:#334155;color:#fff;border:none;border-radius:8px;padding:7px 0;font-weight:600;cursor:pointer}
-#gsGestureStop:hover{background:#475569}
-.gs-gcursor{position:fixed;left:0;top:0;z-index:99999;width:28px;height:28px;margin:-14px 0 0 -14px;border-radius:9999px;border:3px solid #2563eb;background:rgba(255,255,255,.35);box-shadow:0 0 12px rgba(37,99,235,.85);pointer-events:none;display:none;will-change:transform}
-.gs-gcursor.gs-gclick{border-color:#10b981;background:rgba(16,185,129,.45);box-shadow:0 0 18px rgba(16,185,129,.95)}
+/* badge gestur: satu baris, ikon + 1-2 kata saja */
+#gsGestureStatus{margin-top:7px;background:rgba(37,99,235,.15);border:1px solid rgba(59,130,246,.35);color:#bfdbfe;border-radius:10px;padding:8px 6px;line-height:1.3;min-height:32px;font-weight:700;font-size:12.5px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .2s,border-color .2s,color .2s}
+#gsGestureStatus.gs-ok{background:rgba(16,185,129,.16);border-color:rgba(16,185,129,.5);color:#a7f3d0}
+/* tombol ikon: panduan + matikan */
+.gs-gbtns{margin-top:8px;display:flex;gap:7px}
+.gs-gbtns button{flex:1 1 0;height:34px;border-radius:10px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:15px;line-height:1;cursor:pointer;transition:all .15s}
+.gs-gbtns button:hover{background:#334155}
+#gsGestureStop:hover{background:#b91c1c;border-color:#dc2626;color:#fff}
+/* kontrol (kini di dalam panduan) */
+.gs-gctrl{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.gs-gctrl-row{display:flex;align-items:center;gap:6px}
+.gs-gctrl-lbl{flex:0 0 auto;font-size:11px;color:#94a3b8;font-weight:700;min-width:72px}
+.gs-gchip{flex:1 1 0;text-align:center;font-size:11px;font-weight:700;color:#cbd5e1;background:#1e293b;border:1px solid #334155;border-radius:8px;padding:6px 4px;cursor:pointer;user-select:none;-webkit-user-select:none;transition:all .15s}
+.gs-gchip:hover{background:#334155}
+.gs-gchip.gs-active{background:#059669;border-color:#10b981;color:#fff}
+/* kursor lebih besar + titik tengah + ring progres klik otomatis */
+.gs-gcursor{position:fixed;left:0;top:0;z-index:99999;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:9999px;border:4px solid #2563eb;background:rgba(255,255,255,.3);box-shadow:0 0 14px rgba(37,99,235,.85);pointer-events:none;display:none;will-change:transform;transition:width .12s,height .12s,margin .12s,border-color .12s,background .12s}
+.gs-gcursor::after{content:'';position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:9999px;background:#1d4ed8}
+.gs-gcursor.gs-hover{border-color:#10b981;background:rgba(16,185,129,.35);box-shadow:0 0 20px rgba(16,185,129,.95);width:42px;height:42px;margin:-21px 0 0 -21px}
+.gs-gcursor.gs-hover::after{background:#047857}
+.gs-gcursor.gs-gclick{border-color:#10b981;background:rgba(16,185,129,.5);box-shadow:0 0 22px rgba(16,185,129,1)}
+.gs-dwell-svg{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px 0 0 -27px;transform:rotate(-90deg);pointer-events:none;overflow:visible}
+.gs-dwell-svg circle{fill:none;stroke-width:5;stroke-linecap:round}
+.gs-dwell-bg{stroke:rgba(255,255,255,.2)}
+#gsDwellArc{stroke:#10b981;stroke-dasharray:113.1;stroke-dashoffset:113.1;filter:drop-shadow(0 0 4px rgba(16,185,129,.8))}
+/* sorotan hijau pada tombol yang akan diklik */
+#gsHoverBox{position:fixed;z-index:99985;border:3px solid rgba(16,185,129,.95);border-radius:12px;box-shadow:0 0 0 4px rgba(16,185,129,.22),0 8px 22px rgba(16,185,129,.28);pointer-events:none;display:none;transition:all .1s ease;background:rgba(16,185,129,.06)}
+/* panduan bergambar + pengaturan (onboarding) */
+#gsGestureGuide{position:fixed;inset:0;z-index:99990;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,.82);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);font-family:Inter,Arial,sans-serif;padding:18px}
+#gsGestureGuide.gs-show{display:flex}
+.gs-guide-card{background:#0f172a;border:1px solid #334155;border-radius:22px;padding:22px 20px;max-width:430px;width:100%;color:#e2e8f0;box-shadow:0 25px 60px rgba(0,0,0,.5);max-height:92vh;overflow-y:auto}
+.gs-guide-card h2{margin:0 0 4px;font-size:19px;font-weight:800;color:#fff}
+.gs-guide-card p.gs-sub{margin:0 0 14px;font-size:12px;color:#94a3b8;line-height:1.4}
+.gs-guide-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.gs-guide-item{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:12px 10px;text-align:center}
+.gs-guide-item .gi-emoji{font-size:30px;line-height:1;margin-bottom:7px}
+.gs-guide-item .gi-title{font-size:13px;font-weight:800;color:#fff}
+.gs-guide-item .gi-desc{font-size:11px;color:#94a3b8;margin-top:3px;line-height:1.4}
+.gs-guide-tip{margin-top:12px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.4);border-radius:12px;padding:10px 12px;font-size:12px;color:#a7f3d0;line-height:1.5}
+.gs-guide-tip b{color:#fff}
+.gs-guide-set{margin-top:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:11px 11px 12px}
+.gs-guide-set .gs-set-title{font-size:11px;font-weight:800;color:#94a3b8;letter-spacing:.4px;margin:0 0 8px;text-transform:uppercase}
+#gsGuideClose{margin-top:14px;width:100%;background:linear-gradient(135deg,#059669,#10b981);color:#fff;border:none;border-radius:12px;padding:11px 0;font-weight:800;font-size:14px;cursor:pointer}
+#gsGuideClose:hover{filter:brightness(1.08)}
+@media(max-width:400px){.gs-guide-grid{grid-template-columns:1fr}}
 </style>
-<div id="gsGestureBtn" title="GURU SMART Gesture Control — klik untuk aktif/nonaktif">
+<div id="gsGestureBtn" title="Remot Jari — klik untuk menyalakan/mematikan">
   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
 </div>
 <div id="gsGesturePanel">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-    <b style="font-size:12px;color:#fff">Gesture Control</b>
-    <span id="gsGestureCam" style="font-size:10px;color:#94a3b8">kamera: -</span>
+  <div class="gs-ghead">
+    <b>🖐️ Remot Jari</b>
+    <span id="gsGestureCam" title="kamera belum aktif"></span>
   </div>
   <div class="gs-gvideo-wrap">
     <video id="gsGestureVideo" playsinline muted></video>
     <canvas id="gsGestureCanvas"></canvas>
   </div>
-  <div id="gsGestureStatus">Menyiapkan…</div>
-  <div class="gs-glegend">
-    <div>☝️ Telunjuk → <b>kursor</b></div>
-    <div>✊ Kepal tangan → <b>klik</b> (kursor terkunci, tidak geser)</div>
-    <div>🖐️ 3-5 jari terbuka → <b>scroll gaya HP</b> (seret, diam = meluncur)</div>
-    <div>✌️ Dua jari (tahan) → <b>menu utama</b></div>
+  <div id="gsGestureStatus">📷 Siap</div>
+  <div class="gs-gbtns">
+    <button id="gsGestureHelp" title="Cara pakai & pengaturan" type="button">📖</button>
+    <button id="gsGestureStop" title="Matikan Remot Jari" type="button">⏻</button>
   </div>
-  <button id="gsGestureStop" type="button">Matikan Gesture Control</button>
 </div>
-<div id="gsGestureCursor" class="gs-gcursor"></div>
+<div id="gsHoverBox"></div>
+<div id="gsGestureCursor" class="gs-gcursor">
+  <svg class="gs-dwell-svg" viewBox="0 0 40 40"><circle class="gs-dwell-bg" cx="20" cy="20" r="18"/><circle id="gsDwellArc" cx="20" cy="20" r="18"/></svg>
+</div>
+<div id="gsGestureGuide">
+  <div class="gs-guide-card">
+    <h2>🖐️ Remot Jari — Panduan Cepat</h2>
+    <p class="gs-sub">Kendalikan aplikasi cukup dengan tangan di depan kamera. Gampang banget — ikuti 4 gerakan ini:</p>
+    <div class="gs-guide-grid">
+      <div class="gs-guide-item"><div class="gi-emoji">☝️</div><div class="gi-title">Tunjuk</div><div class="gi-desc">Gerakkan telunjuk untuk mengarahkan kursor ke tombol</div></div>
+      <div class="gs-guide-item"><div class="gi-emoji">⏱️</div><div class="gi-title">Klik Otomatis</div><div class="gi-desc">Tahan telunjuk diam di atas tombol ±1 detik — klik terjadi sendiri</div></div>
+      <div class="gs-guide-item"><div class="gi-emoji">✊</div><div class="gi-title">Klik Cepat</div><div class="gi-desc">Kepal tangan untuk klik langsung di titik yang terkunci</div></div>
+      <div class="gs-guide-item"><div class="gi-emoji">🖐️</div><div class="gi-title">Scroll</div><div class="gi-desc">Buka 3–5 jari lalu seret naik/turun — halaman & pop-up ikut bergulir</div></div>
+    </div>
+    <div class="gs-guide-tip">✨ <b>Paling mudah:</b> tunjuk tombol yang mau ditekan, lalu tahan diam sebentar — tombol akan <b>disorot hijau</b> dan klik terjadi otomatis. Kembali ke menu utama: dua jari (✌️) tahan sebentar.<br><br>💡 Tips: pastikan pencahayaan cukup dan tangan terlihat jelas di kotak kamera. Unduhan pertama ±12 MB, sesudahnya instan.</div>
+    <div class="gs-guide-set">
+      <p class="gs-set-title">⚙️ Pengaturan</p>
+      <div class="gs-gctrl-row">
+        <span class="gs-gctrl-lbl">Mode Mudah</span>
+        <div class="gs-gchip" id="gsDwellToggle">Klik Otomatis: AKTIF</div>
+      </div>
+      <div class="gs-gctrl" style="margin-top:6px">
+        <div class="gs-gctrl-row">
+          <span class="gs-gctrl-lbl">Sensitivitas</span>
+          <div class="gs-gchip" data-amp="1.35">Lembut</div>
+          <div class="gs-gchip" data-amp="1.6">Sedang</div>
+          <div class="gs-gchip" data-amp="2">Cepat</div>
+        </div>
+      </div>
+    </div>
+    <button id="gsGuideClose" type="button">Mengerti, Mulai! 👍</button>
+  </div>
+</div>
 <script id="gs-gesture-script">
 (function(){
 "use strict";
-/* ===== GURU SMART Gesture Control v11 — KURSOR MUDAH & KUNCI KLIK =====
-   ☝️ Telunjuk = gerakkan kursor (halus 60fps, cepat menempel sasaran)
-   ✊ Kepal tangan (atau jepit) = KLIK — begitu tangan mulai mengepal, kursor LANGSUNG DIKUNCI & dijepret ke titik yang sudah pas: klik tidak bergeser
-   🖐️ 3-5 JARI TERBUKA = SCROLL gaya HP: seret = konten ikut tangan; berhenti/dilepas = konten MELUNCUR lalu melambat sendiri (momentum)
-   ✌️ Dua jari saja, TAHAN 1 dtk = menu utama
-   Kursor: AI 15fps menetap target, render 60fps meluncur mulus. */
+/* ===== GURU SMART REMOT JARI v13 — MODE MUDAH UNTUK SEMUA =====
+   ☝️ Telunjuk  = gerakkan kursor (halus, 60fps)
+   ⏱️ TAHAN DIAM di atas tombol ±1 dtk = KLIK OTOMATIS (Mode Mudah, ring progres di kursor)
+   ✊ Kepal tangan = klik cepat di titik yang terkunci
+   🖐️ Telapak 3-5 jari = scroll gaya HP (seret + meluncur)
+   ✌️ Dua jari tahan 0,8 dtk = kembali ke menu utama
+   BARU di v13 (dibuat agar MUDAH digunakan):
+   1. KLIK OTOMATIS (dwell click) — tidak perlu mengepal: tunjuk tombol, tahan diam, klik terjadi sendiri
+   2. SOROT HIJAU pada tombol yang sedang ditunjuk + kursor membesar = jelas apa yang akan diklik
+   3. PANDUAN BERGAMBAR muncul otomatis saat pertama kali dinyalakan (+ tombol "Cara Pakai" di panel)
+   4. ATUR SENSITIVITAS kursor: Lembut / Sedang / Cepat (tersimpan otomatis di perangkat)
+   5. Deteksi gestur lebih toleran (ambang 1.12) & lebih responsif (2 dari 3 frame)
+   6. Dua jari lebih cepat (0,8 dtk) dengan indikator persen di status
+   7. Tombol tersembunyi berdenyut halus supaya mudah ditemukan lagi
+   v13.2: SCROLL DIPERBAIKI — sebelumnya menggulir "window" yang tidak pernah bisa
+   discroll (aplikasi memakai layout fixed). Kini sistem mencari container asli yang
+   benar-benar bisa digulir di bawah telapak (#content, pop-up, chat, dsb.),
+   lalu menggulirnya; kalau mentok, guliran lanjut ke induknya (scroll chaining).
+   v13.3: RASA SCROLL DIBENAHKAN — momentum basi saat telapak fokus ulang di-nol-kan
+   (dulu: halaman bisa melompat sendiri), getaran tangan disaring zona-mati lembut
+   (gerak pelan tetap jalan, tak patah-patah), kecepatan lebih tenang (pengali 2.6 +
+   batas ±130px/frame), dan meluncur hanya bila lepasan benar-benar cepat. */
 var CDNS=[
   'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14',
   'https://unpkg.com/@mediapipe/tasks-vision@0.10.14'
 ];
 var MODEL_URL='https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
+var DWELL_MS=1100,ARC_LEN=113.1,TWO_HOLD=800;
 var G={
   on:false,starting:false,session:0,stream:null,landmarker:null,gpuMode:'',cdnRoot:'',
   raf:0,lastVideoTime:-1,cx:Math.round(window.innerWidth/2),cy:Math.round(window.innerHeight/2),
   sx:0.5,sy:0.5,hist:[],dHist:[],stable:'NONE',lastSeen:0,lastCursorAt:0,lockUntil:0,
   clickArmed:true,clickAt:0,menuAt:0,palmSince:0,
   scrollLast:null,scrollY:0.5,scrollVel:0,coast:0,coastRAF:0,drawnHand:false,recycling:false,dPrev:0,
-  tx:0.5,ty:0.5,targetActive:false,rrender:0
+  scrollEl:null,pcx:0.5,pcy:0.5,
+  tx:0.5,ty:0.5,targetActive:false,rrender:0,
+  amp:1.6,dwell:true,dwellEl:null,dwellStart:0,dwellCool:0,hoverOn:false,dwellFiredEl:null
 };
+try{var sa=parseFloat(localStorage.getItem('gsGestureAmp'));if(sa>=1.2&&sa<=2.2)G.amp=sa;}catch(e){}
+try{G.dwell=localStorage.getItem('gsGestureDwell')!=='0';}catch(e){}
 var P={interval:66,lastPump:0,msSum:0,msN:0,detectErr:0};
 function $(id){return document.getElementById(id);}
 function toast(m,t){try{if(typeof showToast==='function')showToast(m,t||'info');}catch(e){}}
-function setStatus(t){var el=$('gsGestureStatus');if(el&&el.innerText!==t){el.innerText=t;}}
+function setStatus(t,ok){
+  var el=$('gsGestureStatus');
+  if(el){
+    if(el.innerText!==t)el.innerText=t;
+    if(ok)el.classList.add('gs-ok');else el.classList.remove('gs-ok');
+  }
+}
 function dist(a,b){var dx=a.x-b.x,dy=a.y-b.y;return Math.sqrt(dx*dx+dy*dy);}
 var BONES=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
 function withTimeout(p,ms,msg){
@@ -6235,13 +6341,20 @@ async function recycleEngineCpu(){
     G.landmarker=await vision.HandLandmarker.createFromOptions(fileset,{baseOptions:{modelAssetPath:MODEL_URL,delegate:'CPU'},runningMode:'VIDEO',numHands:1,minHandDetectionConfidence:0.5,minHandPresenceConfidence:0.5,minTrackingConfidence:0.5});
     G.gpuMode='CPU';P.detectErr=0;P.msSum=0;P.msN=0;
     try{if(old&&old.close)old.close();}catch(x){}
-    updateCamLabel(0);setStatus('Mode CPU aktif — kontrol berjalan lagi.');
+    updateCamLabel(0);setStatus('♻️ Mode CPU');
   }catch(e){}
   G.recycling=false;
 }
+/* v13.1: kamera = titik indikator kecil (tanpa teks); detail hanya di tooltip */
+function camDot(state){
+  var el=$('gsGestureCam');if(!el)return;
+  el.classList.remove('gs-cam-on','gs-cam-err');
+  if(state==='on')el.classList.add('gs-cam-on');
+  else if(state==='err')el.classList.add('gs-cam-err');
+}
 function updateCamLabel(avgMs){
   var el=$('gsGestureCam');if(!el)return;
-  el.innerText='kamera: aktif'+(G.gpuMode?' · '+G.gpuMode:'')+(avgMs?(' '+Math.round(avgMs)+'ms'):'');
+  el.title='kamera: aktif'+(G.gpuMode?' · '+G.gpuMode:'')+(avgMs?(' '+Math.round(avgMs)+'ms'):'');
 }
 /* ---------- Kursor & klik sintetis ---------- */
 function moveCursor(x,y){
@@ -6267,19 +6380,22 @@ function renderLoop(){
 function doClick(){
   var el=$('gsGestureCursor');
   if(el){el.classList.add('gs-gclick');setTimeout(function(){el.classList.remove('gs-gclick');},320);}
+  /* reset klik otomatis + cooldown agar tidak dobel-klik */
+  G.dwellStart=0;G.dwellEl=null;setDwellArc(0);
+  G.dwellCool=Date.now()+1200;
   var target=null;
   try{target=document.elementFromPoint(G.cx,G.cy);}catch(e){}
-  if(!target){setStatus('Klik gagal: tidak ada elemen di posisi kursor.');return;}
-  var label=(target.textContent||target.getAttribute('aria-label')||'elemen').replace(/\s+/g,' ').trim().slice(0,26)||'elemen';
+  if(!target){setStatus('❓ Tidak ada tombol');return;}
+  var label=(target.textContent||target.getAttribute('aria-label')||'elemen').replace(/\s+/g,' ').trim().slice(0,18)||'elemen';
   try{
     var o={bubbles:true,cancelable:true,view:window,clientX:G.cx,clientY:G.cy};
     target.dispatchEvent(new MouseEvent('mousedown',o));
     target.dispatchEvent(new MouseEvent('mouseup',o));
     target.dispatchEvent(new MouseEvent('click',o));
-    setStatus('Klik: '+label);
-  }catch(e){setStatus('Klik tidak dapat dikirim ke elemen ini.');}
+    setStatus('✅ '+label,true);
+  }catch(e){setStatus('⚠️ Tak bisa diklik');}
 }
-/* ---------- Canvas: hanya skeleton 200px ---------- */
+/* ---------- Canvas: skeleton tangan di panel ---------- */
 function drawSkeleton(lm){
   var canvas=$('gsGestureCanvas');if(!canvas)return;
   var ctx=null;try{ctx=canvas.getContext('2d');}catch(e){}
@@ -6303,14 +6419,14 @@ function drawSkeleton(lm){
     G.drawnHand=true;
   }catch(e){}
 }
-/* ---------- Klasifikasi SANTAI: hitung jari terbuka saja ---------- */
+/* ---------- Klasifikasi SANTAI v13: ambang lebih toleran (1.12) ---------- */
 function classify(lm){
   var handSize=dist(lm[0],lm[9])||0.001;
   var ext={
-    index:dist(lm[0],lm[8])>dist(lm[0],lm[6])*1.15,
-    mid:dist(lm[0],lm[12])>dist(lm[0],lm[10])*1.15,
-    ring:dist(lm[0],lm[16])>dist(lm[0],lm[14])*1.15,
-    pinky:dist(lm[0],lm[20])>dist(lm[0],lm[18])*1.15
+    index:dist(lm[0],lm[8])>dist(lm[0],lm[6])*1.12,
+    mid:dist(lm[0],lm[12])>dist(lm[0],lm[10])*1.12,
+    ring:dist(lm[0],lm[16])>dist(lm[0],lm[14])*1.12,
+    pinky:dist(lm[0],lm[20])>dist(lm[0],lm[18])*1.12
   };
   var n=(ext.index?1:0)+(ext.mid?1:0)+(ext.ring?1:0)+(ext.pinky?1:0);
   if(n>=3)return{raw:'PALM',handSize:handSize}; /* 3-5 jari terbuka = scroll (pose longgar, mudah ditahan) */
@@ -6327,7 +6443,7 @@ function gsCoastStep(){
   G.coastRAF=0;
   if(!G.on)return;
   var v=G.coast;if(!v)return;
-  window.scrollBy(0,v);
+  gsScrollBy(v); /* v13.2: gulir container asli, bukan window */
   G.coast=v*0.93; /* gesekan layar: meluncur lalu melambat halus seperti di HP */
   if(Math.abs(G.coast)<0.4){G.coast=0;return;}
   G.coastRAF=requestAnimationFrame(gsCoastStep);
@@ -6335,9 +6451,153 @@ function gsCoastStep(){
 function gsCoastFlick(){
   var conv=16.7/(P.interval||66); /* kecepatan px per-tik pompa -> px per-frame 60fps */
   var v=Math.max(-80,Math.min(80,G.scrollVel*conv*1.15));
-  if(Math.abs(v)<1)return; /* terlalu pelan: dianggap berhenti betulan */
+  if(Math.abs(v)<5)return; /* lepasan pelan = berhenti betulan; hanya lepasan cepat yang meluncur (anti getar) */
   G.coast=v;
   G.coastRAF=requestAnimationFrame(gsCoastStep);
+}
+/* ---------- v13.2: SCROLL KE CONTAINER YANG BENAR ----------
+   Aplikasi ini TIDAK scroll di window (#appScreen fixed overflow-hidden).
+   Konten halaman digulir di #content, pop-up di #modalContent, chat di #aiMessages,
+   dsb. Saat telapak menyeret: cari container paling dalam yang benar-benar bisa
+   digulir di bawah posisi telapak, gulir dia; kalau mentok, lanjut ke induknya
+   (scroll chaining) — persis seperti menggulir dengan jari di layar HP. */
+function gsScrollable(el){
+  try{
+    if(!el||el.nodeType!==1)return false;
+    var cs=getComputedStyle(el);
+    if(cs.overflowY!=='auto'&&cs.overflowY!=='scroll')return false;
+    return el.scrollHeight>el.clientHeight+4;
+  }catch(e){return false;}
+}
+function gsHandPoint(){
+  var x=(1-G.pcx)*window.innerWidth,y=G.pcy*window.innerHeight; /* cermin seperti kursor */
+  return{x:Math.max(1,Math.min(window.innerWidth-1,x)),y:Math.max(1,Math.min(window.innerHeight-1,y))};
+}
+function gsInRect(el,p){
+  try{var r=el.getBoundingClientRect();return p.x>=r.left-2&&p.x<=r.right+2&&p.y>=r.top-2&&p.y<=r.bottom+2;}
+  catch(e){return true;}
+}
+function gsFindScroller(){
+  var p=gsHandPoint(),el=null,guard=0;
+  try{el=document.elementFromPoint(p.x,p.y);}catch(e){}
+  while(el&&guard++<16){
+    if(!el.id||!/^gs(Gesture|Hover|Dwell)/.test(el.id)){ /* lewati elemen milik remot jari */
+      if(gsScrollable(el))return el;
+    }
+    el=el.parentElement;
+  }
+  var ids=['content','modalContent','aiMessages','navMenu'];
+  for(var i=0;i<ids.length;i++){var c=document.getElementById(ids[i]);if(gsScrollable(c))return c;}
+  var de=document.scrollingElement||document.documentElement;
+  if(gsScrollable(de))return de;
+  return document.getElementById('content')||de;
+}
+function gsScrollBy(dy){
+  var p=gsHandPoint();
+  if(!G.scrollEl||!gsScrollable(G.scrollEl)||!gsInRect(G.scrollEl,p)){G.scrollEl=gsFindScroller();}
+  var el=G.scrollEl,guard=0,left=dy;
+  while(el&&guard++<6&&Math.abs(left)>0.5){
+    var before=0;try{before=el.scrollTop;}catch(e){}
+    try{
+      if(el===document.scrollingElement||el===document.documentElement||el===document.body)window.scrollBy(0,left);
+      else el.scrollTop=before+left;
+    }catch(e){break;}
+    var after=0;try{after=el.scrollTop;}catch(e){}
+    left-=after-before; /* sisa guliran yang belum terserap container ini */
+    if(Math.abs(left)<=0.5)break;
+    /* container mentok di ujung: sisa diteruskan ke induk yang masih bisa digulir (scroll chaining) */
+    var par=el.parentElement,found=null,g2=0;
+    while(par&&g2++<12){if(gsScrollable(par)){found=par;break;}par=par.parentElement;}
+    if(!found||found===el)break;
+    el=found;G.scrollEl=el;
+  }
+}
+/* ---------- v13.3: INTI SCROLL TELAPAK (dipisah agar bisa diuji tanpa kamera) ----------
+   Dipanggil tiap frame pompa (±15fps) selama telapak terbuka terdeteksi.
+   - Rata-rata bergerak (EMA 0.45): getaran deteksi tersaring, gerakan tetap responsif
+   - Zona mati LEMBUT: getaran di bawah 0.0028 = nol, gerak pelan tetap bergerak pelan
+     (tidak lagi "macet lalu melompat" seperti versi sebelumnya)
+   - Pengali 2.6 + batas ±130px/frame: sapuan penuh ±2 layar, lonjakan deteksi tak melompatkan halaman
+   - Arah berbalik = momentum lama dibuang; meluncur hanya bila lepasan benar-benar cepat */
+function palmScrollUpdate(pcY){
+  var sdir=0;
+  G.scrollY=G.scrollY*0.55+pcY*0.45;
+  var dy=G.scrollLast-G.scrollY;
+  var mag=Math.abs(dy)-0.0028; /* zona mati lembut: kurangi besaran, jangan buang gerakan */
+  if(mag>0){
+    var pxs=(dy>0?1:-1)*mag*window.innerHeight*2.6; /* SERET: konten mengikuti tangan gaya HP */
+    pxs=Math.max(-130,Math.min(130,pxs));
+    if(G.scrollVel*pxs<0)G.scrollVel=0; /* arah berbalik: momentum lama tidak dibawa */
+    gsCoastStop();
+    gsScrollBy(pxs);
+    G.scrollVel=G.scrollVel*0.5+pxs*0.5; /* catat kecepatan untuk lepasan */
+    sdir=pxs>=0?1:-1;
+  }else{
+    /* tangan diam = "lepas jari": konten meluncur sendiri lalu melambat (bila lepasannya cepat) */
+    if(!G.coastRAF)gsCoastFlick();
+    G.scrollVel*=0.4;
+  }
+  G.scrollLast=G.scrollY;
+  return sdir;
+}
+/* ---------- v13: SOROT tombol yang ditunjuk + KLIK OTOMATIS (dwell) ---------- */
+function clickable(el){
+  try{
+    if(!el||el.nodeType!==1)return null;
+    return el.closest('button,a,[role="button"],[onclick],input,select,textarea,label,summary,.cursor-pointer');
+  }catch(e){return null;}
+}
+function hoverBox(el){
+  var hb=$('gsHoverBox');if(!hb)return;
+  if(!el){
+    if(G.hoverOn){G.hoverOn=false;hb.style.display='none';}
+    var c=$('gsGestureCursor');if(c)c.classList.remove('gs-hover');
+    return;
+  }
+  try{
+    var r=el.getBoundingClientRect();
+    if(!r||r.width<2||r.height<2){hoverBox(null);return;}
+    var L=Math.max(0,r.left-4),T=Math.max(0,r.top-4);
+    hb.style.display='block';
+    hb.style.left=L+'px';hb.style.top=T+'px';
+    hb.style.width=Math.min(window.innerWidth-L,r.width+8)+'px';
+    hb.style.height=Math.min(window.innerHeight-T,r.height+8)+'px';
+    G.hoverOn=true;
+    var c2=$('gsGestureCursor');if(c2)c2.classList.add('gs-hover');
+  }catch(e){}
+}
+function setDwellArc(pr){
+  var a=$('gsDwellArc');if(!a)return;
+  pr=Math.max(0,Math.min(1,pr||0));
+  a.style.strokeDashoffset=String(ARC_LEN*(1-pr));
+}
+function dwellReset(){
+  G.dwellEl=null;G.dwellStart=0;setDwellArc(0);
+}
+function dwellTick(now){
+  if(!G.targetActive){hoverBox(null);dwellReset();return;}
+  var el=null;try{el=document.elementFromPoint(G.cx,G.cy);}catch(e){}
+  var click=clickable(el);
+  if(!click){
+    if(G.dwellEl||G.hoverOn)hoverBox(null);
+    dwellReset();
+    return;
+  }
+  hoverBox(click);
+  if(G.dwellFiredEl&&click===G.dwellFiredEl){setDwellArc(0);return;} /* elemen ini baru diklik: pindah sorotan dulu agar tidak dobel */
+  G.dwellFiredEl=null;
+  if(!G.dwell){setDwellArc(0);return;} /* Mode Mudah mati: sorotan saja */
+  if(now<(G.dwellCool||0)){setDwellArc(0);return;} /* baru saja klik: jeda dulu */
+  if(G.dwellEl!==click){G.dwellEl=click;G.dwellStart=now;}
+  var pr=(now-G.dwellStart)/DWELL_MS;
+  if(pr>=1){
+    G.cx=Math.round(G.tx*window.innerWidth);G.cy=Math.round(G.ty*window.innerHeight);
+    doClick();
+    G.dwellFiredEl=click; /* kunci: jangan klik ulang elemen yang sama sebelum kursor dipindah */
+    G.lockUntil=now+500;
+  }else{
+    setDwellArc(pr);
+  }
 }
 /* ---------- Logika gestur ---------- */
 function onResults(res,video){
@@ -6346,69 +6606,62 @@ function onResults(res,video){
   var now=Date.now();
   if(!lm){
     if(now-G.lastSeen>350){
-      hideCursor();G.scrollLast=null;G.scrollVel=0;G.hist=[];G.dHist=[];G.stable='NONE';G.palmSince=0;G.dPrev=0;G.lockUntil=0;
-      setStatus('Tampilkan tangan ke kamera…');
+      hideCursor();hoverBox(null);dwellReset();G.dwellFiredEl=null; /* tangan hilang: boleh klik ulang elemen yang sama */
+      G.scrollLast=null;G.scrollVel=0;G.hist=[];G.dHist=[];G.stable='NONE';G.palmSince=0;G.dPrev=0;G.lockUntil=0;
+      setStatus('🙋 Tampilkan tangan…');
     }
     return;
   }
   G.lastSeen=now;
   var cls=classify(lm);
-  G.hist.push(cls.raw);if(G.hist.length>4)G.hist.shift();
+  G.hist.push(cls.raw);if(G.hist.length>3)G.hist.shift();
   var counts={};
   for(var i=0;i<G.hist.length;i++){counts[G.hist[i]]=(counts[G.hist[i]]||0)+1;}
   var best=G.stable,bc=0;
   for(var k in counts){if(counts[k]>bc){best=k;bc=counts[k];}}
-  if(bc>=3)G.stable=best;
+  if(bc>=2)G.stable=best; /* v13: 2 dari 3 frame = lebih responsif */
   var gesture=G.stable;
   /* --- 3-5 JARI (TELAPAK TERBUKA): SCROLL naik/turun — sensitif & responsif --- */
   if(gesture==='PALM'){
     G.dPrev=0;G.palmSince=0;
-    hideCursor();
-    var pcY=(lm[0].y+lm[5].y+lm[9].y+lm[17].y)/4; /* pusat telapak - paling stabil */
+    hideCursor();hoverBox(null);dwellReset();
+    var pcX=(lm[0].x+lm[5].x+lm[9].x+lm[17].x)/4,pcY=(lm[0].y+lm[5].y+lm[9].y+lm[17].y)/4; /* pusat telapak - paling stabil */
+    G.pcx=pcX;G.pcy=pcY; /* posisi telapak di layar: untuk memilih container scroll */
     if(G.scrollLast!=null){
-      G.scrollY=G.scrollY*0.35+pcY*0.65; /* responsif: sedikit jeda */
-      var dy=G.scrollLast-G.scrollY;
-      dy=Math.max(-0.5,Math.min(0.5,dy));
-      if(Math.abs(dy)>0.004){
-        var pxs=dy*window.innerHeight*3.5; /* SERET: konten mengikuti tangan persis seperti jari di layar HP */
-        gsCoastStop();
-        window.scrollBy(0,pxs);
-        G.scrollVel=G.scrollVel*0.5+pxs*0.5; /* catat kecepatan gerak untuk lepasan */
-      }else{
-        /* tangan berhenti = "lepas jari" di HP: konten meluncur sendiri lalu melambat */
-        if(!G.coastRAF)gsCoastFlick();
-        G.scrollVel*=0.4;
-      }
-      G.scrollLast=G.scrollY;
-      setStatus('3-5 jari: seret = scroll; gerak cepat lalu diam = meluncur gaya HP.');
+      var sdir=palmScrollUpdate(pcY);
+      setStatus(sdir>0?'🖐️ Scroll ▼':(sdir<0?'🖐️ Scroll ▲':'🖐️ Scroll'));
     }else{
       gsCoastStop(); /* pegang ulang scroll = peluncuran sebelumnya berhenti */
-      G.scrollY=pcY;G.scrollLast=pcY;
-      setStatus('3-5 jari terbuka: seret naik/turun untuk scroll gaya HP.');
+      G.scrollEl=null;G.scrollVel=0;G.scrollY=pcY;G.scrollLast=pcY; /* fokus ulang bersih: tanpa momentum basi, tanpa lompatan */
+      setStatus('🖐️ Scroll');
     }
     return;
   }
   G.scrollLast=null;gsCoastStop(); /* gestur lain = "menyentuh layar": peluncuran berhenti seketika */
-  /* --- TEPAT 2 JARI: TAHAN 1 detik -> menu utama --- */
+  /* --- TEPAT 2 JARI: TAHAN 0,8 dtk (v13) -> menu utama, ada indikator persen --- */
   if(gesture==='TWO'){
     G.dPrev=0;
+    hoverBox(null);dwellReset();
     if(!G.palmSince)G.palmSince=now;
-    setStatus('Dua jari — TAHAN untuk kembali ke menu utama…');
-    if(now-G.palmSince>1000&&now-G.menuAt>3000){
-      G.menuAt=now;G.palmSince=0;hideCursor();G.lastCursorAt=0;
-      try{
-        var mc=$('modalContainer');
-        if(mc&&!mc.classList.contains('hidden')&&typeof closeModal==='function')closeModal();
-      }catch(e){}
-      if(typeof navigate==='function'){navigate('dashboard');toast('Gesture: kembali ke menu utama.','info');setStatus('Kembali ke menu utama.');}
+    if(now-G.menuAt>2500){
+      var pr=Math.min(1,(now-G.palmSince)/TWO_HOLD);
+      if(pr>=1){
+        G.menuAt=now;G.palmSince=0;hideCursor();hoverBox(null);G.lastCursorAt=0;
+        try{
+          var mc=$('modalContainer');
+          if(mc&&!mc.classList.contains('hidden')&&typeof closeModal==='function')closeModal();
+        }catch(e){}
+        if(typeof navigate==='function'){navigate('dashboard');setStatus('🏠 Menu utama',true);}
+      }else{
+        setStatus('✌️ Menu… '+Math.round(pr*100)+'%');
+      }
     }
     return;
   }
   G.palmSince=0;
-  /* --- TELUNJUK: kursor dengan KUNCI-KLIK PERKUAT (anti-geser saat mengepal) --- */
+  /* --- TELUNJUK: kursor + KLIK OTOMATIS saat diam di atas tombol (Mode Mudah) --- */
   if(gesture==='POINT'){
-    /* Deteksi melipat: jarak ujung telunjuk ke pusat telapak DINORMALISASI ukuran tangan
-       dan dibanding jendela 4 frame — pelipatan pelan pun langsung terkunci */
+    /* Deteksi melipat: jarak ujung telunjuk ke pusat telapak DINORMALISASI ukuran tangan */
     var pcx=(lm[0].x+lm[5].x+lm[9].x+lm[17].x)/4,pcy=(lm[0].y+lm[5].y+lm[9].y+lm[17].y)/4;
     var hs=dist(lm[0],lm[9])||0.001;
     var dNow=Math.sqrt((lm[8].x-pcx)*(lm[8].x-pcx)+(lm[8].y-pcy)*(lm[8].y-pcy))/hs;
@@ -6427,11 +6680,18 @@ function onResults(res,video){
     var tx=1-lm[8].x,ty=lm[8].y;
     var ddx=tx-G.sx,ddy=ty-G.sy;
     var sp=Math.sqrt(ddx*ddx+ddy*ddy);
-    if(sp<0.006){G.lastCursorAt=now;return;} /* DEAD-ZONE kecil: diam = target terkunci */
+    if(sp<0.009){ /* DEAD-ZONE: tangan cukup diam = kursor nempel, klik otomatis berjalan */
+      G.lastCursorAt=now;
+      G.targetActive=true;G.clickArmed=true;
+      setStatus('☝️ Tahan diam…');
+      dwellTick(now);
+      return;
+    }
+    dwellReset(); /* bergerak: hitungan klik otomatis diulang */
     var a=Math.min(0.85,0.5+sp*5); /* EMA ringan - kehalusan ditangani render loop 60fps */
     G.sx+=ddx*a;G.sy+=ddy*a;
-    G.tx=Math.max(0,Math.min(1,(G.sx-0.5)*2.0+0.5));
-    G.ty=Math.max(0,Math.min(1,(G.sy-0.5)*2.0+0.5));
+    G.tx=Math.max(0,Math.min(1,(G.sx-0.5)*G.amp+0.5)); /* amp = sensitivitas pilihan pengguna */
+    G.ty=Math.max(0,Math.min(1,(G.sy-0.5)*G.amp+0.5));
     var el=$('gsGestureCursor');
     if(el&&el.style.display!=='block'){ /* muncul lagi: langsung snap, bukan meluncur dari posisi lama */
       G.cx=Math.round(G.tx*window.innerWidth);G.cy=Math.round(G.ty*window.innerHeight);
@@ -6439,12 +6699,14 @@ function onResults(res,video){
     }
     G.targetActive=true;
     G.lastCursorAt=now;
-    setStatus('Telunjuk: kursor. Saat pas, kepal untuk KLIK — kunci otomatis, tidak bergeser.');
+    setStatus('☝️ Tunjuk');
     G.clickArmed=true;
+    dwellTick(now);
     return;
   }
-  /* --- KEPALAN / JEPIT: KLIK TEPAT di titik yang terkunci --- */
+  /* --- KEPALAN: KLIK TEPAT di titik yang terkunci --- */
   if(gesture==='CLOSED'){
+    hoverBox(null);dwellReset();
     if(now-G.lastCursorAt<800){
       if(G.clickArmed&&now-G.clickAt>900){
         G.clickArmed=false;G.clickAt=now;
@@ -6455,7 +6717,7 @@ function onResults(res,video){
         G.lockUntil=now+450; /* setelah klik kunci 450ms: tangan membuka tidak menggeser kursor */
       }
     }else{
-      setStatus('Tunjuk dulu dengan telunjuk, lalu KEPAL tangan untuk klik.');
+      setStatus('☝️ dulu, lalu ✊');
     }
     return;
   }
@@ -6488,18 +6750,30 @@ function pump(){
   }
   if(res)onResults(res,v);
 }
+/* ---------- Panduan bergambar (onboarding) ---------- */
+function gsShowGuide(show){
+  var g=$('gsGestureGuide');if(!g)return;
+  if(show)g.classList.add('gs-show');else g.classList.remove('gs-show');
+}
+function gsShowGuideOnce(){
+  var seen=false;
+  try{seen=localStorage.getItem('gsGestureOnboard')==='1';}catch(e){}
+  if(!seen)gsShowGuide(true);
+}
 /* ---------- Start / Stop ---------- */
 async function start(){
   if(G.on||G.starting)return;
-  if(typeof currentUser==='undefined'||!currentUser){toast('Login dulu untuk memakai Gesture Control.','error');return;}
+  if(typeof currentUser==='undefined'||!currentUser){toast('Login dulu untuk memakai Remot Jari.','error');return;}
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast('Kamera butuh HTTPS atau localhost.','error');return;}
   var sess=(G.session||0)+1;G.session=sess;
   G.starting=true;
   $('gsGesturePanel').classList.add('gs-show');
   $('gsGestureBtn').classList.add('gs-on');
-  var camEl=$('gsGestureCam');if(camEl)camEl.innerText='kamera: -';
+  var _bb=$('gsGestureBtn');if(_bb)_bb.classList.remove('gs-mini'); /* saat aktif: tombol tampil penuh */
+  camDot('');
+  var camEl=$('gsGestureCam');if(camEl)camEl.title='kamera: menyambung…';
   try{
-    setStatus('1/2 — Meminta izin kamera…');
+    setStatus('📷 Izin kamera…');
     G.stream=await withTimeout(
       navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:320},height:{ideal:240},frameRate:{ideal:15,max:30}},audio:false}),
       20000,'kamera tidak merespons. Tutup aplikasi lain yang memakai kamera lalu coba lagi.');
@@ -6510,17 +6784,20 @@ async function start(){
     var wrap=document.querySelector('.gs-gvideo-wrap');
     var setAr=function(){var vw=v.videoWidth||320,vh=v.videoHeight||240;if(wrap)wrap.style.aspectRatio=vw+' / '+vh;};
     if(v.videoWidth){setAr();}else{v.addEventListener('loadedmetadata',setAr,{once:true});}
-    if(camEl)camEl.innerText='kamera: aktif';
-    setStatus('2/2 — Menyiapkan mesin AI… (unduhan pertama ±12 MB, sesudahnya instan)');
+    if(camEl)camEl.title='kamera: aktif';
+    camDot('on');
+    setStatus('⏳ Menyiapkan AI…');
     await withTimeout(loadEngine(),60000,'unduhan mesin AI lambat/terputus. Periksa internet lalu coba lagi.');
     if(sess!==G.session)return;
     G.on=true;G.starting=false;
-    G.lastVideoTime=-1;G.hist=[];G.stable='NONE';G.palmSince=0;G.scrollLast=null;G.scrollVel=0;gsCoastStop();G.drawnHand=false;G.dPrev=0;
+    G.lastVideoTime=-1;G.hist=[];G.stable='NONE';G.palmSince=0;G.scrollLast=null;G.scrollVel=0;G.scrollEl=null;G.pcx=0.5;G.pcy=0.5;gsCoastStop();G.drawnHand=false;G.dPrev=0;
     G.clickArmed=true;G.clickAt=0;G.lastCursorAt=0;G.dHist=[];G.lockUntil=0;
+    G.dwellEl=null;G.dwellStart=0;G.dwellCool=0;G.dwellFiredEl=null;
     P.lastPump=0;P.interval=66;P.msSum=0;P.msN=0;P.detectErr=0;
-    setStatus('Aktif! Tunjuk dengan TELUNJUK — gerak halus, saat pas kepal untuk klik.');
-    toast('Gesture Control aktif — mode '+G.gpuMode+'.','success');
+    setStatus('✅ Aktif! Tunjuk & tahan diam',true);
+    toast('Remot Jari aktif — Mode Mudah '+(G.dwell?'AKTIF':'nonaktif')+' · mesin '+G.gpuMode+'.','success');
     pump();renderLoop();
+    try{gsShowGuideOnce();}catch(eG){}
   }catch(e){
     if(sess!==G.session)return;
     G.starting=false;
@@ -6529,8 +6806,9 @@ async function start(){
       (e&&e.name==='NotReadableError')?'kamera dipakai aplikasi lain. Tutup aplikasi itu lalu coba lagi.':
       (e&&e.message)?e.message:'gagal menyiapkan kamera/mesin. Coba lagi.';
     stop();
-    setStatus('GAGAL: '+m);
-    toast('Gesture Control: '+m,'error');
+    camDot('err');
+    setStatus('⚠️ Gagal');
+    toast('Remot Jari: '+m,'error');
   }
 }
 function stop(){
@@ -6538,28 +6816,110 @@ function stop(){
   G.on=false;G.starting=false;
   if(G.raf){cancelAnimationFrame(G.raf);G.raf=0;}
   if(G.rrender){cancelAnimationFrame(G.rrender);G.rrender=0;}
-  gsCoastStop();
+  gsCoastStop();G.scrollEl=null;
   G.targetActive=false;
   if(G.stream){try{G.stream.getTracks().forEach(function(t){t.stop();});}catch(e){}G.stream=null;}
   var v=$('gsGestureVideo');if(v)v.srcObject=null;
   var p=$('gsGesturePanel');if(p)p.classList.remove('gs-show');
   var b=$('gsGestureBtn');if(b)b.classList.remove('gs-on');
-  var c=$('gsGestureCam');if(c)c.innerText='kamera: -';
+  camDot('');
+  var c=$('gsGestureCam');if(c)c.title='kamera: mati';
   var canvas=$('gsGestureCanvas');
   if(canvas){try{canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);}catch(e){}}
   G.drawnHand=false;P.detectErr=0;
-  hideCursor();
+  hideCursor();hoverBox(null);dwellReset();
+  gsBtnMiniArm(); /* setelah mati: tombol mengembalikan diri tersembunyi */
 }
 window.gsGestureToggle=function(){
+  if(btnWasMini){return;} /* tap pertama pada tombol tersembunyi hanya memunculkan, belum menyalakan */
   if(G.starting){stop();toast('Dibatalkan.','info');return;}
-  if(G.on){stop();toast('Gesture Control dimatikan.','info');}
+  if(G.on){stop();toast('Remot Jari dimatikan.','info');}
   else{start();}
 };
+/* ---------- v13: tombol auto-sembunyi — berdenyut halus agar mudah ditemukan ---------- */
+var miniTimer=0,btnWasMini=false;
+function gsBtnMiniArm(){
+  if(miniTimer){clearTimeout(miniTimer);miniTimer=0;}
+  miniTimer=setTimeout(function(){
+    miniTimer=0;
+    var b=$('gsGestureBtn');
+    if(b&&!G.on&&!G.starting)b.classList.add('gs-mini');
+  },5000);
+}
+function gsBtnWake(){
+  var b=$('gsGestureBtn');if(!b)return;
+  if(b.classList.contains('gs-mini')){
+    b.classList.remove('gs-mini');
+    btnWasMini=true;
+    setTimeout(function(){btnWasMini=false;},350);
+  }
+  gsBtnMiniArm();
+}
+/* ---------- v13: kontrol panel — Mode Mudah, sensitivitas, panduan ---------- */
+function syncDwellChip(){
+  var c=$('gsDwellToggle');if(!c)return;
+  c.innerText='Klik Otomatis: '+(G.dwell?'AKTIF':'MATI');
+  if(G.dwell)c.classList.add('gs-active');else c.classList.remove('gs-active');
+}
+function syncAmpChips(){
+  var chips=document.querySelectorAll('[data-amp]');
+  for(var i=0;i<chips.length;i++){
+    var v=parseFloat(chips[i].getAttribute('data-amp'));
+    if(Math.abs(v-G.amp)<0.01)chips[i].classList.add('gs-active');
+    else chips[i].classList.remove('gs-active');
+  }
+}
+var dt=$('gsDwellToggle');
+if(dt)dt.addEventListener('click',function(){
+  G.dwell=!G.dwell;
+  try{localStorage.setItem('gsGestureDwell',G.dwell?'1':'0');}catch(e){}
+  syncDwellChip();dwellReset();
+  toast(G.dwell?'Mode Mudah AKTIF — tahan diam di tombol untuk klik otomatis.':'Mode Mudah dimatikan — klik dengan mengepal tangan.','info');
+});
+/* v13.1: chip sensitivitas kini ada di dalam panduan — delegasi di document */
+document.addEventListener('click',function(ev){
+  try{
+    var t=ev.target;
+    if(t&&t.getAttribute&&t.getAttribute('data-amp')){
+      var v=parseFloat(t.getAttribute('data-amp'));
+      if(v>=1.2&&v<=2.2){
+        G.amp=v;
+        try{localStorage.setItem('gsGestureAmp',String(v));}catch(e){}
+        syncAmpChips();
+        toast('Sensitivitas kursor: '+t.innerText+' — gerakkan telunjuk untuk mencoba.','info');
+      }
+    }
+  }catch(e){}
+});
+var gc=$('gsGuideClose');
+if(gc)gc.addEventListener('click',function(){
+  gsShowGuide(false);
+  try{localStorage.setItem('gsGestureOnboard','1');}catch(e){}
+});
+var gh=$('gsGestureHelp');
+if(gh)gh.addEventListener('click',function(){gsShowGuide(true);});
 var btn=$('gsGestureBtn');
-if(btn)btn.addEventListener('click',window.gsGestureToggle);
+if(btn){btn.addEventListener('click',window.gsGestureToggle);btn.addEventListener('pointerdown',gsBtnWake);}
+gsBtnMiniArm(); /* halaman baru dibuka: tombol mengecil sendiri setelah 5 detik */
 var stp=$('gsGestureStop');
-if(stp)stp.addEventListener('click',function(){stop();toast('Gesture Control dimatikan.','info');});
-window.__gsGestureV=11;
+if(stp)stp.addEventListener('click',function(){stop();toast('Remot Jari dimatikan.','info');});
+syncDwellChip();syncAmpChips();
+window.__gsGestureV=13.3;
+/* hook QA/debug: menguji mesin scroll & nuansa gerak tanpa kamera */
+window.__gsGestureQA={
+  scrollBy:gsScrollBy,findScroller:gsFindScroller,scrollable:gsScrollable,
+  reset:function(){G.scrollEl=null;},
+  /* release: simulasi telapak lepas / ganti gestur (sama seperti jalur non-PALM) */
+  release:function(){G.scrollLast=null;G.scrollVel=0;gsCoastStop();},
+  setHand:function(x,y){G.pcx=x;G.pcy=y;},
+  setOn:function(v){G.on=v?true:false;},
+  state:function(){return{vel:Math.round(G.scrollVel),coast:Math.round(G.coast),el:(G.scrollEl&&(G.scrollEl.id||G.scrollEl.tagName))||'null'};},
+  /* palmFrame: simulasi 1 frame telapak; frame pertama = fokus (tanpa gulir) */
+  palmFrame:function(pcY){
+    if(G.scrollLast==null){G.scrollVel=0;G.scrollY=pcY;G.scrollLast=pcY;return 0;}
+    return palmScrollUpdate(pcY);
+  }
+};
 })();
 </script>
 </body>
