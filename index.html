@@ -6140,5 +6140,427 @@ window.__gsInstallExcelFormat=function(){
 </style>
 <!-- AKSELERASI: boot seketika setelah seluruh kode aplikasi siap (tanpa menunggu window.onload) -->
 <script>if(window.__gsFastBoot)window.__gsFastBoot();</script>
+<!-- ================= GURU SMART AI — GESTURE CONTROL (MediaPipe Hands) ================= -->
+<style id="gs-gesture-style">
+#gsGestureBtn{position:fixed;right:16px;bottom:16px;z-index:99980;width:54px;height:54px;border-radius:9999px;background:linear-gradient(135deg,#2563eb,#4f46e5);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 25px rgba(37,99,235,.45);cursor:pointer;border:3px solid #fff;transition:transform .15s ease,background .2s;user-select:none}
+#gsGestureBtn:hover{transform:scale(1.08)}
+#gsGestureBtn.gs-on{background:linear-gradient(135deg,#059669,#10b981)}
+#gsGesturePanel{position:fixed;right:16px;bottom:80px;z-index:99980;width:240px;background:rgba(15,23,42,.96);border:1px solid #334155;border-radius:16px;padding:10px;display:none;color:#e2e8f0;font-size:12px;box-shadow:0 15px 35px rgba(0,0,0,.4)}
+#gsGesturePanel.gs-show{display:block}
+.gs-gvideo-wrap{position:relative;width:100%;aspect-ratio:4/3;border-radius:10px;overflow:hidden;background:#000}
+#gsGestureVideo{width:100%;height:100%;object-fit:fill;transform:scaleX(-1);display:block}
+#gsGestureCanvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#gsGestureStatus{margin-top:8px;background:rgba(37,99,235,.15);border:1px solid rgba(59,130,246,.35);color:#bfdbfe;border-radius:8px;padding:6px 8px;line-height:1.35;min-height:30px}
+.gs-glegend{margin-top:8px;display:grid;grid-template-columns:1fr;gap:3px;color:#94a3b8;line-height:1.3}
+.gs-glegend b{color:#e2e8f0;font-weight:600}
+#gsGestureStop{margin-top:8px;width:100%;background:#334155;color:#fff;border:none;border-radius:8px;padding:7px 0;font-weight:600;cursor:pointer}
+#gsGestureStop:hover{background:#475569}
+.gs-gcursor{position:fixed;left:0;top:0;z-index:99999;width:28px;height:28px;margin:-14px 0 0 -14px;border-radius:9999px;border:3px solid #2563eb;background:rgba(255,255,255,.35);box-shadow:0 0 12px rgba(37,99,235,.85);pointer-events:none;display:none;will-change:transform}
+.gs-gcursor.gs-gclick{border-color:#10b981;background:rgba(16,185,129,.45);box-shadow:0 0 18px rgba(16,185,129,.95)}
+</style>
+<div id="gsGestureBtn" title="GURU SMART Gesture Control — klik untuk aktif/nonaktif">
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
+</div>
+<div id="gsGesturePanel">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+    <b style="font-size:12px;color:#fff">Gesture Control</b>
+    <span id="gsGestureCam" style="font-size:10px;color:#94a3b8">kamera: -</span>
+  </div>
+  <div class="gs-gvideo-wrap">
+    <video id="gsGestureVideo" playsinline muted></video>
+    <canvas id="gsGestureCanvas"></canvas>
+  </div>
+  <div id="gsGestureStatus">Menyiapkan…</div>
+  <div class="gs-glegend">
+    <div>☝️ Telunjuk → <b>kursor</b></div>
+    <div>✊ Kepal tangan → <b>klik</b> (kursor terkunci, tidak geser)</div>
+    <div>🖐️ 3-5 jari terbuka → <b>scroll gaya HP</b> (seret, diam = meluncur)</div>
+    <div>✌️ Dua jari (tahan) → <b>menu utama</b></div>
+  </div>
+  <button id="gsGestureStop" type="button">Matikan Gesture Control</button>
+</div>
+<div id="gsGestureCursor" class="gs-gcursor"></div>
+<script id="gs-gesture-script">
+(function(){
+"use strict";
+/* ===== GURU SMART Gesture Control v11 — KURSOR MUDAH & KUNCI KLIK =====
+   ☝️ Telunjuk = gerakkan kursor (halus 60fps, cepat menempel sasaran)
+   ✊ Kepal tangan (atau jepit) = KLIK — begitu tangan mulai mengepal, kursor LANGSUNG DIKUNCI & dijepret ke titik yang sudah pas: klik tidak bergeser
+   🖐️ 3-5 JARI TERBUKA = SCROLL gaya HP: seret = konten ikut tangan; berhenti/dilepas = konten MELUNCUR lalu melambat sendiri (momentum)
+   ✌️ Dua jari saja, TAHAN 1 dtk = menu utama
+   Kursor: AI 15fps menetap target, render 60fps meluncur mulus. */
+var CDNS=[
+  'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14',
+  'https://unpkg.com/@mediapipe/tasks-vision@0.10.14'
+];
+var MODEL_URL='https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
+var G={
+  on:false,starting:false,session:0,stream:null,landmarker:null,gpuMode:'',cdnRoot:'',
+  raf:0,lastVideoTime:-1,cx:Math.round(window.innerWidth/2),cy:Math.round(window.innerHeight/2),
+  sx:0.5,sy:0.5,hist:[],dHist:[],stable:'NONE',lastSeen:0,lastCursorAt:0,lockUntil:0,
+  clickArmed:true,clickAt:0,menuAt:0,palmSince:0,
+  scrollLast:null,scrollY:0.5,scrollVel:0,coast:0,coastRAF:0,drawnHand:false,recycling:false,dPrev:0,
+  tx:0.5,ty:0.5,targetActive:false,rrender:0
+};
+var P={interval:66,lastPump:0,msSum:0,msN:0,detectErr:0};
+function $(id){return document.getElementById(id);}
+function toast(m,t){try{if(typeof showToast==='function')showToast(m,t||'info');}catch(e){}}
+function setStatus(t){var el=$('gsGestureStatus');if(el&&el.innerText!==t){el.innerText=t;}}
+function dist(a,b){var dx=a.x-b.x,dy=a.y-b.y;return Math.sqrt(dx*dx+dy*dy);}
+var BONES=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
+function withTimeout(p,ms,msg){
+  return Promise.race([p,new Promise(function(_,rej){setTimeout(function(){rej(new Error(msg));},ms);})]);
+}
+/* ---------- Muat mesin AI: 2 CDN -> GPU -> CPU ---------- */
+async function loadEngine(){
+  if(G.landmarker)return;
+  var vision=null,lastErr=null;
+  for(var i=0;i<CDNS.length&&!vision;i++){
+    try{vision=await import(CDNS[i]+'/vision_bundle.mjs');G.cdnRoot=CDNS[i];}
+    catch(e){lastErr=e;}
+  }
+  if(!vision)throw new Error('mesin AI gagal diunduh. Periksa koneksi internet lalu coba lagi.');
+  var fileset=await withTimeout(vision.FilesetResolver.forVisionTasks(G.cdnRoot+'/wasm'),40000,'unduhan mesin AI lambat/terputus. Coba lagi.');
+  var mk=function(d){return{baseOptions:{modelAssetPath:MODEL_URL,delegate:d},runningMode:'VIDEO',numHands:1,minHandDetectionConfidence:0.5,minHandPresenceConfidence:0.5,minTrackingConfidence:0.5};};
+  try{G.landmarker=await vision.HandLandmarker.createFromOptions(fileset,mk('GPU'));G.gpuMode='GPU';}
+  catch(e){G.landmarker=await vision.HandLandmarker.createFromOptions(fileset,mk('CPU'));G.gpuMode='CPU';}
+  updateCamLabel(0);
+}
+async function recycleEngineCpu(){
+  if(G.recycling)return;G.recycling=true;
+  try{
+    var vision=await import(G.cdnRoot+'/vision_bundle.mjs');
+    var fileset=await vision.FilesetResolver.forVisionTasks(G.cdnRoot+'/wasm');
+    var old=G.landmarker;
+    G.landmarker=await vision.HandLandmarker.createFromOptions(fileset,{baseOptions:{modelAssetPath:MODEL_URL,delegate:'CPU'},runningMode:'VIDEO',numHands:1,minHandDetectionConfidence:0.5,minHandPresenceConfidence:0.5,minTrackingConfidence:0.5});
+    G.gpuMode='CPU';P.detectErr=0;P.msSum=0;P.msN=0;
+    try{if(old&&old.close)old.close();}catch(x){}
+    updateCamLabel(0);setStatus('Mode CPU aktif — kontrol berjalan lagi.');
+  }catch(e){}
+  G.recycling=false;
+}
+function updateCamLabel(avgMs){
+  var el=$('gsGestureCam');if(!el)return;
+  el.innerText='kamera: aktif'+(G.gpuMode?' · '+G.gpuMode:'')+(avgMs?(' '+Math.round(avgMs)+'ms'):'');
+}
+/* ---------- Kursor & klik sintetis ---------- */
+function moveCursor(x,y){
+  G.cx=Math.max(0,Math.min(window.innerWidth-2,x));
+  G.cy=Math.max(0,Math.min(window.innerHeight-2,y));
+  var el=$('gsGestureCursor');
+  if(el){el.style.display='block';el.style.transform='translate3d('+G.cx+'px,'+G.cy+'px,0)';}
+}
+function hideCursor(){var el=$('gsGestureCursor');if(el)el.style.display='none';G.targetActive=false;}
+/* ---------- Render loop 60fps: kursor meluncur mulus ke target dari AI ---------- */
+function renderLoop(){
+  if(!G.on){G.rrender=0;return;}
+  G.rrender=requestAnimationFrame(renderLoop);
+  var el=$('gsGestureCursor');if(!el)return;
+  if(!G.targetActive)return;
+  var px=G.tx*window.innerWidth,py=G.ty*window.innerHeight;
+  var dx=px-G.cx,dy=py-G.cy;
+  if(dx*dx+dy*dy<0.4)return; /* sudah pas - berhenti, hemat CPU */
+  G.cx+=dx*0.38;G.cy+=dy*0.38; /* menempel lebih cepat = lebih mudah diarahkan */
+  el.style.display='block';
+  el.style.transform='translate3d('+Math.round(G.cx)+'px,'+Math.round(G.cy)+'px,0)';
+}
+function doClick(){
+  var el=$('gsGestureCursor');
+  if(el){el.classList.add('gs-gclick');setTimeout(function(){el.classList.remove('gs-gclick');},320);}
+  var target=null;
+  try{target=document.elementFromPoint(G.cx,G.cy);}catch(e){}
+  if(!target){setStatus('Klik gagal: tidak ada elemen di posisi kursor.');return;}
+  var label=(target.textContent||target.getAttribute('aria-label')||'elemen').replace(/\s+/g,' ').trim().slice(0,26)||'elemen';
+  try{
+    var o={bubbles:true,cancelable:true,view:window,clientX:G.cx,clientY:G.cy};
+    target.dispatchEvent(new MouseEvent('mousedown',o));
+    target.dispatchEvent(new MouseEvent('mouseup',o));
+    target.dispatchEvent(new MouseEvent('click',o));
+    setStatus('Klik: '+label);
+  }catch(e){setStatus('Klik tidak dapat dikirim ke elemen ini.');}
+}
+/* ---------- Canvas: hanya skeleton 200px ---------- */
+function drawSkeleton(lm){
+  var canvas=$('gsGestureCanvas');if(!canvas)return;
+  var ctx=null;try{ctx=canvas.getContext('2d');}catch(e){}
+  if(!ctx)return;
+  if(!lm){
+    if(G.drawnHand){try{ctx.clearRect(0,0,canvas.width,canvas.height);}catch(e){}G.drawnHand=false;}
+    return;
+  }
+  var v=$('gsGestureVideo');
+  var vw=(v&&v.videoWidth)||320,vh=(v&&v.videoHeight)||240;
+  var cw=200,ch=Math.max(100,Math.round(200*vh/vw));
+  if(canvas.width!==cw)canvas.width=cw;
+  if(canvas.height!==ch)canvas.height=ch;
+  try{
+    ctx.clearRect(0,0,cw,ch);
+    ctx.save();ctx.translate(cw,0);ctx.scale(-1,1);
+    ctx.lineWidth=3;ctx.strokeStyle='rgba(96,165,250,.95)';
+    for(var i=0;i<BONES.length;i++){var a=lm[BONES[i][0]],b=lm[BONES[i][1]];if(!a||!b)continue;ctx.beginPath();ctx.moveTo(a.x*cw,a.y*ch);ctx.lineTo(b.x*cw,b.y*ch);ctx.stroke();}
+    for(var j=0;j<lm.length;j++){var p=lm[j];ctx.beginPath();ctx.fillStyle=(j===8)?'#f59e0b':(j===4)?'#10b981':'#e0f2fe';ctx.arc(p.x*cw,p.y*ch,(j===8||j===4)?6:3.5,0,Math.PI*2);ctx.fill();}
+    ctx.restore();
+    G.drawnHand=true;
+  }catch(e){}
+}
+/* ---------- Klasifikasi SANTAI: hitung jari terbuka saja ---------- */
+function classify(lm){
+  var handSize=dist(lm[0],lm[9])||0.001;
+  var ext={
+    index:dist(lm[0],lm[8])>dist(lm[0],lm[6])*1.15,
+    mid:dist(lm[0],lm[12])>dist(lm[0],lm[10])*1.15,
+    ring:dist(lm[0],lm[16])>dist(lm[0],lm[14])*1.15,
+    pinky:dist(lm[0],lm[20])>dist(lm[0],lm[18])*1.15
+  };
+  var n=(ext.index?1:0)+(ext.mid?1:0)+(ext.ring?1:0)+(ext.pinky?1:0);
+  if(n>=3)return{raw:'PALM',handSize:handSize}; /* 3-5 jari terbuka = scroll (pose longgar, mudah ditahan) */
+  if(ext.index&&ext.mid)return{raw:'TWO',handSize:handSize}; /* tepat 2 jari = menu (tahan) */
+  if(ext.index)return{raw:'POINT',handSize:handSize};
+  return{raw:'CLOSED',handSize:handSize};
+}
+/* ---------- SCROLL GAYA HP: seret + meluncur (momentum seperti layar sentuh) ---------- */
+function gsCoastStop(){
+  if(G.coastRAF){cancelAnimationFrame(G.coastRAF);G.coastRAF=0;}
+  G.coast=0;
+}
+function gsCoastStep(){
+  G.coastRAF=0;
+  if(!G.on)return;
+  var v=G.coast;if(!v)return;
+  window.scrollBy(0,v);
+  G.coast=v*0.93; /* gesekan layar: meluncur lalu melambat halus seperti di HP */
+  if(Math.abs(G.coast)<0.4){G.coast=0;return;}
+  G.coastRAF=requestAnimationFrame(gsCoastStep);
+}
+function gsCoastFlick(){
+  var conv=16.7/(P.interval||66); /* kecepatan px per-tik pompa -> px per-frame 60fps */
+  var v=Math.max(-80,Math.min(80,G.scrollVel*conv*1.15));
+  if(Math.abs(v)<1)return; /* terlalu pelan: dianggap berhenti betulan */
+  G.coast=v;
+  G.coastRAF=requestAnimationFrame(gsCoastStep);
+}
+/* ---------- Logika gestur ---------- */
+function onResults(res,video){
+  var lm=(res&&res.landmarks&&res.landmarks[0])||null;
+  drawSkeleton(lm);
+  var now=Date.now();
+  if(!lm){
+    if(now-G.lastSeen>350){
+      hideCursor();G.scrollLast=null;G.scrollVel=0;G.hist=[];G.dHist=[];G.stable='NONE';G.palmSince=0;G.dPrev=0;G.lockUntil=0;
+      setStatus('Tampilkan tangan ke kamera…');
+    }
+    return;
+  }
+  G.lastSeen=now;
+  var cls=classify(lm);
+  G.hist.push(cls.raw);if(G.hist.length>4)G.hist.shift();
+  var counts={};
+  for(var i=0;i<G.hist.length;i++){counts[G.hist[i]]=(counts[G.hist[i]]||0)+1;}
+  var best=G.stable,bc=0;
+  for(var k in counts){if(counts[k]>bc){best=k;bc=counts[k];}}
+  if(bc>=3)G.stable=best;
+  var gesture=G.stable;
+  /* --- 3-5 JARI (TELAPAK TERBUKA): SCROLL naik/turun — sensitif & responsif --- */
+  if(gesture==='PALM'){
+    G.dPrev=0;G.palmSince=0;
+    hideCursor();
+    var pcY=(lm[0].y+lm[5].y+lm[9].y+lm[17].y)/4; /* pusat telapak - paling stabil */
+    if(G.scrollLast!=null){
+      G.scrollY=G.scrollY*0.35+pcY*0.65; /* responsif: sedikit jeda */
+      var dy=G.scrollLast-G.scrollY;
+      dy=Math.max(-0.5,Math.min(0.5,dy));
+      if(Math.abs(dy)>0.004){
+        var pxs=dy*window.innerHeight*3.5; /* SERET: konten mengikuti tangan persis seperti jari di layar HP */
+        gsCoastStop();
+        window.scrollBy(0,pxs);
+        G.scrollVel=G.scrollVel*0.5+pxs*0.5; /* catat kecepatan gerak untuk lepasan */
+      }else{
+        /* tangan berhenti = "lepas jari" di HP: konten meluncur sendiri lalu melambat */
+        if(!G.coastRAF)gsCoastFlick();
+        G.scrollVel*=0.4;
+      }
+      G.scrollLast=G.scrollY;
+      setStatus('3-5 jari: seret = scroll; gerak cepat lalu diam = meluncur gaya HP.');
+    }else{
+      gsCoastStop(); /* pegang ulang scroll = peluncuran sebelumnya berhenti */
+      G.scrollY=pcY;G.scrollLast=pcY;
+      setStatus('3-5 jari terbuka: seret naik/turun untuk scroll gaya HP.');
+    }
+    return;
+  }
+  G.scrollLast=null;gsCoastStop(); /* gestur lain = "menyentuh layar": peluncuran berhenti seketika */
+  /* --- TEPAT 2 JARI: TAHAN 1 detik -> menu utama --- */
+  if(gesture==='TWO'){
+    G.dPrev=0;
+    if(!G.palmSince)G.palmSince=now;
+    setStatus('Dua jari — TAHAN untuk kembali ke menu utama…');
+    if(now-G.palmSince>1000&&now-G.menuAt>3000){
+      G.menuAt=now;G.palmSince=0;hideCursor();G.lastCursorAt=0;
+      try{
+        var mc=$('modalContainer');
+        if(mc&&!mc.classList.contains('hidden')&&typeof closeModal==='function')closeModal();
+      }catch(e){}
+      if(typeof navigate==='function'){navigate('dashboard');toast('Gesture: kembali ke menu utama.','info');setStatus('Kembali ke menu utama.');}
+    }
+    return;
+  }
+  G.palmSince=0;
+  /* --- TELUNJUK: kursor dengan KUNCI-KLIK PERKUAT (anti-geser saat mengepal) --- */
+  if(gesture==='POINT'){
+    /* Deteksi melipat: jarak ujung telunjuk ke pusat telapak DINORMALISASI ukuran tangan
+       dan dibanding jendela 4 frame — pelipatan pelan pun langsung terkunci */
+    var pcx=(lm[0].x+lm[5].x+lm[9].x+lm[17].x)/4,pcy=(lm[0].y+lm[5].y+lm[9].y+lm[17].y)/4;
+    var hs=dist(lm[0],lm[9])||0.001;
+    var dNow=Math.sqrt((lm[8].x-pcx)*(lm[8].x-pcx)+(lm[8].y-pcy)*(lm[8].y-pcy))/hs;
+    G.dHist.push(dNow);if(G.dHist.length>4)G.dHist.shift();
+    var dMax=0;for(var di=0;di<G.dHist.length;di++){if(G.dHist[di]>dMax)dMax=G.dHist[di];}
+    var curling=(G.dHist.length>=2&&dNow<dMax*0.8)||(G.dPrev>0&&dNow<G.dPrev*0.85); /* mulai mengepal */
+    G.dPrev=dNow;
+    if(curling||now<(G.lockUntil||0)){
+      if(curling){ /* KUNCI + JEPRET: kursor menempel di titik yang sudah pas — titik itulah yang diklik */
+        G.cx=Math.round(G.tx*window.innerWidth);G.cy=Math.round(G.ty*window.innerHeight);
+        var elc=$('gsGestureCursor');
+        if(elc){elc.style.display='block';elc.style.transform='translate3d('+G.cx+'px,'+G.cy+'px,0)';}
+      }
+      G.lastCursorAt=now;return; /* kursor beku: tidak ikut gerak saat tangan mengepal / setelah klik */
+    }
+    var tx=1-lm[8].x,ty=lm[8].y;
+    var ddx=tx-G.sx,ddy=ty-G.sy;
+    var sp=Math.sqrt(ddx*ddx+ddy*ddy);
+    if(sp<0.006){G.lastCursorAt=now;return;} /* DEAD-ZONE kecil: diam = target terkunci */
+    var a=Math.min(0.85,0.5+sp*5); /* EMA ringan - kehalusan ditangani render loop 60fps */
+    G.sx+=ddx*a;G.sy+=ddy*a;
+    G.tx=Math.max(0,Math.min(1,(G.sx-0.5)*2.0+0.5));
+    G.ty=Math.max(0,Math.min(1,(G.sy-0.5)*2.0+0.5));
+    var el=$('gsGestureCursor');
+    if(el&&el.style.display!=='block'){ /* muncul lagi: langsung snap, bukan meluncur dari posisi lama */
+      G.cx=Math.round(G.tx*window.innerWidth);G.cy=Math.round(G.ty*window.innerHeight);
+      el.style.display='block';el.style.transform='translate3d('+G.cx+'px,'+G.cy+'px,0)';
+    }
+    G.targetActive=true;
+    G.lastCursorAt=now;
+    setStatus('Telunjuk: kursor. Saat pas, kepal untuk KLIK — kunci otomatis, tidak bergeser.');
+    G.clickArmed=true;
+    return;
+  }
+  /* --- KEPALAN / JEPIT: KLIK TEPAT di titik yang terkunci --- */
+  if(gesture==='CLOSED'){
+    if(now-G.lastCursorAt<800){
+      if(G.clickArmed&&now-G.clickAt>900){
+        G.clickArmed=false;G.clickAt=now;
+        G.cx=Math.round(G.tx*window.innerWidth);G.cy=Math.round(G.ty*window.innerHeight); /* jepret ke titik yang sudah pas */
+        var elz=$('gsGestureCursor');
+        if(elz){elz.style.display='block';elz.style.transform='translate3d('+G.cx+'px,'+G.cy+'px,0)';}
+        doClick();
+        G.lockUntil=now+450; /* setelah klik kunci 450ms: tangan membuka tidak menggeser kursor */
+      }
+    }else{
+      setStatus('Tunjuk dulu dengan telunjuk, lalu KEPAL tangan untuk klik.');
+    }
+    return;
+  }
+}
+/* ---------- Pompa frame: throttle 15fps + adaptif 10fps ---------- */
+function pump(){
+  if(!G.on)return;
+  G.raf=requestAnimationFrame(pump);
+  var v=$('gsGestureVideo');
+  if(!v||v.readyState<2||!G.landmarker)return;
+  var now=performance.now();
+  if(now-P.lastPump<P.interval)return;
+  if(v.currentTime===G.lastVideoTime)return;
+  G.lastVideoTime=v.currentTime;
+  P.lastPump=now;
+  var t0=now,res=null;
+  try{res=G.landmarker.detectForVideo(v,now);P.detectErr=0;}
+  catch(e){
+    P.detectErr++;
+    if(P.detectErr>=3&&!G.recycling)recycleEngineCpu();
+    return;
+  }
+  var dt=performance.now()-t0;
+  P.msSum+=dt;P.msN++;
+  if(P.msN>=30){
+    var avg=P.msSum/P.msN;
+    updateCamLabel(avg);
+    if(avg>40&&P.interval<100){P.interval=100;}
+    P.msSum=0;P.msN=0;
+  }
+  if(res)onResults(res,v);
+}
+/* ---------- Start / Stop ---------- */
+async function start(){
+  if(G.on||G.starting)return;
+  if(typeof currentUser==='undefined'||!currentUser){toast('Login dulu untuk memakai Gesture Control.','error');return;}
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast('Kamera butuh HTTPS atau localhost.','error');return;}
+  var sess=(G.session||0)+1;G.session=sess;
+  G.starting=true;
+  $('gsGesturePanel').classList.add('gs-show');
+  $('gsGestureBtn').classList.add('gs-on');
+  var camEl=$('gsGestureCam');if(camEl)camEl.innerText='kamera: -';
+  try{
+    setStatus('1/2 — Meminta izin kamera…');
+    G.stream=await withTimeout(
+      navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:320},height:{ideal:240},frameRate:{ideal:15,max:30}},audio:false}),
+      20000,'kamera tidak merespons. Tutup aplikasi lain yang memakai kamera lalu coba lagi.');
+    if(sess!==G.session)return;
+    var v=$('gsGestureVideo');v.srcObject=G.stream;
+    try{await v.play();}catch(pe){}
+    if(sess!==G.session)return;
+    var wrap=document.querySelector('.gs-gvideo-wrap');
+    var setAr=function(){var vw=v.videoWidth||320,vh=v.videoHeight||240;if(wrap)wrap.style.aspectRatio=vw+' / '+vh;};
+    if(v.videoWidth){setAr();}else{v.addEventListener('loadedmetadata',setAr,{once:true});}
+    if(camEl)camEl.innerText='kamera: aktif';
+    setStatus('2/2 — Menyiapkan mesin AI… (unduhan pertama ±12 MB, sesudahnya instan)');
+    await withTimeout(loadEngine(),60000,'unduhan mesin AI lambat/terputus. Periksa internet lalu coba lagi.');
+    if(sess!==G.session)return;
+    G.on=true;G.starting=false;
+    G.lastVideoTime=-1;G.hist=[];G.stable='NONE';G.palmSince=0;G.scrollLast=null;G.scrollVel=0;gsCoastStop();G.drawnHand=false;G.dPrev=0;
+    G.clickArmed=true;G.clickAt=0;G.lastCursorAt=0;G.dHist=[];G.lockUntil=0;
+    P.lastPump=0;P.interval=66;P.msSum=0;P.msN=0;P.detectErr=0;
+    setStatus('Aktif! Tunjuk dengan TELUNJUK — gerak halus, saat pas kepal untuk klik.');
+    toast('Gesture Control aktif — mode '+G.gpuMode+'.','success');
+    pump();renderLoop();
+  }catch(e){
+    if(sess!==G.session)return;
+    G.starting=false;
+    var m=(e&&e.name==='NotAllowedError')?'izin kamera ditolak. Buka izin kamera di browser lalu coba lagi.':
+      (e&&e.name==='NotFoundError')?'kamera tidak ditemukan.':
+      (e&&e.name==='NotReadableError')?'kamera dipakai aplikasi lain. Tutup aplikasi itu lalu coba lagi.':
+      (e&&e.message)?e.message:'gagal menyiapkan kamera/mesin. Coba lagi.';
+    stop();
+    setStatus('GAGAL: '+m);
+    toast('Gesture Control: '+m,'error');
+  }
+}
+function stop(){
+  G.session=(G.session||0)+1;
+  G.on=false;G.starting=false;
+  if(G.raf){cancelAnimationFrame(G.raf);G.raf=0;}
+  if(G.rrender){cancelAnimationFrame(G.rrender);G.rrender=0;}
+  gsCoastStop();
+  G.targetActive=false;
+  if(G.stream){try{G.stream.getTracks().forEach(function(t){t.stop();});}catch(e){}G.stream=null;}
+  var v=$('gsGestureVideo');if(v)v.srcObject=null;
+  var p=$('gsGesturePanel');if(p)p.classList.remove('gs-show');
+  var b=$('gsGestureBtn');if(b)b.classList.remove('gs-on');
+  var c=$('gsGestureCam');if(c)c.innerText='kamera: -';
+  var canvas=$('gsGestureCanvas');
+  if(canvas){try{canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);}catch(e){}}
+  G.drawnHand=false;P.detectErr=0;
+  hideCursor();
+}
+window.gsGestureToggle=function(){
+  if(G.starting){stop();toast('Dibatalkan.','info');return;}
+  if(G.on){stop();toast('Gesture Control dimatikan.','info');}
+  else{start();}
+};
+var btn=$('gsGestureBtn');
+if(btn)btn.addEventListener('click',window.gsGestureToggle);
+var stp=$('gsGestureStop');
+if(stp)stp.addEventListener('click',function(){stop();toast('Gesture Control dimatikan.','info');});
+window.__gsGestureV=11;
+})();
+</script>
 </body>
 </html>
