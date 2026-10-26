@@ -1564,6 +1564,7 @@ input,textarea,select{font-size:16px!important}
 </div>
 </div>
 <div id="toast" class="hidden fixed bottom-5 right-5 z-[60] bg-slate-800 text-white px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2"></div>
+<div id="gsServiceStatus" role="status" aria-live="polite" class="hidden fixed top-0 left-0 right-0 z-[100] px-4 py-3 text-sm font-semibold text-white shadow-lg" style="background:#b91c1c"><div class="max-w-5xl mx-auto flex items-start gap-3"><span id="gsServiceStatusIcon" aria-hidden="true">⚠️</span><div class="flex-1"><div id="gsServiceStatusTitle">Gangguan layanan</div><div id="gsServiceStatusMessage" class="font-normal mt-1">Koneksi sedang diperiksa.</div><div id="gsServiceStatusTime" class="font-normal text-xs mt-1 opacity-90"></div></div><button type="button" onclick="gsCheckServiceStatus(true)" class="shrink-0 rounded border border-white/60 px-3 py-1 hover:bg-white/10">Coba lagi</button></div></div>
 <div id="printArea"></div>
 <script>
 var SUPABASE_URL='https://urslwiueyqhoykjhxmqq.supabase.co';
@@ -1572,7 +1573,7 @@ var sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSessio
 var AI_IMG='https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe';
 var TEACHER_IMG='https://z-cdn-media.chatglm.cn/files/75ded651-0d28-42b6-ac6e-372dcb2f3a18.png?auth_key=1890942260-f34ada6a38934170ac18de993429b194-0-e2c31b27403b6a0ff985778a913412f7';
 function imgFallback(img){img.onerror=null;img.src='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="#1e3a8a"/><circle cx="50" cy="45" r="20" fill="white"/><rect x="35" y="40" width="10" height="6" rx="3" fill="#3b82f6"/><rect x="55" y="40" width="10" height="6" rx="3" fill="#3b82f6"/><path d="M30 55 Q50 70 70 55 L70 65 Q50 80 30 65 Z" fill="#3b82f6"/><text x="50" y="95" font-size="15" text-anchor="middle" fill="white" font-family="sans-serif" font-weight="bold">AI</text></svg>';}
-var DB={get:async function(t){if(!currentUser||!currentUser.id)return[];try{var r=await sb.from(t).select('*').eq('user_id',currentUser.id);if(r.error){console.error('Err:',r.error);showToast('Tabel '+t+' belum dibuat di database!','error');return[];}return r.data||[];}catch(e){console.error('Crash diambil:',e);return[];}},insert:async function(t,p){var q={};Object.keys(p).forEach(function(k2){var v2=p[k2];if(v2==='')v2=null;q[k2]=v2;});var r=await sb.from(t).insert([{...q,user_id:currentUser.id}]).select();if(r.error){console.error('Err:',r.error);showToast('Gagal: '+r.error.message,'error');return null;}try{gsAudit('INSERT',t,(r.data&&r.data[0]&&r.data[0].id)||'');}catch(eA){}return r.data;},update:async function(t,id,p){var q={};Object.keys(p).forEach(function(k2){var v2=p[k2];if(v2==='')v2=null;q[k2]=v2;});var r=await sb.from(t).update(q).eq('id',id).eq('user_id',currentUser.id).select();if(r.error){console.error('Err:',r.error);showToast('Gagal: '+r.error.message,'error');return null;}if(r.data&&r.data.length){try{gsAudit('UPDATE',t,id);}catch(eA){}}return r.data;},remove:async function(t,id){var r=await sb.from(t).delete().eq('id',id).eq('user_id',currentUser.id);if(r.error){console.error('Err:',r.error);showToast('Gagal: '+r.error.message,'error');return false;}try{gsAudit('DELETE',t,id);}catch(eA){}return true;}};
+var DB={get:async function(t){if(!currentUser||!currentUser.id)return[];try{var r=await sb.from(t).select('*').eq('user_id',currentUser.id);if(r.error){console.error('Err:',r.error);var em=String(r.error.message||'').toLowerCase();if(/fetch|network|timeout|temporar|unavailable/i.test(em)){showToast('Server/database sedang tidak dapat dihubungi. Periksa koneksi dan coba lagi nanti.','error');}else if(r.error.code==='PGRST205'||em.includes('could not find the table')){showToast('Tabel '+t+' belum tersedia di database. Hubungi pengelola aplikasi.','error');}else{showToast('Gagal membaca data '+t+': '+(r.error.message||'kesalahan database'),'error');}return[];}return r.data||[];}catch(e){console.error('Crash diambil:',e);return[];}},insert:async function(t,p){var q={};Object.keys(p).forEach(function(k2){var v2=p[k2];if(v2==='')v2=null;q[k2]=v2;});var r=await sb.from(t).insert([{...q,user_id:currentUser.id}]).select();if(r.error){console.error('Err:',r.error);showToast('Gagal: '+r.error.message,'error');return null;}try{gsAudit('INSERT',t,(r.data&&r.data[0]&&r.data[0].id)||'');}catch(eA){}return r.data;},update:async function(t,id,p){var q={};Object.keys(p).forEach(function(k2){var v2=p[k2];if(v2==='')v2=null;q[k2]=v2;});var r=await sb.from(t).update(q).eq('id',id).eq('user_id',currentUser.id).select();if(r.error){console.error('Err:',r.error);showToast('Gagal: '+r.error.message,'error');return null;}if(r.data&&r.data.length){try{gsAudit('UPDATE',t,id);}catch(eA){}}return r.data;},remove:async function(t,id){var r=await sb.from(t).delete().eq('id',id).eq('user_id',currentUser.id);if(r.error){console.error('Err:',r.error);showToast('Gagal: '+r.error.message,'error');return false;}try{gsAudit('DELETE',t,id);}catch(eA){}return true;}};
 var currentUser=null;var currentPage='dashboard';var html5QrCode=null;var currentDaysInMonth=31;
 var soalCameraStream=null;var soalCapturedDataUrl=null;
 function formatDateID(d){if(!d)return'-';try{var dt=new Date(d);if(isNaN(dt.getTime()))return d;return String(dt.getDate()).padStart(2,'0')+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+dt.getFullYear();}catch(e){return d;}}
@@ -3717,8 +3718,32 @@ window.gsTestWriteAccess=async function(){
   if(probe&&probe.blocked){window.gsShowRlsHelp('school_profile',probe.msg,false);return;}
   showToast('Sesi login valid & izin tulis database NORMAL ✅ Silakan restore lagi. Bila tabel lain masih gagal, jalankan SQL perbaikan di panduan RLS.','success');
 };
+window.gsRestoreProgress=function(percent,message,detail){
+  percent=Math.max(0,Math.min(100,Math.round(Number(percent)||0)));
+  var safe=function(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
+  var html='<div class="space-y-4">'+
+    '<div class="flex items-center justify-between"><span class="text-sm font-semibold text-slate-700 dark:text-slate-200">'+safe(message||'Memulihkan data...')+'</span><strong class="text-xl text-blue-600" id="gsRestorePercent">'+percent+'%</strong></div>'+
+    '<div class="w-full h-4 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+percent+'"><div id="gsRestoreProgressBar" class="h-full rounded-full transition-all duration-300 bg-blue-600" style="width:'+percent+'%"></div></div>'+
+    '<p class="text-xs text-slate-500 dark:text-slate-400" id="gsRestoreDetail">'+safe(detail||'Mohon jangan tutup halaman sampai proses selesai.')+'</p>'+
+    '<p class="text-xs text-amber-700 dark:text-amber-300">Jangan muat ulang halaman atau memutus koneksi selama restore berlangsung.</p></div>';
+  var container=document.getElementById('modalContainer');
+  if(!container||container.classList.contains('hidden'))openModal('⏳ Memulihkan Data — Mohon Tunggu',html);
+  else {
+    document.getElementById('modalTitle').innerText='⏳ Memulihkan Data — Mohon Tunggu';
+    var content=document.getElementById('modalContent');
+    if(!document.getElementById('gsRestorePercent'))content.innerHTML=html;
+    else {
+      document.getElementById('gsRestorePercent').innerText=percent+'%';
+      document.getElementById('gsRestoreProgressBar').style.width=percent+'%';
+      document.getElementById('gsRestoreProgressBar').parentElement.setAttribute('aria-valuenow',String(percent));
+      document.getElementById('gsRestoreDetail').innerText=detail||'Mohon jangan tutup halaman sampai proses selesai.';
+      var label=content.querySelector('.flex.items-center span');if(label)label.innerText=message||'Memulihkan data...';
+    }
+  }
+};
 window.importAllDataJSON=function(event){
   var file=event.target.files[0];if(!file)return;
+  var restoreProgressStarted=false;
   var reader=new FileReader();
   reader.onload=async function(e){
     try{
@@ -3742,25 +3767,74 @@ window.importAllDataJSON=function(event){
       var sourceUser=meta.user||meta.user_id||'tidak tercantum';
       var okRestore=confirm('KONFIRMASI RESTORE BACKUP\n\nFile: '+(file.name||'backup.json')+'\nSumber: '+sourceUser+'\nTotal baris: '+totalRows+'\n\n'+tableSummary+'\n\nRestore akan melakukan upsert dan dapat menimpa data yang memiliki ID sama pada akun Anda. Buat backup terkini sebelum lanjut. Lanjutkan?');
       if(!okRestore){gsAudit('RESTORE_CANCELLED','backup',file.name||'','Pengguna membatalkan setelah pratinjau');showToast('Restore dibatalkan; tidak ada data yang diimpor.','info');return;}
+      restoreProgressStarted=true;window.gsRestoreProgress(0,'Menyiapkan pemulihan data...','Memulai restore dengan aman.');
       showToast('Membuat snapshot data saat ini sebelum restore…','info');
       try{var preRestore=await window.gsBuildBackupObject();preRestore._meta.backup_reason='sebelum-restore';await window.gsIdbSet(window.gsBackupKey(),preRestore);localStorage.setItem('gs_backup_last_'+currentUser.id,new Date().toISOString());gsAudit('PRE_RESTORE_SNAPSHOT_SUCCESS','backup',file.name||'',preRestore._meta.total_rows+' baris');gsFormatBackupStatus();}
       catch(preErr){gsAudit('PRE_RESTORE_SNAPSHOT_FAILED','backup',file.name||'',preErr.message||String(preErr));throw new Error('Restore dihentikan karena snapshot pengaman sebelum restore gagal: '+(preErr.message||preErr)+'. Tidak ada data yang diimpor.');}
+      window.gsRestoreProgress(5,'Membuat snapshot pengaman...','Menyimpan salinan data saat ini sebelum restore.');
       gsAudit('RESTORE_STARTED','backup',file.name||'',totalRows+' baris; sumber '+sourceUser);
+      window.gsRestoreProgress(10,'Memeriksa izin database...','Memastikan sesi dan izin tulis tersedia.');
       showToast('Memeriksa izin tulis database...','info');
       var probe=await window.gsRlsProbe();
-      if(probe&&probe.blocked){window.gsShowRlsHelp('school_profile',probe.msg,true);return;}
-      var ORDER=['school_profile','teachers','subjects','classes','students','schedules','piket','attendance','activity_attendance','activity_records','grades','assignments','materi','keuangan','announcements','kurikulum','kuis_kelas'];
+      if(probe&&probe.blocked){closeModal();window.gsShowRlsHelp('school_profile',probe.msg,true);return;}
+      var ORDER=['school_profile','teachers','subjects','classes','students','schedules','piket','attendance','grades','assignments','materi','keuangan','announcements','kurikulum','kuis_kelas','activity_attendance','activity_records'];
       tables.sort(function(a,b){var ia=ORDER.indexOf(a),ib=ORDER.indexOf(b);if(ia<0)ia=99;if(ib<0)ib=99;return ia-ib;});
+      window.gsRestoreProgress(12,'Mengimpor data...','0 dari '+totalRows+' baris diproses.');
       showToast('Mengimpor '+totalRows+' baris... mohon tunggu, jangan tutup halaman.','info');
       window.gsIdMap={};
       var results=[],importedTotal=0,failTables=0;
       for(var i=0;i<tables.length;i++){
         var t=tables[i];
         var rows=data[t];
+        // Pastikan relasi absensi kegiatan menunjuk ke ID kegiatan dan siswa yang benar,
+        // termasuk ketika backup dipulihkan ke akun/database lain dengan ID yang berbeda.
+        if(t==='activity_records' && Array.isArray(rows)){
+          try{
+            var srcActs=Array.isArray(data.activity_attendance)?data.activity_attendance:[];
+            var destActsRes=await sb.from('activity_attendance').select('id,title,date').eq('user_id',currentUser.id);
+            if(!destActsRes.error && Array.isArray(destActsRes.data)){
+              var destActs=destActsRes.data;
+              srcActs.forEach(function(sa){
+                if(!sa||!sa.id)return;
+                if(destActs.some(function(da){return String(da.id)===String(sa.id);}))return;
+                var matchAct=destActs.find(function(da){return String(da.title||'').trim().toLowerCase()===String(sa.title||'').trim().toLowerCase() && String(da.date||'')===String(sa.date||'');});
+                if(matchAct)window.gsIdMap[String(sa.id)]=matchAct.id;
+              });
+            }
+          }catch(linkActErr){console.warn('Pemetaan ID kegiatan saat restore:',linkActErr);}
+          try{
+            var srcStudents=Array.isArray(data.students)?data.students:[];
+            var destStudentsRes=await sb.from('students').select('id,nis,name').eq('user_id',currentUser.id);
+            if(!destStudentsRes.error && Array.isArray(destStudentsRes.data)){
+              var destStudents=destStudentsRes.data;
+              srcStudents.forEach(function(ss){
+                if(!ss||!ss.id)return;
+                if(destStudents.some(function(ds){return String(ds.id)===String(ss.id);}))return;
+                var matchStudent=null;
+                if(ss.nis!=null && String(ss.nis).trim())matchStudent=destStudents.find(function(ds){return String(ds.nis||'').trim()===String(ss.nis).trim();});
+                if(!matchStudent && ss.name)matchStudent=destStudents.find(function(ds){return String(ds.name||'').trim().toLowerCase()===String(ss.name).trim().toLowerCase();});
+                if(matchStudent)window.gsIdMap[String(ss.id)]=matchStudent.id;
+              });
+            }
+          }catch(linkStudentErr){console.warn('Pemetaan ID siswa saat restore:',linkStudentErr);}
+          // Normalisasi beberapa nama kolom dari backup versi lama.
+          rows=rows.map(function(rec){
+            var x=Object.assign({},rec);
+            if(x.act_id==null)x.act_id=x.activity_id!=null?x.activity_id:(x.kegiatan_id!=null?x.kegiatan_id:x.kegiatanId);
+            if(x.student_id==null)x.student_id=x.siswa_id!=null?x.siswa_id:x.studentId;
+            if(x.date==null)x.date=x.tanggal!=null?x.tanggal:x.tgl;
+            if(x.status==null)x.status=x.kehadiran!=null?x.kehadiran:x.status_absensi;
+            if(x.status!=null){var st=String(x.status).trim().toLowerCase();x.status=({'h':'Hadir','hadir':'Hadir','present':'Hadir','s':'Sakit','sakit':'Sakit','i':'Izin','izin':'Izin','a':'Alpa','alpa':'Alpa','alpha':'Alpa'}[st]||x.status);}
+            return x;
+          });
+        }
         var r=rows.length?await window.gsImportTable(t,rows):{ok:0,fail:0,err:'',total:0};
         if(r.ok>0)importedTotal+=r.ok;
         if(r.fail>0)failTables++;
         results.push({t:t,ok:r.ok,fail:r.fail,err:r.err,rls:!!r.rls,blind:r.blind||0,remapped:r.remapped||0});
+        var doneRows=0;for(var di=0;di<results.length;di++)doneRows+=results[di].ok+results[di].fail;
+        var importPct=12+Math.round(((i+1)/Math.max(tables.length,1))*68);
+        window.gsRestoreProgress(importPct,'Mengimpor tabel '+(i+1)+' dari '+tables.length+'...','Tabel: '+t+' • '+doneRows+' dari '+totalRows+' baris telah diproses.');
       }
       var verify=[];
       for(var v=0;v<tables.length;v++){
@@ -3769,19 +3843,21 @@ window.importAllDataJSON=function(event){
           verify.push({t:tables[v],count:(c&&c.count!=null)?c.count:'-'});
         }catch(ev){verify.push({t:tables[v],count:'-'});}
       }
+      window.gsRestoreProgress(88,'Memeriksa hasil restore...','Memastikan tabel data selesai diproses.');
       var anyRls=false,anyBlind=0,anyRemap=0;
       for(var rr=0;rr<results.length;rr++){
         if(results[rr].rls&&results[rr].fail>0)anyRls=true;
         anyBlind+=results[rr].blind||0;
         anyRemap+=results[rr].remapped||0;
       }
+      window.gsRestoreProgress(100,'Pemulihan selesai','Restore selesai diproses. Menampilkan ringkasan hasil...');
       window.gsShowImportSummary(results,verify,importedTotal,failTables,metaInfo,anyRls,anyBlind,anyRemap);
       gsAudit(failTables===0&&anyBlind===0?'RESTORE_SUCCESS':'RESTORE_PARTIAL','backup',file.name||'',importedTotal+' berhasil; '+failTables+' tabel bermasalah; '+anyBlind+' tidak terbaca');
       if(failTables===0&&anyBlind>0)showToast('Data tersimpan tetapi '+anyBlind+' baris TIDAK TERBACA — lihat panduan di ringkasan restore.','error');
       else if(failTables===0)showToast('Restore berhasil: '+importedTotal+' baris! Klik Muat Ulang untuk menampilkan data.','success');
       else showToast(failTables+' tabel gagal diimpor — lihat ringkasan restore.','error');
       try{navigate('dashboard');}catch(eN){}
-    }catch(err){try{gsAudit('RESTORE_FAILED','backup',event&&event.target&&event.target.files&&event.target.files[0]&&event.target.files[0].name||'',err&&err.message||String(err));}catch(eA){}showToast('Gagal import: '+(err&&err.message?err.message:err),'error');}
+    }catch(err){if(restoreProgressStarted){try{closeModal();}catch(closeErr){}}try{gsAudit('RESTORE_FAILED','backup',event&&event.target&&event.target.files&&event.target.files[0]&&event.target.files[0].name||'',err&&err.message||String(err));}catch(eA){}showToast('Gagal import: '+(err&&err.message?err.message:err),'error');}
     finally{try{event.target.value='';}catch(eR){}}
   };
   reader.readAsText(file);
@@ -7610,6 +7686,77 @@ async function exportAnalisisNilaiCSV(){
   XLSX.writeFile(wb,'Analisis_Nilai_Guru_Smart.xlsx');
   showToast('File Excel analisis nilai berhasil diunduh!','success');
 }
+</script>
+<script>
+/* Pemantauan koneksi dan layanan Supabase. Pemeriksaan berkala hanya membaca status; tidak mengubah data. */
+(function(){
+  var lastState='unknown', checking=false, lastFailureAt=null;
+  function el(id){return document.getElementById(id);}
+  function show(state,title,message){
+    var b=el('gsServiceStatus'); if(!b)return;
+    b.classList.remove('hidden');
+    b.style.background=state==='offline'?'#991b1b':state==='database'?'#9a3412':'#b91c1c';
+    el('gsServiceStatusIcon').textContent=state==='offline'?'📡':state==='database'?'🗄️':'⚠️';
+    el('gsServiceStatusTitle').textContent=title;
+    el('gsServiceStatusMessage').textContent=message;
+    el('gsServiceStatusTime').textContent='Terakhir terdeteksi: '+new Date().toLocaleString('id-ID')+'. Data yang belum tersimpan mungkin perlu dikirim ulang setelah layanan pulih.';
+    if(lastState!==state){
+      try{if(typeof showToast==='function')showToast(title+' — '+message,'error');}catch(e){}
+    }
+    lastState=state;
+  }
+  function clear(){
+    var b=el('gsServiceStatus');if(b)b.classList.add('hidden');
+    if(lastState!=='ok'&&lastState!=='unknown'){
+      try{if(typeof showToast==='function')showToast('Koneksi server dan database kembali normal. Periksa kembali data terakhir yang Anda simpan.','success');}catch(e){}
+    }
+    lastState='ok';lastFailureAt=null;
+  }
+  window.gsCheckServiceStatus=async function(manual){
+    if(checking)return;checking=true;
+    try{
+      if(navigator.onLine===false){show('offline','Koneksi internet terputus','Periksa Wi-Fi atau jaringan internet perangkat. Aplikasi mungkin belum bisa membaca atau menyimpan data ke server.');return;}
+      var controller=typeof AbortController!=='undefined'?new AbortController():null;
+      var timer=setTimeout(function(){if(controller)controller.abort();},9000);
+      var response;
+      try{response=await fetch(SUPABASE_URL+'/auth/v1/health',{method:'GET',headers:{'apikey':SUPABASE_ANON_KEY},cache:'no-store',signal:controller?controller.signal:undefined});}
+      finally{clearTimeout(timer);}
+      if(!response||!response.ok){
+        var code=response?response.status:0;
+        if(code===401||code===403){show('database','Layanan server merespons, tetapi akses pemeriksaan ditolak','Periksa konfigurasi Supabase API key dan kebijakan akses. Jangan bagikan kata sandi atau kunci rahasia.');}
+        else show('server','Server layanan sedang gangguan','Server autentikasi/database tidak merespons normal (HTTP '+(code||'tidak diketahui')+'). Tunggu sebentar lalu tekan “Coba lagi”.');
+        return;
+      }
+      if(currentUser&&currentUser.id){
+        var dbCheck=await Promise.race([
+          sb.from('users').select('id').eq('id',currentUser.id).maybeSingle(),
+          new Promise(function(_,reject){setTimeout(function(){reject(new Error('DB_TIMEOUT'));},9000);})
+        ]);
+        if(dbCheck&&dbCheck.error){
+          var m=String(dbCheck.error.message||'').toLowerCase();
+          if(m.includes('fetch')||m.includes('network')||m.includes('timeout')||m.includes('temporar')||m.includes('unavailable')){show('database','Database sedang tidak dapat dihubungi','Koneksi ke database gagal. Jangan ulangi penyimpanan berkali-kali; tunggu hingga pulih lalu periksa data.');return;}
+          if(dbCheck.error.code==='PGRST205'||m.includes('could not find the table')){show('database','Tabel database tidak ditemukan','Server merespons, tetapi struktur tabel “users” bermasalah. Hubungi pengelola aplikasi; jangan melakukan restore berulang.');return;}
+          if(dbCheck.error.code==='42501'||m.includes('permission')||m.includes('row-level security')||m.includes('rls')){show('database','Akses database ditolak','Server aktif, tetapi akun tidak memiliki izin yang diperlukan. Periksa sesi login dan kebijakan RLS.');return;}
+          /* Error selain gangguan jaringan ditangani sebagai peringatan konfigurasi, bukan server mati. */
+          show('database','Pemeriksaan database perlu perhatian','Server dapat dijangkau, tetapi pemeriksaan database gagal: '+(dbCheck.error.message||'kesalahan tidak diketahui')+'.');return;
+        }
+      }
+      clear();
+    }catch(e){
+      var msg=String(e&&e.message||e||'');
+      if(navigator.onLine===false||/failed to fetch|networkerror|load failed|aborterror|db_timeout|timeout/i.test(msg)){
+        show('server','Server atau database tidak dapat dihubungi','Tidak ada respons dalam batas waktu pemeriksaan. Bisa jadi server sedang gangguan atau koneksi tidak stabil. Coba lagi beberapa saat.');
+      }else{
+        show('server','Pemeriksaan layanan gagal','Tidak dapat memastikan status layanan saat ini. Periksa koneksi, lalu tekan “Coba lagi”.');
+      }
+    }finally{checking=false;}
+  };
+  window.addEventListener('offline',function(){show('offline','Koneksi internet terputus','Periksa Wi-Fi atau jaringan internet perangkat. Data online mungkin belum tersimpan.');});
+  window.addEventListener('online',function(){show('server','Koneksi internet kembali','Sedang memeriksa apakah server dan database sudah pulih…');window.gsCheckServiceStatus(false);});
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)window.gsCheckServiceStatus(false);});
+  setTimeout(function(){window.gsCheckServiceStatus(false);},2500);
+  setInterval(function(){if(!document.hidden)window.gsCheckServiceStatus(false);},60000);
+})();
 </script>
 </body>
 </html>
