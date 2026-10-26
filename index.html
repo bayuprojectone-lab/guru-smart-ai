@@ -6265,7 +6265,7 @@ window.__gsInstallExcelFormat=function(){
 #gsGesturePanel.gs-show{display:block}
 .gs-ghead{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
 .gs-ghead b{font-size:12px;color:#fff}
-#gsGestureCam{width:9px;height:9px;border-radius:9999px;background:#475569;display:inline-block;flex:0 0 auto;transition:background .2s}
+#gsGestureCam{width:9px;height:9px;border-radius:9999px;background:#475569;display:inline-block;flex:0 0 auto;transition:background .2s}#gsCamLabel{font-size:10px;font-weight:800;color:#cbd5e1;margin-left:5px;white-space:nowrap}#gsGesturePanel.gs-paused #gsCamLabel{color:#fbbf24}#gsGesturePanel.gs-paused #gsGestureCam{background:#f59e0b;box-shadow:0 0 7px #f59e0b;animation:none}
 #gsGestureCam.gs-cam-on{background:#10b981;box-shadow:0 0 8px rgba(16,185,129,.9);animation:gsDotPulse 1.6s ease-in-out infinite}
 #gsGestureCam.gs-cam-err{background:#ef4444;box-shadow:0 0 8px rgba(239,68,68,.9)}
 @keyframes gsDotPulse{50%{opacity:.45}}
@@ -6288,13 +6288,13 @@ window.__gsInstallExcelFormat=function(){
 .gs-gchip{flex:1 1 0;text-align:center;font-size:11px;font-weight:700;color:#cbd5e1;background:#1e293b;border:1px solid #334155;border-radius:8px;padding:6px 4px;cursor:pointer;user-select:none;-webkit-user-select:none;transition:all .15s}
 .gs-gchip:hover{background:#334155}
 .gs-gchip.gs-active{background:#059669;border-color:#10b981;color:#fff}
-/* kursor lebih besar + titik tengah + ring progres klik otomatis */
-.gs-gcursor{position:fixed;left:0;top:0;z-index:99999;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:9999px;border:4px solid #2563eb;background:rgba(255,255,255,.3);box-shadow:0 0 14px rgba(37,99,235,.85);pointer-events:none;display:none;will-change:transform;transition:width .12s,height .12s,margin .12s,border-color .12s,background .12s}
-.gs-gcursor::after{content:'';position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:9999px;background:#1d4ed8}
-.gs-gcursor.gs-hover{border-color:#10b981;background:rgba(16,185,129,.35);box-shadow:0 0 20px rgba(16,185,129,.95);width:42px;height:42px;margin:-21px 0 0 -21px}
+/* kursor profesional: ring ringkas, titik presisi, animasi minim agar tidak mengganggu */
+.gs-gcursor{position:fixed;left:0;top:0;z-index:99999;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;border:2px solid #2563eb;background:rgba(255,255,255,.12);box-shadow:0 1px 5px rgba(15,23,42,.28),0 0 3px rgba(37,99,235,.32);pointer-events:none;display:none;will-change:transform;transition:border-color .1s ease,background .1s ease,box-shadow .1s ease}
+.gs-gcursor::after{content:'';position:absolute;left:50%;top:50%;width:3px;height:3px;margin:-1.5px 0 0 -1.5px;border-radius:50%;background:#1d4ed8}
+.gs-gcursor.gs-hover{border-color:#059669;background:rgba(16,185,129,.14);box-shadow:0 1px 5px rgba(15,23,42,.24),0 0 4px rgba(16,185,129,.42);width:20px;height:20px;margin:-10px 0 0 -10px}
 .gs-gcursor.gs-hover::after{background:#047857}
-.gs-gcursor.gs-gclick{border-color:#10b981;background:rgba(16,185,129,.5);box-shadow:0 0 22px rgba(16,185,129,1)}
-.gs-dwell-svg{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px 0 0 -27px;transform:rotate(-90deg);pointer-events:none;overflow:visible}
+.gs-gcursor.gs-gclick{border-color:#059669;background:rgba(16,185,129,.24);box-shadow:0 0 6px rgba(16,185,129,.5)}
+.gs-dwell-svg{position:absolute;left:50%;top:50%;width:30px;height:30px;margin:-15px 0 0 -15px;transform:rotate(-90deg);pointer-events:none;overflow:visible}
 .gs-dwell-svg circle{fill:none;stroke-width:5;stroke-linecap:round}
 .gs-dwell-bg{stroke:rgba(255,255,255,.2)}
 #gsDwellArc{stroke:#10b981;stroke-dasharray:113.1;stroke-dashoffset:113.1;filter:drop-shadow(0 0 4px rgba(16,185,129,.8))}
@@ -6312,7 +6312,7 @@ window.__gsInstallExcelFormat=function(){
 .gs-guide-item .gi-title{font-size:13px;font-weight:800;color:#fff}
 .gs-guide-item .gi-desc{font-size:11px;color:#94a3b8;margin-top:3px;line-height:1.4}
 .gs-guide-tip{margin-top:12px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.4);border-radius:12px;padding:10px 12px;font-size:12px;color:#a7f3d0;line-height:1.5}
-.gs-guide-tip b{color:#fff}
+.gs-guide-tip b{color:#fff}.gs-cal-row{display:grid;grid-template-columns:74px 1fr 35px;align-items:center;gap:7px;margin:7px 0;font-size:11px;color:#cbd5e1}.gs-cal-row input{width:100%;accent-color:#10b981}.gs-cal-row output{text-align:right;color:#a7f3d0;font-weight:800}.gs-cal-actions{display:flex;gap:6px;margin-top:8px}.gs-cal-actions button{flex:1;border:1px solid #475569;background:#1e293b;color:#e2e8f0;border-radius:8px;padding:7px 4px;font-size:11px;font-weight:700}.gs-cal-actions button:hover{background:#334155}
 .gs-guide-set{margin-top:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:11px 11px 12px}
 .gs-guide-set .gs-set-title{font-size:11px;font-weight:800;color:#94a3b8;letter-spacing:.4px;margin:0 0 8px;text-transform:uppercase}
 #gsGuideClose{margin-top:14px;width:100%;background:linear-gradient(135deg,#059669,#10b981);color:#fff;border:none;border-radius:12px;padding:11px 0;font-weight:800;font-size:14px;cursor:pointer}
@@ -6340,7 +6340,7 @@ window.__gsInstallExcelFormat=function(){
   <div class="gs-ghead">
     <b>🖐️ Remot Jari</b>
     <span id="gsCamMini" title="Remot Jari tetap aktif">🖐️</span>
-    <span id="gsGestureCam" title="kamera belum aktif"></span>
+    <span id="gsGestureCam" title="kamera belum aktif" aria-label="Status kamera"></span><span id="gsCamLabel">Kamera mati</span>
   </div>
   <div class="gs-gvideo-wrap">
     <video id="gsGestureVideo" playsinline muted></video>
@@ -6348,9 +6348,10 @@ window.__gsInstallExcelFormat=function(){
   </div>
   <div id="gsGestureStatus">📷 Siap</div>
   <div class="gs-gbtns">
-    <button id="gsGestureHide" title="Sembunyikan kamera — deteksi tetap jalan" type="button">🙈</button>
+    <button id="gsGesturePause" title="Jeda kamera" aria-label="Jeda atau lanjutkan kamera" type="button">⏸️</button>
+    <button id="gsGestureHide" title="Sembunyikan pratinjau kamera — deteksi tetap jalan" type="button">🙈</button>
     <button id="gsGestureHelp" title="Cara pakai & pengaturan" type="button">📖</button>
-    <button id="gsGestureStop" title="Matikan Remot Jari" type="button" aria-label="Matikan Remot Jari"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" width="17" height="17" aria-hidden="true"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="11"/></svg></button>
+    <button id="gsGestureStop" title="DARURAT: Matikan semua kontrol dan kamera" type="button" aria-label="DARURAT: Matikan semua kontrol dan kamera"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" width="17" height="17" aria-hidden="true"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="11"/></svg></button>
   </div>
 </div>
 <div id="gsHoverBox"></div>
@@ -6381,6 +6382,37 @@ window.__gsInstallExcelFormat=function(){
           <div class="gs-gchip" data-amp="1.6">Sedang</div>
           <div class="gs-gchip" data-amp="2">Cepat</div>
         </div>
+      </div>
+      <div style="margin-top:12px;border-top:1px solid #334155;padding-top:10px">
+        <p class="gs-set-title">⚙️ Pengaturan Presisi</p>
+        <div class="gs-cal-row"><label for="gsAmpRange">Sensitivitas</label><input id="gsAmpRange" type="range" min="1.2" max="2.2" step="0.05" value="1.6"><output id="gsAmpOut">1,60×</output></div>
+        <div class="gs-cal-row"><label for="gsSmoothRange">Kehalusan</label><input id="gsSmoothRange" type="range" min="8" max="45" step="1" value="22"><output id="gsSmoothOut">22 ms</output></div>
+        <div class="gs-cal-actions"><button id="gsTuneReset" type="button">Reset pengaturan</button><button id="gsDiagRefresh" type="button">Perbarui status</button></div>
+        <div class="gs-cal-actions" style="margin-top:7px"><button id="gsAutoCalibrate" type="button">🎯 Kalibrasi otomatis</button><button id="gsSafeClickToggle" type="button" aria-pressed="true">🛡️ Klik aman: ON</button></div>
+        <p id="gsCalStatus" class="gs-guide-tip" style="margin-top:6px">Kalibrasi otomatis merekam gerakan telunjuk selama 4 detik. Gerakkan telunjuk ke area kerja yang ingin dijangkau.</p>
+      </div>
+      <div style="margin-top:12px;border-top:1px solid #334155;padding-top:10px">
+        <p class="gs-set-title">🩺 Diagnostik Kamera</p>
+        <div id="gsDiagBox" style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+          <div class="gs-guide-item"><div class="gi-title">Kamera</div><div class="gi-desc" id="gsDiagCam">Belum aktif</div></div>
+          <div class="gs-guide-item"><div class="gi-title">Deteksi tangan</div><div class="gi-desc" id="gsDiagHand">Menunggu</div></div>
+          <div class="gs-guide-item"><div class="gi-title">FPS kursor</div><div class="gi-desc" id="gsDiagFps">—</div></div>
+          <div class="gs-guide-item"><div class="gi-title">Inferensi AI</div><div class="gi-desc" id="gsDiagLatency">—</div></div>
+          <div class="gs-guide-item" style="grid-column:1/-1"><div class="gi-title">Mesin & kondisi</div><div class="gi-desc" id="gsDiagEngine">Siap diperiksa</div></div>
+        </div>
+        <p class="gs-guide-tip" id="gsDiagAdvice" style="margin-top:8px">Aktifkan Remot Jari untuk melihat kondisi kamera dan deteksi secara langsung.</p>
+      </div>
+      <div style="margin-top:12px;border-top:1px solid #334155;padding-top:10px">
+        <p class="gs-set-title">🎯 Kalibrasi Area Layar</p>
+        <div class="gs-cal-row"><label for="gsAreaXMin">Kiri</label><input id="gsAreaXMin" type="range" min="0" max="45" step="1" value="0"><output id="gsAreaXMinOut">0%</output></div>
+        <div class="gs-cal-row"><label for="gsAreaXMax">Kanan</label><input id="gsAreaXMax" type="range" min="55" max="100" step="1" value="100"><output id="gsAreaXMaxOut">100%</output></div>
+        <div class="gs-cal-row"><label for="gsAreaYMin">Atas</label><input id="gsAreaYMin" type="range" min="0" max="45" step="1" value="0"><output id="gsAreaYMinOut">0%</output></div>
+        <div class="gs-cal-row"><label for="gsAreaYMax">Bawah</label><input id="gsAreaYMax" type="range" min="55" max="100" step="1" value="100"><output id="gsAreaYMaxOut">100%</output></div>
+        <div class="gs-cal-actions"><button id="gsAreaReset" type="button">Layar penuh</button><button id="gsAreaApply" type="button">Terapkan area</button></div>
+      </div>
+      <div style="margin-top:12px;border-top:1px solid #334155;padding-top:10px">
+        <p class="gs-set-title">⏱️ Waktu Klik Otomatis</p>
+        <div class="gs-cal-row"><label for="gsDwellRange">Tahan</label><input id="gsDwellRange" type="range" min="500" max="2500" step="100" value="1100"><output id="gsDwellOut">1,1 dtk</output></div>
       </div>
     </div>
     <button id="gsGuideClose" type="button">Mengerti, Mulai! 👍</button>
@@ -6462,16 +6494,19 @@ var G={
   on:false,starting:false,session:0,stream:null,landmarker:null,gpuMode:'',cdnRoot:'',
   raf:0,lastVideoTime:-1,cx:Math.round(window.innerWidth/2),cy:Math.round(window.innerHeight/2),
   sx:0.5,sy:0.5,hist:[],dHist:[],stable:'NONE',lastSeen:0,lastCursorAt:0,lockUntil:0,
-  clickArmed:true,clickAt:0,menuAt:0,palmSince:0,
+  clickArmed:true,clickAt:0,menuAt:0,palmSince:0,closedSince:0,closedTarget:null,pinchSince:0,pinchFired:false,safeClick:true,calibrating:false,calStarted:0,calSamples:[],calLastUi:0,
   scrollLast:null,scrollY:0.5,scrollVel:0,coast:0,coastRAF:0,drawnHand:false,recycling:false,dPrev:0,
   scrollEl:null,pcx:0.5,pcy:0.5,
   tx:0.5,ty:0.5,tvx:0,tvy:0,tAt:0,rLast:0,targetActive:false,rrender:0,pMoving:false,
-  amp:1.6,dwell:true,dwellEl:null,dwellStart:0,dwellCool:0,hoverOn:false,dwellFiredEl:null,
-  camHidden:0
+  amp:1.6,smoothMs:22,dwell:true,dwellEl:null,dwellStart:0,dwellCool:0,hoverOn:false,dwellFiredEl:null,
+  camHidden:0,paused:false,area:{xmin:0,xmax:1,ymin:0,ymax:1}
 };
 try{var sa=parseFloat(localStorage.getItem('gsGestureAmp'));if(sa>=1.2&&sa<=2.2)G.amp=sa;}catch(e){}
 try{G.dwell=localStorage.getItem('gsGestureDwell')!=='0';}catch(e){}
-var P={interval:60,lastPump:0,msSum:0,msN:0,detectErr:0,tier:0};
+try{var ga=JSON.parse(localStorage.getItem('gsGestureArea')||'null');if(ga&&ga.xmin>=0&&ga.xmax<=1&&ga.ymin>=0&&ga.ymax<=1&&ga.xmax-ga.xmin>=0.1&&ga.ymax-ga.ymin>=0.1)G.area=ga;}catch(e){}
+try{var gd=parseInt(localStorage.getItem('gsGestureDwellMs')||'1100',10);if(gd>=500&&gd<=2500)DWELL_MS=gd;}catch(e){}
+try{var sm=parseInt(localStorage.getItem('gsGestureSmoothMs')||'22',10);if(sm>=8&&sm<=45)G.smoothMs=sm;}catch(e){}
+var P={interval:60,lastPump:0,msSum:0,msN:0,detectErr:0,tier:0,lastLatency:0,avgLatency:0,frames:0,fps:0,fpsAt:0,diagAt:0};
 function $(id){return document.getElementById(id);}
 function toast(m,t){try{if(typeof showToast==='function')showToast(m,t||'info');}catch(e){}}
 function setStatus(t,ok){
@@ -6496,7 +6531,7 @@ async function loadEngine(){
   }
   if(!vision)throw new Error('mesin AI gagal diunduh. Periksa koneksi internet lalu coba lagi.');
   var fileset=await withTimeout(vision.FilesetResolver.forVisionTasks(G.cdnRoot+'/wasm'),40000,'unduhan mesin AI lambat/terputus. Coba lagi.');
-  var mk=function(d){return{baseOptions:{modelAssetPath:MODEL_URL,delegate:d},runningMode:'VIDEO',numHands:1,minHandDetectionConfidence:0.5,minHandPresenceConfidence:0.5,minTrackingConfidence:0.5};};
+  var mk=function(d){return{baseOptions:{modelAssetPath:MODEL_URL,delegate:d},runningMode:'VIDEO',numHands:1,minHandDetectionConfidence:0.32,minHandPresenceConfidence:0.35,minTrackingConfidence:0.35};};
   try{G.landmarker=await vision.HandLandmarker.createFromOptions(fileset,mk('GPU'));G.gpuMode='GPU';}
   catch(e){G.landmarker=await vision.HandLandmarker.createFromOptions(fileset,mk('CPU'));G.gpuMode='CPU';}
   updateCamLabel(0);
@@ -6507,7 +6542,7 @@ async function recycleEngineCpu(){
     var vision=await import(G.cdnRoot+'/vision_bundle.mjs');
     var fileset=await vision.FilesetResolver.forVisionTasks(G.cdnRoot+'/wasm');
     var old=G.landmarker;
-    G.landmarker=await vision.HandLandmarker.createFromOptions(fileset,{baseOptions:{modelAssetPath:MODEL_URL,delegate:'CPU'},runningMode:'VIDEO',numHands:1,minHandDetectionConfidence:0.5,minHandPresenceConfidence:0.5,minTrackingConfidence:0.5});
+    G.landmarker=await vision.HandLandmarker.createFromOptions(fileset,{baseOptions:{modelAssetPath:MODEL_URL,delegate:'CPU'},runningMode:'VIDEO',numHands:1,minHandDetectionConfidence:0.32,minHandPresenceConfidence:0.35,minTrackingConfidence:0.35});
     G.gpuMode='CPU';P.detectErr=0;P.msSum=0;P.msN=0;
     try{if(old&&old.close)old.close();}catch(x){}
     updateCamLabel(0);setStatus('♻️ Mode CPU');
@@ -6516,10 +6551,11 @@ async function recycleEngineCpu(){
 }
 /* v13.1: kamera = titik indikator kecil (tanpa teks); detail hanya di tooltip */
 function camDot(state){
-  var el=$('gsGestureCam');if(!el)return;
+  var el=$('gsGestureCam'),lab=$('gsCamLabel'),panel=$('gsGesturePanel');if(!el)return;
   el.classList.remove('gs-cam-on','gs-cam-err');
-  if(state==='on')el.classList.add('gs-cam-on');
-  else if(state==='err')el.classList.add('gs-cam-err');
+  if(state==='on')el.classList.add('gs-cam-on');else if(state==='err')el.classList.add('gs-cam-err');
+  if(lab)lab.textContent=state==='on'?'Kamera aktif':state==='err'?'Kamera error':(G.paused?'Kamera dijeda':'Kamera mati');
+  if(panel)panel.classList.toggle('gs-paused',!!G.paused);
 }
 function updateCamLabel(avgMs){
   var el=$('gsGestureCam');if(!el)return;
@@ -6554,7 +6590,7 @@ function cursorStep(dt,now){
   var px=(G.tx+gx)*w,py=(G.ty+gy)*h;
   var dx=px-G.cx,dy=py-G.cy;
   if(dx*dx+dy*dy<0.4)return 0; /* sudah pas - berhenti, hemat CPU */
-  var k=1-Math.exp(-dt/40); /* ~40ms: nempel cepat tanpa patah (dulu 0.38/frame) */
+  var k=1-Math.exp(-dt/Math.max(8,Math.min(45,G.smoothMs||22))); /* dapat diatur: kecil=responsif, besar=lebih halus */
   G.cx+=dx*k;G.cy+=dy*k;
   if(G.cx<0)G.cx=0;else if(G.cx>w-2)G.cx=w-2;
   if(G.cy<0)G.cy=0;else if(G.cy>h-2)G.cy=h-2;
@@ -6562,30 +6598,86 @@ function cursorStep(dt,now){
   if(el){el.style.display='block';el.style.transform='translate3d('+Math.round(G.cx)+'px,'+Math.round(G.cy)+'px,0)';}
   return 1;
 }
+function gsUpdateDiagnostics(force){
+  var now=performance.now();
+  if(!force&&now-(P.diagAt||0)<500)return;
+  P.diagAt=now;
+  var cam=$('gsDiagCam'),hand=$('gsDiagHand'),fps=$('gsDiagFps'),lat=$('gsDiagLatency'),engine=$('gsDiagEngine'),advice=$('gsDiagAdvice');
+  if(!cam&&!hand&&!fps&&!lat&&!engine)return;
+  if(cam)cam.textContent=!G.on?'Mati':G.paused?'Dijeda':(G.stream&&G.stream.active?'Aktif':'Menyiapkan…');
+  var age=G.lastSeen?now-G.lastSeen:Infinity;
+  if(hand)hand.textContent=age<500?'Terdeteksi':G.on&&!G.paused?'Belum terbaca':'Menunggu kamera';
+  if(fps){
+    if(!P.fpsAt)P.fpsAt=now;
+    if(now-P.fpsAt>=1000){P.fps=Math.round(P.frames*1000/(now-P.fpsAt));P.frames=0;P.fpsAt=now;}
+    fps.textContent=(P.fps||0)+' FPS';
+  }
+  if(lat)lat.textContent=P.avgLatency?Math.round(P.avgLatency)+' ms':'Mengukur…';
+  if(engine){
+    var mode=W.worker?(W.ready?'Worker '+(W.gpu||'AI'):'Worker memuat'):G.landmarker?'AI '+(G.gpuMode||'aktif'):'AI belum siap';
+    engine.textContent=mode+' · interval '+P.interval+' ms'+(P.detectErr?' · error '+P.detectErr:'');
+  }
+  if(advice){
+    var msg=!G.on?'Aktifkan Remot Jari untuk mulai diagnostik.':
+      G.paused?'Kamera sedang dijeda; lanjutkan untuk membaca tangan.':
+      !G.stream||!G.stream.active?'Kamera belum mengalir. Periksa izin kamera browser.':
+      age>1500?'Tangan belum terbaca. Tambah pencahayaan, tampilkan telapak dan ujung telunjuk, lalu jaga tangan di dalam bingkai.':
+      P.avgLatency>80?'Inferensi lambat. Tutup aplikasi berat, gunakan pencahayaan terang, dan coba mode kamera ringan.':
+      'Kondisi baik. Jaga telunjuk terlihat dan gerakkan tangan di dalam area kalibrasi.';
+    advice.textContent=msg;
+  }
+}
 function renderLoop(){
   if(!G.on){G.rrender=0;return;}
   G.rrender=requestAnimationFrame(renderLoop);
-  var now=performance.now(),dt=now-(G.rLast||now-16);G.rLast=now;
+  var now=performance.now(),dt=now-(G.rLast||now-16);G.rLast=now;gsUpdateDiagnostics(false);
   if(dt<4)dt=4;if(dt>100)dt=100;
   cursorStep(dt,now);
 }
-function doClick(){
+function doClick(mode){
+  /* Semua jalur klik (dwell/kepalan) melewati gerbang keamanan yang sama. */
+  mode=mode||'unknown';
+  var now=performance.now(),raw=null,target=null;
+  try{raw=document.elementFromPoint(G.cx,G.cy);target=clickable(raw);}catch(e){}
+  if(!target){setStatus('🛡️ Arahkan ke tombol');dwellReset();return false;}
+  if(target.disabled||target.getAttribute('aria-disabled')==='true'||target.hasAttribute('disabled')){
+    setStatus('🛡️ Tombol dinonaktifkan');dwellReset();return false;
+  }
+  var rect=target.getBoundingClientRect();
+  if(!rect||rect.width<2||rect.height<2||rect.right<0||rect.bottom<0||rect.left>window.innerWidth||rect.top>window.innerHeight){
+    setStatus('🛡️ Target tidak terlihat');dwellReset();return false;
+  }
+  /* Target harus tetap sama selama jeda; melindungi dari tangan bergetar. */
+  if(mode==='dwell'){
+    if(G.dwellEl!==target||!G.dwellStart||now-G.dwellStart<DWELL_MS){setStatus('🛡️ Target berubah, tahan lagi');dwellReset();return false;}
+  }else if(mode==='fist'){
+    if(G.closedTarget!==target){G.closedTarget=target;G.closedSince=now;setStatus('🛡️ Target berubah, tahan…');return false;}
+    var stableFor=now-(G.closedSince||now),required=G.safeClick?220:120;
+    if(stableFor<required){setStatus('🛡️ Pastikan target stabil…');return false;}
+  }else{
+    setStatus('🛡️ Jalur klik tidak dikenal');return false;
+  }
+  var label=(target.textContent||target.getAttribute('aria-label')||target.getAttribute('title')||'elemen').replace(/\s+/g,' ').trim().slice(0,60)||'elemen';
+  /* Tindakan destruktif memerlukan konfirmasi tambahan sebelum event dikirim. */
+  var context=(label+' '+(target.getAttribute('aria-label')||'')+' '+(target.getAttribute('title')||'')+' '+(target.id||'')+' '+(target.getAttribute('name')||'')).toLowerCase();
+  var destructive=/(hapus|delete|remove|reset|kosongkan|bersihkan|clear[-_ ]?(data|all|history|nilai)|hapus[-_ ]?(semua|nilai|data|riwayat)|nilai.*hapus|hapus.*nilai)/i.test(context);
+  if(destructive){
+    var ok=false;
+    try{ok=window.confirm('KONFIRMASI TAMBAHAN — TINDAKAN BERISIKO\n\nTarget: '+label+'\n\nTindakan ini dapat menghapus atau mengubah data. Apakah Anda yakin ingin melanjutkan?');}catch(e){}
+    if(!ok){setStatus('🛡️ Tindakan dibatalkan');G.clickArmed=false;G.closedSince=0;G.closedTarget=null;dwellReset();G.dwellCool=now+700;return false;}
+  }
   var el=$('gsGestureCursor');
   if(el){el.classList.add('gs-gclick');setTimeout(function(){el.classList.remove('gs-gclick');},320);}
-  /* reset klik otomatis + cooldown agar tidak dobel-klik */
-  G.dwellStart=0;G.dwellEl=null;setDwellArc(0);
-  G.dwellCool=performance.now()+1200;
-  var target=null;
-  try{target=document.elementFromPoint(G.cx,G.cy);}catch(e){}
-  if(!target){setStatus('❓ Tidak ada tombol');return;}
-  var label=(target.textContent||target.getAttribute('aria-label')||'elemen').replace(/\s+/g,' ').trim().slice(0,18)||'elemen';
+  /* Reset klik otomatis + cooldown; klik hanya dikirim sekali ke target yang tervalidasi. */
+  G.dwellStart=0;G.dwellEl=null;setDwellArc(0);G.dwellCool=now+1200;
   try{
     var o={bubbles:true,cancelable:true,view:window,clientX:G.cx,clientY:G.cy};
     target.dispatchEvent(new MouseEvent('mousedown',o));
     target.dispatchEvent(new MouseEvent('mouseup',o));
     target.dispatchEvent(new MouseEvent('click',o));
-    setStatus('✅ '+label,true);
-  }catch(e){setStatus('⚠️ Tak bisa diklik');}
+    setStatus('✅ '+label.slice(0,18),true);
+    return true;
+  }catch(e){setStatus('⚠️ Tak bisa diklik');return false;}
 }
 /* ---------- v13.5: WORKER INFERENSI — thread utama bebas, kursor tak pernah beku ----------
    Dulu: detectForVideo() SINKRON membekukan thread utama 10-40ms tiap deteksi
@@ -6601,7 +6693,7 @@ var WSRC=[
 "async function tryCdn(root){",
 " const v=await to(import(root+'/vision_bundle.mjs'),15000);",
 " const fs=await to(v.FilesetResolver.forVisionTasks(root+'/wasm'),20000);",
-" const mk=d=>({baseOptions:{modelAssetPath:MODEL,delegate:d},runningMode:'VIDEO',numHands:1,minHandDetectionConfidence:0.5,minHandPresenceConfidence:0.5,minTrackingConfidence:0.5});",
+" const mk=d=>({baseOptions:{modelAssetPath:MODEL,delegate:d},runningMode:'VIDEO',numHands:1,minHandDetectionConfidence:0.32,minHandPresenceConfidence:0.35,minTrackingConfidence:0.35});",
 " try{const eng=await to(v.HandLandmarker.createFromOptions(fs,mk('GPU')),30000);return{eng:eng,gpu:'GPU'};}",
 " catch(e1){const eng=await to(v.HandLandmarker.createFromOptions(fs,mk('CPU')),30000);return{eng:eng,gpu:'CPU'};}",
 "}",
@@ -6643,7 +6735,10 @@ function gsWorkerStart(){
       else if(m.t==='fail'){gsWorkerKill();} /* v13.6: semua CDN gagal di worker -> langsung fallback sinkron, jangan tunggu 20 dtk */
       else if(m.t==='res'){
         W.inflight=false;W.bad=0;
-        P.msSum+=performance.now()-(m.ts||performance.now());P.msN++;
+        P.lastLatency=performance.now()-(m.ts||performance.now());
+        P.avgLatency=P.msN?((P.avgLatency*0.85)+(P.lastLatency*0.15)):P.lastLatency;
+        P.frames++;
+        P.msSum+=P.lastLatency;P.msN++;
         if(P.msN>=30){var avg=P.msSum/P.msN;updateCamLabel(avg);pumpTier(avg);P.msSum=0;P.msN=0;}
         onResults({landmarks:m.lm?[m.lm]:[]},null,m.ts);
       }
@@ -6708,12 +6803,14 @@ function drawSkeleton(lm){
 function classify(lm){
   var handSize=dist(lm[0],lm[9])||0.001;
   var ext={
-    index:dist(lm[0],lm[8])>dist(lm[0],lm[6])*1.12,
-    mid:dist(lm[0],lm[12])>dist(lm[0],lm[10])*1.12,
-    ring:dist(lm[0],lm[16])>dist(lm[0],lm[14])*1.12,
-    pinky:dist(lm[0],lm[20])>dist(lm[0],lm[18])*1.12
+    index:dist(lm[0],lm[8])>dist(lm[0],lm[6])*1.08,
+    mid:dist(lm[0],lm[12])>dist(lm[0],lm[10])*1.08,
+    ring:dist(lm[0],lm[16])>dist(lm[0],lm[14])*1.08,
+    pinky:dist(lm[0],lm[20])>dist(lm[0],lm[18])*1.08
   };
   var n=(ext.index?1:0)+(ext.mid?1:0)+(ext.ring?1:0)+(ext.pinky?1:0);
+  /* Jepit ibu jari + telunjuk = klik kanan; ambang relatif ukuran tangan agar tahan beda jarak kamera. */
+  if(dist(lm[4],lm[8])/handSize<0.22)return{raw:'PINCH',handSize:handSize};
   if(n>=3)return{raw:'PALM',handSize:handSize}; /* 3-5 jari terbuka = scroll (pose longgar, mudah ditahan) */
   if(ext.index&&ext.mid)return{raw:'TWO',handSize:handSize}; /* tepat 2 jari = menu (tahan) */
   if(ext.index)return{raw:'POINT',handSize:handSize};
@@ -6878,9 +6975,8 @@ function dwellTick(now){
   if(pr>=1){
     G.cx=Math.round(G.tx*window.innerWidth);G.cy=Math.round(G.ty*window.innerHeight);
     G.tvx=0;G.tvy=0;
-    doClick();
-    G.dwellFiredEl=click; /* kunci: jangan klik ulang elemen yang sama sebelum kursor dipindah */
-    G.lockUntil=now+500;
+    if(doClick('dwell')){G.dwellFiredEl=click;G.lockUntil=now+500;}
+    else {G.dwellStart=0;G.dwellEl=null;setDwellArc(0);}
   }else{
     setDwellArc(pr);
   }
@@ -6898,10 +6994,10 @@ function pointMove(tx0,ty0,now){
   var ddx=tx0-G.sx,ddy=ty0-G.sy;
   var sp=Math.sqrt(ddx*ddx+ddy*ddy);
   if(!G.pMoving){
-    if(sp<0.005){G.tvx*=0.6;G.tvy*=0.6;G.tAt=now;return sp;} /* diam: getar tersaring, gerak nyata mengumpul celah */
+    if(sp<0.0028){G.tvx*=0.6;G.tvy*=0.6;G.tAt=now;return sp;} /* diam: getar tersaring, gerak nyata mengumpul celah */
     G.pMoving=true;
-  }else if(sp<0.0025){G.pMoving=false;G.tvx=0;G.tvy=0;G.tAt=now;return sp;}
-  var a=Math.min(0.9,0.7+sp*3),eff=Math.max(0,sp-0.0012)/sp;
+  }else if(sp<0.0014){G.pMoving=false;G.tvx=0;G.tvy=0;G.tAt=now;return sp;}
+  var a=Math.min(0.94,0.78+sp*3),eff=Math.max(0,sp-0.0006)/sp;
   var nsx=G.sx+ddx*eff*a,nsy=G.sy+ddy*eff*a;
   var rx=(nsx-0.5)*G.amp+0.5,ry=(nsy-0.5)*G.amp+0.5; /* amp = sensitivitas pengguna */
   var dtP=now-(G.tAt||now-60);if(dtP<10)dtP=10;if(dtP>300)dtP=300;
@@ -6919,7 +7015,7 @@ function pointMove(tx0,ty0,now){
      tapi deteksi jarang tak lagi membunuh prediksi (dulu: sp<0.008 per-tick) */
   if(sp/dtP*1000<0.15){G.tvx*=0.7;G.tvy*=0.7;}
   G.sx=nsx;G.sy=nsy;
-  G.tx=Math.max(0,Math.min(1,rx));G.ty=Math.max(0,Math.min(1,ry)); /* posisi di-clamp, kecepatan tidak */
+  var ax=G.area||{xmin:0,xmax:1,ymin:0,ymax:1};G.tx=Math.max(0,Math.min(1,(rx-ax.xmin)/Math.max(.1,ax.xmax-ax.xmin)));G.ty=Math.max(0,Math.min(1,(ry-ax.ymin)/Math.max(.1,ax.ymax-ax.ymin))); /* area kalibrasi dinormalisasi ke seluruh layar */
   G.tAt=now;
   return sp;
 }
@@ -6937,6 +7033,32 @@ function onResults(res,video,ts){
     return;
   }
   G.lastSeen=now;
+  /* Kalibrasi otomatis: rekam posisi telunjuk selama 4 detik sambil pengguna menyapu area kerja. */
+  if(G.calibrating){
+    var rxCal=1-lm[8].x,ryCal=lm[8].y;
+    G.calSamples.push({x:rxCal,y:ryCal});
+    var elapsed=now-G.calStarted;
+    var calUi=$('gsCalStatus');
+    if(calUi&&now-(G.calLastUi||0)>250){G.calLastUi=now;calUi.textContent='Kalibrasi berjalan… '+Math.max(0,Math.ceil((4000-elapsed)/1000))+' dtk tersisa. Gerakkan telunjuk ke sudut area kerja.';}
+    if(elapsed>=4000){
+      G.calibrating=false;
+      var xs=G.calSamples.map(function(q){return q.x;}),ys=G.calSamples.map(function(q){return q.y;});
+      var xmin=Math.min.apply(null,xs),xmax=Math.max.apply(null,xs),ymin=Math.min.apply(null,ys),ymax=Math.max.apply(null,ys);
+      /* Sedikit margin mencegah area hasil kalibrasi terlalu ketat. */
+      xmin=Math.max(0,xmin-0.025);xmax=Math.min(1,xmax+0.025);ymin=Math.max(0,ymin-0.025);ymax=Math.min(1,ymax+0.025);
+      if(G.calSamples.length>=12&&xmax-xmin>=0.18&&ymax-ymin>=0.18){
+        G.area={xmin:xmin,xmax:xmax,ymin:ymin,ymax:ymax};
+        try{localStorage.setItem('gsGestureArea',JSON.stringify(G.area));}catch(e){}
+        if(calUi)calUi.textContent='Kalibrasi selesai ✓ Area gerak disimpan. Uji kursor; ulangi bila area terlalu sempit.';
+        toast('Kalibrasi otomatis selesai dan disimpan.','success');
+      }else{
+        if(calUi)calUi.textContent='Kalibrasi belum cukup luas. Ulangi sambil gerakkan telunjuk ke empat sudut area kerja.';
+        toast('Kalibrasi belum cukup luas. Coba lagi dengan gerakan lebih lebar.','info');
+      }
+      G.calSamples=[];G.hist=[];G.stable='NONE';G.sx=0.5;G.sy=0.5;G.tvx=0;G.tvy=0;hideCursor();
+    }
+    return;
+  }
   var cls=classify(lm);
   G.hist.push(cls.raw);if(G.hist.length>3)G.hist.shift();
   var counts={};
@@ -6945,6 +7067,21 @@ function onResults(res,video,ts){
   for(var k in counts){if(counts[k]>bc){best=k;bc=counts[k];}}
   if(bc>=2)G.stable=best; /* v13: 2 dari 3 frame = lebih responsif */
   var gesture=G.stable;
+  /* --- JEPIT IBU JARI + TELUNJUK: klik kanan sekali setelah tahan 350 ms --- */
+  if(gesture==='PINCH'){
+    G.scrollLast=null;gsCoastStop();G.dPrev=0;G.tvx=0;G.tvy=0;G.pMoving=false;dwellReset();hoverBox(null);
+    if(!G.pinchSince)G.pinchSince=now;
+    if(now-G.pinchSince>=350&&!G.pinchFired&&now-G.clickAt>900){
+      var px=Math.round(G.cx),py=Math.round(G.cy),pt=null;
+      try{pt=document.elementFromPoint(px,py);}catch(e){}
+      var ptarget=clickable(pt)||pt;
+      if(ptarget){
+        try{var po={bubbles:true,cancelable:true,view:window,clientX:px,clientY:py,button:2,buttons:2};ptarget.dispatchEvent(new MouseEvent('mousedown',po));ptarget.dispatchEvent(new MouseEvent('mouseup',po));ptarget.dispatchEvent(new MouseEvent('contextmenu',po));setStatus('🖱️ Klik kanan',true);}catch(e){setStatus('⚠️ Klik kanan gagal');}
+      }else setStatus('🤏 Jepit ditahan…');
+      G.pinchFired=true;G.clickAt=now;G.lockUntil=now+500;
+    }else setStatus('🤏 Klik kanan…');
+    return;
+  }else{G.pinchSince=0;G.pinchFired=false;}
   /* --- 3-5 JARI (TELAPAK TERBUKA): SCROLL naik/turun — sensitif & responsif --- */
   if(gesture==='PALM'){
     G.dPrev=0;G.palmSince=0;G.tvx=0;G.tvy=0;G.pMoving=false; /* v13.4/13.5: prediksi & state gerak tidak dibawa saat scroll */
@@ -7030,19 +7167,23 @@ function onResults(res,video,ts){
     hoverBox(null);dwellReset();G.tvx=0;G.tvy=0;G.pMoving=false;
     if(now-G.lastCursorAt<800){
       if(G.clickArmed&&now-G.clickAt>900){
-        G.clickArmed=false;G.clickAt=now;
-        G.cx=Math.round(G.tx*window.innerWidth);G.cy=Math.round(G.ty*window.innerHeight); /* jepret ke titik yang sudah pas */
-        G.tvx=0;G.tvy=0;
+        G.cx=Math.round(G.tx*window.innerWidth);G.cy=Math.round(G.ty*window.innerHeight);
         var elz=$('gsGestureCursor');
-        if(elz){elz.style.display='block';elz.style.transform='translate3d('+G.cx+'px,'+G.cy+'px,0)';}
-        doClick();
-        G.lockUntil=now+450; /* setelah klik kunci 450ms: tangan membuka tidak menggeser kursor */
+        if(elz){elz.style.display='block';elz.style.transform='translate3d('+G.cx+'px,'+G.cy+'px,0)'}
+        var safeTarget=null;try{safeTarget=document.elementFromPoint(G.cx,G.cy);}catch(e){}
+        safeTarget=clickable(safeTarget);
+        if(G.safeClick){
+          if(!safeTarget){G.closedSince=0;G.closedTarget=null;setStatus('🛡️ Arahkan ke tombol');return;}
+          if(G.closedTarget!==safeTarget){G.closedTarget=safeTarget;G.closedSince=now;setStatus('🛡️ Pastikan target…');return;}
+          if(now-G.closedSince<220){setStatus('🛡️ Konfirmasi klik…');return;}
+        }
+        if(doClick('fist')){G.clickArmed=false;G.clickAt=now;G.closedSince=0;G.closedTarget=null;G.lockUntil=now+500;}
       }
     }else{
-      setStatus('☝️ dulu, lalu ✊');
+      G.closedSince=0;G.closedTarget=null;setStatus('☝️ dulu, lalu ✊');
     }
     return;
-  }
+  }else{G.closedSince=0;G.closedTarget=null;}
 }
 /* ---------- Pompa frame: worker dulu (bebas macet); fallback sinkron TIDAK MENAHAN layar ---------- */
 function pumpTier(avg){
@@ -7053,6 +7194,7 @@ function pumpTier(avg){
 function pump(){
   if(!G.on)return;
   G.raf=requestAnimationFrame(pump);
+  if(G.paused)return;
   var v=$('gsGestureVideo');
   if(!v||v.readyState<2)return;
   var now=performance.now();
@@ -7067,7 +7209,7 @@ function pump(){
     G.lastVideoTime=v.currentTime;
     P.lastPump=now;
     W.inflight=true;W.inflightAt=now;
-    createImageBitmap(v).then(function(bmp){
+    createImageBitmap(v,{resizeWidth:320,resizeHeight:240,resizeQuality:'low'}).then(function(bmp){
       if(!W.worker){try{bmp.close();}catch(e){}W.inflight=false;return;}
       W.worker.postMessage({t:'frame',bmp:bmp,ts:now},[bmp]);
     }).catch(function(){W.inflight=false;});
@@ -7092,6 +7234,7 @@ function syncDetect(){
     return;
   }
   var dt=performance.now()-t0;
+  P.lastLatency=dt;P.avgLatency=P.msN?((P.avgLatency*0.85)+(dt*0.15)):dt;P.frames++;
   P.msSum+=dt;P.msN++;
   if(P.msN>=30){
     var avg=P.msSum/P.msN;
@@ -7117,7 +7260,7 @@ async function start(){
   if(typeof currentUser==='undefined'||!currentUser){toast('Login dulu untuk memakai Remot Jari.','error');return;}
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast('Kamera butuh HTTPS atau localhost.','error');return;}
   var sess=(G.session||0)+1;G.session=sess;
-  G.starting=true;
+  G.starting=true;G.paused=false;
   $('gsGesturePanel').classList.add('gs-show');
   $('gsGestureBtn').classList.add('gs-on');
   var _bb=$('gsGestureBtn');if(_bb)_bb.classList.remove('gs-mini'); /* saat aktif: tombol tampil penuh */
@@ -7148,7 +7291,7 @@ async function start(){
       await withTimeout(loadEngine(),60000,'unduhan mesin AI lambat/terputus. Periksa internet lalu coba lagi.');
       if(sess!==G.session)return;
     }
-    G.on=true;G.starting=false;
+    G.on=true;G.starting=false;G.paused=false;syncPauseButton();camDot('on');
     G.lastVideoTime=-1;G.hist=[];G.stable='NONE';G.palmSince=0;G.scrollLast=null;G.scrollVel=0;G.scrollEl=null;G.pcx=0.5;G.pcy=0.5;gsCoastStop();G.drawnHand=false;G.dPrev=0;
     G.clickArmed=true;G.clickAt=0;G.lastCursorAt=0;G.dHist=[];G.lockUntil=0;
     G.dwellEl=null;G.dwellStart=0;G.dwellCool=0;G.dwellFiredEl=null;
@@ -7173,7 +7316,7 @@ async function start(){
 }
 function stop(){
   G.session=(G.session||0)+1;
-  G.on=false;G.starting=false;
+  G.on=false;G.starting=false;G.paused=false;syncPauseButton();
   if(G.raf){cancelAnimationFrame(G.raf);G.raf=0;}
   if(G.rrender){cancelAnimationFrame(G.rrender);G.rrender=0;}
   gsCoastStop();G.scrollEl=null;
@@ -7231,6 +7374,17 @@ function syncAmpChips(){
     else chips[i].classList.remove('gs-active');
   }
 }
+/* Stabilitas PRO: kalibrasi terpandu dan konfirmasi target untuk klik kepalan. */
+var autoCalBtn=$('gsAutoCalibrate');
+if(autoCalBtn)autoCalBtn.addEventListener('click',function(){
+  if(!G.on||G.paused){toast('Aktifkan Remot Jari dan lanjutkan kamera sebelum kalibrasi.','info');return;}
+  G.calibrating=true;G.calStarted=performance.now();G.calLastUi=0;G.calSamples=[];G.hist=[];G.stable='NONE';G.pinchSince=0;G.pinchFired=false;hideCursor();hoverBox(null);dwellReset();
+  var el=$('gsCalStatus');if(el)el.textContent='Mulai! Selama 4 detik, gerakkan telunjuk ke empat sudut area kerja dengan gerakan lebar.';
+  setStatus('🎯 Kalibrasi…');
+});
+var safeClickBtn=$('gsSafeClickToggle');
+if(safeClickBtn){safeClickBtn.textContent=G.safeClick?'🛡️ Klik aman: ON':'🛡️ Klik aman: OFF';safeClickBtn.setAttribute('aria-pressed',G.safeClick?'true':'false');safeClickBtn.addEventListener('click',function(){G.safeClick=!G.safeClick;safeClickBtn.textContent=G.safeClick?'🛡️ Klik aman: ON':'🛡️ Klik aman: OFF';safeClickBtn.setAttribute('aria-pressed',G.safeClick?'true':'false');try{localStorage.setItem('gsGestureSafeClick',G.safeClick?'1':'0');}catch(e){}toast(G.safeClick?'Klik aman aktif: target harus stabil 220 ms.':'Klik aman dimatikan: klik kepalan lebih cepat.','info');});}
+try{G.safeClick=localStorage.getItem('gsGestureSafeClick')!=='0';if(safeClickBtn){safeClickBtn.textContent=G.safeClick?'🛡️ Klik aman: ON':'🛡️ Klik aman: OFF';safeClickBtn.setAttribute('aria-pressed',G.safeClick?'true':'false');}}catch(e){}
 var dt=$('gsDwellToggle');
 if(dt)dt.addEventListener('click',function(){
   G.dwell=!G.dwell;
@@ -7247,7 +7401,7 @@ document.addEventListener('click',function(ev){
       if(v>=1.2&&v<=2.2){
         G.amp=v;
         try{localStorage.setItem('gsGestureAmp',String(v));}catch(e){}
-        syncAmpChips();
+        syncAmpChips();gsSyncTuneControls();
         toast('Sensitivitas kursor: '+t.innerText+' — gerakkan telunjuk untuk mencoba.','info');
       }
     }
@@ -7264,7 +7418,7 @@ var btn=$('gsGestureBtn');
 if(btn){btn.addEventListener('click',window.gsGestureToggle);btn.addEventListener('pointerdown',gsBtnWake);}
 gsBtnMiniArm(); /* halaman baru dibuka: tombol mengecil sendiri setelah 5 detik */
 var stp=$('gsGestureStop');
-if(stp)stp.addEventListener('click',function(){stop();toast('Remot Jari dimatikan.','info');});
+if(stp)stp.addEventListener('click',function(){stop();toast('DARURAT: kontrol gerakan dan kamera dimatikan.','info');});
 /* ---------- v13.7: sembunyikan kamera — deteksi AI tetap jalan ---------- */
 function gsSetCamHidden(hide){
   var p=$('gsGesturePanel');if(!p)return;
@@ -7284,6 +7438,65 @@ if(hideBtn)hideBtn.addEventListener('click',function(e){
   gsSetCamHidden(true);
   toast('Kamera disembunyikan — Remot Jari tetap aktif. Ketuk gelembung 🖐️ untuk menampilkan lagi.','info');
 });
+function syncPauseButton(){
+  var b=$('gsGesturePause');if(!b)return;
+  b.textContent=G.paused?'▶️':'⏸️';b.title=G.paused?'Lanjutkan kamera':'Jeda kamera';
+  b.setAttribute('aria-label',G.paused?'Lanjutkan kamera':'Jeda kamera');
+  var lab=$('gsCamLabel');if(lab)lab.textContent=G.paused?'Kamera dijeda':G.on?'Kamera aktif':G.starting?'Menyambungkan…':'Kamera mati';
+  var p=$('gsGesturePanel');if(p)p.classList.toggle('gs-paused',!!G.paused);
+}
+function gsToggleCameraPause(){
+  if(!G.on||!G.stream){toast('Nyalakan Remot Jari terlebih dahulu.','info');return;}
+  G.paused=!G.paused;
+  try{G.stream.getVideoTracks().forEach(function(t){t.enabled=!G.paused;});}catch(e){}
+  var v=$('gsGestureVideo');
+  if(G.paused){try{if(v)v.pause();}catch(e){}hideCursor();hoverBox(null);dwellReset();setStatus('⏸️ Kamera dijeda');}
+  else{try{if(v)v.play();}catch(e){}G.lastVideoTime=-1;setStatus('▶️ Kamera aktif');}
+  syncPauseButton();camDot(G.paused?'': 'on');
+  if(G.paused){var lab=$('gsCamLabel');if(lab)lab.textContent='Kamera dijeda';}
+}
+var pauseBtn=$('gsGesturePause');if(pauseBtn)pauseBtn.addEventListener('click',function(e){e.stopPropagation();gsToggleCameraPause();});
+function gsSyncTuneControls(){
+  var ar=$('gsAmpRange'),ao=$('gsAmpOut'),sr=$('gsSmoothRange'),so=$('gsSmoothOut');
+  if(ar)ar.value=G.amp;if(ao)ao.textContent=Number(G.amp).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})+'×';
+  if(sr)sr.value=G.smoothMs;if(so)so.textContent=G.smoothMs+' ms';
+}
+var ampRange=$('gsAmpRange');
+if(ampRange)ampRange.addEventListener('input',function(){
+  var v=Math.max(1.2,Math.min(2.2,+ampRange.value||1.6));G.amp=v;
+  var o=$('gsAmpOut');if(o)o.textContent=v.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})+'×';
+  syncAmpChips();
+});
+if(ampRange)ampRange.addEventListener('change',function(){try{localStorage.setItem('gsGestureAmp',String(G.amp));}catch(e){}toast('Sensitivitas disimpan: '+G.amp.toFixed(2)+'×.','info');});
+var smoothRange=$('gsSmoothRange');
+if(smoothRange)smoothRange.addEventListener('input',function(){
+  G.smoothMs=Math.max(8,Math.min(45,+smoothRange.value||22));var o=$('gsSmoothOut');if(o)o.textContent=G.smoothMs+' ms';
+});
+if(smoothRange)smoothRange.addEventListener('change',function(){try{localStorage.setItem('gsGestureSmoothMs',String(G.smoothMs));}catch(e){}G.tvx=0;G.tvy=0;toast('Kehalusan kursor disimpan: '+G.smoothMs+' ms.','info');});
+var tuneReset=$('gsTuneReset');
+if(tuneReset)tuneReset.addEventListener('click',function(){
+  G.amp=1.6;G.smoothMs=22;G.area={xmin:0,xmax:1,ymin:0,ymax:1};DWELL_MS=1100;G.safeClick=true;
+  var scb=$('gsSafeClickToggle');if(scb){scb.textContent='🛡️ Klik aman: ON';scb.setAttribute('aria-pressed','true');}
+  try{localStorage.setItem('gsGestureAmp','1.6');localStorage.setItem('gsGestureSmoothMs','22');localStorage.setItem('gsGestureArea',JSON.stringify(G.area));localStorage.setItem('gsGestureDwellMs','1100');localStorage.setItem('gsGestureSafeClick','1');}catch(e){}
+  gsSyncTuneControls();gsSyncAreaControls();syncAmpChips();G.tvx=0;G.tvy=0;toast('Pengaturan Remot Jari dikembalikan ke awal.','success');
+});
+var diagRefresh=$('gsDiagRefresh');if(diagRefresh)diagRefresh.addEventListener('click',function(){gsUpdateDiagnostics(true);toast('Status diagnostik diperbarui.','info');});
+function gsSyncAreaControls(){
+  var a=G.area||{xmin:0,xmax:1,ymin:0,ymax:1};
+  [['gsAreaXMin',a.xmin*100],['gsAreaXMax',a.xmax*100],['gsAreaYMin',a.ymin*100],['gsAreaYMax',a.ymax*100]].forEach(function(pair){var el=$(pair[0]),out=$(pair[0]+'Out');if(el)el.value=Math.round(pair[1]);if(out)out.textContent=Math.round(pair[1])+'%';});
+  var dr=$('gsDwellRange'),do_= $('gsDwellOut');if(dr)dr.value=DWELL_MS;if(do_)do_.textContent=(DWELL_MS/1000).toLocaleString('id-ID',{minimumFractionDigits:1,maximumFractionDigits:1})+' dtk';
+}
+function gsReadAreaControls(){
+  var xmin=+(($('gsAreaXMin')||{}).value||0)/100,xmax=+(($('gsAreaXMax')||{}).value||100)/100,ymin=+(($('gsAreaYMin')||{}).value||0)/100,ymax=+(($('gsAreaYMax')||{}).value||100)/100;
+  if(xmax-xmin<.1||ymax-ymin<.1){toast('Area harus memiliki lebar dan tinggi minimal 10%.','error');gsSyncAreaControls();return false;}
+  G.area={xmin:xmin,xmax:xmax,ymin:ymin,ymax:ymax};try{localStorage.setItem('gsGestureArea',JSON.stringify(G.area));}catch(e){};
+  G.sx=.5;G.sy=.5;G.tx=.5;G.ty=.5;G.tvx=0;G.tvy=0;gsSyncAreaControls();toast('Area layar berhasil diterapkan.','success');return true;
+}
+['gsAreaXMin','gsAreaXMax','gsAreaYMin','gsAreaYMax'].forEach(function(id){var el=$(id);if(el)el.addEventListener('input',function(){var out=$(id+'Out');if(out)out.textContent=el.value+'%';});});
+var areaApply=$('gsAreaApply');if(areaApply)areaApply.addEventListener('click',gsReadAreaControls);
+var areaReset=$('gsAreaReset');if(areaReset)areaReset.addEventListener('click',function(){G.area={xmin:0,xmax:1,ymin:0,ymax:1};try{localStorage.setItem('gsGestureArea',JSON.stringify(G.area));}catch(e){}gsSyncAreaControls();G.sx=.5;G.sy=.5;G.tx=.5;G.ty=.5;toast('Area layar penuh dipulihkan.','success');});
+var dwellRange=$('gsDwellRange');if(dwellRange){dwellRange.addEventListener('input',function(){DWELL_MS=+dwellRange.value;var out=$('gsDwellOut');if(out)out.textContent=(DWELL_MS/1000).toLocaleString('id-ID',{minimumFractionDigits:1,maximumFractionDigits:1})+' dtk';});dwellRange.addEventListener('change',function(){try{localStorage.setItem('gsGestureDwellMs',String(DWELL_MS));}catch(e){}dwellReset();toast('Waktu klik otomatis: '+(DWELL_MS/1000).toLocaleString('id-ID')+' detik.','info');});}
+gsSyncAreaControls();gsSyncTuneControls();syncPauseButton();gsUpdateDiagnostics(true);
 var pnl=$('gsGesturePanel');
 if(pnl)pnl.addEventListener('click',function(e){
   if(!G.camHidden)return;
@@ -7291,7 +7504,8 @@ if(pnl)pnl.addEventListener('click',function(e){
   gsSetCamHidden(false);
 },true); /* capture: gelembung selalu memulihkan tampilan */
 syncDwellChip();syncAmpChips();
-window.__gsGestureV=13.8;
+window.__gsGestureV=15.0;
+/* v15.0: kalibrasi otomatis, klik kepalan anti-salah klik, dan jepit untuk klik kanan. */
 /* hook QA/debug: menguji mesin scroll, nuansa gerak, DAN kursor tanpa kamera */
 window.__gsGestureQA={
   scrollBy:gsScrollBy,findScroller:gsFindScroller,scrollable:gsScrollable,
@@ -7317,7 +7531,8 @@ window.__gsGestureQA={
   setMoving:function(v){G.pMoving=v?true:false;},
   /* v13.7: uji sembunyikan kamera tanpa kamera */
   camHide:function(v){gsSetCamHidden(v?true:false);return G.camHidden;},
-  camState:function(){var p=$('gsGesturePanel'),v=$('gsGestureVideo');return{hidden:!!G.camHidden,panelCls:p?p.className:'',engine:!!G.on,videoPos:v?getComputedStyle(v).position:'',videoX:v?Math.round(v.getBoundingClientRect().left):0,miniShown:(function(){var m=$('gsCamMini');return m?getComputedStyle(m).display!=='none':false;})()};}
+  diagnostics:function(){return{on:!!G.on,paused:!!G.paused,handSeen:!!G.lastSeen&&performance.now()-G.lastSeen<500,fps:P.fps,latencyMs:Math.round(P.avgLatency||0),intervalMs:P.interval,engine:W.worker?(W.ready?'worker':'worker-loading'):(G.landmarker?'sync':'not-ready'),sensitivity:G.amp,smoothingMs:G.smoothMs,area:G.area};},
+  camState:function(){var p=$('gsGesturePanel'),v=$('gsGestureVideo');return{hidden:!!G.camHidden,paused:!!G.paused,area:G.area,dwellMs:DWELL_MS,panelCls:p?p.className:'',engine:!!G.on,videoPos:v?getComputedStyle(v).position:'',videoX:v?Math.round(v.getBoundingClientRect().left):0,miniShown:(function(){var m=$('gsCamMini');return m?getComputedStyle(m).display!=='none':false;})()};}
 };
 })();
 </script>
@@ -7359,38 +7574,41 @@ function updateAnalisisNilai(){
   var rows=perStudent.map(function(x,i){var p=x.avg===null?'-':(x.avg>=90?'A':x.avg>=80?'B':x.avg>=70?'C':'D');var stClass=d.classes.find(function(c){return String(c.id)===String(x.student.class_id);});var subjName=selectedSubject?selectedSubject.name:'Semua mapel';var status=x.avg===null?'Belum ada nilai':(kkm===null?'KKM belum diatur':(x.avg>=kkm?'Tuntas':'Belum tuntas'));var statusClass=x.avg===null?'text-slate-500':(kkm===null?'text-blue-600':(x.avg>=kkm?'text-green-600':'text-red-600'));return '<tr class="border-t dark:border-slate-700"><td class="px-3 py-2">'+(i+1)+'</td><td class="px-3 py-2 font-semibold">'+esc(x.student.name||'-')+'</td><td class="px-3 py-2">'+esc(stClass?.name||'-')+'</td><td class="px-3 py-2 text-center font-bold">'+(x.avg===null?'-':x.avg.toFixed(1))+'</td><td class="px-3 py-2 text-center">'+p+'</td><td class="px-3 py-2 '+statusClass+' font-semibold">'+status+'</td></tr>';}).join('');
   var card=function(title,value,subtext){return '<div class="bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-xl p-4"><p class="text-xs text-slate-500">'+title+'</p><p class="text-2xl font-extrabold mt-1">'+value+'</p><p class="text-xs text-slate-500 mt-1">'+subtext+'</p></div>';};
   var recommendation=grades.length===0?'Belum ada nilai yang cocok dengan filter. Input nilai melalui menu Penilaian untuk memulai analisis.':(noScores?'Ada '+noScores+' siswa tanpa nilai pada filter ini. Periksa kelengkapan input nilai. ':'')+(low.length?'Periksa kembali '+low.length+' siswa dengan rata-rata rendah dan pertimbangkan remedial atau pendampingan.':'')+(kkm===null?' KKM belum tersedia untuk filter ini, sehingga ketuntasan KKM tidak dapat dihitung.':'');
-  document.getElementById('gsAnalysisResults').innerHTML='<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">'+card('Siswa dalam filter',students.length,'termasuk yang belum memiliki nilai')+card('Data nilai',grades.length,'nilai valid yang dianalisis')+card('Rata-rata nilai',grades.length?avg.toFixed(1):'-','rata-rata seluruh entri nilai')+card('Ketuntasan KKM',kkm===null?'-':(grades.length?Math.round(pass/grades.length*100)+'%':'-'),kkm===null?'KKM tidak tersedia':pass+' dari '+grades.length+' entri nilai')+'</div><div class="grid grid-cols-1 lg:grid-cols-2 gap-4"><div class="bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-xl p-4"><h3 class="font-bold mb-3">Distribusi predikat</h3>'+['A','B','C','D'].map(function(k){var pct=values.length?Math.round(distribution[k]/values.length*100):0;return '<div class="mb-3"><div class="flex justify-between text-sm mb-1"><span>Predikat '+k+'</span><span>'+distribution[k]+' ('+pct+'%)</span></div><div class="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden"><div class="h-2 bg-indigo-500 rounded-full" style="width:'+pct+'%"></div></div></div>';}).join('')+'</div><div class="bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-xl p-4"><h3 class="font-bold mb-2">Saran tindak lanjut</h3><p class="text-sm text-slate-600 dark:text-slate-300">'+esc(recommendation||'Nilai telah tersedia. Tinjau hasil per siswa dan gunakan sebagai bahan refleksi pembelajaran.')+'</p><p class="text-xs text-slate-400 mt-3">Batas predikat mengikuti aturan yang sudah dipakai aplikasi: A ≥ 90, B ≥ 80, C ≥ 70, D &lt; 70. Status KKM hanya dihitung jika KKM mapel tersedia.</p></div></div><div class="bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-xl overflow-hidden"><div class="p-4 flex flex-wrap justify-between items-center gap-2"><h3 class="font-bold">Rekap per siswa</h3><button onclick="exportAnalisisNilaiCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-bold">⬇️ Ekspor CSV</button></div><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-100 dark:bg-slate-700"><tr><th class="px-3 py-3">No</th><th class="px-3 py-3">Nama siswa</th><th class="px-3 py-3">Kelas</th><th class="px-3 py-3 text-center">Rata-rata</th><th class="px-3 py-3 text-center">Predikat</th><th class="px-3 py-3">Status</th></tr></thead><tbody>'+ (rows||'<tr><td colspan="6" class="p-6 text-center text-slate-500">Belum ada data siswa.</td></tr>')+'</tbody></table></div></div>';
+  document.getElementById('gsAnalysisResults').innerHTML='<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">'+card('Siswa dalam filter',students.length,'termasuk yang belum memiliki nilai')+card('Data nilai',grades.length,'nilai valid yang dianalisis')+card('Rata-rata nilai',grades.length?avg.toFixed(1):'-','rata-rata seluruh entri nilai')+card('Ketuntasan KKM',kkm===null?'-':(grades.length?Math.round(pass/grades.length*100)+'%':'-'),kkm===null?'KKM tidak tersedia':pass+' dari '+grades.length+' entri nilai')+'</div><div class="grid grid-cols-1 lg:grid-cols-2 gap-4"><div class="bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-xl p-4"><h3 class="font-bold mb-3">Distribusi predikat</h3>'+['A','B','C','D'].map(function(k){var pct=values.length?Math.round(distribution[k]/values.length*100):0;return '<div class="mb-3"><div class="flex justify-between text-sm mb-1"><span>Predikat '+k+'</span><span>'+distribution[k]+' ('+pct+'%)</span></div><div class="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden"><div class="h-2 bg-indigo-500 rounded-full" style="width:'+pct+'%"></div></div></div>';}).join('')+'</div><div class="bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-xl p-4"><h3 class="font-bold mb-2">Saran tindak lanjut</h3><p class="text-sm text-slate-600 dark:text-slate-300">'+esc(recommendation||'Nilai telah tersedia. Tinjau hasil per siswa dan gunakan sebagai bahan refleksi pembelajaran.')+'</p><p class="text-xs text-slate-400 mt-3">Batas predikat mengikuti aturan yang sudah dipakai aplikasi: A ≥ 90, B ≥ 80, C ≥ 70, D &lt; 70. Status KKM hanya dihitung jika KKM mapel tersedia.</p></div></div><div class="bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-xl overflow-hidden"><div class="p-4 flex flex-wrap justify-between items-center gap-2"><h3 class="font-bold">Rekap per siswa</h3><button onclick="exportAnalisisNilaiCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-bold">⬇️ Ekspor Excel</button></div><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead class="bg-slate-100 dark:bg-slate-700"><tr><th class="px-3 py-3">No</th><th class="px-3 py-3">Nama siswa</th><th class="px-3 py-3">Kelas</th><th class="px-3 py-3 text-center">Rata-rata</th><th class="px-3 py-3 text-center">Predikat</th><th class="px-3 py-3">Status</th></tr></thead><tbody>'+ (rows||'<tr><td colspan="6" class="p-6 text-center text-slate-500">Belum ada data siswa.</td></tr>')+'</tbody></table></div></div>';
 }
 async function exportAnalisisNilaiCSV(){
   var d=window.__gsAnalysisData;if(!d)return;
+  if(!window.XLSX||!XLSX.utils||typeof XLSX.writeFile!=='function'){showToast('Fitur Excel belum termuat. Muat ulang aplikasi lalu coba lagi.','error');return;}
   var cls=document.getElementById('gsAnalysisClass')?.value||'all',sub=document.getElementById('gsAnalysisSubject')?.value||'all';
   var profResult=await DB.get('school_profile');
   var prof=(profResult&&profResult[0])||{};
-  var escCSV=function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';};
   var selectedClass=d.classes.find(function(c){return String(c.id)===String(cls);});
   var selectedSubject=d.subjects.find(function(x){return String(x.id)===String(sub);});
   var classLabel=cls==='all'?'Semua kelas':(selectedClass?.name||'Semua kelas');
   var subjectLabel=sub==='all'?'Semua mata pelajaran':(selectedSubject?.name||'Semua mata pelajaran');
-  /* Susunan kepala laporan mengikuti pola Export Excel pada menu Data Siswa. */
-  var rows=[[''],['',prof.kop_line1||'NAMA SEKOLAH','','','','','','','']];
-  if(prof.kop_line1b)rows.push(['',prof.kop_line1b,'','','','','','','']);
-  rows.push(['',prof.kop_line2||prof.name||'','','','','','','','']);
-  rows.push(['',prof.kop_line3||'','','','','','','','']);
-  rows.push(['']);
-  rows.push(['ANALISIS NILAI SISWA']);
-  rows.push(['Kelas: '+classLabel+' | Mata Pelajaran: '+subjectLabel]);
-  rows.push(['']);
-  rows.push(['No','NIS','Nama Siswa','Kelas','Mata Pelajaran','Jumlah Nilai','Rata-rata','Predikat','Status KKM']);
+  /* Format laporan mengikuti pola Export Excel pada menu Data Siswa: kop, judul, filter, lalu tabel berkolom. */
+  var aoa=[[''],['',prof.kop_line1||'NAMA SEKOLAH','','','','','','','']];
+  if(prof.kop_line1b)aoa.push(['',prof.kop_line1b,'','','','','','','']);
+  aoa.push(['',prof.kop_line2||prof.name||'','','','','','','','']);
+  aoa.push(['',prof.kop_line3||'','','','','','','','']);
+  aoa.push(['']);
+  aoa.push(['ANALISIS NILAI SISWA']);
+  aoa.push(['Kelas: '+classLabel+' | Mata Pelajaran: '+subjectLabel]);
+  aoa.push(['']);
+  aoa.push(['No','NIS','Nama Siswa','Kelas','Mata Pelajaran','Jumlah Nilai','Rata-rata','Predikat','Status KKM']);
   d.students.filter(function(st){return cls==='all'||String(st.class_id)===String(cls);}).forEach(function(st,i){
     var gs=d.grades.filter(function(g){return String(g.student_id)===String(st.id)&&(sub==='all'||String(g.subject_id)===String(sub))&&g.score!==null&&g.score!==''&&Number.isFinite(Number(g.score));});
     var a=gs.length?gs.reduce(function(t,g){return t+Number(g.score);},0)/gs.length:null;
-    var su=selectedSubject;
-    var kkm=su&&su.kkm!==null&&su.kkm!==''&&Number.isFinite(Number(su.kkm))?Number(su.kkm):null;
+    var kkm=selectedSubject&&selectedSubject.kkm!==null&&selectedSubject.kkm!==''&&Number.isFinite(Number(selectedSubject.kkm))?Number(selectedSubject.kkm):null;
     var studentClass=d.classes.find(function(c){return String(c.id)===String(st.class_id);});
-    rows.push([i+1,st.nis||'',st.name||'',studentClass?.name||'-',subjectLabel,gs.length,a===null?'':a.toFixed(1),a===null?'':(a>=90?'A':a>=80?'B':a>=70?'C':'D'),a===null?'Belum ada nilai':(kkm===null?'KKM belum diatur':(a>=kkm?'Tuntas':'Belum tuntas'))]);
+    aoa.push([i+1,st.nis||'',st.name||'',studentClass?.name||'-',subjectLabel,gs.length,a===null?'':Number(a.toFixed(1)),a===null?'':(a>=90?'A':a>=80?'B':a>=70?'C':'D'),a===null?'Belum ada nilai':(kkm===null?'KKM belum diatur':(a>=kkm?'Tuntas':'Belum tuntas'))]);
   });
-  var csv='\ufeff'+rows.map(function(r){return r.map(escCSV).join(';');}).join('\r\n');
-  var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download='Analisis_Nilai_Guru_Smart.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},1000);
+  var ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!merges']=[{s:{r:1,c:1},e:{r:1,c:8}},{s:{r:2,c:1},e:{r:2,c:8}},{s:{r:3,c:1},e:{r:3,c:8}},{s:{r:4,c:1},e:{r:4,c:8}},{s:{r:6,c:0},e:{r:6,c:8}},{s:{r:7,c:0},e:{r:7,c:8}}];
+  ws['!cols']=[{wch:6},{wch:16},{wch:28},{wch:18},{wch:25},{wch:14},{wch:14},{wch:12},{wch:22}];
+  var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Analisis Nilai');
+  XLSX.writeFile(wb,'Analisis_Nilai_Guru_Smart.xlsx');
+  showToast('File Excel analisis nilai berhasil diunduh!','success');
 }
 </script>
 </body>
