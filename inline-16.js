@@ -1,0 +1,1 @@
+if(window.__gsFastBoot)window.__gsFastBoot();
