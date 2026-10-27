@@ -1,0 +1,844 @@
+
+/* ===== CSS dari blok style 1 ===== */
+
+html{-webkit-text-size-adjust:100%}
+body{font-family:'Inter',sans-serif;overscroll-behavior:none;touch-action:manipulation;margin:0}
+html,body{height:100%}
+input,textarea,select{font-size:16px!important}
+@media(min-width:640px){input,textarea,select{font-size:14px!important}}
+.sidebar-nav::-webkit-scrollbar{width:5px}.sidebar-nav::-webkit-scrollbar-thumb{background:#94a3b8;border-radius:5px}
+.modal-scroll::-webkit-scrollbar{width:5px}.modal-scroll::-webkit-scrollbar-thumb{background:#94a3b8;border-radius:5px}
+.fade-in{animation:fadeIn .3s ease-in-out}@keyframes fadeIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+.slide-up{animation:slideUp .5s cubic-bezier(0.16,1,0.3,1)}@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.hero-pattern{background-image:radial-gradient(circle at 20% 50%,rgba(255,255,255,0.08) 0%,transparent 50%),radial-gradient(circle at 80% 80%,rgba(255,255,255,0.06) 0%,transparent 50%)}
+.stat-card{position:relative;overflow:hidden;transition:all 0.3s cubic-bezier(0.16,1,0.3,1)}
+.stat-card:hover{transform:translateY(-4px);box-shadow:0 20px 25px -5px rgba(0,0,0,0.1),0 10px 10px -5px rgba(0,0,0,0.04)}
+.stat-card::after{content:'';position:absolute;top:0;right:0;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.1);transform:translate(30px,-30px);transition:transform 0.4s}
+.stat-card:hover::after{transform:translate(20px,-20px) scale(1.5)}
+.floating{animation:floating 6s ease-in-out infinite}@keyframes floating{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+#printArea{display:none}@media print{body *{visibility:hidden}#printArea,#printArea *{visibility:visible}#printArea{display:block;position:absolute;left:0;top:0;width:100%;padding:0}@page{margin:1.5cm}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}table,th,td{border:1px solid #000!important;border-collapse:collapse!important}.card-info-table,.card-info-table td,.card-info-table tr{border:none!important;background:transparent!important}.rapor-info-table,.rapor-info-table td,.rapor-info-table tr{border:none!important;background:transparent!important}}
+.dark .bg-white:not([class*="dark:bg"]){background-color:rgba(30,41,59,0.6)!important;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.1)!important}
+.dark .bg-slate-50:not([class*="dark:bg"]){background-color:rgba(51,65,85,0.5)!important}
+.dark .border:not([class*="dark:border"]):not([class*="border-t-4"]){border-color:rgba(255,255,255,0.1)!important}
+.dark .divide-y:not([class*="dark:divide"])>*{border-color:rgba(255,255,255,0.1)!important}
+.dark h3:not([class*="dark:text"]):not([class*="text-white"]){color:rgb(255 255 255)!important}
+.dark h4:not([class*="dark:text"]):not([class*="text-white"]){color:rgb(255 255 255)!important}
+.dark label:not([class*="dark:text"]):not([class*="text-white"]){color:rgb(203 213 225)!important}
+.dark p:not([class*="dark:text"]):not([class*="text-white"]):not([class*="text-blue"]):not([class*="text-green"]):not([class*="text-red"]):not([class*="text-yellow"]):not([class*="text-slate-400"]):not([class*="text-slate-500"]):not([class*="text-gray-500"]){color:rgb(203 213 225)!important}
+.dark td:not([class*="dark:text"]):not([class*="text-white"]):not([class*="text-blue"]):not([class*="text-green"]):not([class*="text-red"]):not([class*="font-bold"]){color:rgb(203 213 225)!important}
+.dark td.font-bold:not([class*="dark:text"]):not([class*="text-blue"]){color:rgb(255 255 255)!important}
+.dark select:not([class*="dark:bg"]):not([class*="dark:text"]){background-color:rgba(51,65,85,0.8)!important;color:rgb(255 255 255)!important}
+.dark #aiMessages .text-gray-800{color:rgb(241 245 249)!important}
+.dark #aiMessages .text-gray-500{color:rgb(148 163 184)!important}
+.dark .text-slate-800{color:rgb(255 255 255)!important}.dark .text-slate-700{color:rgb(203 213 225)!important}.dark .text-slate-600{color:rgb(203 213 225)!important}
+.bg-white:not([class*="dark:bg"]){background-color:rgba(255,255,255,0.8)!important;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(226,232,240,0.8)!important;box-shadow:0 4px 20px rgba(0,0,0,0.03)!important}
+.bg-slate-50:not([class*="dark:bg"]){background-color:rgba(248,250,252,0.8)!important}
+.camera-viewfinder{position:relative;background:#0f172a;border-radius:16px;overflow:hidden;box-shadow:0 10px 25px -5px rgba(0,0,0,0.3),0 8px 10px -6px rgba(0,0,0,0.2);border:2px solid rgba(255,255,255,0.1)}
+.viewfinder-corner{position:absolute;width:32px;height:32px;border-color:#10b981;z-index:10;pointer-events:none;transition:all 0.3s ease}
+.viewfinder-corner.tl{top:16px;left:16px;border-top:4px solid;border-left:4px solid;border-top-left-radius:8px}
+.viewfinder-corner.tr{top:16px;right:16px;border-top:4px solid;border-right:4px solid;border-top-right-radius:8px}
+.viewfinder-corner.bl{bottom:16px;left:16px;border-bottom:4px solid;border-left:4px solid;border-bottom-left-radius:8px}
+.viewfinder-corner.br{bottom:16px;right:16px;border-bottom:4px solid;border-right:4px solid;border-bottom-right-radius:8px}
+.ocr-result-panel{background:rgba(248,250,252,0.8);border:1px solid rgba(226,232,240,0.8);backdrop-filter:blur(8px);border-radius:12px;max-height:200px;overflow-y:auto}
+.dark .ocr-result-panel{background:rgba(30,41,59,0.6);border-color:rgba(255,255,255,0.1)}
+.ocr-loading-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#10b981;margin:0 2px;animation:ocrBounce 1.4s infinite ease-in-out both}
+.ocr-loading-dot:nth-child(1){animation-delay:-0.32s}
+.ocr-loading-dot:nth-child(2){animation-delay:-0.16s}
+@keyframes ocrBounce{0%,80%,100%{transform:scale(0)}40%{transform:scale(1.0)}}
+.student-card-modal{width:8.5cm;height:5.4cm;border-radius:12px;overflow:hidden;display:flex;font-family:'Arial',sans-serif;box-shadow:0 4px 15px rgba(0,0,0,.2);position:relative;background:white;border:2px solid #1e3a8a;margin:0 auto;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+.card-left{width:35%;background:linear-gradient(135deg,#1e3a8a 0%,#4c1d95 100%);padding:10px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;color:white;text-align:center;position:relative;overflow:hidden;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+.card-right{width:65%;padding:10px;display:flex;flex-direction:column;justify-content:space-between;position:relative}
+.card-right::before{content:'';position:absolute;top:0;left:0;width:5px;height:100%;background:linear-gradient(180deg,#3b82f6 0%,#8b5cf6 100%);-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+.card-logo{width:40px;height:40px;object-fit:contain;z-index:2}
+.card-photo{width:70px;height:80px;object-fit:cover;border:3px solid white;border-radius:6px;background:#cbd5e1;z-index:2}
+.card-qr{width:60px;height:60px;background:white;padding:3px;border-radius:4px;z-index:2}
+.student-card-print{width:8.5cm;height:5.4cm;border-radius:10px;overflow:hidden;display:flex;font-family:'Arial',sans-serif;position:relative;background:white;border:1.5px solid #1e3a8a;page-break-inside:avoid;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+.att-table{font-size:10px;border-collapse:collapse;width:100%}
+.att-table th,.att-table td{border:1px solid #cbd5e1;padding:2px;text-align:center}
+.att-table th{background:#f1f5f9}
+.card-info-table,.card-info-table td,.card-info-table tr{border:none!important;background:transparent!important}
+.rapor-info-table,.rapor-info-table td,.rapor-info-table tr{border:none!important;background:transparent!important}
+.ai-output h1,.ai-output h2,.ai-output h3{font-weight:bold;margin-top:12px;margin-bottom:6px}
+.ai-output p{margin-bottom:8px}.ai-output ul,.ai-output ol{margin-left:20px;margin-bottom:8px;list-style-position:inside}
+.ai-output table{width:100%;border-collapse:collapse;margin-bottom:8px}
+.ai-output th,.ai-output td{border:1px solid #000;padding:6px;text-align:left}
+.ai-output img{max-width:100%;border-radius:8px;margin:10px 0;box-shadow:0 2px 5px rgba(0,0,0,.1)}
+.ai-output .soal-item{font-family:'Times New Roman',Georgia,serif;margin-bottom:18px;padding:14px 16px;background:#f8fafc;border-left:3px solid #3b82f6;border-radius:0 8px 8px 0;page-break-inside:avoid}
+.ai-output .soal-header{display:flex;align-items:flex-start;gap:6px;margin-bottom:8px}
+.ai-output .soal-number{font-weight:bold;color:#1e3a8a;min-width:28px}
+.ai-output .soal-text{font-size:14px;line-height:1.7;color:#1e293b;font-weight:500;flex:1}
+.ai-output .soal-opts{display:flex;gap:24px;margin:8px 0 8px 34px}
+.ai-output .opt-col{flex:1;display:flex;flex-direction:column;gap:4px}
+.ai-output .soal-opt{display:flex;align-items:flex-start;font-size:13px;color:#334155}
+.ai-output .soal-opt .opt-label{font-weight:bold;margin-right:6px;min-width:20px;color:#475569}
+.ai-output .soal-opt.correct{background:#fef08a;font-weight:600;box-shadow:0 0 0 1px #eab308;padding:2px 4px;border-radius:3px}
+.ai-output .soal-answer{margin:6px 0 0 34px;padding:4px 10px;font-size:12px;background:#dbeafe;border-radius:4px;display:inline-block;color:#1e3a8a;font-family:'Inter',sans-serif}
+.ai-output .soal-pembahasan{margin:8px 0 0 34px;padding:8px 12px;font-size:12.5px;line-height:1.8;background:#f0fdf4;border:1px dashed #10b981;border-radius:6px;color:#065f46;display:block;text-align:left}
+.ai-output .soal-pembahasan b{color:#047857}
+.ai-output .soal-pembahasan sup,.ai-output .soal-text sup{font-size:10px}
+.ai-output .kunci-jawaban-section{margin-top:20px;padding:12px 16px;background:#1e3a8a;border-radius:8px;color:white;font-family:'Inter',sans-serif}
+.ai-output .kunci-jawaban-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:4px;margin-top:8px}
+.ai-output .kunci-jawaban-grid span{background:rgba(255,255,255,.15);padding:4px 8px;border-radius:4px;text-align:center}
+@media print{.ai-output .soal-item{background:white!important;border-left:none!important;padding:0 0 15px 0!important;margin-bottom:15px}.ai-output .soal-opt.correct{background:transparent!important;font-weight:normal!important;box-shadow:none!important}.hide-on-print{display:none!important}}
+#whiteboardCanvas{touch-action:none;cursor:crosshair;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.08)}
+.wb-tool-btn{transition:all .2s}
+.wb-tool-btn.active{background:#2563eb!important;color:white!important}
+.dark #whiteboardCanvas{background:#f8fafc}
+
+/* Kartu pelajar: tata letak rapi, hijau-kuning, sisi depan dan belakang */
+.student-card-pair{display:flex;flex-direction:column;align-items:center;gap:5mm;margin:0 auto 8mm;page-break-inside:avoid;break-inside:avoid}
+.student-card-face{width:85.6mm;height:54mm;box-sizing:border-box;position:relative;overflow:hidden;border:.35mm solid var(--card-color,#00a65a);border-radius:1.2mm;background:#fff;color:#123c39;font-family:Arial,sans-serif;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;box-shadow:0 1mm 2mm rgba(0,0,0,.12)}
+.student-card-front-head{height:24%;box-sizing:border-box;display:flex;align-items:center;gap:2mm;padding:1.5mm 2.5mm 2mm;background:linear-gradient(105deg,var(--card-color,#00a65a),#8bc943 52%,var(--card-color,#00a65a));border-bottom:2mm solid #ffcc27;color:#fff;overflow:hidden;position:relative}
+.student-card-front-head:after{content:"";position:absolute;left:0;bottom:0;width:34%;height:2.1mm;background:#ffcc27;border-radius:0 5mm 0 0}
+.student-card-front-head img{width:11mm;height:11mm;flex:0 0 11mm;object-fit:contain;background:#fff;border-radius:50%;padding:.5mm;position:relative;z-index:1}
+.student-card-front-head>div{flex:1;min-width:0;text-align:center;font-size:5.4pt;font-weight:bold;line-height:1.15;overflow-wrap:anywhere;position:relative;z-index:1}
+.student-card-front-head>div>div:first-child{font-size:8.5pt!important;line-height:1.05;margin-bottom:.7mm;text-transform:uppercase;text-shadow:.25mm .25mm #285b42}
+.student-card-front-body{height:76%;display:flex;align-items:flex-start;gap:2.2mm;padding:2mm 2.5mm 17mm;position:relative;box-sizing:border-box;background:linear-gradient(135deg,#fff 0%,#fff 76%,#f4faef 100%)}
+.student-card-front-photo{width:22mm;height:29mm;flex:0 0 22mm;object-fit:cover;border:.6mm solid #9aca3c;background:#edf4dc;box-sizing:border-box;position:relative;z-index:1}
+.student-card-front-info{font-size:6.2pt;line-height:1.2;flex:1;min-width:0;max-width:calc(100% - 24mm);max-height:24mm;overflow:hidden;overflow-wrap:anywhere;padding-top:.3mm}
+.student-card-data-row{display:grid;grid-template-columns:10mm minmax(0,1fr);column-gap:.5mm;align-items:start;margin-top:.8mm}
+.student-card-data-row span{white-space:nowrap;font-weight:700;color:#303030}
+.student-card-data-row b{font-weight:500;min-width:0;overflow-wrap:anywhere;word-break:break-word;color:#303030}
+.student-card-data-row:first-child b{font-weight:800;text-transform:uppercase;font-size:7pt}
+.student-card-front-info strong{font-size:7pt;display:block;margin-bottom:1mm;line-height:1.15}
+.student-card-bottom{position:absolute;left:2mm;right:2mm;bottom:1.2mm;display:flex;align-items:flex-end;justify-content:space-between;gap:2mm;z-index:2}
+.student-card-front-qr{position:absolute;left:30mm;bottom:1mm;flex:0 0 14mm;width:14mm;height:14mm;box-sizing:border-box;background:#fff;padding:.3mm;align-self:flex-end;overflow:hidden;border:.3mm solid #e3eadf;margin-left:0}
+.student-card-front-qr img,.student-card-front-qr canvas{width:12.2mm!important;height:12.2mm!important;display:block}
+.student-card-sign{position:absolute;right:1mm;bottom:0;width:28mm;max-width:36%;text-align:center;font-size:5pt;line-height:1.1;overflow:visible;color:#333;z-index:4}
+.student-card-sign img{height:6mm;max-width:24mm;object-fit:contain;display:block;margin:auto}
+.student-card-sign-assets{height:10mm;display:flex;align-items:center;justify-content:center;gap:1mm;overflow:visible;position:relative}
+.student-card-sign-assets img{height:7mm;max-width:14mm;object-fit:contain;flex:0 1 auto}
+.student-card-sign-assets img.student-card-stamp{position:absolute;left:50%;top:50%;transform:translate(-50%,-42%);width:15mm;height:15mm;max-width:15mm;object-fit:contain;flex:0 0 15mm;z-index:3;opacity:.72;pointer-events:none}
+.student-card-stamp{opacity:.95}
+.student-card-back{background:linear-gradient(135deg,#fff 0%,#fff 72%,#f3faef 100%)}
+.student-card-back-title{margin:4.2mm 10mm 2mm;background:linear-gradient(100deg,var(--card-color,#00a65a),#23b45d);color:white;text-align:center;padding:1.8mm 2mm;font-size:12pt;font-weight:900;letter-spacing:.45mm;clip-path:polygon(12% 0,88% 0,100% 100%,0 100%)}
+.student-card-back-content{display:flex;align-items:flex-start;gap:4mm;padding:1mm 3.5mm;font-size:6.2pt;line-height:1.35}
+.student-card-back-logo{width:18mm;height:18mm;flex:0 0 18mm;object-fit:contain;border:1mm solid var(--card-color,#00a65a);border-radius:2mm;padding:1mm;background:white}
+.student-card-back-rules{flex:1;min-width:0}
+.student-card-back-rules>b{display:block;font-size:12pt;letter-spacing:.4mm;margin-bottom:1mm;color:#064e48}
+.student-card-back-rules>div{margin-bottom:1.2mm}
+.student-card-back-footer{position:absolute;bottom:0;left:0;right:0;background:var(--card-color,#00a65a);color:#fff;border-top:1.5mm solid #ffcc27;text-align:center;padding:1.8mm 2mm 1.4mm;font-size:6pt;font-weight:bold;line-height:1.15}
+.student-card-back-footer:before{content:"";position:absolute;left:20%;right:20%;top:-1.5mm;height:1.5mm;background:#ffcc27;border-radius:5mm 5mm 0 0}
+#modalContent.modal-scroll{max-height:calc(100dvh - 8rem);overflow-y:auto;overscroll-behavior:contain}
+@media print{@page{size:A4 portrait;margin:8mm}html,body{height:auto!important;overflow:visible!important;background:#fff!important}.student-card-pair{gap:4mm;margin:0 auto 6mm;page-break-inside:avoid;break-inside:avoid}.student-card-face{box-shadow:none;border-radius:0;flex-shrink:0}.student-card-back{page-break-after:always;break-after:page}#printArea{display:block!important;position:absolute!important;left:0!important;top:0!important;width:100%!important;margin:0!important;padding:0!important}#printArea .student-card-pair{align-items:center}#printArea img{max-width:100%}}
+
+/* PERBAIKAN KARTU PELAJAR: identitas lebih besar, QR lebih besar, stempel sedikit ke kiri */
+.student-card-front-info{font-size:7.2pt!important;line-height:1.25!important;max-height:27mm!important;max-width:calc(100% - 24mm)!important}
+.student-card-data-row{grid-template-columns:10mm minmax(0,1fr)!important;margin-top:1mm!important}
+.student-card-data-row:first-child b{font-size:8pt!important}
+.student-card-front-qr{left:29mm!important;width:17mm!important;height:17mm!important;padding:.4mm!important}
+.student-card-front-qr img,.student-card-front-qr canvas{width:15.8mm!important;height:15.8mm!important}
+.student-card-sign-assets img.student-card-stamp{left:calc(50% - 2.5mm)!important}
+@media print{
+ .student-card-front-info{font-size:7.2pt!important}
+ .student-card-front-qr{left:29mm!important;width:17mm!important;height:17mm!important}
+ .student-card-front-qr img,.student-card-front-qr canvas{width:15.8mm!important;height:15.8mm!important}
+ .student-card-sign-assets img.student-card-stamp{left:calc(50% - 2.5mm)!important}
+}
+
+/* Revisi kartu pelajar: stempel, judul identitas, logo, warna dan sisi belakang */
+.student-card-sign-assets img.student-card-stamp{left:calc(50% - 6mm)!important}
+.student-card-identity-title{display:block;font-size:7.4pt!important;line-height:1.05!important;font-weight:900!important;letter-spacing:.15mm;color:var(--card-color,#087f45)!important;text-align:left;margin:0 0 1.2mm!important;padding:0 0 .6mm;border-bottom:.35mm solid var(--card-color,#087f45);white-space:nowrap}
+.student-card-front-head img{background:transparent!important;border-radius:0!important;padding:0!important;mix-blend-mode:multiply;filter:contrast(1.04)}
+.student-card-back-title{margin:2.5mm 10mm 1.3mm!important;padding:1.2mm 2mm!important;font-size:10pt!important;line-height:1.05!important;letter-spacing:.25mm!important}
+.student-card-back-content{gap:2.5mm!important;padding:1mm 3mm 10mm!important;font-size:5.2pt!important;line-height:1.15!important;box-sizing:border-box}
+.student-card-back-logo{width:15mm!important;height:15mm!important;flex:0 0 15mm!important;padding:.5mm!important;border-width:.5mm!important}
+.student-card-back-rules{overflow-wrap:anywhere;word-break:normal;min-width:0;max-height:29mm;overflow:hidden}
+.student-card-back-rules>b{font-size:8pt!important;letter-spacing:.2mm!important;margin-bottom:.8mm!important}
+.student-card-back-rules>div{margin-bottom:.7mm!important}
+.student-card-back-footer{padding:1mm 2mm .8mm!important;font-size:5pt!important;line-height:1.1!important;border-top-width:1mm!important;overflow-wrap:anywhere}
+.student-card-face{--card-color:#00a65a}
+.student-card-front-head{background:linear-gradient(105deg,var(--card-color,#00a65a),#8bc943 52%,var(--card-color,#00a65a))!important}
+.student-card-back-title{background:linear-gradient(100deg,var(--card-color,#00a65a),#23b45d)!important}
+.student-card-back-footer{background:var(--card-color,#00a65a)!important}
+@media print{
+ .student-card-sign-assets img.student-card-stamp{left:calc(50% - 6mm)!important}
+ .student-card-back-content{padding-bottom:10mm!important;font-size:5.2pt!important;line-height:1.15!important}
+ .student-card-back-rules{max-height:29mm!important;overflow:hidden!important}
+}
+
+
+
+
+/* ===== CSS dari blok style 2 ===== */
+
+
+/* DESAIN ACUAN KARTU PELAJAR: depan-belakang sejajar, tema hijau-kuning */
+.student-card-pair{display:flex!important;flex-direction:row!important;align-items:flex-start!important;justify-content:center!important;gap:2.5mm!important;flex-wrap:nowrap!important;width:max-content;max-width:100%;}
+.student-card-face{width:100mm!important;height:63mm!important;flex:0 0 100mm!important;border:0!important;border-radius:0!important;overflow:hidden!important;box-shadow:none!important;position:relative!important;background-color:#fff!important;color:#073f3a!important}
+.student-card-front-head{height:25%!important;min-height:15.7mm!important;padding:1.5mm 2.5mm 2.2mm!important;gap:2.5mm!important;background:linear-gradient(105deg,var(--card-color,#00a65a),#8bc943 50%,var(--card-color,#00a65a))!important;border-bottom:2.2mm solid #ffcc27!important}
+.student-card-front-head img{width:13mm!important;height:13mm!important;flex:0 0 13mm!important;object-fit:contain!important;background:transparent!important;border:0!important;border-radius:0!important;padding:0!important;mix-blend-mode:multiply!important}
+.student-card-front-head>div>div:first-child{font-size:10pt!important;line-height:1.05!important;text-shadow:.25mm .25mm #285b42!important}
+.student-card-front-head>div{font-size:6.5pt!important;line-height:1.12!important}
+.student-card-front-body{height:75%!important;padding:2.3mm 3mm 14mm!important;gap:2.8mm!important;background:linear-gradient(135deg,#fff 0%,#fff 76%,#f4faef 100%)!important}
+.student-card-front-photo{width:21mm!important;height:28mm!important;flex:0 0 21mm!important;border:0!important;background:#a6ce43!important}
+.student-card-front-info{font-size:7.2pt!important;line-height:1.22!important;max-height:34mm!important;max-width:none!important;overflow:hidden!important;padding-top:.4mm!important}
+.student-card-identity-title{font-size:8pt!important;letter-spacing:.25mm!important;color:#333!important;border:0!important;margin:0 0 1.5mm!important;padding:0!important}
+.student-card-data-row{grid-template-columns:19mm minmax(0,1fr)!important;column-gap:.5mm!important;margin-top:1.2mm!important;line-height:1.15!important}
+.student-card-data-row:first-child b{font-size:9pt!important}
+.student-card-data-row span{font-size:7.4pt!important}
+.student-card-bottom{left:3mm!important;right:2.5mm!important;bottom:1mm!important}
+.student-card-front-qr{left:25mm!important;bottom:0!important;width:14mm!important;height:14mm!important}
+.student-card-front-qr img,.student-card-front-qr canvas{width:12.8mm!important;height:12.8mm!important}
+.student-card-sign{right:2mm!important;bottom:0!important;width:28mm!important;font-size:5.3pt!important}
+.student-card-sign-assets{height:8mm!important}
+.student-card-sign-assets img.student-card-stamp{left:calc(50% - 6mm)!important;width:14mm!important;height:14mm!important}
+.student-card-back{background:linear-gradient(135deg,#fff 0%,#fff 72%,#f3faef 100%)!important}
+.student-card-back-title{margin:4.5mm 13mm 2mm!important;padding:1.6mm 2mm!important;font-size:15pt!important;letter-spacing:.3mm!important;line-height:1.05!important;background:linear-gradient(100deg,var(--card-color,#00a65a),#23b45d)!important}
+.student-card-back-content{gap:4mm!important;padding:1mm 3.5mm 13mm!important;font-size:7.2pt!important;line-height:1.28!important}
+.student-card-back-logo{width:23mm!important;height:23mm!important;flex:0 0 23mm!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;object-fit:contain!important;mix-blend-mode:multiply}
+.student-card-back-rules{max-height:36mm!important;overflow:hidden!important;overflow-wrap:normal!important;word-break:normal!important}
+.student-card-back-rules>b{font-size:15pt!important;letter-spacing:.2mm!important;margin-bottom:1mm!important}
+.student-card-back-rules>div{font-size:7.6pt!important;line-height:1.22!important;margin-bottom:1.2mm!important}
+.student-card-back-footer{padding:2.2mm 2mm 1.6mm!important;font-size:8pt!important;line-height:1.12!important;border-top:1.5mm solid #ffcc27!important;background:var(--card-color,#00a65a)!important;color:#fff!important}
+.student-card-back-footer span{font-size:7pt!important}
+@media(max-width:700px){.student-card-pair{flex-wrap:wrap!important;width:100%!important}.student-card-face{max-width:100%!important;flex-shrink:1!important}}
+@media print{@page{size:A4 landscape;margin:8mm}.student-card-pair{flex-direction:row!important;flex-wrap:nowrap!important;gap:3mm!important;justify-content:center!important;width:100%!important}.student-card-face{width:100mm!important;height:63mm!important;flex:0 0 100mm!important;page-break-after:auto!important;break-after:auto!important}.student-card-back{page-break-after:auto!important;break-after:auto!important}}
+
+
+/* PENYEMPURNAAN KARTU: garis tepi, outline putih logo, QR besar dengan logo sekolah */
+.student-card-face{
+  border:.65mm solid #176b3a!important;
+  border-radius:1.8mm!important;
+  box-shadow:0 0 0 .35mm #fff inset!important;
+}
+.student-card-front-head img{
+  filter:drop-shadow(0 0 .45mm #fff)
+         drop-shadow(.45mm 0 0 #fff)
+         drop-shadow(-.45mm 0 0 #fff)
+         drop-shadow(0 .45mm 0 #fff)
+         drop-shadow(0 -.45mm 0 #fff)!important;
+  outline:.35mm solid rgba(255,255,255,.95)!important;
+  outline-offset:.45mm!important;
+}
+.student-card-front-qr{
+  left:24mm!important;bottom:.6mm!important;
+  width:18mm!important;height:18mm!important;
+  padding:.5mm!important;border:.45mm solid #fff!important;
+  border-radius:1.2mm!important;background:#fff!important;
+  overflow:hidden!important;position:absolute!important;
+  box-shadow:0 0 0 .35mm #176b3a!important;
+}
+.student-card-front-qr img.qr-school-logo{
+  position:absolute!important;left:50%!important;top:50%!important;
+  transform:translate(-50%,-50%)!important;
+  width:4.2mm!important;height:4.2mm!important;
+  object-fit:contain!important;display:block!important;
+  background:#fff!important;border:.45mm solid #fff!important;
+  border-radius:50%!important;padding:.2mm!important;
+  z-index:5!important;box-shadow:0 0 .3mm rgba(0,0,0,.25)!important;
+}
+.student-card-front-qr img:not(.qr-school-logo),
+.student-card-front-qr canvas{
+  width:16.8mm!important;height:16.8mm!important;
+  display:block!important;max-width:none!important;margin:0!important;
+}
+@media print{
+ .student-card-face{border:.65mm solid #176b3a!important;border-radius:1.8mm!important}
+ .student-card-front-qr{left:24mm!important;width:18mm!important;height:18mm!important}
+ .student-card-front-qr img:not(.qr-school-logo),.student-card-front-qr canvas{width:16.8mm!important;height:16.8mm!important}
+ .student-card-front-qr img.qr-school-logo{width:4.2mm!important;height:4.2mm!important}
+}
+
+
+
+
+/* ===== CSS dari blok style 3 ===== */
+
+/* Logo sekolah di bagian depan kartu: kotak putih agar jelas pada latar hijau */
+.student-card-front-head img{
+  box-sizing:border-box !important;
+  background:#ffffff !important;
+  padding:1.1mm !important;
+  border:0.45mm solid #ffffff !important;
+  border-radius:1mm !important;
+  object-fit:contain !important;
+  mix-blend-mode:normal !important;
+  filter:none !important;
+  outline:0.25mm solid rgba(255,255,255,.95) !important;
+  outline-offset:.35mm !important;
+  box-shadow:0 0 .5mm rgba(0,0,0,.18) !important;
+  flex:0 0 13mm !important;
+}
+@media print{
+  .student-card-front-head img{
+    background:#ffffff !important;
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+  }
+}
+
+
+
+/* ===== CSS dari blok style 4 ===== */
+
+/* Turunkan logo depan sedikit agar tidak terlalu menempel di atas. */
+.student-card-front-head img{
+  transform:translateY(1mm) !important;
+}
+/* Logo di tengah QR dibuat rapi, kotak putih, dan tetap memberi ruang pola QR. */
+.student-card-front-qr{
+  display:flex !important;align-items:center !important;justify-content:center !important;
+  box-sizing:border-box !important;background:#fff !important;
+}
+.student-card-front-qr img.qr-school-logo{
+  position:absolute !important;left:50% !important;top:50% !important;
+  transform:translate(-50%,-50%) !important;
+  width:3.8mm !important;height:3.8mm !important;
+  box-sizing:border-box !important;object-fit:contain !important;
+  display:block !important;background:#fff !important;
+  border:0.45mm solid #fff !important;border-radius:.55mm !important;
+  padding:.25mm !important;outline:.2mm solid rgba(22,107,58,.35) !important;
+  z-index:5 !important;box-shadow:0 0 .35mm rgba(0,0,0,.28) !important;
+}
+@media print{
+  .student-card-front-head img{transform:translateY(1mm) !important;}
+  .student-card-front-qr img.qr-school-logo{width:3.8mm !important;height:3.8mm !important;}
+}
+
+
+
+/* ===== CSS dari blok style 5 ===== */
+
+/* Garis kuning pada bagian depan kartu dibuat lebih tipis */
+.student-card-front-head{
+  border-bottom:.8mm solid #ffcc27!important;
+}
+.student-card-front-head:after{
+  height:.8mm!important;
+}
+/* Tambahkan garis tipis di bawah judul KARTU PELAJAR pada sisi depan */
+.student-card-identity-title{
+  display:block!important;
+  border:0!important;
+  border-bottom:.35mm solid #16804a!important;
+  padding:0 0 .7mm!important;
+  margin:0 0 1.5mm!important;
+  width:100%!important;
+  box-sizing:border-box!important;
+}
+@media print{
+  .student-card-front-head{border-bottom:.8mm solid #ffcc27!important;}
+  .student-card-front-head:after{height:.8mm!important;}
+  .student-card-identity-title{border-bottom:.35mm solid #16804a!important;}
+}
+
+
+
+/* ===== CSS dari blok style 6 ===== */
+
+/* Revisi proporsi kartu: foto sedikit lebih besar, kotak putih logo sedikit lebih kecil */
+.student-card-front-head #cardLogo,
+.student-card-front-head img#cardLogo,
+.student-card-front-head #cardLogo:not(img) {
+  width:8.5mm !important;
+  height:8.5mm !important;
+  flex:0 0 8.5mm !important;
+  background:#fff !important;
+  padding:.35mm !important;
+  border:.25mm solid rgba(255,255,255,.95) !important;
+  border-radius:1.2mm !important;
+  box-sizing:border-box !important;
+}
+.student-card-front-photo {
+  width:22mm !important;
+  height:29mm !important;
+  flex:0 0 22mm !important;
+  object-fit:cover !important;
+  border:.55mm solid var(--card-line-color,#16804a) !important;
+  outline:.25mm solid #fff !important;
+  outline-offset:-.9mm !important;
+  box-shadow:0 .35mm 1mm rgba(15,45,30,.22) !important;
+  border-radius:1mm !important;
+  box-sizing:border-box !important;
+}
+@media print {
+  .student-card-front-head img#cardLogo {width:8.5mm!important;height:8.5mm!important;flex-basis:8.5mm!important;padding:.35mm!important;}
+  .student-card-front-photo {width:22mm!important;height:29mm!important;flex-basis:22mm!important;border:.55mm solid var(--card-line-color,#16804a)!important;outline:.25mm solid #fff!important;box-shadow:0 .35mm 1mm rgba(15,45,30,.22)!important;border-radius:1mm!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+}
+
+
+
+/* ===== CSS dari blok style 7 ===== */
+
+/* Foto disejajarkan dengan baris Nama; judul KARTU PELAJAR dipusatkan */
+.student-card-front-photo {
+  margin-top:4mm !important;
+  align-self:flex-start !important;
+}
+.student-card-front-info {
+  padding-top:0 !important;
+}
+.student-card-identity-title {
+  text-align:center !important;
+  width:100% !important;
+  display:block !important;
+  box-sizing:border-box !important;
+}
+@media print {
+  .student-card-front-photo { margin-top:4mm !important; align-self:flex-start !important; }
+  .student-card-identity-title { text-align:center !important; width:100% !important; }
+}
+
+
+
+/* ===== CSS dari blok style 8 ===== */
+
+/* Besarkan area tanda tangan dan stempel kepala sekolah */
+.student-card-sign-assets{height:11mm!important;min-height:11mm!important;gap:1.2mm!important}
+.student-card-sign-assets img:not(.student-card-stamp){height:9mm!important;max-width:17mm!important}
+.student-card-sign-assets img.student-card-stamp{width:17mm!important;height:17mm!important;max-width:17mm!important;left:calc(50% - 6mm)!important;top:50%!important}
+/* QR sedikit digeser ke kanan pada kartu depan */
+.student-card-front-qr{left:28mm!important}
+/* Warna belakang mengikuti warna kartu depan yang dipilih pengguna */
+.student-card-face{--card-color:inherit!important}
+#printableCard .student-card-face,#printArea .student-card-face{--card-color:inherit!important}
+@media print{
+ .student-card-sign-assets{height:11mm!important;min-height:11mm!important}
+ .student-card-sign-assets img:not(.student-card-stamp){height:9mm!important;max-width:17mm!important}
+ .student-card-sign-assets img.student-card-stamp{width:17mm!important;height:17mm!important;max-width:17mm!important;left:calc(50% - 6mm)!important}
+ .student-card-front-qr{left:28mm!important}
+ .student-card-face{--card-color:inherit!important}
+}
+
+
+
+/* ===== CSS dari blok style 9 ===== */
+
+/* Pratinjau langsung: warna utama dan warna kedua gradasi dapat disesuaikan */
+#printableCard.student-card-face, #printArea .student-card-face { --card-color:#00a65a; --card-gradient-end:#8bc943; }
+#student-card-modal, #printableCard { transition:background-color .15s ease; }
+.student-card-front-head { background:linear-gradient(105deg,var(--card-color,#00a65a) 0%,var(--card-gradient-end,#8bc943) 52%,var(--card-color,#00a65a) 100%)!important; }
+.student-card-back-title { background:linear-gradient(100deg,var(--card-color,#00a65a) 0%,var(--card-gradient-end,#8bc943) 100%)!important; }
+.student-card-back-footer { background:linear-gradient(100deg,var(--card-color,#00a65a) 0%,var(--card-gradient-end,#8bc943) 100%)!important; }
+#printableCard .student-card-front-head, #printArea .student-card-front-head { background:linear-gradient(105deg,var(--card-color,#00a65a) 0%,var(--card-gradient-end,#8bc943) 52%,var(--card-color,#00a65a) 100%)!important; }
+#printableCard .student-card-back-title, #printArea .student-card-back-title { background:linear-gradient(100deg,var(--card-color,#00a65a) 0%,var(--card-gradient-end,#8bc943) 100%)!important; }
+#printableCard .student-card-back-footer, #printArea .student-card-back-footer { background:linear-gradient(100deg,var(--card-color,#00a65a) 0%,var(--card-gradient-end,#8bc943) 100%)!important; }
+@media print { .student-card-front-head,.student-card-back-title,.student-card-back-footer { -webkit-print-color-adjust:exact!important; print-color-adjust:exact!important; } }
+
+
+
+/* ===== CSS dari blok style 10 ===== */
+
+#cardColorPresets button{flex:0 0 17px!important;min-width:17px!important;height:17px!important;padding:0!important}#cardColorInput,#cardGradientInput{appearance:auto!important;min-width:30px!important;max-width:30px!important;height:27px!important}#printableCard.student-card-face{transition:background .12s ease,border-color .12s ease}
+
+
+
+/* ===== CSS dari blok style 11 ===== */
+
+.student-card-face{border-color:var(--card-line-color,#16804a)!important}
+.student-card-front-head:after{background:var(--card-line-color,#ffcc27)!important}
+.student-card-identity-title{color:var(--card-title-color,#16804a)!important;border-color:var(--card-line-color,#16804a)!important}
+.student-card-face{--card-line-color:#16804a;--card-title-color:#16804a}
+@media print{.student-card-face{border-color:var(--card-line-color,#16804a)!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}.student-card-front-head:after{background:var(--card-line-color,#ffcc27)!important}.student-card-identity-title{color:var(--card-title-color,#16804a)!important;border-color:var(--card-line-color,#16804a)!important}}
+
+
+
+/* ===== CSS dari blok style 12 ===== */
+
+/* Penyempurnaan profesional: logo depan sedikit lebih besar dan komposisi lebih elegan */
+.student-card-front-head img#cardLogo,
+.student-card-front-head img {
+  width:10.5mm !important;
+  height:10.5mm !important;
+  flex:0 0 10.5mm !important;
+  padding:.55mm !important;
+  background:#fff !important;
+  border: .35mm solid rgba(255,255,255,.98) !important;
+  border-radius:1.35mm !important;
+  object-fit:contain !important;
+  box-shadow:0 .35mm 1mm rgba(0,0,0,.16) !important;
+  transform:translateY(.6mm) !important;
+  mix-blend-mode:normal !important;
+}
+.student-card-front-head {
+  gap:3mm !important;
+  padding:1.5mm 3mm 2mm !important;
+  background:linear-gradient(112deg,var(--card-color,#087f45) 0%,var(--card-gradient-end,#79b943) 52%,var(--card-color,#087f45) 100%) !important;
+}
+.student-card-front-head>div>div:first-child {
+  font-size:10.2pt !important;
+  letter-spacing:.12mm !important;
+  text-shadow:0 .25mm .4mm rgba(0,0,0,.18) !important;
+}
+.student-card-front-body {
+  background:linear-gradient(135deg,#fff 0%,#fff 68%,#f2f8f1 100%) !important;
+}
+.student-card-face {
+  border: .65mm solid var(--card-line-color,#176b3a) !important;
+  border-radius:2mm !important;
+  box-shadow:0 .7mm 1.8mm rgba(16,45,31,.12),0 0 0 .3mm #fff inset !important;
+}
+.student-card-front-photo {
+  border-radius:1.4mm !important;
+  box-shadow:0 .45mm 1.2mm rgba(15,45,30,.18) !important;
+}
+.student-card-identity-title {
+  font-weight:800 !important;
+  letter-spacing:.3mm !important;
+}
+@media print {
+  .student-card-front-head img#cardLogo,
+  .student-card-front-head img {
+    width:10.5mm !important;height:10.5mm !important;flex-basis:10.5mm !important;
+    background:#fff !important;transform:translateY(.6mm) !important;
+    -webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;
+  }
+  .student-card-face {
+    border-radius:2mm !important;
+    box-shadow:0 0 0 .3mm #fff inset !important;
+    -webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;
+  }
+}
+
+
+
+/* ===== CSS dari blok style 13 ===== */
+
+/* Pastikan seluruh warna pilihan pengguna dibawa ke pratinjau cetak */
+#printArea, #printArea * {
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  color-adjust: exact !important;
+}
+#printArea .student-card-face {
+  border-color: var(--card-line-color, #16804a) !important;
+  background-color: #ffffff !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+#printArea .student-card-front-head {
+  background-color: var(--card-color, #00a65a) !important;
+  background-image: linear-gradient(105deg, var(--card-color, #00a65a) 0%, var(--card-gradient-end, #8bc943) 52%, var(--card-color, #00a65a) 100%) !important;
+  color: #ffffff !important;
+}
+#printArea .student-card-front-head::after {
+  background: var(--card-line-color, #16804a) !important;
+}
+#printArea .student-card-front-body {
+  background-color: #ffffff !important;
+  background-image: linear-gradient(135deg, #ffffff 0%, #ffffff 76%, color-mix(in srgb, var(--card-color, #00a65a) 7%, white) 100%) !important;
+}
+#printArea .student-card-identity-title {
+  color: var(--card-title-color, #16804a) !important;
+  border-color: var(--card-line-color, #16804a) !important;
+}
+#printArea .student-card-back-title,
+#printArea .student-card-back-footer {
+  background-color: var(--card-color, #00a65a) !important;
+  background-image: linear-gradient(100deg, var(--card-color, #00a65a) 0%, var(--card-gradient-end, #8bc943) 100%) !important;
+  color: #ffffff !important;
+}
+#printArea .student-card-back-logo { border-color: var(--card-color, #00a65a) !important; }
+@media print {
+  html, body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  #printArea, #printArea * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  #printArea .student-card-front-head,
+  #printArea .student-card-back-title,
+  #printArea .student-card-back-footer,
+  #printArea .student-card-front-head::after { visibility: visible !important; }
+}
+
+
+
+/* ===== CSS dari blok style 14 ===== */
+
+/* Nama sekolah pada bagian kepala kartu pelajar diperbesar; elemen lain tetap. */
+.student-card-front-head>div>div:first-child{
+  font-size:13pt!important;
+  line-height:1.08!important;
+  font-weight:900!important;
+  letter-spacing:.15mm!important;
+  overflow-wrap:anywhere!important;
+}
+@media print{
+  .student-card-front-head>div>div:first-child{
+    font-size:13pt!important;
+    line-height:1.08!important;
+  }
+}
+
+
+
+/* ===== CSS dari blok style 15 ===== */
+
+/* Perbaikan khusus QR kartu siswa: pola lebih besar, area logo tengah minimal. */
+.student-card-front-qr{
+  width:21mm!important;height:21mm!important;
+  min-width:21mm!important;min-height:21mm!important;
+  padding:.35mm!important;background:#fff!important;
+  overflow:hidden!important;isolation:isolate!important;
+}
+.student-card-front-qr img:not(.qr-school-logo),
+.student-card-front-qr canvas{
+  width:20mm!important;height:20mm!important;
+  max-width:none!important;max-height:none!important;
+  display:block!important;margin:0!important;
+  image-rendering:pixelated!important;
+}
+.student-card-front-qr img.qr-school-logo{
+  width:3mm!important;height:3mm!important;
+  max-width:3mm!important;max-height:3mm!important;
+  object-fit:contain!important;box-sizing:border-box!important;
+  padding:.25mm!important;border:.15mm solid #fff!important;
+  border-radius:50%!important;background-color:#fff!important;
+  box-shadow:0 0 0 .15mm #fff!important;z-index:5!important;
+}
+@media print{
+  .student-card-front-qr{width:21mm!important;height:21mm!important;left:27mm!important;bottom:.4mm!important}
+  .student-card-front-qr img:not(.qr-school-logo),
+  .student-card-front-qr canvas{width:20mm!important;height:20mm!important}
+  .student-card-front-qr img.qr-school-logo{width:3mm!important;height:3mm!important;object-fit:contain!important;background-color:#fff!important;border-radius:50%!important;padding:.25mm!important;box-sizing:border-box!important}
+}
+
+
+
+/* ===== CSS dari blok style 16 ===== */
+
+/* Hanya hilangkan latar putih/bingkai pada logo yang berada di tengah QR. */
+.student-card-front-qr img.qr-school-logo{
+  background:transparent !important;
+  background-color:transparent !important;
+  border:0 !important;
+  padding:0 !important;
+  outline:0 !important;
+  box-shadow:none !important;
+  border-radius:0 !important;
+  mix-blend-mode:normal !important;
+}
+@media print{
+  .student-card-front-qr img.qr-school-logo{
+    background:transparent !important;
+    background-color:transparent !important;
+    border:0 !important;
+    padding:0 !important;
+    outline:0 !important;
+    box-shadow:none !important;
+    border-radius:0 !important;
+  }
+}
+
+
+
+/* ===== CSS dari blok style 17 ===== */
+
+/* Logo QR diperbesar; latar tetap transparan dan bagian lain tidak diubah. */
+.student-card-front-qr img.qr-school-logo{
+  width:5mm !important;
+  height:5mm !important;
+  max-width:5mm !important;
+  max-height:5mm !important;
+  object-fit:contain !important;
+  background:transparent !important;
+  background-color:transparent !important;
+  border:0 !important;
+  padding:0 !important;
+  outline:0 !important;
+  box-shadow:none !important;
+  border-radius:0 !important;
+}
+@media print{
+  .student-card-front-qr img.qr-school-logo{
+    width:5mm !important;
+    height:5mm !important;
+    max-width:5mm !important;
+    max-height:5mm !important;
+  }
+}
+
+
+
+/* ===== CSS dari blok style 18 ===== */
+
+/* Bingkai scan persegi seperti scanner HP; hanya tampilan scanner QR yang diubah. */
+#qr-reader{position:relative!important;overflow:hidden!important;isolation:isolate;width:100%!important;max-width:430px!important;aspect-ratio:1/1!important;height:min(78vw,430px)!important;max-height:52dvh!important;min-height:260px!important;margin-inline:auto;background:#171717!important;border-radius:14px!important}
+#qr-reader video{width:100%!important;height:100%!important;object-fit:cover!important}
+#qr-reader canvas{max-width:100%!important}
+#qr-reader::after{content:"";position:absolute;left:5%;top:8%;width:90%;height:2px;z-index:40;pointer-events:none;border-radius:999px;background:linear-gradient(90deg,transparent 0%,rgba(59,130,246,.45) 8%,#60a5fa 28%,#dbeafe 50%,#60a5fa 72%,rgba(59,130,246,.45) 92%,transparent 100%);box-shadow:0 0 5px 2px rgba(59,130,246,.65),0 0 14px 4px rgba(59,130,246,.25);animation:qrScanLineSweep 2.2s ease-in-out infinite alternate}
+#qr-reader::before{content:"";position:absolute;left:5%;top:5%;width:90%;height:90%;z-index:35;pointer-events:none;border:1px solid rgba(255,255,255,.18);box-shadow:inset 0 0 22px rgba(0,0,0,.10)}
+#qr-reader>div[style*="position: relative"]{z-index:1}
+@keyframes qrScanLineSweep{0%{top:7%;opacity:.8}100%{top:92%;opacity:1}}
+@media(max-width:480px){#qr-reader{width:min(78vw,360px)!important;height:min(78vw,360px)!important;min-height:260px!important;max-height:44dvh!important}#qr-reader video{object-fit:cover!important}}
+@media(prefers-reduced-motion:reduce){#qr-reader::after{animation-duration:4s}}
+
+
+
+/* ===== CSS dari blok style 19 ===== */
+.certificate-svg-sheet{width:100%;aspect-ratio:297/210;overflow:hidden;background:#fff;padding:0!important;min-height:0!important}.certificate-svg-sheet svg{display:block;width:100%;height:100%;max-width:100%}
+
+
+/* ===== CSS dari blok style 20 ===== */
+
+/* PERBAIKAN FINAL: UKURAN PRATINJAU ASLI & ANTI-TUMPUK */
+@media print {
+  @page {
+    size: A4 portrait; /* A4 Tegak agar muat banyak siswa ke bawah */
+    margin: 10;
+  }
+  
+  html, body {
+    width: 210mm !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    overflow: visible !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+  #printArea, #printArea * {
+    visibility: visible !important;
+  }
+
+  #printArea {
+    display: block !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 210mm !important;
+    padding: 10mm 2mm !important; /* Margin kertas atas-bawah 2mm, kiri-kanan 2mm */
+    box-sizing: border-box !important;
+    background: #fff !important;
+    z-index: 9999 !important;
+  }
+
+  /* GUNAKAN SISTEM TABEL AGAR KARTU TIDAK BERTUMPUK */
+  #printArea .student-card-pair {
+    display: table !important;
+    table-layout: fixed !important;
+    width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 8mm 0 !important; /* Jarak antara kartu depan dan belakang */
+    margin: 0 0 8mm 0 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* UKURAN KARTU ASLI 100MM x 63MM (SAMA PERSIS PRATINJAU) */
+  #printArea .student-card-face {
+    display: table-cell !important;
+    width: 100mm !important;
+    height: 63mm !important;
+    vertical-align: top !important;
+    box-shadow: none !important;
+    border-radius: 2mm !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+
+
+
+/* ===== CSS dari blok style 21 ===== */
+
+/* ===== Manajemen Kelas: tabel & tampilan elegan profesional ===== */
+.gs-elegant-table{border-collapse:separate!important;border-spacing:0!important;width:100%}
+.gs-elegant-table thead th{background:linear-gradient(180deg,#f8fafc,#eef2f7)!important;color:#334155!important;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;padding:13px 16px;border-bottom:2px solid #e2e8f0!important;white-space:nowrap}
+.dark .gs-elegant-table thead th{background:linear-gradient(180deg,rgba(51,65,85,.8),rgba(30,41,59,.95))!important;color:#cbd5e1!important;border-bottom-color:rgba(255,255,255,.12)!important}
+.gs-elegant-table tbody td{padding:12px 16px;border-bottom:1px solid #f1f5f9!important;vertical-align:middle}
+.dark .gs-elegant-table tbody td{border-bottom-color:rgba(255,255,255,.07)!important}
+.gs-elegant-table tbody tr{transition:background .18s ease}
+.gs-elegant-table tbody tr.gs-cls-row:hover{background:linear-gradient(90deg,rgba(99,102,241,.08),rgba(59,130,246,.03))!important}
+.dark .gs-elegant-table tbody tr.gs-cls-row:hover{background:linear-gradient(90deg,rgba(99,102,241,.18),rgba(59,130,246,.07))!important}
+.gs-elegant-table tfoot td{padding:12px 16px!important;background:linear-gradient(180deg,#f8fafc,#f1f5f9)!important;border-top:2px solid #e2e8f0!important;font-size:12px;color:#334155!important}
+.dark .gs-elegant-table tfoot td{background:rgba(15,23,42,.55)!important;border-top-color:rgba(255,255,255,.12)!important;color:#e2e8f0!important}
+.cls-search-input:focus{box-shadow:0 0 0 4px rgba(99,102,241,.14)}
+.cls-form-label{display:block;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#64748b;margin-bottom:6px}
+.dark .cls-form-label{color:#94a3b8!important}
+.cls-input-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#94a3b8;display:flex;pointer-events:none}
+.cls-input-icon svg{width:16px;height:16px}
+.cls-form-input{width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:12px;background:#fff;color:#1e293b;font-size:14px;outline:none;transition:border-color .15s ease,box-shadow .15s ease}
+.cls-form-input:focus{border-color:#6366f1!important;box-shadow:0 0 0 4px rgba(99,102,241,.15)}
+.dark .cls-form-input{background:rgba(51,65,85,.85)!important;border-color:rgba(255,255,255,.16)!important;color:#fff!important}
+.gs-has-icon{padding-left:36px!important}
+/* ===== Kartu pelajar: garis foto mengikuti warna garis tepi kartu ===== */
+.student-card-front-photo{border-color:var(--card-line-color,#16804a)!important}
+@media print{.student-card-front-photo{border-color:var(--card-line-color,#16804a)!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
+
+
+
+/* ===== CSS dari blok style 22 ===== */
+
+#gsGestureBtn{position:fixed;right:16px;bottom:16px;z-index:99980;width:56px;height:56px;border-radius:9999px;background:linear-gradient(135deg,#2563eb,#4f46e5);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 25px rgba(37,99,235,.45);cursor:pointer;border:3px solid #fff;transition:transform .15s ease,background .2s,right .35s ease,opacity .35s ease,width .2s ease,height .2s;user-select:none;-webkit-user-select:none}
+#gsGestureBtn:hover{transform:scale(1.08)}
+#gsGestureBtn.gs-on{background:linear-gradient(135deg,#059669,#10b981);animation:none}
+/* mode tersembunyi tetap terlihat — denyut halus agar mudah ditemukan lagi */
+#gsGestureBtn.gs-mini{width:34px;height:34px;right:0;bottom:14px;opacity:.45;border-width:1px;box-shadow:none;border-radius:8px 0 0 8px;transform:none;animation:gsMiniPulse 2.6s ease-in-out infinite}
+#gsGestureBtn.gs-mini:hover{opacity:.95;transform:none;animation:none}
+#gsGestureBtn.gs-mini svg{width:17px;height:17px}
+@keyframes gsMiniPulse{0%,100%{opacity:.45}50%{opacity:.85}}
+/* v13.1: panel SIMPEL — kecil, sedikit teks */
+#gsGesturePanel{position:fixed;right:16px;bottom:84px;z-index:99980;width:196px;background:rgba(15,23,42,.97);border:1px solid #334155;border-radius:16px;padding:10px;display:none;color:#e2e8f0;font-size:12px;box-shadow:0 15px 35px rgba(0,0,0,.4);font-family:Inter,Arial,sans-serif}
+#gsGesturePanel.gs-show{display:block}
+.gs-ghead{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.gs-ghead b{font-size:12px;color:#fff}
+#gsGestureCam{width:9px;height:9px;border-radius:9999px;background:#475569;display:inline-block;flex:0 0 auto;transition:background .2s}#gsCamLabel{font-size:10px;font-weight:800;color:#cbd5e1;margin-left:5px;white-space:nowrap}#gsGesturePanel.gs-paused #gsCamLabel{color:#fbbf24}#gsGesturePanel.gs-paused #gsGestureCam{background:#f59e0b;box-shadow:0 0 7px #f59e0b;animation:none}
+#gsGestureCam.gs-cam-on{background:#10b981;box-shadow:0 0 8px rgba(16,185,129,.9);animation:gsDotPulse 1.6s ease-in-out infinite}
+#gsGestureCam.gs-cam-err{background:#ef4444;box-shadow:0 0 8px rgba(239,68,68,.9)}
+@keyframes gsDotPulse{50%{opacity:.45}}
+.gs-gvideo-wrap{position:relative;width:100%;aspect-ratio:4/3;border-radius:10px;overflow:hidden;background:#000}
+#gsGestureVideo{width:100%;height:100%;object-fit:fill;transform:scaleX(-1);display:block}
+#gsGestureCanvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+/* badge gestur: satu baris, ikon + 1-2 kata saja */
+#gsGestureStatus{margin-top:7px;background:rgba(37,99,235,.15);border:1px solid rgba(59,130,246,.35);color:#bfdbfe;border-radius:10px;padding:8px 6px;line-height:1.3;min-height:32px;font-weight:700;font-size:12.5px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .2s,border-color .2s,color .2s}
+#gsGestureStatus.gs-ok{background:rgba(16,185,129,.16);border-color:rgba(16,185,129,.5);color:#a7f3d0}
+/* tombol ikon: panduan + matikan */
+.gs-gbtns{margin-top:8px;display:flex;gap:7px}
+.gs-gbtns button{flex:1 1 0;height:34px;border-radius:10px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:15px;line-height:1;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;padding:0}
+.gs-gbtns button svg{flex:0 0 auto;display:block}
+.gs-gbtns button:hover{background:#334155}
+#gsGestureStop:hover{background:#b91c1c;border-color:#dc2626;color:#fff}
+/* kontrol (kini di dalam panduan) */
+.gs-gctrl{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.gs-gctrl-row{display:flex;align-items:center;gap:6px}
+.gs-gctrl-lbl{flex:0 0 auto;font-size:11px;color:#94a3b8;font-weight:700;min-width:72px}
+.gs-gchip{flex:1 1 0;text-align:center;font-size:11px;font-weight:700;color:#cbd5e1;background:#1e293b;border:1px solid #334155;border-radius:8px;padding:6px 4px;cursor:pointer;user-select:none;-webkit-user-select:none;transition:all .15s}
+.gs-gchip:hover{background:#334155}
+.gs-gchip.gs-active{background:#059669;border-color:#10b981;color:#fff}
+/* kursor profesional: ring ringkas, titik presisi, animasi minim agar tidak mengganggu */
+.gs-gcursor{position:fixed;left:0;top:0;z-index:99999;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;border:2px solid #2563eb;background:rgba(255,255,255,.12);box-shadow:0 1px 5px rgba(15,23,42,.28),0 0 3px rgba(37,99,235,.32);pointer-events:none;display:none;will-change:transform;transition:border-color .1s ease,background .1s ease,box-shadow .1s ease}
+.gs-gcursor::after{content:'';position:absolute;left:50%;top:50%;width:3px;height:3px;margin:-1.5px 0 0 -1.5px;border-radius:50%;background:#1d4ed8}
+.gs-gcursor.gs-hover{border-color:#059669;background:rgba(16,185,129,.14);box-shadow:0 1px 5px rgba(15,23,42,.24),0 0 4px rgba(16,185,129,.42);width:20px;height:20px;margin:-10px 0 0 -10px}
+.gs-gcursor.gs-hover::after{background:#047857}
+.gs-gcursor.gs-gclick{border-color:#059669;background:rgba(16,185,129,.24);box-shadow:0 0 6px rgba(16,185,129,.5)}
+.gs-dwell-svg{position:absolute;left:50%;top:50%;width:30px;height:30px;margin:-15px 0 0 -15px;transform:rotate(-90deg);pointer-events:none;overflow:visible}
+.gs-dwell-svg circle{fill:none;stroke-width:5;stroke-linecap:round}
+.gs-dwell-bg{stroke:rgba(255,255,255,.2)}
+#gsDwellArc{stroke:#10b981;stroke-dasharray:113.1;stroke-dashoffset:113.1;filter:drop-shadow(0 0 4px rgba(16,185,129,.8))}
+/* sorotan hijau pada tombol yang akan diklik */
+#gsHoverBox{position:fixed;z-index:99985;border:3px solid rgba(16,185,129,.95);border-radius:12px;box-shadow:0 0 0 4px rgba(16,185,129,.22),0 8px 22px rgba(16,185,129,.28);pointer-events:none;display:none;transition:all .1s ease;background:rgba(16,185,129,.06)}
+/* panduan bergambar + pengaturan (onboarding) */
+#gsGestureGuide{position:fixed;inset:0;z-index:99990;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,.82);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);font-family:Inter,Arial,sans-serif;padding:18px}
+#gsGestureGuide.gs-show{display:flex}
+.gs-guide-card{background:#0f172a;border:1px solid #334155;border-radius:22px;padding:22px 20px;max-width:430px;width:100%;color:#e2e8f0;box-shadow:0 25px 60px rgba(0,0,0,.5);max-height:92vh;overflow-y:auto}
+.gs-guide-card h2{margin:0 0 4px;font-size:19px;font-weight:800;color:#fff}
+.gs-guide-card p.gs-sub{margin:0 0 14px;font-size:12px;color:#94a3b8;line-height:1.4}
+.gs-guide-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.gs-guide-item{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:12px 10px;text-align:center}
+.gs-guide-item .gi-emoji{font-size:30px;line-height:1;margin-bottom:7px}
+.gs-guide-item .gi-title{font-size:13px;font-weight:800;color:#fff}
+.gs-guide-item .gi-desc{font-size:11px;color:#94a3b8;margin-top:3px;line-height:1.4}
+.gs-guide-tip{margin-top:12px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.4);border-radius:12px;padding:10px 12px;font-size:12px;color:#a7f3d0;line-height:1.5}
+.gs-guide-tip b{color:#fff}.gs-cal-row{display:grid;grid-template-columns:74px 1fr 35px;align-items:center;gap:7px;margin:7px 0;font-size:11px;color:#cbd5e1}.gs-cal-row input{width:100%;accent-color:#10b981}.gs-cal-row output{text-align:right;color:#a7f3d0;font-weight:800}.gs-cal-actions{display:flex;gap:6px;margin-top:8px}.gs-cal-actions button{flex:1;border:1px solid #475569;background:#1e293b;color:#e2e8f0;border-radius:8px;padding:7px 4px;font-size:11px;font-weight:700}.gs-cal-actions button:hover{background:#334155}
+.gs-guide-set{margin-top:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:11px 11px 12px}
+.gs-guide-set .gs-set-title{font-size:11px;font-weight:800;color:#94a3b8;letter-spacing:.4px;margin:0 0 8px;text-transform:uppercase}
+#gsGuideClose{margin-top:14px;width:100%;background:linear-gradient(135deg,#059669,#10b981);color:#fff;border:none;border-radius:12px;padding:11px 0;font-weight:800;font-size:14px;cursor:pointer}
+#gsGuideClose:hover{filter:brightness(1.08)}
+@media(max-width:400px){.gs-guide-grid{grid-template-columns:1fr}}
+/* v13.7: sembunyikan kamera — panel jadi gelembung kecil 🖐️+titik hijau;
+   video TETAP dirender di luar layar (position:fixed, opacity .01) agar frame
+   kamera terus mengalir ke AI di worker — semua gestur tetap jalan normal */
+#gsGestureHide:hover{background:#1d4ed8;border-color:#2563eb;color:#fff}
+#gsCamMini{display:none;font-size:19px;line-height:1}
+#gsGesturePanel.gs-cam-hidden{width:auto;padding:8px 12px;border-radius:9999px}
+#gsGesturePanel.gs-cam-hidden .gs-ghead{margin:0;gap:7px}
+#gsGesturePanel.gs-cam-hidden .gs-ghead b{display:none}
+#gsGesturePanel.gs-cam-hidden #gsGestureStatus,
+#gsGesturePanel.gs-cam-hidden .gs-gbtns{display:none}
+#gsGesturePanel.gs-cam-hidden .gs-gvideo-wrap{position:absolute;left:0;top:0;width:1px;height:1px;opacity:.01;overflow:hidden;pointer-events:none}
+#gsGesturePanel.gs-cam-hidden #gsGestureVideo{position:fixed;left:-9999px;top:0;width:160px;height:120px;max-width:none;opacity:.01;pointer-events:none}
+#gsGesturePanel.gs-cam-hidden #gsGestureCanvas{display:none}
+#gsGesturePanel.gs-cam-hidden #gsCamMini{display:inline}
+
