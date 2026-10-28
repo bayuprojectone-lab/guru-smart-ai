@@ -1,1 +1,0 @@
-/* v2: config dipasang otomatis saat Tailwind siap (lihat Mesin KILAT #5) */window.__gsTwCfg={darkMode:'class',theme:{extend:{fontFamily:['Inter','sans-serif']}}};
