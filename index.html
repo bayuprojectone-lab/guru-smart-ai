@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1e3a8a">
+<title>GURU SMART - Sistem Manajemen Sekolah</title>
+<!-- ==================== AKSELERASI LOADING: PRECONNECT CDN (koneksi disiapkan seketika) ==================== -->
+<link rel="preconnect" href="https://cdn.tailwindcss.com">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://js.puter.com">
+<link rel="preconnect" href="https://urslwiueyqhoykjhxmqq.supabase.co" crossorigin>
+<link rel="preconnect" href="https://z-cdn-media.chatglm.cn">
+<link rel="dns-prefetch" href="https://urslwiueyqhoykjhxmqq.supabase.co">
+<!-- ==================== AKHIR PRECONNECT ==================== -->
+
+
+<script src="https://cdn.tailwindcss.com" defer fetchpriority="high"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"></noscript>
+<script src="https://js.puter.com/v2/" defer></script>
+
+<link rel="preload" as="script" href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" fetchpriority="high"/><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <link rel="stylesheet" href="style.css">
+</head><body class="bg-slate-100 dark:bg-slate-900 transition-colors duration-300">
+<div id="authScreen" class="min-h-[100dvh] flex flex-col items-center justify-center p-4 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700">
+<div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 w-full max-w-md fade-in">
+<div class="text-center mb-8">
+<img src="https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe" onerror="imgFallback(this)" alt="GURU SMART" class="w-32 h-32 rounded-xl mx-auto mb-4 object-cover bg-slate-200">
+<h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">GURU SMART</h1>
+<p class="text-slate-500 dark:text-slate-400 mt-2 text-sm">Sistem Manajemen Sekolah Berbasis Cloud</p>
+</div>
+<form id="loginForm" class="space-y-4">
+<div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label><input type="email" id="loginEmail" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" required></div>
+<div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Password</label><input type="password" id="loginPassword" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" required></div>
+<button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-2.5 rounded-lg transition-colors shadow-lg">Masuk</button>
+<p class="text-center text-sm text-slate-500 mt-4">Belum punya akun? <button type="button" onclick="toggleAuth('register')" class="text-blue-600 font-semibold hover:underline">Daftar di sini</button></p>
+</form>
+<form id="registerForm" class="space-y-4 hidden">
+<div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap</label><input type="text" id="regName" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" required></div>
+<div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label><input type="email" id="regEmail" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" required></div>
+<div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Password (Min 6 karakter)</label><input type="password" id="regPassword" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" required></div>
+<button type="submit" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-2.5 rounded-lg transition-colors shadow-lg">Daftar Sekarang</button>
+<p class="text-center text-sm text-slate-500 mt-4">Sudah punya akun? <button type="button" onclick="toggleAuth('login')" class="text-blue-600 font-semibold hover:underline">Login di sini</button></p>
+</form>
+</div>
+<p class="text-center text-xs text-white/70 mt-6">Powered by @bayuprojectone</p>
+</div>
+<div id="appScreen" class="hidden fixed inset-0 flex flex-col overflow-hidden bg-slate-100 dark:bg-slate-900">
+<div class="flex flex-1 min-h-0 overflow-hidden">
+<aside id="sidebar" class="fixed lg:relative z-40 w-64 h-full bg-gradient-to-b from-blue-800 to-indigo-900 dark:from-slate-800 dark:to-slate-900 border-r border-blue-700/50 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out text-white flex flex-col">
+<div class="p-4 flex-none flex items-center justify-between border-b border-blue-700/50 dark:border-slate-700">
+<div class="flex items-center space-x-2">
+<img src="https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe" onerror="imgFallback(this)" alt="Logo" class="w-10 h-10 rounded-lg object-cover bg-slate-200">
+<div><h1 class="font-bold text-white text-lg leading-tight">GURU SMART</h1></div>
+</div>
+<button onclick="toggleSidebar()" class="lg:hidden text-slate-300"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+</div>
+<nav id="navMenu" class="sidebar-nav flex-1 overflow-y-auto p-4 space-y-1 text-sm"></nav>
+<div class="flex-none p-4 border-t border-blue-700/50 dark:border-slate-700 bg-gradient-to-r from-blue-900/50 to-indigo-900/50 dark:from-slate-900/50 dark:to-slate-800/50">
+<div class="flex items-center justify-center gap-2 mb-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+<span class="text-[9px] uppercase tracking-widest text-blue-200 font-medium">Powered By</span>
+</div>
+<p class="text-center text-sm font-extrabold text-white tracking-wide">@Bayu_projectone</p>
+<p class="text-center text-[10px] text-blue-200/70 mt-1">© 2026 GURU SMART<br>Sistem Manajemen Sekolah</p>
+</div>
+</aside>
+<div id="sidebarOverlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-black/50 z-30"></div>
+<main class="flex-1 flex flex-col min-h-0 overflow-hidden bg-slate-100 dark:bg-slate-900">
+<header class="h-16 flex-none bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 lg:px-6 shadow-sm">
+<div class="flex items-center space-x-4">
+<button onclick="toggleSidebar()" class="lg:hidden text-slate-500"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
+<h2 id="pageTitle" class="text-xl font-semibold text-slate-800 dark:text-white">Dashboard</h2>
+</div>
+<div class="flex items-center space-x-4">
+<button onclick="toggleDarkMode()" class="text-slate-500 hover:text-blue-600">
+<svg id="iconSun" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+<svg id="iconMoon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+</button>
+<div class="flex items-center space-x-2">
+<img id="userAvatar" src="https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe" onerror="imgFallback(this)" alt="User" class="w-8 h-8 rounded-lg object-cover bg-white ring-2 ring-blue-500" style="background:#ffffff">
+<div class="hidden md:block">
+<p id="userName" class="text-sm font-medium text-slate-800 dark:text-white">Admin</p>
+<p id="userRole" class="text-xs text-slate-500 dark:text-slate-400 capitalize">Administrator</p>
+</div>
+<button onclick="confirmLogout()" title="Keluar" class="text-red-500 hover:text-red-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg></button>
+</div>
+</div>
+</header>
+<div id="content" class="flex-1 min-h-0 overflow-y-auto p-4 lg:p-6 bg-slate-100 dark:bg-slate-900"></div>
+</main>
+</div>
+</div>
+<div id="modalContainer" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+<div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
+<div class="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-700">
+<h3 id="modalTitle" class="text-lg font-semibold text-slate-800 dark:text-white">Modal Title</h3>
+<button onclick="closeModal()" class="text-slate-500 hover:text-red-500 z-50"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+</div>
+<div id="modalContent" class="modal-scroll p-6 overflow-y-auto bg-white dark:bg-slate-800"></div>
+</div>
+</div>
+<div id="toastStack" role="region" aria-live="polite" aria-label="Notifikasi aplikasi"></div>
+<div id="gsServiceStatus" role="status" aria-live="polite" class="hidden fixed top-0 left-0 right-0 z-[100] px-4 py-3 text-sm font-semibold text-white shadow-lg" style="background:#b91c1c"><div class="max-w-5xl mx-auto flex items-start gap-3"><span id="gsServiceStatusIcon" aria-hidden="true">⚠️</span><div class="flex-1"><div id="gsServiceStatusTitle">Gangguan layanan</div><div id="gsServiceStatusMessage" class="font-normal mt-1">Koneksi sedang diperiksa.</div><div id="gsServiceStatusTime" class="font-normal text-xs mt-1 opacity-90"></div></div><button type="button" onclick="gsCheckServiceStatus(true)" class="shrink-0 rounded border border-white/60 px-3 py-1 hover:bg-white/10">Coba lagi</button></div></div>
+<div id="printArea"></div>
+
+
+
+
+
+
+
+
+
+<!-- AKSELERASI: boot seketika setelah seluruh kode aplikasi siap (tanpa menunggu window.onload) -->
+
+<!-- ================= GURU SMART AI — GESTURE CONTROL (MediaPipe Hands) ================= -->
+
+<div id="gsGestureBtn" title="Remot Jari — klik untuk menyalakan/mematikan">
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
+</div>
+<div id="gsGesturePanel">
+  <div class="gs-ghead">
+    <b>🖐️ Remot Jari</b>
+    <span id="gsCamMini" title="Remot Jari tetap aktif">🖐️</span>
+    <span id="gsGestureCam" title="kamera belum aktif" aria-label="Status kamera"></span><span id="gsCamLabel">Kamera mati</span>
+  </div>
+  <div class="gs-gvideo-wrap">
+    <video id="gsGestureVideo" playsinline muted></video>
+    <canvas id="gsGestureCanvas"></canvas>
+  </div>
+  <div id="gsGestureStatus">📷 Siap</div>
+  <div class="gs-gbtns">
+    <button id="gsGesturePause" title="Jeda kamera" aria-label="Jeda atau lanjutkan kamera" type="button">⏸️</button>
+    <button id="gsGestureHide" title="Sembunyikan pratinjau kamera — deteksi tetap jalan" type="button">🙈</button>
+    <button id="gsGestureHelp" title="Cara pakai & pengaturan" type="button">📖</button>
+    <button id="gsGestureStop" title="DARURAT: Matikan semua kontrol dan kamera" type="button" aria-label="DARURAT: Matikan semua kontrol dan kamera"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" width="17" height="17" aria-hidden="true"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="11"/></svg></button>
+  </div>
+</div>
+<div id="gsHoverBox"></div>
+<div id="gsGestureCursor" class="gs-gcursor">
+  <svg class="gs-dwell-svg" viewBox="0 0 40 40"><circle class="gs-dwell-bg" cx="20" cy="20" r="18"/><circle id="gsDwellArc" cx="20" cy="20" r="18"/></svg>
+</div>
+<div id="gsGestureGuide">
+  <div class="gs-guide-card">
+    <h2>🖐️ Remot Jari — Panduan Cepat</h2>
+    <p class="gs-sub">Kendalikan aplikasi cukup dengan tangan di depan kamera. Gampang banget — ikuti 4 gerakan ini:</p>
+    <div class="gs-guide-grid">
+      <div class="gs-guide-item"><div class="gi-emoji">☝️</div><div class="gi-title">Tunjuk</div><div class="gi-desc">Gerakkan telunjuk untuk mengarahkan kursor ke tombol</div></div>
+      <div class="gs-guide-item"><div class="gi-emoji">⏱️</div><div class="gi-title">Klik Otomatis</div><div class="gi-desc">Tahan telunjuk diam di atas tombol ±1 detik — klik terjadi sendiri</div></div>
+      <div class="gs-guide-item"><div class="gi-emoji">✊</div><div class="gi-title">Klik Cepat</div><div class="gi-desc">Kepal tangan untuk klik langsung di titik yang terkunci</div></div>
+      <div class="gs-guide-item"><div class="gi-emoji">🖐️</div><div class="gi-title">Scroll</div><div class="gi-desc">Buka 3–5 jari lalu seret naik/turun — halaman & pop-up ikut bergulir</div></div>
+    </div>
+    <div class="gs-guide-tip">✨ <b>Paling mudah:</b> tunjuk tombol yang mau ditekan, lalu tahan diam sebentar — tombol akan <b>disorot hijau</b> dan klik terjadi otomatis. Kembali ke menu utama: dua jari (✌️) tahan sebentar.<br><br>💡 Tips: pastikan pencahayaan cukup dan tangan terlihat jelas di kotak kamera. Unduhan pertama ±12 MB, sesudahnya instan.</div>
+    <div class="gs-guide-set">
+      <p class="gs-set-title">⚙️ Pengaturan</p>
+      <div class="gs-gctrl-row">
+        <span class="gs-gctrl-lbl">Mode Mudah</span>
+        <div class="gs-gchip" id="gsDwellToggle">Klik Otomatis: AKTIF</div>
+      </div>
+      <div class="gs-gctrl" style="margin-top:6px">
+        <div class="gs-gctrl-row">
+          <span class="gs-gctrl-lbl">Sensitivitas</span>
+          <div class="gs-gchip" data-amp="1.35">Lembut</div>
+          <div class="gs-gchip" data-amp="1.6">Sedang</div>
+          <div class="gs-gchip" data-amp="2">Cepat</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;border-top:1px solid #334155;padding-top:10px">
+        <p class="gs-set-title">⚙️ Pengaturan Presisi</p>
+        <div class="gs-cal-row"><label for="gsAmpRange">Sensitivitas</label><input id="gsAmpRange" type="range" min="1.2" max="2.2" step="0.05" value="1.6"><output id="gsAmpOut">1,60×</output></div>
+        <div class="gs-cal-row"><label for="gsSmoothRange">Kehalusan</label><input id="gsSmoothRange" type="range" min="8" max="45" step="1" value="22"><output id="gsSmoothOut">22 ms</output></div>
+        <div class="gs-cal-actions"><button id="gsTuneReset" type="button">Reset pengaturan</button><button id="gsDiagRefresh" type="button">Perbarui status</button></div>
+        <div class="gs-cal-actions" style="margin-top:7px"><button id="gsAutoCalibrate" type="button">🎯 Kalibrasi otomatis</button><button id="gsSafeClickToggle" type="button" aria-pressed="true">🛡️ Klik aman: ON</button></div>
+        <p id="gsCalStatus" class="gs-guide-tip" style="margin-top:6px">Kalibrasi otomatis merekam gerakan telunjuk selama 4 detik. Gerakkan telunjuk ke area kerja yang ingin dijangkau.</p>
+      </div>
+      <div style="margin-top:12px;border-top:1px solid #334155;padding-top:10px">
+        <p class="gs-set-title">🩺 Diagnostik Kamera</p>
+        <div id="gsDiagBox" style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+          <div class="gs-guide-item"><div class="gi-title">Kamera</div><div class="gi-desc" id="gsDiagCam">Belum aktif</div></div>
+          <div class="gs-guide-item"><div class="gi-title">Deteksi tangan</div><div class="gi-desc" id="gsDiagHand">Menunggu</div></div>
+          <div class="gs-guide-item"><div class="gi-title">FPS kursor</div><div class="gi-desc" id="gsDiagFps">—</div></div>
+          <div class="gs-guide-item"><div class="gi-title">Inferensi AI</div><div class="gi-desc" id="gsDiagLatency">—</div></div>
+          <div class="gs-guide-item" style="grid-column:1/-1"><div class="gi-title">Mesin & kondisi</div><div class="gi-desc" id="gsDiagEngine">Siap diperiksa</div></div>
+        </div>
+        <p class="gs-guide-tip" id="gsDiagAdvice" style="margin-top:8px">Aktifkan Remot Jari untuk melihat kondisi kamera dan deteksi secara langsung.</p>
+      </div>
+      <div style="margin-top:12px;border-top:1px solid #334155;padding-top:10px">
+        <p class="gs-set-title">🎯 Kalibrasi Area Layar</p>
+        <div class="gs-cal-row"><label for="gsAreaXMin">Kiri</label><input id="gsAreaXMin" type="range" min="0" max="45" step="1" value="0"><output id="gsAreaXMinOut">0%</output></div>
+        <div class="gs-cal-row"><label for="gsAreaXMax">Kanan</label><input id="gsAreaXMax" type="range" min="55" max="100" step="1" value="100"><output id="gsAreaXMaxOut">100%</output></div>
+        <div class="gs-cal-row"><label for="gsAreaYMin">Atas</label><input id="gsAreaYMin" type="range" min="0" max="45" step="1" value="0"><output id="gsAreaYMinOut">0%</output></div>
+        <div class="gs-cal-row"><label for="gsAreaYMax">Bawah</label><input id="gsAreaYMax" type="range" min="55" max="100" step="1" value="100"><output id="gsAreaYMaxOut">100%</output></div>
+        <div class="gs-cal-actions"><button id="gsAreaReset" type="button">Layar penuh</button><button id="gsAreaApply" type="button">Terapkan area</button></div>
+      </div>
+      <div style="margin-top:12px;border-top:1px solid #334155;padding-top:10px">
+        <p class="gs-set-title">⏱️ Waktu Klik Otomatis</p>
+        <div class="gs-cal-row"><label for="gsDwellRange">Tahan</label><input id="gsDwellRange" type="range" min="500" max="2500" step="100" value="1100"><output id="gsDwellOut">1,1 dtk</output></div>
+      </div>
+    </div>
+    <button id="gsGuideClose" type="button">Mengerti, Mulai! 👍</button>
+  </div>
+</div>
+
+
+
+
+  <script src="app.js" defer></script>
+</body>
+</html>
