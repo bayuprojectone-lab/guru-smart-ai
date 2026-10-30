@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1e3a8a">
+<title>GURU SMART - Sistem Manajemen Sekolah</title>
+<!-- ==================== AKSELERASI LOADING: PRECONNECT CDN (koneksi disiapkan seketika) ==================== -->
+<link rel="preconnect" href="https://cdn.tailwindcss.com">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://js.puter.com">
+<link rel="preconnect" href="https://urslwiueyqhoykjhxmqq.supabase.co" crossorigin>
+<link rel="preconnect" href="https://z-cdn-media.chatglm.cn">
+<link rel="dns-prefetch" href="https://urslwiueyqhoykjhxmqq.supabase.co">
+<!-- ==================== AKHIR PRECONNECT ==================== -->
+<script>
+/* ============================================================
+   DETEKSI & RENDER MODE BUZZER DI HEAD (sangat awal)
+   ============================================================
+   Strategi FINAL:
+   1. Deteksi buzzer mode INSTAN saat head di-parse
+   2. Override initApp/renderContent agar app utama tidak jalan
+   3. Tambah CSS untuk hide elemen app utama + style UI buzzer
+   4. Tampilkan overlay booting INSTAN (sebelum DOM siap)
+   5. Daftarkan DOMContentLoaded handler untuk:
+      - Bersihkan body
+      - Bangun UI buzzer dengan inline CSS (tidak butuh Tailwind)
+      - Hapus overlay booting
+      - Poll sb (Supabase) hingga tersedia, lalu connect realtime
+   
+   PENTING: Tidak menunggu event 'load' (yang butuh semua CDN selesai).
+   DOMContentLoaded cukup untuk render UI. Supabase di-poll terpisah.
+   ============================================================ */
+(function(){
+  try {
+    var hash = window.location.hash || '';
+    var search = window.location.search || '';
+    var isQueryBuzzer = (new URLSearchParams(search)).get('buzzer') === '1';
+    var isHashBuzzer = hash.indexOf('#join-') === 0;
+    if (!isHashBuzzer && !isQueryBuzzer) return;
+    
+    window.__BUZZER_MODE__ = true;
+    
+    // Override fungsi aplikasi utama agar tidak bisa dipanggil
+    window.initApp = function(){ console.log('[Buzzer] initApp diblokir'); };
+    window.renderContent = function(){ console.log('[Buzzer] renderContent diblokir'); };
+    window.checkSession = function(){ return Promise.resolve(false); };
+    
+    // Parse room & teams dari URL
+    var room = '';
+    var initialTeams = [];
+    if (isQueryBuzzer) {
+        room = (new URLSearchParams(search)).get('room') || '';
+        try { initialTeams = JSON.parse((new URLSearchParams(search)).get('teams') || '[]'); } catch (e) { initialTeams = []; }
+    } else {
+        var joinParts = hash.substring(6).split('--teams-');
+        try { room = decodeURIComponent(joinParts[0] || ''); } catch (e) { room = joinParts[0] || ''; }
+        try { if (joinParts.length > 1) initialTeams = JSON.parse(decodeURIComponent(joinParts.slice(1).join('--teams-'))); } catch (e) { initialTeams = []; }
+    }
+    if (!Array.isArray(initialTeams)) initialTeams = [];
+    window.__BUZZER_ROOM__ = room;
+    window.__BUZZER_TEAMS__ = initialTeams;
+    
+    document.title = "Buzzer Kuis Siswa";
+    
+    // Inject CSS: hide app utama + style UI buzzer (inline, tidak butuh Tailwind)
+    var s = document.createElement('style');
+    s.id = '__buzzer_css';
+    s.textContent = [
+      '#authScreen,#appScreen,#modalContainer,#toast,#printArea{display:none!important}',
+      '*{box-sizing:border-box}',
+      'html,body{margin:0!important;padding:0!important;min-height:100%!important;width:100%!important;background:#0f172a!important;color:#fff!important;font-family:Inter,Arial,sans-serif!important}',
+      '#__buzzer_boot{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0f172a;color:#fff;font-family:Inter,Arial,sans-serif;font-size:18px;z-index:2147483647}',
+      '#__buzzer_boot .bb-inner{text-align:center;padding:20px}',
+      '#__buzzer_boot .bb-icon{font-size:48px;margin-bottom:12px;animation:bbpulse 1.2s ease-in-out infinite}',
+      '@keyframes bbpulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.92)}}',
+      '#studentApp{min-height:100vh;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:clamp(14px,4vw,28px);padding-bottom:max(24px,env(safe-area-inset-bottom));text-align:center;background:#0f172a;color:#fff}',
+      '#studentLogin,#studentBuzzer{width:100%;max-width:480px}',
+      '#teamList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%}',
+      '#buzzBtn{width:100%;min-height:clamp(230px,48vh,430px);padding:24px 12px;border:3px solid rgba(255,255,255,.25);border-radius:28px;box-shadow:0 12px 30px rgba(0,0,0,.35);color:#fff;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;user-select:none;-webkit-user-select:none;touch-action:manipulation}',
+      '.bb-hidden{display:none!important}'
+    ].join('\n');
+    document.documentElement.appendChild(s);
+    
+    // Tampilkan overlay booting INSTAN (sebelum body ada)
+    function showBoot(){
+      if(document.getElementById('__buzzer_boot'))return;
+      var boot=document.createElement('div');
+      boot.id='__buzzer_boot';
+      boot.innerHTML='<div class="bb-inner"><div class="bb-icon">🔔</div><div>Memuat Buzzer Kuis...</div></div>';
+      document.documentElement.appendChild(boot);
+    }
+    showBoot();
+    
+    // Fungsi utama: render UI buzzer + connect Supabase
+    window.__renderBuzzerUI = function() {
+      try {
+        // Bersihkan body
+        ['authScreen','appScreen','modalContainer','toast','printArea'].forEach(function(id){
+          var el = document.getElementById(id);
+          if(el) el.remove();
+        });
+        while(document.body && document.body.firstChild){ document.body.removeChild(document.body.firstChild); }
+        
+        // Bangun UI buzzer
+        var room = window.__BUZZER_ROOM__ || '';
+        var initialTeams = window.__BUZZER_TEAMS__ || [];
+        var safeRoom = String(room).replace(/[<>&"]/g,function(c){return{'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];});
+        
+        var appWrap = document.createElement('div');
+        appWrap.id = 'studentApp';
+        appWrap.innerHTML =
+            '<div id="studentLogin">'
+          +   '<h1 style="font-size:clamp(24px,6vw,32px);font-weight:800;color:#fff;margin:0 0 16px">🔔 Buzzer Online</h1>'
+          +   '<p style="color:#cbd5e1;margin:0 0 32px">Pilih Nama Tim Kamu di bawah ini:</p>'
+          +   '<div id="teamList"></div>'
+          + '</div>'
+          + '<div id="studentBuzzer" class="bb-hidden">'
+          +   '<div id="buzzBtn" style="background:linear-gradient(135deg,#ef4444,#e11d48)">'
+          +     '<span style="font-size:64px;margin-bottom:8px">🔔</span>'
+          +     '<span style="font-size:clamp(30px,8vw,48px)">TEKAN</span>'
+          +   '</div>'
+          +   '<div id="buzzStatus" style="margin-top:24px;min-height:36px;color:#4ade80;font-weight:700;font-size:18px;display:flex;align-items:center;justify-content:center"></div>'
+          +   '<button id="changeTeamBtn" style="margin-top:32px;color:#94a3b8;font-size:14px;background:none;border:none;text-decoration:underline;cursor:pointer;padding:10px 18px">Ganti Tim</button>'
+          + '</div>'
+          + '<p style="color:#64748b;font-size:12px;margin-top:48px">Tersambung ke Room: <span style="color:#4ade80;font-family:monospace">' + safeRoom + '</span></p>';
+        document.body.appendChild(appWrap);
+        
+        // Hapus overlay booting
+        var boot = document.getElementById('__buzzer_boot');
+        if(boot) boot.remove();
+        
+        // Render teams
+        var colors = [
+          'linear-gradient(135deg,#ec4899,#e11d48)',
+          'linear-gradient(135deg,#22d3ee,#3b82f6)',
+          'linear-gradient(135deg,#a855f7,#d946ef)',
+          'linear-gradient(135deg,#fb923c,#ef4444)'
+        ];
+        window.__buzzerRenderTeams = function(teams) {
+          var list = document.getElementById('teamList');
+          if (!list) return;
+          list.innerHTML = '';
+          teams.forEach(function(t, i) {
+            var col = colors[i % colors.length];
+            var btn = document.createElement('button');
+            btn.style.cssText = 'min-height:108px;width:100%;border:0;border-radius:18px;padding:18px 8px;font-size:clamp(16px,4vw,22px);line-height:1.25;overflow-wrap:anywhere;touch-action:manipulation;background:'+col+';color:#fff;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px';
+            btn.innerHTML = '<span style="font-size:28px">🔔</span>' + t;
+            btn.onclick = function() {
+              if(typeof kls_unlockAudio === 'function') kls_unlockAudio();
+              document.getElementById('studentLogin').classList.add('bb-hidden');
+              document.getElementById('studentBuzzer').classList.remove('bb-hidden');
+              var bigBtn = document.getElementById('buzzBtn');
+              bigBtn.style.background = col;
+              bigBtn.onclick = function() {
+                if(typeof playBuzzerHorn === 'function') playBuzzerHorn();
+                bigBtn.style.transform = 'scale(0.95)';
+                setTimeout(function() { bigBtn.style.transform = ''; }, 200);
+                var status = document.getElementById('buzzStatus');
+                if(status) {
+                  status.innerHTML = '✅ Sinyal Terkirim!';
+                  setTimeout(function() { status.innerHTML = ''; }, 2000);
+                }
+                try {
+                  if(window.__buzzerChannel) {
+                    window.__buzzerChannel.send({ type: 'broadcast', event: 'buzz', payload: { team: t } });
+                  }
+                  if(typeof sb !== 'undefined' && sb && sb.from) {
+                    sb.from('kuis_buzzer').insert([{ room: room, team: t, created_at: new Date().toISOString() }]).then(function(){}).catch(function(e){});
+                  }
+                } catch(err) { console.warn('Buzzer send error:', err); }
+              };
+            };
+            list.appendChild(btn);
+          });
+        };
+        
+        if (initialTeams.length) window.__buzzerRenderTeams(initialTeams);
+        else window.__buzzerRenderTeams(['GARUDA', 'ELANG', 'RAJAWALI', 'MERPATI']);
+        
+        var changeBtn = document.getElementById('changeTeamBtn');
+        if(changeBtn){
+          changeBtn.onclick = function() {
+            document.getElementById('studentLogin').classList.remove('bb-hidden');
+            document.getElementById('studentBuzzer').classList.add('bb-hidden');
+          };
+        }
+        
+        // Poll Supabase hingga tersedia, lalu connect realtime channel
+        var pollCount = 0;
+        var pollInterval = setInterval(function(){
+          pollCount++;
+          if (typeof sb !== 'undefined' && sb && sb.channel) {
+            clearInterval(pollInterval);
+            try {
+              var ch = sb.channel(room, { config: { broadcast: { self: false } } })
+                .on('broadcast', { event: 'sync' }, function(payload) {
+                  if(payload && payload.message && payload.message.teams && window.__buzzerRenderTeams){
+                    window.__buzzerRenderTeams(payload.message.teams);
+                  }
+                })
+                .subscribe(function(status) {
+                  if (status === 'SUBSCRIBED') {
+                    ch.send({ type: 'broadcast', event: 'request_sync', payload: {} });
+                  }
+                });
+              window.__buzzerChannel = ch;
+            } catch(e) { console.warn('Buzzer channel error:', e); }
+          } else if (pollCount > 60) {
+            // 30 detik (60 x 500ms) tetap tidak ada sb — tampilkan warning kecil
+            clearInterval(pollInterval);
+            console.warn('Supabase tidak tersedia setelah 30s');
+          }
+        }, 500);
+        
+      } catch(err) {
+        console.error('Buzzer render error:', err);
+        // Tetap hapus overlay biar user tidak stuck di "Memuat"
+        var boot = document.getElementById('__buzzer_boot');
+        if(boot) boot.remove();
+        // Tampilkan error ke user
+        if(document.body){
+          document.body.innerHTML = '<div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0f172a;color:#fff;font-family:Arial;padding:20px;text-align:center"><div><div style="font-size:48px;margin-bottom:12px">⚠️</div><h2 style="margin:0 0 12px">Gagal Memuat Buzzer</h2><p style="color:#cbd5e1;margin:0">Silakan refresh halaman atau pindai ulang QR Code.</p><p style="color:#64748b;font-size:12px;margin-top:16px">'+String(err.message||err)+'</p></div></div>';
+        }
+      }
+    };
+    
+    // Daftarkan DOMContentLoaded untuk render UI sesegera mungkin
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', window.__renderBuzzerUI);
+    } else if (document.readyState === 'interactive') {
+      // DOM sudah parse, langsung render
+      setTimeout(window.__renderBuzzerUI, 0);
+    } else if (document.readyState === 'complete') {
+      // Sudah complete, langsung render
+      setTimeout(window.__renderBuzzerUI, 0);
+    }
+    
+    // FALLBACK: jika setelah 3 detik UI belum ke-render, paksa render
+    setTimeout(function(){
+      if(!document.getElementById('studentApp') && typeof window.__renderBuzzerUI === 'function'){
+        console.warn('Buzzer fallback render triggered');
+        try { window.__renderBuzzerUI(); } catch(e){ console.error(e); }
+      }
+    }, 3000);
+    
+  } catch(e) { 
+    console.warn('Buzzer early-detect error:', e); 
+  }
+})();
+</script>
+<script>
+/* ============================================================
+   MESIN LOADING KILAT GURU SMART (v2)
+   Mempercepat loading sampai terasa 0 detik TANPA mengubah
+   fungsi/kode aplikasi lain sedikit pun:
+   1. Splash "Memuat" tampil SEKETIKA (sebelum CSS/library siap)
+   2. Library berat (Chart/Excel/QR/Scanner/AI/Tailwind) dimuat
+      paralel tanpa memblokir tampilan (atribut defer)
+   3. Aplikasi boot di akhir <body> — tidak menunggu window.onload
+      (tidak menunggu font/gambar selesai)
+   4. Jaring pengaman: grafik & QR tetap tergambar walau library
+      belum sempat tiba (antrian otomatis, diputar saat siap)
+   5. Pemasang format Excel ikut ditunda sampai library Excel siap
+   TAMBAHAN v2 (anti-ngelag, tanpa menyentuh kode aplikasi):
+   6. Tailwind dimuat ASINKRON — aplikasi menyala lebih awal;
+      konfigurasi (darkMode class, font Inter) dipasang OTOMATIS
+      begitu Tailwind siap sehingga tampilan tidak berubah
+   7. Splash gagal-aman: bila jaringan lambat, splash hilang sendiri
+      begitu layar aplikasi tampil (maks 2,5 dtk) — tidak ada lagi
+      tampilan menunggu tanpa batas
+   8. ANTI-LAG SCROLL: listener sentuh/gulir level window & dokumen
+      otomatis PASIF (standar browser modern) agar guliran HP mulus;
+      listener yang memang butuh preventDefault (mis. papan tulis)
+      tetap dihormati 100%
+   9. ANTI-LAG GAMBAR: gambar yang dibuat dinamis otomatis
+      loading=lazy + decoding=async (kecuali di area cetak) supaya
+      kuota hemat & halaman tidak tersendat saat memuat gambar
+   ============================================================ */
+(function(){
+  if(window.__BUZZER_MODE__){return;} /* Mode buzzer punya jalur cepatnya sendiri */
+
+  /* ---------- 1. SPLASH INSTAN ---------- */
+  var st=document.createElement('style');
+  st.textContent='@keyframes gsbootspin{to{transform:rotate(360deg)}}#__gs_boot{position:fixed;inset:0;z-index:2147483646;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1e3a8a 0%,#4338ca 55%,#6d28d9 100%);color:#fff;font-family:Inter,Arial,sans-serif;transition:opacity .3s ease}';
+  document.documentElement.appendChild(st);
+  var sp=document.createElement('div');
+  sp.id='__gs_boot';
+  sp.innerHTML='<div style="text-align:center;padding:24px"><div style="width:76px;height:76px;margin:0 auto 18px;border-radius:22px;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;box-shadow:0 12px 32px rgba(0,0,0,.28)"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 8l10 5 10-5-10-5z"/><path d="M6 10.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-5.5"/><path d="M22 8v6"/></svg></div><div style="font-size:26px;font-weight:900;letter-spacing:.5px">GURU SMART</div><div style="font-size:12px;opacity:.75;margin-top:4px">Sistem Manajemen Sekolah</div><div style="width:30px;height:30px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;margin:22px auto 0;animation:gsbootspin .8s linear infinite"></div></div>';
+  document.documentElement.appendChild(sp);
+  function hideSplash(){
+    var el=document.getElementById('__gs_boot');
+    if(!el||el.dataset.done)return;
+    el.dataset.done='1';
+    el.style.opacity='0';
+    setTimeout(function(){try{el.remove();st.remove();}catch(e){}},350);
+  }
+  var t0=Date.now(),twAt=0;
+  var splashIv=setInterval(function(){
+    var hide=false;
+    try{
+      if(!twAt&&window.tailwind)twAt=Date.now();
+      var as=document.getElementById('authScreen');
+      var ap=document.getElementById('appScreen');
+      var av=as&&!as.classList.contains('hidden');
+      var pv=ap&&!ap.classList.contains('hidden');
+      if(window.tailwind&&(av||pv)&&twAt&&Date.now()-twAt>=300)hide=true;
+      /* v14 gagal-aman: layar sudah tampil > 1.5 dtk (jaringan lambat) -> splash hilang sendiri */
+      if(!hide&&(av||pv)&&Date.now()-t0>1500)hide=true;
+    }catch(e){hide=true;}
+    if(Date.now()-t0>20000)hide=true; /* jaring pengaman: splash hilang maks 20 dtk */
+    if(hide){clearInterval(splashIv);hideSplash();}
+  },80);
+
+  /* ---------- 2. JARING PENGAMAN CHART (antrian + putar ulang) ---------- */
+  (function(){
+    if(typeof window.Chart!=='undefined')return;
+    var q=[];
+    window.Chart=function(ctx,cfg){q.push([ctx,cfg]);return{destroy:function(){},update:function(){},resize:function(){},data:(cfg&&cfg.data)||{}};};
+    window.Chart.__gsStub=true;
+    window.__gsFlushChart=function(){
+      var C=window.Chart;
+      if(!C||C.__gsStub)return;
+      var Q=q.splice(0,q.length);
+      setTimeout(function(){for(var i=0;i<Q.length;i++){try{new C(Q[i][0],Q[i][1]);}catch(e){console.warn('Chart replay:',e);}}},0);
+    };
+  })();
+
+  /* ---------- 3. JARING PENGAMAN QRCODE (antrian + putar ulang) ---------- */
+  (function(){
+    if(typeof window.QRCode!=='undefined')return;
+    var q=[];
+    window.QRCode=function(el,opts){q.push([el,opts]);return{};};
+    window.QRCode.__gsStub=true;
+    window.QRCode.CorrectLevel={L:1,M:0,Q:3,H:2};
+    window.__gsFlushQR=function(){
+      var C=window.QRCode;
+      if(!C||C.__gsStub)return;
+      var Q=q.splice(0,q.length);
+      setTimeout(function(){for(var i=0;i<Q.length;i++){try{new C(Q[i][0],Q[i][1]);}catch(e){console.warn('QR replay:',e);}}},0);
+    };
+  })();
+
+  /* ---------- 4. BOOT CEPAT (dipanggil dari akhir <body>) ---------- */
+  window.__gsFastBoot=function(){
+    if(window.__gsBooted)return;
+    window.__gsBooted=true;
+    if(window.__BUZZER_MODE__)return;
+    try{
+      /* v14 MASUK INSTAN: bila ada sesi tersimpan (gs_currentUser), aplikasi
+         langsung ditampilkan tanpa menunggu Supabase - layar logo/login tidak
+         muncul lagi setiap kali file dibuka. Validasi sesi tetap berjalan di
+         belakang: online & sesi tidak valid -> kembali ke layar masuk. */
+      var cached=null;
+      try{cached=JSON.parse(localStorage.getItem('gs_currentUser')||'null');}catch(eC){cached=null;}
+      var hasCache=!!(cached&&cached.id);
+      if(hasCache&&typeof initApp==='function'&&typeof checkSession==='function'){
+        window.currentUser=cached;
+        try{initApp();window.__gsFastEntered=true;}
+        catch(eF){window.__gsFastEntered=false;console.warn('Boot cepat v14:',eF);}
+      }
+      if(typeof checkSession==='function'&&typeof initApp==='function'){
+        if(hasCache&&!navigator.onLine){
+          console.log('[Boot v14] Offline: memakai sesi tersimpan, validasi Supabase dilewati');
+        }else{
+          Promise.resolve(checkSession()).then(function(ok){
+            if(ok){if(!window.__gsFastEntered)initApp();}
+            else if(window.__gsFastEntered){
+              try{localStorage.removeItem('gs_currentUser');}catch(eR){}
+              location.reload();
+            }
+          }).catch(function(e){console.warn('Boot cepat:',e);});
+        }
+      }
+    }catch(e){console.warn('Boot cepat:',e);}
+  };
+
+  /* ---------- 5. PENGAWAS LIBRARY (Excel + flush chart/QR + config Tailwind) ---------- */
+  var excelDone=false,twDone=false,tick=0;
+  var libIv=setInterval(function(){
+    tick++;
+    try{
+      /* v2: pasang konfigurasi Tailwind segera setelah Tailwind siap (defer) */
+      if(!twDone&&window.tailwind&&window.__gsTwCfg){
+        try{window.tailwind.config=window.__gsTwCfg;twDone=true;window.__gsTwCfgApplied=true;}catch(e){console.warn('Config Tailwind:',e);}
+      }
+      if(!excelDone&&window.XLSX&&typeof XLSX.writeFile==='function'){
+        if(typeof window.__gsInstallExcelFormat==='function'){try{window.__gsInstallExcelFormat();}catch(e){console.warn('Format Excel:',e);}}
+        excelDone=true;
+      }
+      if(window.Chart&&!window.Chart.__gsStub&&window.__gsFlushChart){window.__gsFlushChart();}
+      if(window.QRCode&&!window.QRCode.__gsStub&&window.__gsFlushQR){window.__gsFlushQR();}
+    }catch(e){console.warn('Pengawas library:',e);}
+    if(tick>500)clearInterval(libIv); /* berhenti setelah 30 dtk */
+  },60);
+
+  /* ---------- 6. PAKET ANTI-LAG v2 (tambahan, tanpa ubah kode aplikasi) ---------- */
+  try{
+    /* 6a. Listener sentuh/gulir level window & dokumen otomatis PASIF.
+       Guliran di HP jadi mulus (standar browser modern). Listener yang
+       sengaja meminta passive:false (mis. papan tulis) TETAP dihormati. */
+    var _gsAdd=EventTarget.prototype.addEventListener;
+    EventTarget.prototype.addEventListener=function(type,fn,opts){
+      try{
+        if((this===window||this===document)&&(type==='touchstart'||type==='touchmove'||type==='wheel')){
+          if(opts===undefined||opts===null||opts===true||opts===false){
+            return _gsAdd.call(this,type,fn,{capture:!!opts,passive:true});
+          }
+          if(typeof opts==='object'&&opts.passive===undefined){
+            var o2={};for(var k in opts){o2[k]=opts[k];}o2.passive=true;
+            return _gsAdd.call(this,type,fn,o2);
+          }
+        }
+      }catch(e){}
+      return _gsAdd.call(this,type,fn,opts);
+    };
+  }catch(e){}
+  try{
+    /* 6b. Gambar dinamis otomatis hemat kuota (lazy+async).
+       Area cetak (#printArea) dan gambar ber-tag khusus tidak disentuh. */
+    var gsLazy=function(img){
+      try{
+        if(!img||img.nodeType!==1||img.tagName!=='IMG')return;
+        if(img.getAttribute('loading'))return;
+        if(img.hasAttribute('data-gs-nolazy'))return;
+        if(img.closest&&img.closest('#printArea'))return;
+        img.setAttribute('loading','lazy');
+        img.setAttribute('decoding','async');
+      }catch(e){}
+    };
+    var mo=new MutationObserver(function(ms){
+      for(var i=0;i<ms.length;i++){
+        var add=ms[i].addedNodes;
+        if(!add||!add.length)continue;
+        for(var j=0;j<add.length;j++){
+          var n=add[j];
+          if(!n||n.nodeType!==1)continue;
+          if(n.tagName==='IMG'){gsLazy(n);}
+          else if(n.querySelectorAll){var ims=n.querySelectorAll('img');for(var q=0;q<ims.length;q++){gsLazy(ims[q]);}}
+        }
+      }
+    });
+    var gsStartLazy=function(){try{mo.observe(document.body,{childList:true,subtree:true});}catch(e){}};
+    if(document.body){gsStartLazy();}
+    else{document.addEventListener('DOMContentLoaded',gsStartLazy,{once:true});}
+  }catch(e){}
+})();
+</script>
+<script src="https://cdn.tailwindcss.com" defer fetchpriority="high"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"></noscript>
+<script src="https://js.puter.com/v2/" defer></script>
+<script>
+/* ==================================================================
+   GSAI BRIDGE v6 — CEPAT, TANPA POLLINATIONS, KUNCI SOAL AKURAT
+   - Chat/Teks   : PUTER AI LANGSUNG (Pollinations dihapus total)
+                   * Chat biasa: model cepat "gpt-4o-mini" dicoba paling awal
+                   * MODE AKURAT: permintaan soal/matematika otomatis pakai
+                     model kuat berhitung dulu (gpt-4o -> claude-3.5-sonnet)
+                     supaya kunci jawaban & pembahasan tidak karangan
+                   * Saldo/kuota Puter habis (Low Balance) -> lompat ke model
+                     hemat gpt-4o-mini, lalu pesan panduan ganti akun gratis /
+                     isi saldo (tanpa error teknis membingungkan)
+                   * STREAMING: balasan tampil bertahap selagi AI mengetik
+                   * Bantalan waktu tiap percobaan + fallback model otomatis
+                   * Menunggu pustaka Puter siap (tidak langsung gagal)
+   - Baca Gambar : Puter AI Vision (cukup klik "Sambungkan AI" sekali saja)
+   - Buat Gambar : PUTER AI IMG (puter.ai.txt2img) = JALUR TUNGGAL + MODE KILAT
+                   * Ukuran generate dipangkas (maks 640px, rasio sama) lalu
+                     diperbesar presisi ke ukuran target -> jauh lebih cepat
+                   * 2 strategi pemanggilan dipacu paralel, yang selesai duluan menang
+                   Jika Puter gagal -> PEMBERITAHUAN LANGSUNG ke pengguna
+   - OCR Darurat : Tesseract.js langsung di browser (tanpa server)
+   ================================================================== */
+window.GSAI=(function(){
+  var lastProvider='-';
+  function hasPuter(){try{return (typeof puter!=='undefined')&&puter&&puter.ai&&typeof puter.ai.chat==='function';}catch(e){return false;}}
+  function hasImageMsg(ms){try{for(var i=0;i<ms.length;i++){var c=ms[i]&&ms[i].content;if(Array.isArray(c)){for(var j=0;j<c.length;j++){if(c[j]&&c[j].type==='image_url')return true;}}}}catch(e){}return false;}
+  function toStr(c){if(typeof c==='string')return c;if(Array.isArray(c))return c.map(function(p){return (p&&p.text)||'';}).join('\n');return '';}
+  function toText(r){
+    try{
+      if(r==null)return '';
+      if(typeof r==='string')return r;
+      if(typeof r.message==='string')return r.message;
+      if(r.message){var c=r.message.content;if(typeof c==='string')return c;if(Array.isArray(c))return toStr(c);}
+      if(Array.isArray(r.choices)&&r.choices[0])return toText(r.choices[0].message);
+      if(typeof r.text==='string'&&r.text)return r.text;
+      if(typeof r.content==='string')return r.content;
+      if(Array.isArray(r.content))return toStr(r.content);
+      if(typeof r.reasoning==='string'&&r.reasoning.trim())return r.reasoning;
+    }catch(e){}
+    return '';
+  }
+  /* ===== Pembantu kecepatan ===== */
+  function waitPuter(ms){
+    if(hasPuter())return Promise.resolve(true);
+    return new Promise(function(res){
+      var t0=Date.now();
+      var iv=setInterval(function(){
+        if(hasPuter()){clearInterval(iv);res(true);}
+        else if(Date.now()-t0>(ms||8000)){clearInterval(iv);res(false);}
+      },100);
+    });
+  }
+  function isRateErr(e){var m=String((e&&(e.message||e))||e||'');return /429|too many|rate|kuota|quota|limit/i.test(m);}
+  /* Saldo/kuota akun Puter habis (Low Balance) - semua model mahal pasti gagal */
+  function isBalanceErr(e){var m=String((e&&(e.message||e))||e||'');return /low balance|not enough funding|upgrade to continue|insufficient (funds|balance)|funding/i.test(m);}
+  function gsBalanceMsg(){return 'Kuota/saldo AI Puter akun Anda sudah habis (Low Balance). Solusi tercepat: klik tombol GANTI AKUN AI yang tampil bersama pesan ini (atau tombol Ganti Akun di kanan atas) lalu daftar akun Puter GRATIS yang baru - kuota langsung kembali penuh. Alternatif: isi saldo/upgrade akun Anda di puter.com/settings, lalu ulangi permintaan. Catatan: bila saldo masih tersisa sedikit, sistem otomatis mencoba model paling hemat (gpt-4o-mini) agar tetap bisa menjawab.';}
+  function withTimeout(p,ms,label){
+    return new Promise(function(res,rej){
+      var t=setTimeout(function(){rej(new Error((label||'Proses')+' melebihi batas waktu ('+Math.round(ms/1000)+' dtk)'));},ms);
+      p.then(function(v){clearTimeout(t);res(v);},function(e){clearTimeout(t);rej(e);});
+    });
+  }
+  /* Satu percobaan chat ke Puter AI (streaming bila onDelta diberikan) */
+  async function puterChatOnce(ms,model,onDelta){
+    var opts={};
+    if(model)opts.model=model;
+    var stream=typeof onDelta==='function';
+    if(stream)opts.stream=true;
+    var res=await puter.ai.chat(ms,Object.keys(opts).length?opts:undefined);
+    if(stream&&res&&typeof res[Symbol.asyncIterator]==='function'){
+      var acc='',started=Date.now(),any=false;
+      for await (var part of res){
+        if(!any&&Date.now()-started>15000)throw new Error('Model lambat merespons (tanpa token awal 15 dtk)');
+        var t=(part&&typeof part.text==='string')?part.text:(typeof part==='string'?part:'');
+        if(t){acc+=t;any=true;onDelta(acc);}
+      }
+      if(!acc.trim())throw new Error('Respon kosong');
+      return acc;
+    }
+    var txt=toText(res);
+    if(!txt||!txt.trim())throw new Error('Respon kosong');
+    if(stream)onDelta(txt);
+    return txt;
+  }
+  /* Chat Puter AI: model tercepat dulu, fallback otomatis, bantalan waktu */
+  async function puterChat(ms,onDelta){
+    var ok=await waitPuter(8000);
+    if(!ok)throw new Error('Pustaka Puter belum termuat — periksa koneksi internet lalu muat ulang halaman (refresh).');
+    var signed=false;try{signed=puter.auth.isSignedIn();}catch(e){signed=false;}
+    if(!signed){
+      try{await puter.auth.signIn();}
+      catch(eA){throw new Error('Sambungan Puter dibatalkan/diblokir. Klik tombol "🔗 Sambungkan AI" lalu izinkan popup yang muncul, kemudian ulangi pesan Anda.');}
+    }
+    /* MODE AKURAT: permintaan soal/kuis/hitungan/matematika otomatis dipakai
+       model yang kuat berhitung agar kunci jawaban & pembahasan BENAR
+       (bukan karangan). Chat biasa tetap pakai model tercepat. */
+    function gsAccurMode(ms){
+      try{
+        var t=' ';
+        for(var i=0;i<ms.length;i++){
+          var m=ms[i]||{};
+          if(m.role!=='user')continue;
+          var c=m.content;
+          t+=' '+(typeof c==='string'?c:JSON.stringify(c||''));
+        }
+        return /(soal|kuis|ulangan|ujian|latihan|matematika|hitung|perhitungan|pecahan|desimal|persen|kpk|fpb|aljabar|geometri|luas|keliling|volume|pythagoras|bilangan|aritmetika|statistika|peluang|persamaan|logaritma|exponen|turunan|integral|pembahasan|kunci jawaban)/i.test(t);
+      }catch(e){return false;}
+    }
+    var accurate=gsAccurMode(ms);
+    var attempts=accurate?[
+      {model:'gpt-4o',label:'gpt-4o',tt:60000},
+      {model:'claude-3-5-sonnet-latest',label:'claude-3.5-sonnet',tt:75000},
+      {model:null,label:'model bawaan',tt:60000}
+    ]:[
+      {model:'gpt-4o-mini',label:'gpt-4o-mini',tt:45000},
+      {model:null,label:'model bawaan',tt:60000},
+      {model:'gpt-4o',label:'gpt-4o',tt:60000},
+      {model:'claude-3-5-sonnet-latest',label:'claude-3.5-sonnet',tt:60000}
+    ];
+    var errs=[],balanceHit=false,triedMini=false;
+    for(var i=0;i<attempts.length;i++){
+      if(i>0&&isRateErr(errs[errs.length-1])){await new Promise(function(r){setTimeout(r,1200);});}
+      let deadToken=false;
+      let safeDelta=(typeof onDelta==='function')?function(t){if(!deadToken)onDelta(t);}:null;
+      try{
+        var txt=await withTimeout(puterChatOnce(ms,attempts[i].model,safeDelta),attempts[i].tt,attempts[i].label);
+        lastProvider='Puter AI ['+(attempts[i].model||'default')+(accurate?' mode-akurat':'')+']';
+        return txt;
+      }catch(e){
+        deadToken=true;
+        errs.push(attempts[i].label+': '+((e&&(e.message||e))||e));
+        if(typeof onDelta==='function'){try{onDelta('');}catch(e2){}}
+        /* Low Balance: model mahal tidak akan berhasil - coba model paling hemat
+           (gpt-4o-mini) lebih dulu sebelum menyerah */
+        if(isBalanceErr(e)){
+          balanceHit=true;
+          var jump=-1;
+          for(var k=i+1;k<attempts.length;k++){if(attempts[k].model==='gpt-4o-mini'){jump=k;break;}}
+          if(jump<0&&!triedMini){
+            attempts=attempts.slice(0,i+1).concat([
+              {model:'gpt-4o-mini',label:'gpt-4o-mini',tt:45000},
+              {model:null,label:'model bawaan',tt:60000}
+            ]);
+            jump=i+1;triedMini=true;
+          }
+          if(jump>0)i=jump-1;
+        }
+      }
+    }
+    if(balanceHit)throw new Error(gsBalanceMsg());
+    throw new Error('Semua model AI gagal — '+errs.join(' | '));
+  }
+  /* Chat utama: SEMUA lewat Puter AI (Pollinations dihapus) */
+  async function chat(ms,onDelta){
+    ms=ms||[];
+    try{
+      return await puterChat(ms,(typeof onDelta==='function')?onDelta:null);
+    }catch(e){
+      if(hasImageMsg(ms)&&!isBalanceErr(e)){
+        throw new Error('Fitur baca gambar membutuhkan Puter AI. Klik tombol "Sambungkan AI" di halaman Asisten AI (sekali saja), lalu ulangi. ('+((e&&(e.message||e))||e)+')');
+      }
+      throw e;
+    }
+  }
+  function hasPuterImg(){try{return (typeof puter!=='undefined')&&puter&&puter.ai&&(typeof puter.ai.txt2img==='function'||typeof puter.ai.txtToImage==='function');}catch(e){return false;}}
+  function extractImgSrc(el){
+    try{
+      if(typeof el==='string')return el;
+      if(el&&el.tagName&&el.tagName.toLowerCase()==='img')return el.src||el.getAttribute('src')||'';
+      if(el&&typeof el.src==='string'&&el.src)return el.src;
+      if(el&&typeof el.url==='string'&&el.url)return el.url;
+      if(el&&typeof el.toString==='function'){var s=el.toString();if(s&&(s.indexOf('http')===0||s.indexOf('data:image')===0))return s;}
+    }catch(e){}
+    return '';
+  }
+  function puterImgOnce(fn,args){
+    return new Promise(function(res,rej){
+      var to=setTimeout(function(){rej(new Error('Guru Smart AItimeout (75 dtk)'));},75000);
+      Promise.resolve().then(function(){return fn.apply(null,args);}).then(function(el){
+        clearTimeout(to);
+        var s=extractImgSrc(el);
+        if(s)res(s);else rej(new Error('Guru Smart AI tidak mengembalikan gambar'));
+      }).catch(function(e){clearTimeout(to);rej(e);});
+    });
+  }
+  /* Balapan N promise: beres pulang begitu SATU saja sukses (yang lain diabaikan);
+     gagal hanya bila SEMUA gagal; error cancel/auth langsung memenangkan kegagalan. */
+  function raceFirstSuccess(ps){
+    return new Promise(function(res,rej){
+      var pend=ps.length,errs=[];
+      if(!pend){rej(new Error('Tidak ada strategi gambar'));return;}
+      ps.forEach(function(p,idx){
+        Promise.resolve(p).then(function(v){res(v);},function(e){
+          var m=String((e&&e.message)||e||'');
+          if(/cancel|batal|auth|sign in|popup|permission|blocked/i.test(m)){rej(e);return;}
+          errs[idx]=e;pend--;
+          if(pend===0){for(var i=0;i<errs.length;i++){if(errs[i]){rej(errs[i]);return;}}rej(new Error('Guru Smart AI gagal'));}
+        });
+      });
+    });
+  }
+  function isCancelErr(e){return /cancel|batal|auth|sign in|popup|permission|blocked/i.test(String((e&&(e.message||e))||e||''));}
+  async function puterImg(prompt,rq){
+    if(!hasPuterImg())throw new Error('Pustaka Puter IMG belum termuat');
+    var signed=false;try{signed=puter.auth.isSignedIn();}catch(e){signed=false;}
+    if(!signed){await puter.auth.signIn();}
+    /* ===== MODE KILAT =====
+       1) Ukuran generate DIPANGKAS: sisi terpanjang maksimal 640px dengan rasio
+          yang sama -> proses difusi jauh lebih cepat; hasil akhir diperbesar
+          presisi ke ukuran target oleh fitRatio (canvas, tanpa distorsi).
+       2) Dua strategi pemanggilan DIPACU BERSAMAAN (bentuk objek resmi Puter +
+          bentuk klasik) — siapa pun yang selesai lebih dulu menang, yang lain
+          diabaikan. Worst case ikut terpangkas karena tak lagi menunggu antrean
+          berurutan 4 x 120 dtk. */
+    var small=null;
+    if(rq&&rq.w&&rq.h){
+      var sc=Math.min(640/Math.max(rq.w,rq.h),1);
+      small={w:Math.max(256,Math.round(rq.w*sc)),h:Math.max(256,Math.round(rq.h*sc))};
+    }
+    var o2=(typeof puter.ai.txt2img==='function')?puter.ai.txt2img:null;
+    var o1=(typeof puter.ai.txtToImage==='function')?puter.ai.txtToImage:null;
+    var strats=[];
+    if(o2){
+      if(small)strats.push({f:o2.bind(puter.ai),a:[{prompt:String(prompt),test_mode:false,ratio:{w:small.w,h:small.h},width:small.w,height:small.h}],lbl:'kilat-'+small.w+'x'+small.h});
+      strats.push({f:o2.bind(puter.ai),a:[String(prompt),false],lbl:'klasik'});
+    }
+    if(o1&&o1!==o2)strats.push({f:o1.bind(puter.ai),a:[String(prompt),false],lbl:'alias'});
+    if(!strats.length)throw new Error('Pustaka Puter IMG tidak dikenali');
+    var lastErr=null;
+    try{
+      /* Gelombang 1: maksimal 2 strategi terbaik dipacu paralel */
+      var w1=strats.slice(0,2);
+      var s=await raceFirstSuccess(w1.map(function(x){return puterImgOnce(x.f,x.a);}));
+      lastProvider='Guru Smart AI ('+w1[0].lbl+(w1.length>1?'/':'')+(w1.length>1?w1[1].lbl:'')+')';
+      return s;
+    }catch(e1){
+      lastErr=e1;
+      if(isBalanceErr(e1))throw new Error(gsBalanceMsg());
+      if(!isCancelErr(e1)){
+        /* Gelombang 2: sisa strategi dicoba berurutan */
+        for(var j=2;j<strats.length;j++){
+          try{var s2=await puterImgOnce(strats[j].f,strats[j].a);lastProvider='Guru Smart AI ('+strats[j].lbl+')';return s2;}
+          catch(e2){lastErr=e2;if(isCancelErr(e2))break;}
+        }
+      }
+    }
+    if(lastErr&&isBalanceErr(lastErr))throw new Error(gsBalanceMsg());
+    throw lastErr||new Error('Guru Smart AI gagal');
+  }
+  /* ===== Petunjuk rasio pada prompt ===== */
+  function ratioHint(w,h){
+    if(!w||!h)return '';
+    var t=w/h,d;
+    if(Math.abs(t-1)<0.04)d='persegi 1:1 (square)';
+    else if(t>1)d='landscape mendatar '+w+'x'+h+' piksel (wide horizontal 16:9)';
+    else d='portrait tegak '+w+'x'+h+' piksel (tall vertical 9:16)';
+    return '. PENTING: buat seluruh komposisi gambar dalam format '+d+', objek utama lengkap di dalam bingkai, tanpa tepi kosong (no border, no letterbox).';
+  }
+  function canvasToUrl(cv){
+    try{var du=cv.toDataURL('image/png');if(du&&du.length<2600000)return du;}catch(e){}
+    try{return cv.toDataURL('image/jpeg',0.92);}catch(e2){return '';}
+  }
+  /* Jaminan rasio hasil akhir:
+     - rasio sudah sesuai (toleransi 3%) -> biarkan apa adanya
+     - selisih kecil (korong <=12%)      -> potong tengah, tanpa distorsi
+     - selisih besar                     -> gambar utuh dipertahankan, sisi kosong
+                                            diisi latar blur (tidak ada konten terbuang) */
+  function fitRatio(src,w,h){
+    return new Promise(function(res){
+      if(!src||!w||!h){res(src);return;}
+      var img=new Image(),done=false;
+      var fin=function(v){if(!done){done=true;res(v||src);}};
+      var to=setTimeout(function(){fin(src);},15000);
+      img.onload=function(){
+        clearTimeout(to);
+        try{
+          var iw=img.naturalWidth||img.width,ih=img.naturalHeight||img.height;
+          if(!iw||!ih){fin(src);return;}
+          var t=w/h,a=iw/ih;
+          var cv=document.createElement('canvas');
+          var ctx=cv.getContext('2d');
+          if(!ctx){fin(src);return;}
+          if(Math.abs(t-a)/t<0.01){
+            /* MODE KILAT: hasil generate kecil ber-rasio sama -> perbesar presisi
+               ke ukuran target (canvas high-quality), jadi ukuran akhir tetap pas. */
+            if(w&&h&&(iw<w-2||ih<h-2)){
+              cv.width=w;cv.height=h;
+              ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+              ctx.drawImage(img,0,0,w,h);
+              fin(canvasToUrl(cv));return;
+            }
+            fin(src);return;
+          }
+          if(a>t){
+            var cw=Math.round(ih*t),ch=ih,loss=(iw-cw)/iw;
+            if(loss<=0.12){cv.width=cw;cv.height=ch;ctx.drawImage(img,(iw-cw)/2,0,cw,ch,0,0,cw,ch);fin(canvasToUrl(cv));return;}
+          }else{
+            var cw2=iw,ch2=Math.round(iw/t),loss2=(ih-ch2)/ih;
+            if(loss2<=0.12){cv.width=cw2;cv.height=ch2;ctx.drawImage(img,0,(ih-ch2)/2,cw2,ch2,0,0,cw2,ch2);fin(canvasToUrl(cv));return;}
+          }
+          cv.width=w;cv.height=h;
+          ctx.filter='blur(28px)';
+          var sc=Math.max(w/iw,h/ih)*1.18,bw=iw*sc,bh=ih*sc;
+          ctx.drawImage(img,(w-bw)/2,(h-bh)/2,bw,bh);
+          ctx.filter='none';
+          ctx.fillStyle='rgba(15,23,42,0.22)';ctx.fillRect(0,0,w,h);
+          var fc=Math.min(w/iw,h/ih),fw=iw*fc,fh=ih*fc;
+          ctx.drawImage(img,(w-fw)/2,(h-fh)/2,fw,fh);
+          fin(canvasToUrl(cv));
+        }catch(e){fin(src);}
+      };
+      img.onerror=function(){clearTimeout(to);fin(src);};
+      img.src=src;
+    });
+  }
+  async function image(prompt,w,h){
+    // JALUR TUNGGAL: PUTER AI IMG (puter.ai.txt2img) — satu jalur, lebih fokus & cepat.
+    // Jika w & h diberikan: opsi rasio RESMI Puter dikirim (ratio/width/height) +
+    // instruksi rasio pada prompt, lalu hasil akhir DIJAMIN ber-rasio tepat oleh
+    // fitRatio (potong tengah / latar blur). Jika gagal -> pemberitahuan langsung.
+    try{
+      var wanted=prompt+ratioHint(w,h);
+      var src=await puterImg(wanted,(w&&h)?{w:w,h:h}:null);
+      if(!src)throw new Error('Guru Smart AI tidak mengembalikan gambar');
+      var fitted=await fitRatio(src,w,h);
+      return fitted||src;
+    }catch(e1){
+      var m1=(e1&&(e1.message||e1))||'tidak diketahui';
+      throw new Error('GURU Smart AI gagal membuat gambar — '+m1+'. Klik tombol "🔗 Sambungkan AI" di bagian atas halaman (izinkan popup yang muncul), lalu coba lagi.');
+    }
+  }
+  return {chat:chat,chatStream:function(ms,onDelta){return chat(ms,onDelta);},image:image,provider:function(){return lastProvider;}};
+})();
+window.gsDownloadImage=function(url,name){
+  (async function(){
+    try{
+      var href=url,blob=null;
+      try{var r=await fetch(url);if(r.ok)blob=await r.blob();}catch(e){}
+      if(blob&&blob.size>0){try{href=URL.createObjectURL(blob);}catch(e){blob=null;href=url;}}
+      var a=document.createElement('a');a.href=href;a.download=name||('Gambar_'+Date.now()+'.png');a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();document.body.removeChild(a);
+      if(blob){setTimeout(function(){try{URL.revokeObjectURL(href);}catch(e){}},5000);}
+      showToast('Gambar berhasil diunduh!','success');
+    }catch(e){
+      try{var w=window.open(url,'_blank');if(!w)throw new Error('popup diblokir');}catch(e2){showToast('Gagal unduh: '+(e2.message||e2),'error');}
+    }
+  })();
+};
+window.gsConnectPuter=async function(){
+  try{
+    if(typeof puter==='undefined'){showToast('Pustaka Puter belum termuat. Muat ulang halaman (refresh) lalu coba lagi. Semua fitur AI (chat, buat gambar, baca gambar) memakai Puter AI.','error');return;}
+    var s=false;try{s=puter.auth.isSignedIn();}catch(e){}
+    if(s){showToast('Puter AI sudah tersambung!','success');gsUpdateAuthChip();return;}
+    showToast('Menyambungkan ke Puter AI... izinkan jendela yang muncul.','success');
+    await puter.auth.signIn();
+    showToast('Puter AI tersambung! Buat gambar (Guru Smart AI) & baca gambar siap dipakai.','success');
+    gsUpdateAuthChip();
+  }catch(e){
+    showToast('Koneksi Puter dibatalkan/diblokir popup. Chat AI, buat gambar & baca gambar membutuhkan koneksi Puter — klik Sambungkan AI lagi untuk mencoba.','error');
+    gsUpdateAuthChip();
+  }
+};
+window.gsUpdateAuthChip=function(){
+  var c=document.getElementById('gsAIAuthChip');if(!c)return;
+  var ok='px-3 py-1.5 text-xs font-semibold rounded-md bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 border border-green-300 dark:border-green-700';
+  var warn='px-3 py-1.5 text-xs font-semibold rounded-md bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-300 dark:border-amber-700';
+  var ready=false,signed=false;
+  try{if(typeof puter!=='undefined'){ready=true;signed=puter.auth.isSignedIn();}}catch(e){}
+  if(ready&&signed){c.innerHTML='✅ AI Tersambung';c.className=ok;}
+  else if(!ready){c.innerHTML='⏳ Menyiapkan AI...';c.className=warn;}
+  else{c.innerHTML='🔗 Sambungkan AI (wajib untuk semua fitur AI)';c.className=warn;}
+};
+/* Ganti akun Puter dalam satu klik: keluar -> popup masuk/daftar akun baru.
+   Dipakai terutama saat kuota akun habis (Low Balance) - akun gratis baru
+   langsung mendapat kuota AI baru. */
+window.gsGantiAkunAI=async function(){
+  try{
+    if(typeof puter==='undefined'||!puter||!puter.auth){showToast('Pustaka Puter belum termuat. Muat ulang halaman (refresh) lalu coba lagi.','error');return;}
+    var okS=confirm('Ganti akun AI Puter?\n\nAkun sekarang akan dikeluarkan, lalu jendela masuk/daftar Puter akan terbuka.\nGunakan akun Puter GRATIS yang baru agar kuota AI kembali penuh.\n\nLanjutkan?');
+    if(!okS)return;
+    showToast('Mengeluarkan akun lama...','info');
+    try{await puter.auth.signOut();}catch(eS){}
+    showToast('Jendela akun baru terbuka... izinkan popup bila diblokir.','info');
+    await puter.auth.signIn();
+    var u='';try{var gu=await puter.auth.getUser();if(gu&&gu.username)u=gu.username;}catch(eU){}
+    showToast('Berhasil! Akun AI baru'+(u?' ('+u+')':'')+' terhubung - kuota baru siap dipakai. Silakan ulangi permintaan Anda.','success');
+    try{gsUpdateAuthChip();}catch(eC){}
+  }catch(e){
+    var m=String((e&&(e.message||e))||e||'');
+    if(/cancel|batal|dismiss|closed|popup|denied/i.test(m)){showToast('Penggantian akun dibatalkan - akun lama tetap dipakai.','info');}
+    else{showToast('Gagal ganti akun: '+m+' - coba klik Ganti Akun lagi.','error');}
+    try{gsUpdateAuthChip();}catch(eC2){}
+  }
+};
+window.gsLocalOCR=function(dataUrl){
+  return new Promise(function(resolve){
+    var done=false;
+    var finish=function(t){if(done)return;done=true;resolve((t||'').trim());};
+    setTimeout(function(){finish('');},120000);
+    try{
+      var run=function(){
+        try{
+          if(typeof Tesseract==='undefined'){
+            if(!document.getElementById('gsTessScript')){
+              var s=document.createElement('script');s.id='gsTessScript';
+              s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+              document.head.appendChild(s);
+            }
+            setTimeout(run,400);return;
+          }
+          Tesseract.recognize(dataUrl,'ind').then(function(r){finish(r&&r.data&&r.data.text);})
+            .catch(function(){try{Tesseract.recognize(dataUrl,'eng').then(function(r2){finish(r2&&r2.data&&r2.data.text);}).catch(function(){finish('');});}catch(e){finish('');}});
+        }catch(e){finish('');}
+      };
+      run();
+    }catch(e){finish('');}
+  });
+};
+console.log('%c GSAI Bridge v6 aktif — Chat: Puter AI streaming | Mode akurat soal-matematika | Gambar mode kilat | Low Balance: panduan + tombol Ganti Akun ','background:#10b981;color:#fff;border-radius:4px');
+</script>
+<link rel="preload" as="script" href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" fetchpriority="high"/><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>/* v2: config dipasang otomatis saat Tailwind siap (lihat Mesin KILAT #5) */window.__gsTwCfg={darkMode:'class',theme:{extend:{fontFamily:['Inter','sans-serif']}}};</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <link rel="stylesheet" href="style.css">
+</head><body class="bg-slate-100 dark:bg-slate-900 transition-colors duration-300">
+<div id="authScreen" class="min-h-[100dvh] flex flex-col items-center justify-center p-4 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700">
+<div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 w-full max-w-md fade-in">
+<div class="text-center mb-8">
+<img src="https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe" onerror="imgFallback(this)" alt="GURU SMART" class="w-32 h-32 rounded-xl mx-auto mb-4 object-cover bg-slate-200">
+<h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">GURU SMART</h1>
+<p class="text-slate-500 dark:text-slate-400 mt-2 text-sm">Sistem Manajemen Sekolah Berbasis Cloud</p>
+</div>
+<form id="loginForm" class="space-y-4">
+<div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label><input type="email" id="loginEmail" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" required></div>
+<div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Password</label><input type="password" id="loginPassword" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" required></div>
+<button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-2.5 rounded-lg transition-colors shadow-lg">Masuk</button>
+<p class="text-center text-sm text-slate-500 mt-4">Belum punya akun? <button type="button" onclick="toggleAuth('register')" class="text-blue-600 font-semibold hover:underline">Daftar di sini</button></p>
+</form>
+<form id="registerForm" class="space-y-4 hidden">
+<div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap</label><input type="text" id="regName" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" required></div>
+<div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label><input type="email" id="regEmail" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" required></div>
+<div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Password (Min 6 karakter)</label><input type="password" id="regPassword" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" required></div>
+<button type="submit" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-2.5 rounded-lg transition-colors shadow-lg">Daftar Sekarang</button>
+<p class="text-center text-sm text-slate-500 mt-4">Sudah punya akun? <button type="button" onclick="toggleAuth('login')" class="text-blue-600 font-semibold hover:underline">Login di sini</button></p>
+</form>
+</div>
+<p class="text-center text-xs text-white/70 mt-6">Powered by @bayuprojectone</p>
+</div>
+<div id="appScreen" class="hidden fixed inset-0 flex flex-col overflow-hidden bg-slate-100 dark:bg-slate-900">
+<div class="flex flex-1 min-h-0 overflow-hidden">
+<aside id="sidebar" class="fixed lg:relative z-40 w-64 h-full bg-gradient-to-b from-blue-800 to-indigo-900 dark:from-slate-800 dark:to-slate-900 border-r border-blue-700/50 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out text-white flex flex-col">
+<div class="p-4 flex-none flex items-center justify-between border-b border-blue-700/50 dark:border-slate-700">
+<div class="flex items-center space-x-2">
+<img src="https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe" onerror="imgFallback(this)" alt="Logo" class="w-10 h-10 rounded-lg object-cover bg-slate-200">
+<div><h1 class="font-bold text-white text-lg leading-tight">GURU SMART</h1></div>
+</div>
+<button onclick="toggleSidebar()" class="lg:hidden text-slate-300"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+</div>
+<nav id="navMenu" class="sidebar-nav flex-1 overflow-y-auto p-4 space-y-1 text-sm"></nav>
+<div class="flex-none p-4 border-t border-blue-700/50 dark:border-slate-700 bg-gradient-to-r from-blue-900/50 to-indigo-900/50 dark:from-slate-900/50 dark:to-slate-800/50">
+<div class="flex items-center justify-center gap-2 mb-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+<span class="text-[9px] uppercase tracking-widest text-blue-200 font-medium">Powered By</span>
+</div>
+<p class="text-center text-sm font-extrabold text-white tracking-wide">@Bayu_projectone</p>
+<p class="text-center text-[10px] text-blue-200/70 mt-1">© 2026 GURU SMART<br>Sistem Manajemen Sekolah</p>
+</div>
+</aside>
+<div id="sidebarOverlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-black/50 z-30"></div>
+<main class="flex-1 flex flex-col min-h-0 overflow-hidden bg-slate-100 dark:bg-slate-900">
+<header class="h-16 flex-none bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 lg:px-6 shadow-sm">
+<div class="flex items-center space-x-4">
+<button onclick="toggleSidebar()" class="lg:hidden text-slate-500"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
+<h2 id="pageTitle" class="text-xl font-semibold text-slate-800 dark:text-white">Dashboard</h2>
+</div>
+<div class="flex items-center space-x-4">
+<button onclick="toggleDarkMode()" class="text-slate-500 hover:text-blue-600">
+<svg id="iconSun" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+<svg id="iconMoon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+</button>
+<div class="flex items-center space-x-2">
+<img id="userAvatar" src="https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe" onerror="imgFallback(this)" alt="User" class="w-8 h-8 rounded-lg object-cover bg-white ring-2 ring-blue-500" style="background:#ffffff">
+<div class="hidden md:block">
+<p id="userName" class="text-sm font-medium text-slate-800 dark:text-white">Admin</p>
+<p id="userRole" class="text-xs text-slate-500 dark:text-slate-400 capitalize">Administrator</p>
+</div>
+<button onclick="confirmLogout()" title="Keluar" class="text-red-500 hover:text-red-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg></button>
+</div>
+</div>
+</header>
+<div id="content" class="flex-1 min-h-0 overflow-y-auto p-4 lg:p-6 bg-slate-100 dark:bg-slate-900"></div>
+</main>
+</div>
+</div>
+<div id="modalContainer" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+<div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
+<div class="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-700">
+<h3 id="modalTitle" class="text-lg font-semibold text-slate-800 dark:text-white">Modal Title</h3>
+<button onclick="closeModal()" class="text-slate-500 hover:text-red-500 z-50"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+</div>
+<div id="modalContent" class="modal-scroll p-6 overflow-y-auto bg-white dark:bg-slate-800"></div>
+</div>
+</div>
+<div id="toastStack" role="region" aria-live="polite" aria-label="Notifikasi aplikasi"></div>
+<div id="gsServiceStatus" role="status" aria-live="polite" class="hidden fixed top-0 left-0 right-0 z-[100] px-4 py-3 text-sm font-semibold text-white shadow-lg" style="background:#b91c1c"><div class="max-w-5xl mx-auto flex items-start gap-3"><span id="gsServiceStatusIcon" aria-hidden="true">⚠️</span><div class="flex-1"><div id="gsServiceStatusTitle">Gangguan layanan</div><div id="gsServiceStatusMessage" class="font-normal mt-1">Koneksi sedang diperiksa.</div><div id="gsServiceStatusTime" class="font-normal text-xs mt-1 opacity-90"></div></div><button type="button" onclick="gsCheckServiceStatus(true)" class="shrink-0 rounded border border-white/60 px-3 py-1 hover:bg-white/10">Coba lagi</button></div></div>
+<div id="printArea"></div>
+
+
+
+
+
+
+
+
+
+<!-- AKSELERASI: boot seketika setelah seluruh kode aplikasi siap (tanpa menunggu window.onload) -->
+
+<!-- ================= GURU SMART AI — GESTURE CONTROL (MediaPipe Hands) ================= -->
+
+<div id="gsGestureBtn" title="Remot Jari — klik untuk menyalakan/mematikan">
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
+</div>
+<div id="gsGesturePanel">
+  <div class="gs-ghead">
+    <b>🖐️ Remot Jari</b>
+    <span id="gsCamMini" title="Remot Jari tetap aktif">🖐️</span>
+    <span id="gsGestureCam" title="kamera belum aktif" aria-label="Status kamera"></span><span id="gsCamLabel">Kamera mati</span>
+  </div>
+  <div class="gs-gvideo-wrap">
+    <video id="gsGestureVideo" playsinline muted></video>
+    <canvas id="gsGestureCanvas"></canvas>
+  </div>
+  <div id="gsGestureStatus">📷 Siap</div>
+  <div class="gs-gbtns">
+    <button id="gsGesturePause" title="Jeda kamera" aria-label="Jeda atau lanjutkan kamera" type="button">⏸️</button>
+    <button id="gsGestureHide" title="Sembunyikan pratinjau kamera — deteksi tetap jalan" type="button">🙈</button>
+    <button id="gsGestureHelp" title="Cara pakai & pengaturan" type="button">📖</button>
+    <button id="gsGestureStop" title="DARURAT: Matikan semua kontrol dan kamera" type="button" aria-label="DARURAT: Matikan semua kontrol dan kamera"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" width="17" height="17" aria-hidden="true"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="11"/></svg></button>
+  </div>
+</div>
+<div id="gsHoverBox"></div>
+<div id="gsGestureCursor" class="gs-gcursor">
+  <svg class="gs-dwell-svg" viewBox="0 0 40 40"><circle class="gs-dwell-bg" cx="20" cy="20" r="18"/><circle id="gsDwellArc" cx="20" cy="20" r="18"/></svg>
+</div>
+<div id="gsGestureGuide">
+  <div class="gs-guide-card">
+    <h2>🖐️ Remot Jari — Panduan Cepat</h2>
+    <p class="gs-sub">Kendalikan aplikasi cukup dengan tangan di depan kamera. Gampang banget — ikuti 4 gerakan ini:</p>
+    <div class="gs-guide-grid">
+      <div class="gs-guide-item"><div class="gi-emoji">☝️</div><div class="gi-title">Tunjuk</div><div class="gi-desc">Gerakkan telunjuk untuk mengarahkan kursor ke tombol</div></div>
+      <div class="gs-guide-item"><div class="gi-emoji">⏱️</div><div class="gi-title">Klik Otomatis</div><div class="gi-desc">Tahan telunjuk diam di atas tombol ±1 detik — klik terjadi sendiri</div></div>
+      <div class="gs-guide-item"><div class="gi-emoji">✊</div><div class="gi-title">Klik Cepat</div><div class="gi-desc">Kepal tangan untuk klik langsung di titik yang terkunci</div></div>
+      <div class="gs-guide-item"><div class="gi-emoji">🖐️</div><div class="gi-title">Scroll</div><div class="gi-desc">Buka 3–5 jari lalu seret naik/turun — halaman & pop-up ikut bergulir</div></div>
+    </div>
+    <div class="gs-guide-tip">✨ <b>Paling mudah:</b> tunjuk tombol yang mau ditekan, lalu tahan diam sebentar — tombol akan <b>disorot hijau</b> dan klik terjadi otomatis. Kembali ke menu utama: dua jari (✌️) tahan sebentar.<br><br>💡 Tips: pastikan pencahayaan cukup dan tangan terlihat jelas di kotak kamera. Unduhan pertama ±12 MB, sesudahnya instan.</div>
+    <div class="gs-guide-set">
+      <p class="gs-set-title">⚙️ Pengaturan</p>
+      <div class="gs-gctrl-row">
+        <span class="gs-gctrl-lbl">Mode Mudah</span>
+        <div class="gs-gchip" id="gsDwellToggle">Klik Otomatis: AKTIF</div>
+      </div>
+      <div class="gs-gctrl" style="margin-top:6px">
+        <div class="gs-gctrl-row">
+          <span class="gs-gctrl-lbl">Sensitivitas</span>
+          <div class="gs-gchip" data-amp="1.35">Lembut</div>
+          <div class="gs-gchip" data-amp="1.6">Sedang</div>
+          <div class="gs-gchip" data-amp="2">Cepat</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;border-top:1px solid #334155;padding-top:10px">
+        <p class="gs-set-title">⚙️ Pengaturan Presisi</p>
+        <div class="gs-cal-row"><label for="gsAmpRange">Sensitivitas</label><input id="gsAmpRange" type="range" min="1.2" max="2.2" step="0.05" value="1.6"><output id="gsAmpOut">1,60×</output></div>
+        <div class="gs-cal-row"><label for="gsSmoothRange">Kehalusan</label><input id="gsSmoothRange" type="range" min="8" max="45" step="1" value="22"><output id="gsSmoothOut">22 ms</output></div>
+        <div class="gs-cal-actions"><button id="gsTuneReset" type="button">Reset pengaturan</button><button id="gsDiagRefresh" type="button">Perbarui status</button></div>
+        <div class="gs-cal-actions" style="margin-top:7px"><button id="gsAutoCalibrate" type="button">🎯 Kalibrasi otomatis</button><button id="gsSafeClickToggle" type="button" aria-pressed="true">🛡️ Klik aman: ON</button></div>
+        <p id="gsCalStatus" class="gs-guide-tip" style="margin-top:6px">Kalibrasi otomatis merekam gerakan telunjuk selama 4 detik. Gerakkan telunjuk ke area kerja yang ingin dijangkau.</p>
+      </div>
+      <div style="margin-top:12px;border-top:1px solid #334155;padding-top:10px">
+        <p class="gs-set-title">🩺 Diagnostik Kamera</p>
+        <div id="gsDiagBox" style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+          <div class="gs-guide-item"><div class="gi-title">Kamera</div><div class="gi-desc" id="gsDiagCam">Belum aktif</div></div>
+          <div class="gs-guide-item"><div class="gi-title">Deteksi tangan</div><div class="gi-desc" id="gsDiagHand">Menunggu</div></div>
+          <div class="gs-guide-item"><div class="gi-title">FPS kursor</div><div class="gi-desc" id="gsDiagFps">—</div></div>
+          <div class="gs-guide-item"><div class="gi-title">Inferensi AI</div><div class="gi-desc" id="gsDiagLatency">—</div></div>
+          <div class="gs-guide-item" style="grid-column:1/-1"><div class="gi-title">Mesin & kondisi</div><div class="gi-desc" id="gsDiagEngine">Siap diperiksa</div></div>
+        </div>
+        <p class="gs-guide-tip" id="gsDiagAdvice" style="margin-top:8px">Aktifkan Remot Jari untuk melihat kondisi kamera dan deteksi secara langsung.</p>
+      </div>
+      <div style="margin-top:12px;border-top:1px solid #334155;padding-top:10px">
+        <p class="gs-set-title">🎯 Kalibrasi Area Layar</p>
+        <div class="gs-cal-row"><label for="gsAreaXMin">Kiri</label><input id="gsAreaXMin" type="range" min="0" max="45" step="1" value="0"><output id="gsAreaXMinOut">0%</output></div>
+        <div class="gs-cal-row"><label for="gsAreaXMax">Kanan</label><input id="gsAreaXMax" type="range" min="55" max="100" step="1" value="100"><output id="gsAreaXMaxOut">100%</output></div>
+        <div class="gs-cal-row"><label for="gsAreaYMin">Atas</label><input id="gsAreaYMin" type="range" min="0" max="45" step="1" value="0"><output id="gsAreaYMinOut">0%</output></div>
+        <div class="gs-cal-row"><label for="gsAreaYMax">Bawah</label><input id="gsAreaYMax" type="range" min="55" max="100" step="1" value="100"><output id="gsAreaYMaxOut">100%</output></div>
+        <div class="gs-cal-actions"><button id="gsAreaReset" type="button">Layar penuh</button><button id="gsAreaApply" type="button">Terapkan area</button></div>
+      </div>
+      <div style="margin-top:12px;border-top:1px solid #334155;padding-top:10px">
+        <p class="gs-set-title">⏱️ Waktu Klik Otomatis</p>
+        <div class="gs-cal-row"><label for="gsDwellRange">Tahan</label><input id="gsDwellRange" type="range" min="500" max="2500" step="100" value="1100"><output id="gsDwellOut">1,1 dtk</output></div>
+      </div>
+    </div>
+    <button id="gsGuideClose" type="button">Mengerti, Mulai! 👍</button>
+  </div>
+</div>
+
+
+
+
+  <script src="app.js"></script>
+</body>
+</html>
