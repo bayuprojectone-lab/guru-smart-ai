@@ -1,0 +1,8 @@
+name = "guru-smart-ai"
+main = "src/index.js"
+compatibility_date = "2026-11-02"
+workers_dev = true
+
+# Frontend GURU SMART SIBI tetap di GitHub Pages.
+# Worker ini hanya melayani API /api/*; tidak memakai assets.directory,
+# D1, maupun folder public.
