@@ -1,6 +1,0 @@
-Frontend: index.html + app.js + style.css (GitHub Pages root)
-Backend: src/index.js (Cloudflare Worker)
-Konfigurasi deploy: wrangler.toml (root)
-Database: Supabase yang sudah digunakan oleh aplikasi
-D1: tidak digunakan oleh paket ini
-Assets binding: tidak digunakan oleh paket ini
