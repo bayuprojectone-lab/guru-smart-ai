@@ -1,0 +1,34 @@
+GURU SMART - PERUBAHAN v27 (1 permintaan)
+==========================================
+
+1) WARNA BAGIAN "RAPOR DIGITAL SISWA" DI APLIKASI DISAMAKAN DENGAN
+   HALAMAN RAPOR DIGITAL (TAUTAN SHARE)
+   - Panel "Rapor Digital Siswa" di aplikasi sebelumnya bertema GELAP
+     (teknologi/navy gelap). Sekarang warnanya dibuat sama persis dengan
+     halaman rapor digital yang dibuka lewat tautan share (rapor.html):
+     * Header halaman: gradasi biru tua ke hijau toska
+       (#10294b -> #1456a4 -> #0e9eb2) seperti hero rapor digital.
+     * Bar judul rapor: gradasi biru ke toska (#1769d2 -> #13a6ad)
+       seperti bar "Biodata Siswa / Hasil Belajar".
+     * Kartu putih dengan garis tepi biru muda (#dce7f3) dan sudut membulat,
+       bayangan lembut seperti kartu rapor digital.
+     * Kartu statistik (Rata-rata nilai, Mapel tuntas, Kehadiran hadir,
+       Predikat umum): latar biru muda gradasi + angka biru (#1458a2)
+       seperti kotak statistik rapor digital.
+     * Tabel nilai: kepala tabel biru muda (#eaf3fc), garis baris halus.
+     * Pill status: "Tuntas" hijau muda (#e8f8ef / #087443) persis pill
+       rapor digital; "Perlu bimbingan" merah muda lembut.
+     * Tombol: Cetak/PDF gradasi biru (#1769d2 -> #087eaa) seperti tombol
+       "Simpan Rapor (PDF)"; Ekspor Excel/CSV biru muda lembut; Share
+       WhatsApp tetap hijau.
+   - Mode gelap (dark mode) HP tidak lagi mengubah warna panel ini -
+     selalu tampil terang seperti rapor digital.
+
+YANG TIDAK BERUBAH
+------------------
+- Semua fungsi tetap sama: filter kelas/siswa, Cetak/PDF, Ekspor
+  Excel/CSV, Share WhatsApp, tanda tangan Kepala Sekolah + NIP dan
+  Wali Kelas (dari versi 26), halaman rapor.html (tautan share),
+  dan seluruh bagian aplikasi lain.
+
+File yang berubah: app.js
