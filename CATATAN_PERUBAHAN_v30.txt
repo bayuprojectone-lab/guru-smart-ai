@@ -1,0 +1,42 @@
+GURU SMART - PERUBAHAN v30 (1 permintaan)
+==========================================
+
+1) LOGO DI "DATA DIGITAL GURU" & "DATA DIGITAL SISWA" SEKARANG SELALU SAMA
+   DENGAN LOGO DI DATA SEKOLAH (OTOMATIS IKUT BERGANTI)
+
+   a. LOGO TIDAK LAGI DITANAMKAN KE DALAM QR
+   - Sebelumnya: URL biodata yang dibungkus QR membawa alamat logo sekolah
+     SEWAKTU QR dibuat. Jika logo sekolah kemudian diganti di Data Sekolah
+     (Pengaturan > Kop Surat), QR yang dibuat dari data tersimpan masih
+     membawa logo LAMA, sehingga logo pada halaman Data Digital Guru /
+     Data Digital Siswa tampak BERBEDA dari logo sekolah terbaru.
+   - Sekarang: seluruh QR digital (QR Profil Digital Guru, Kartu Pelajar,
+     Sertifikat) membuka halaman biodata TANPA logo tertanam. Halaman
+     biodata selalu mengambil logo TERBARU langsung dari profil sekolah di
+     server. Jadi: ganti logo sekolah -> begitu QR dipindai, logo di halaman
+     digital pasti logo terbaru.
+   - QR lama yang sudah tercetak pun ikut menampilkan logo terbaru saat
+     dipindai ulang (mekanisme v29).
+   - URL QR menjadi lebih pendek, pola QR lebih lega dan mudah dipindai.
+
+   b. SIMPAN PROFIL SEKOLAH LANGSUNG MENYEGARKAN CACHE APLIKASI
+   - Sebelumnya: setelah logo diganti lalu disimpan, aplikasi masih memakai
+     salinan profil lama di penyimpanan lokal perangkat (cache kilat), sehingga
+     QR Profil Digital Guru, Kartu Pelajar, Rapor Digital Siswa, dan Sertifikat
+     yang dibuka sesaat setelahnya masih memakai logo lama.
+   - Sekarang: begitu profil sekolah berhasil disimpan (termasuk logo kop),
+     cache kilat school_profile diperbarui DETIK ITU JUGA, sehingga semua
+     panel langsung membaca logo terbaru tanpa menunggu revalidasi latar.
+
+YANG TIDAK BERUBAH
+------------------
+- Fitur "+ Logo" khusus kartu pada dialog Cetak Kartu Siswa tetap berfungsi
+  seperti semula (logo kartu boleh berbeda dari logo kop, sesuai desain v25).
+- Isi biodata, foto, isi QR, cara cetak, dan seluruh fitur aplikasi lain
+  tetap sama persis. Tidak ada perubahan database / migrasi baru.
+- Transparansi logo QR Sertifikat & Kartu Pelajar (v29), warna halaman hasil
+  scan QR siswa (v28), tampilan Rapor Digital Siswa (v27) tetap sama.
+- Catatan kecil: halaman biodata digital tetap memerlukan internet untuk
+  mengambil logo terbaru dari server (halaman digital memuat data server).
+
+File yang berubah: app.js
