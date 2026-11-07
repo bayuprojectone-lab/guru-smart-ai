@@ -7,7 +7,7 @@ workers_dev = true
 [[d1_databases]]
 binding = "DB"
 database_name = "guru-smart-sibi"
-database_id = "982fa034-55d5-4af3-b3d8-bf14580dd17e"
+database_id = "cfc69cfa-b781-4061-b6c0-3c949944edf3"
 migrations_dir = "migrations"
 
 # Atur SUPABASE_URL dan SUPABASE_ANON_KEY sebagai Variables/Secrets di dashboard Cloudflare Worker.
