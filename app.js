@@ -315,7 +315,7 @@ window.gsRenderTeacherInlineQR=function(){
  'use strict';
  if(window.__GS_DRIVE_MODULE__)return;window.__GS_DRIVE_MODULE__=true;
  if(window.__BUZZER_MODE__)return;
- var API=(window.GURU_SMART_D1_API_URL||'https://guru-smart-ai.pages.dev/').replace(/\/+$/,'');
+ var API=(window.GURU_SMART_D1_API_URL||'https://bayuprojectone.guru-smart-ai-pro.workers.dev').replace(/\/+$/,'');
  var state={connected:false,email:'',busy:false,last:'Belum ada backup',recoveryNeeded:false,syncing:false};
  function el(id){return document.getElementById(id)}
  function toast(msg,type){if(typeof window.showToast==='function')window.showToast(msg,type||'info');else console.log('[GURU SMART DRIVE]',msg)}
