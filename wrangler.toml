@@ -1,0 +1,13 @@
+name = "guru-smart-ai"
+main = "src/index.js"
+compatibility_date = "2026-11-02"
+workers_dev = true
+
+# WAJIB: setelah membuat database D1, ganti database_id dengan ID sebenarnya.
+[[d1_databases]]
+binding = "DB"
+database_name = "guru-smart-sibi"
+database_id = "GANTI_DENGAN_DATABASE_ID_D1"
+migrations_dir = "migrations/d1"
+
+# Atur SUPABASE_URL dan SUPABASE_ANON_KEY sebagai Variables/Secrets di dashboard Cloudflare Worker.
