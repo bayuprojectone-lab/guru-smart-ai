@@ -1,7 +1,11 @@
-name = "guru-smart-ai"
+name = "website-guru-smart-ai-pro"
 main = "src/index.js"
-compatibility_date = "2026-11-02"
-workers_dev = true
+compatibility_date = "2026-11-06"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = ["/api/*"]
 
 # WAJIB: setelah membuat database D1, ganti database_id dengan ID sebenarnya.
 [[d1_databases]]
