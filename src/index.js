@@ -303,8 +303,28 @@ export default {
     }
     if (request.method === "GET" && url.pathname === "/api/drive/oauth/callback") return driveCallback(request, env);
     if (request.method === "GET" && (url.pathname === "/" || url.pathname === "/api")) return response({ ok:true, service:"GURU SMART SIBI D1 API", version:VERSION, endpoints:["/api/health","/api/d1-health","/api/db/query","/api/drive/oauth/start","/api/drive/oauth/callback","/api/drive/status","/api/drive/backup","/api/drive/restore","/api/drive/file-backup","/api/drive/storage-list","/api/drive/storage-file"] }, 200, origin);
-    if (request.method === "GET" && url.pathname === "/api/health") return response({ ok:true, worker:"online", version:VERSION, timestamp:new Date().toISOString(), d1_bound:!!env.DB }, 200, origin);
-    if (request.method === "GET" && url.pathname === "/api/d1-health") {
+    
+if (request.method === "GET" && url.pathname === "/api") {
+  return response({
+    ok: true,
+    service: "GURU SMART SIBI D1 API",
+    version: VERSION,
+    endpoints: [
+      "/api/health",
+      "/api/d1-health",
+      "/api/db/query",
+      "/api/drive/oauth/start",
+      "/api/drive/oauth/callback",
+      "/api/drive/status",
+      "/api/drive/backup",
+      "/api/drive/restore",
+      "/api/drive/file-backup",
+      "/api/drive/storage-list",
+      "/api/drive/storage-file"
+    ]
+  }, 200, origin);
+}
+
       if (!env.DB) return response({ ok:false, d1:"not_configured", message:"Binding D1 belum dikonfigurasi." }, 503, origin);
       try { const r=await env.DB.prepare("SELECT COUNT(*) AS count FROM app_records").first(); return response({ ok:true, d1:"connected", records:r?.count||0, version:VERSION }, 200, origin); }
       catch (_) { return response({ ok:false, d1:"migration_required", message:"Database terhubung, tetapi migrasi belum dijalankan." }, 503, origin); }
@@ -321,7 +341,16 @@ export default {
       if (verified.error) return response({ error:verified.error }, verified.status, origin);
       return queryD1(request, env, verified.user);
     }
-    if (url.pathname.startsWith("/api/")) return response({ error:"API route tidak ditemukan" }, 404, origin);
-    return response({ ok:false, error:"Not found" }, 404, origin);
-  }
-};
+    
+if (url.pathname.startsWith("/api/")) {
+  return response({ error: "API route tidak ditemukan" }, 404, origin);
+}
+
+if (env.ASSETS) {
+  return env.ASSETS.fetch(request);
+}
+
+return new Response("Website assets belum dikonfigurasi.", {
+  status: 503,
+  headers: { "content-type": "text/plain; charset=utf-8" }
+});
