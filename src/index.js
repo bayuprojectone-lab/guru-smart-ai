@@ -292,7 +292,24 @@ export default {
       "access-control-allow-headers": "Content-Type, Authorization, apikey", "access-control-max-age": "86400", "vary": "Origin"
     }});
     const url = new URL(request.url);
-    const privacyPath = url.pathname.replace(/\/+$/, "") || "/";
+    // HALAMAN UTAMA GURU SMART AI
+if (
+  url.pathname === "/" &&
+  (request.method === "GET" || request.method === "HEAD")
+) {
+  if (!env.ASSETS) {
+    return new Response("Frontend ASSETS belum terhubung.", {
+      status: 503
+    });
+  }
+
+  const assetUrl = new URL(request.url);
+  assetUrl.pathname = "/index.html";
+
+  return env.ASSETS.fetch(
+    new Request(assetUrl.toString(), request)
+  );
+}const privacyPath = url.pathname.replace(/\/+$/, "") || "/";
     if (request.method === "GET" && ["/privacy", "/privacy.html", "/kebijakan-privasi"].includes(privacyPath)) {
       return new Response(PRIVACY_HTML, { status: 200, headers: {
         "content-type": "text/html; charset=utf-8",
