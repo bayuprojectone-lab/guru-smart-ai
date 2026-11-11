@@ -109,10 +109,10 @@ function safeOrigin(request) {
 async function verifySupabaseJwt(token, env) {
   const secret = String(env.SUPABASE_JWT_SECRET || ""); if (!secret) return null;
   const parts = String(token).split("."); if (parts.length !== 3) return null;
-  const decode = s => JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(s.replace(/-/g,"+").replace(/_/g,"/")), c => c.charCodeAt(0))));
+  const decode = s => JSON.parse(new TextDecoder().decode(decodeBase64Bytes(s,"Token Supabase")));
   const header = decode(parts[0]), payload = decode(parts[1]); if (header.alg !== "HS256" || !payload.sub || Number(payload.exp || 0) <= Date.now()/1000) return null;
   const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), {name:"HMAC",hash:"SHA-256"}, false, ["verify"]);
-  const sig = Uint8Array.from(atob(parts[2].replace(/-/g,"+").replace(/_/g,"/")), c => c.charCodeAt(0));
+  const sig = decodeBase64Bytes(parts[2],"Signature token Supabase");
   const ok = await crypto.subtle.verify("HMAC", key, sig, new TextEncoder().encode(parts[0]+"."+parts[1]));
   return ok ? {id:payload.sub,email:payload.email||"",role:payload.role||"authenticated"} : null;
 }
@@ -231,10 +231,27 @@ async function queryD1(request, env, user) {
 
 // ---- Google Drive OAuth + backup per pengguna (refresh token terenkripsi) ----
 function b64u(bytes){return btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
-function unb64u(s){s=String(s).replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';return Uint8Array.from(atob(s),c=>c.charCodeAt(0));}
+/* Decode Base64/Base64URL safely. Cloudflare secrets may be pasted with line
+   breaks; JWT/state values are Base64URL and commonly omit terminal padding. */
+function decodeBase64Bytes(value,label){
+  let s=String(value==null?'':value).trim().replace(/\s+/g,'').replace(/-/g,'+').replace(/_/g,'/');
+  if(!s)throw new Error((label||'Data Base64')+' kosong.');
+  if(!/^[A-Za-z0-9+/]*={0,2}$/.test(s))throw new Error((label||'Data Base64')+' bukan Base64/Base64URL yang valid. Periksa karakter tambahan, tanda kutip, atau placeholder.');
+  s=s.replace(/=+$/,'');
+  if(s.length%4===1)throw new Error((label||'Data Base64')+' memiliki panjang yang tidak valid.');
+  while(s.length%4)s+='=';
+  let binary;try{binary=atob(s);}catch(_){throw new Error((label||'Data Base64')+' gagal didekode. Pastikan nilainya Base64 yang benar.');}
+  return Uint8Array.from(binary,c=>c.charCodeAt(0));
+}
+function unb64u(s){return decodeBase64Bytes(s,'Data Base64URL');}
 async function hmac(value,secret){const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);return b64u(await crypto.subtle.sign('HMAC',k,new TextEncoder().encode(value)));}
-async function sealToken(token,secret){const raw=Uint8Array.from(atob(secret),c=>c.charCodeAt(0));if(raw.length!==32)throw new Error('DRIVE_TOKEN_ENCRYPTION_KEY harus Base64 dari 32 byte acak.');const key=await crypto.subtle.importKey('raw',raw,'AES-GCM',false,['encrypt']);const iv=crypto.getRandomValues(new Uint8Array(12));const data=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(token));return b64u(iv)+'.'+b64u(data);}
-async function openToken(value,secret){const raw=Uint8Array.from(atob(secret),c=>c.charCodeAt(0));if(raw.length!==32)throw new Error('Kunci enkripsi token tidak valid.');const key=await crypto.subtle.importKey('raw',raw,'AES-GCM',false,['decrypt']);const p=String(value).split('.');const data=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64u(p[0])},key,unb64u(p[1]));return new TextDecoder().decode(data);}
+function driveEncryptionKey(secret){
+  const raw=decodeBase64Bytes(secret,'DRIVE_TOKEN_ENCRYPTION_KEY');
+  if(raw.length!==32)throw new Error('DRIVE_TOKEN_ENCRYPTION_KEY tidak valid: harus Base64/Base64URL dari tepat 32 byte acak (hasil openssl rand -base64 32). Jangan gunakan Client Secret atau OAUTH_STATE_SECRET.');
+  return raw;
+}
+async function sealToken(token,secret){const raw=driveEncryptionKey(secret);const key=await crypto.subtle.importKey('raw',raw,'AES-GCM',false,['encrypt']);const iv=crypto.getRandomValues(new Uint8Array(12));const data=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(token));return b64u(iv)+'.'+b64u(data);}
+async function openToken(value,secret){const raw=driveEncryptionKey(secret);const key=await crypto.subtle.importKey('raw',raw,'AES-GCM',false,['decrypt']);const p=String(value).split('.');if(p.length!==2)throw new Error('Format token Google Drive terenkripsi tidak valid.');const data=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64u(p[0])},key,unb64u(p[1]));return new TextDecoder().decode(data);}
 function driveRedirect(request,query){const u=new URL(request.url);u.pathname='/';u.search='';u.hash='';for(const k in query)u.searchParams.set(k,query[k]);return Response.redirect(u.toString(),302);}
 async function driveToken(userId,env){const row=await env.DB.prepare('SELECT * FROM drive_connections WHERE user_id=?').bind(userId).first();if(!row)return {error:'Google Drive belum terhubung.'};const refresh=await openToken(row.refresh_token_enc,env.DRIVE_TOKEN_ENCRYPTION_KEY);const form=new URLSearchParams({client_id:env.GOOGLE_CLIENT_ID,client_secret:env.GOOGLE_CLIENT_SECRET,refresh_token:refresh,grant_type:'refresh_token'});const r=await fetch('https://oauth2.googleapis.com/token',{method:'POST',headers:{'content-type':'application/x-www-form-urlencoded'},body:form});const j=await r.json();if(!r.ok||!j.access_token)throw new Error('Token Google tidak dapat diperbarui: '+(j.error_description||j.error||r.status));return {access:j.access_token,row};}
 async function driveApi(access,path,options){const r=await fetch('https://www.googleapis.com/drive/v3/'+path,{...options,headers:{Authorization:'Bearer '+access,...(options&&options.headers||{})}});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error('Google Drive API '+r.status+': '+(j.error&&j.error.message||'permintaan gagal'));return j;}
@@ -292,7 +309,24 @@ export default {
       "access-control-allow-headers": "Content-Type, Authorization, apikey", "access-control-max-age": "86400", "vary": "Origin"
     }});
     const url = new URL(request.url);
-    const privacyPath = url.pathname.replace(/\/+$/, "") || "/";
+    // HALAMAN UTAMA GURU SMART AI
+if (
+  url.pathname === "/" &&
+  (request.method === "GET" || request.method === "HEAD")
+) {
+  if (!env.ASSETS) {
+    return new Response("Frontend ASSETS belum terhubung.", {
+      status: 503
+    });
+  }
+
+  const assetUrl = new URL(request.url);
+  assetUrl.pathname = "/index.html";
+
+  return env.ASSETS.fetch(
+    new Request(assetUrl.toString(), request)
+  );
+}const privacyPath = url.pathname.replace(/\/+$/, "") || "/";
     if (request.method === "GET" && ["/privacy", "/privacy.html", "/kebijakan-privasi"].includes(privacyPath)) {
       return new Response(PRIVACY_HTML, { status: 200, headers: {
         "content-type": "text/html; charset=utf-8",
@@ -302,7 +336,7 @@ export default {
       }});
     }
     if (request.method === "GET" && url.pathname === "/api/drive/oauth/callback") return driveCallback(request, env);
-    if (request.method === "GET" && (url.pathname === "/" || url.pathname === "/api")) return response({ ok:true, service:"GURU SMART SIBI D1 API", version:VERSION, endpoints:["/api/health","/api/d1-health","/api/db/query","/api/drive/oauth/start","/api/drive/oauth/callback","/api/drive/status","/api/drive/backup","/api/drive/restore","/api/drive/file-backup","/api/drive/storage-list","/api/drive/storage-file"] }, 200, origin);
+    if (request.method === "GET" && url.pathname === "/api") return response({ ok:true, service:"GURU SMART SIBI D1 API", version:VERSION, endpoints:["/api/health","/api/d1-health","/api/db/query","/api/drive/oauth/start","/api/drive/oauth/callback","/api/drive/status","/api/drive/backup","/api/drive/restore","/api/drive/file-backup","/api/drive/storage-list","/api/drive/storage-file"] }, 200, origin);
     if (request.method === "GET" && url.pathname === "/api/health") return response({ ok:true, worker:"online", version:VERSION, timestamp:new Date().toISOString(), d1_bound:!!env.DB }, 200, origin);
     if (request.method === "GET" && url.pathname === "/api/d1-health") {
       if (!env.DB) return response({ ok:false, d1:"not_configured", message:"Binding D1 belum dikonfigurasi." }, 503, origin);
@@ -322,6 +356,11 @@ export default {
       return queryD1(request, env, verified.user);
     }
     if (url.pathname.startsWith("/api/")) return response({ error:"API route tidak ditemukan" }, 404, origin);
-    return response({ ok:false, error:"Not found" }, 404, origin);
+    // Sajikan frontend statis dari Cloudflare Workers Static Assets.
+    // File sumber di root tetap dipertahankan; salinannya berada di ./public.
+    if (env.ASSETS && (request.method === "GET" || request.method === "HEAD")) {
+      return env.ASSETS.fetch(request);
+    }
+    return new Response("Static Assets belum dikonfigurasi. Periksa binding ASSETS pada wrangler.toml.", { status:503, headers:{"content-type":"text/plain; charset=utf-8"} });
   }
 };
