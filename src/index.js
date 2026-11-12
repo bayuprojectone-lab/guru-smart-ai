@@ -107,7 +107,6 @@ function safeOrigin(request) {
   return "*";
 }
 function decodeJwtBase64Url(segment) {
-  // JWT memakai Base64URL tanpa padding. atob() membutuhkan padding yang benar.
   let value = String(segment || "").replace(/-/g, "+").replace(/_/g, "/").replace(/\s+/g, "");
   if (!/^[A-Za-z0-9+/]*={0,2}$/.test(value)) throw new Error("Segmen JWT bukan Base64URL yang valid.");
   value = value.replace(/=+$/, "");
@@ -245,7 +244,16 @@ async function queryD1(request, env, user) {
 
 // ---- Google Drive OAuth + backup per pengguna (refresh token terenkripsi) ----
 function b64u(bytes){return btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
-function unb64u(s){s=String(s||'').trim().replace(/-/g,'+').replace(/_/g,'/').replace(/\s+/g,'');while(s.length%4)s+='=';return Uint8Array.from(atob(s),c=>c.charCodeAt(0));}
+function unb64u(value){
+  let s=String(value??'').trim().replace(/\s+/g,'').replace(/-/g,'+').replace(/_/g,'/');
+  if(!s || !/^[A-Za-z0-9+/]*={0,2}$/.test(s) || /=/.test(s.slice(0,-2)) || s.length%4===1){
+    throw new Error('Format Base64URL token Google di D1 tidak valid. Hubungkan ulang Google Drive untuk membuat token baru.');
+  }
+  s=s.replace(/=+$/,'');
+  while(s.length%4)s+='=';
+  try{return Uint8Array.from(atob(s),c=>c.charCodeAt(0));}
+  catch(_){throw new Error('Token Google di D1 rusak atau bukan Base64URL yang valid. Hubungkan ulang Google Drive untuk memperbarui token.');}
+}
 /* decodeKeySecret: terima Base64 / Base64URL / Hex (64 char) 32-byte. Spasi, newline,
    dan tanda '=' akhir diabaikan. Melempar pesan yang jelas agar callback OAuth
    tidak lagi menampilkan "atob() called with invalid base64-encoded data". */
@@ -269,7 +277,16 @@ function decodeKeySecret(secret){
 }
 async function hmac(value,secret){const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);return b64u(await crypto.subtle.sign('HMAC',k,new TextEncoder().encode(value)));}
 async function sealToken(token,secret){const raw=decodeKeySecret(secret);const key=await crypto.subtle.importKey('raw',raw,'AES-GCM',false,['encrypt']);const iv=crypto.getRandomValues(new Uint8Array(12));const data=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(token));return b64u(iv)+'.'+b64u(data);}
-async function openToken(value,secret){const raw=decodeKeySecret(secret);const key=await crypto.subtle.importKey('raw',raw,'AES-GCM',false,['decrypt']);const p=String(value).split('.');const data=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64u(p[0])},key,unb64u(p[1]));return new TextDecoder().decode(data);}
+async function openToken(value,secret){
+  const raw=decodeKeySecret(secret);
+  const parts=String(value||'').split('.');
+  if(parts.length!==2 || !parts[0] || !parts[1]) throw new Error('Format refresh token terenkripsi di D1 tidak lengkap. Hubungkan ulang Google Drive untuk membuat token baru.');
+  const iv=unb64u(parts[0]), cipher=unb64u(parts[1]);
+  if(iv.length!==12 || cipher.length<17) throw new Error('Refresh Token Google di D1 tidak utuh. Hubungkan ulang Google Drive untuk membuat token baru.');
+  const key=await crypto.subtle.importKey('raw',raw,'AES-GCM',false,['decrypt']);
+  try { const data=await crypto.subtle.decrypt({name:'AES-GCM',iv},key,cipher); return new TextDecoder().decode(data); }
+  catch(_) { throw new Error('Refresh Token Google tidak dapat dibuka. DRIVE_TOKEN_ENCRYPTION_KEY mungkin berbeda dari kunci saat token disimpan. Periksa Secret lama; jangan menggantinya sembarangan.'); }
+},key,unb64u(p[1]));return new TextDecoder().decode(data);}
 function driveRedirect(request,query){const u=new URL(request.url);u.pathname='/';u.search='';u.hash='';for(const k in query)u.searchParams.set(k,query[k]);return Response.redirect(u.toString(),302);}
 async function driveToken(userId,env){const row=await env.DB.prepare('SELECT * FROM drive_connections WHERE user_id=?').bind(userId).first();if(!row)return {error:'Google Drive belum terhubung.'};const refresh=await openToken(row.refresh_token_enc,env.DRIVE_TOKEN_ENCRYPTION_KEY);const form=new URLSearchParams({client_id:env.GOOGLE_CLIENT_ID,client_secret:env.GOOGLE_CLIENT_SECRET,refresh_token:refresh,grant_type:'refresh_token'});const r=await fetch('https://oauth2.googleapis.com/token',{method:'POST',headers:{'content-type':'application/x-www-form-urlencoded'},body:form});const j=await r.json();if(!r.ok||!j.access_token)throw new Error('Token Google tidak dapat diperbarui: '+(j.error_description||j.error||r.status));return {access:j.access_token,row};}
 async function driveApi(access,path,options){const r=await fetch('https://www.googleapis.com/drive/v3/'+path,{...options,headers:{Authorization:'Bearer '+access,...(options&&options.headers||{})}});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error('Google Drive API '+r.status+': '+(j.error&&j.error.message||'permintaan gagal'));return j;}
