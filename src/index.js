@@ -288,14 +288,34 @@ async function driveCallback(request, env) {
       body: form
     });
 
-    const tj = await tr.json();
+    
+if (!tr.ok) {
+  console.error("Google OAuth token exchange failed:", {
+    status: tr.status,
+    error: tj.error || null,
+    error_description: tj.error_description || null
+  });
 
-    if (!tr.ok || !tj.access_token) {
-      throw new Error(
-        "Pertukaran token Google gagal: " +
-        (tj.error_description || tj.error || tr.status)
-      );
-    }
+  throw new Error(
+    `Google gagal menukar authorization code (${tr.status}): ${
+      tj.error_description || tj.error || "Penyebab tidak diketahui"
+    }`
+  );
+}
+
+if (!tj.access_token) {
+  throw new Error("Google tidak mengirim access_token.");
+}
+
+console.log("Google OAuth token response:", {
+  status: tr.status,
+  has_access_token: Boolean(tj.access_token),
+  has_refresh_token: Boolean(tj.refresh_token),
+  token_type: tj.token_type || null,
+  expires_in: tj.expires_in || null,
+  scope: tj.scope || null
+});
+
 
     // Ambil refresh token lama jika Google tidak mengirim token baru.
     const previous = await env.DB.prepare(
