@@ -106,13 +106,27 @@ function safeOrigin(request) {
   if (/^https:\/\/[a-z0-9-]+\.github\.io$/i.test(origin) || /^https:\/\/[a-z0-9.-]+\.pages\.dev$/i.test(origin) || /^https:\/\/.*\.workers\.dev$/i.test(origin)) return origin;
   return "*";
 }
+function decodeJwtBase64Url(segment) {
+  // JWT memakai Base64URL tanpa padding. atob() membutuhkan padding yang benar.
+  let value = String(segment || "").replace(/-/g, "+").replace(/_/g, "/").replace(/\s+/g, "");
+  if (!/^[A-Za-z0-9+/]*={0,2}$/.test(value)) throw new Error("Segmen JWT bukan Base64URL yang valid.");
+  value = value.replace(/=+$/, "");
+  if (value.length % 4 === 1) throw new Error("Panjang segmen JWT Base64URL tidak valid.");
+  while (value.length % 4) value += "=";
+  const binary = atob(value);
+  return Uint8Array.from(binary, c => c.charCodeAt(0));
+}
 async function verifySupabaseJwt(token, env) {
   const secret = String(env.SUPABASE_JWT_SECRET || ""); if (!secret) return null;
   const parts = String(token).split("."); if (parts.length !== 3) return null;
-  const decode = s => JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(s.replace(/-/g,"+").replace(/_/g,"/")), c => c.charCodeAt(0))));
-  const header = decode(parts[0]), payload = decode(parts[1]); if (header.alg !== "HS256" || !payload.sub || Number(payload.exp || 0) <= Date.now()/1000) return null;
+  let header, payload, sig;
+  try {
+    header = JSON.parse(new TextDecoder().decode(decodeJwtBase64Url(parts[0])));
+    payload = JSON.parse(new TextDecoder().decode(decodeJwtBase64Url(parts[1])));
+    sig = decodeJwtBase64Url(parts[2]);
+  } catch (_) { return null; }
+  if (header.alg !== "HS256" || !payload.sub || Number(payload.exp || 0) <= Date.now()/1000) return null;
   const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), {name:"HMAC",hash:"SHA-256"}, false, ["verify"]);
-  const sig = Uint8Array.from(atob(parts[2].replace(/-/g,"+").replace(/_/g,"/")), c => c.charCodeAt(0));
   const ok = await crypto.subtle.verify("HMAC", key, sig, new TextEncoder().encode(parts[0]+"."+parts[1]));
   return ok ? {id:payload.sub,email:payload.email||"",role:payload.role||"authenticated"} : null;
 }
