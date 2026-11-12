@@ -241,8 +241,180 @@ async function driveApi(access,path,options){const r=await fetch('https://www.go
 async function ensureDriveFolder(access,name,parent){const q="name='"+name.replace(/'/g,"\\'")+"' and mimeType='application/vnd.google-apps.folder' and trashed=false"+(parent?" and '"+parent+"' in parents":'');const found=await driveApi(access,'files?q='+encodeURIComponent(q)+'&fields=files(id,name)&pageSize=10');if(found.files&&found.files.length)return found.files[0].id;const f=await driveApi(access,'files?fields=id',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name,mimeType:'application/vnd.google-apps.folder',...(parent?{parents:[parent]}:{})})});return f.id;}
 async function backupDriveEvent(request,env,user){if(!env.DB)return response({error:'D1 belum dikonfigurasi.'},503,safeOrigin(request));let body;try{body=await request.json();}catch(_){return response({error:'JSON tidak valid.'},400,safeOrigin(request));}const table=String(body.table||'').replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,64)||'data';const op=String(body.op||'change');const event={app:'GURU SMART AI PRO',user_id:user.id,table,operation:op,record_data:body.data??null,filters:body.filters||[],occurred_at:body.timestamp||new Date().toISOString(),schema_version:1};try{const auth=await driveToken(user.id,env);let root=auth.row.root_folder_id;if(!root)root=await ensureDriveFolder(auth.access,'GURU SMART AI',null);let folders={};try{folders=JSON.parse(auth.row.folders_json||'{}')}catch(_){}let folder=folders[table];if(!folder){const t=table.toLowerCase();let cat='Backup Database';if(/teacher|guru/.test(t))cat='Data Guru';else if(/student|siswa|attendance|absen/.test(t))cat='Data Siswa';else if(/rapor|report/.test(t))cat='Raport Digital';else if(/grade|nilai/.test(t))cat='Nilai Siswa';else if(/question|soal|quiz|kuis/.test(t))cat='Bank Soal';else if(/sibi|book|buku/.test(t))cat='Buku Pelajaran SIBI';else if(/document|file|material|perangkat/.test(t))cat='Dokumen Pembelajaran';folder=await ensureDriveFolder(auth.access,table,folders['category__'+cat]||root);}folders[table]=folder;await env.DB.prepare('UPDATE drive_connections SET root_folder_id=?,folders_json=?,updated_at=datetime(\'now\') WHERE user_id=?').bind(root,JSON.stringify(folders),user.id).run();const boundary='----gsdrive'+crypto.randomUUID().replace(/-/g,'');const metadata={name:table+'_'+Date.now()+'_'+crypto.randomUUID().slice(0,8)+'.json',mimeType:'application/json',parents:[folder]};const multipart='--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+JSON.stringify(metadata)+'\r\n--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+JSON.stringify(event)+'\r\n--'+boundary+'--';const up=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name',{method:'POST',headers:{Authorization:'Bearer '+auth.access,'Content-Type':'multipart/related; boundary='+boundary},body:multipart});const uj=await up.json();if(!up.ok)throw new Error(uj.error&&uj.error.message||'Upload Drive gagal');await env.DB.prepare('INSERT INTO drive_backup_log(id,user_id,table_name,file_id,status) VALUES(?,?,?,?,?)').bind(crypto.randomUUID(),user.id,table,uj.id,'ok').run();return response({ok:true,file_id:uj.id,folder_id:folder},200,safeOrigin(request));}catch(e){await env.DB.prepare('INSERT INTO drive_backup_log(id,user_id,table_name,status,detail) VALUES(?,?,?,?,?)').bind(crypto.randomUUID(),user.id,table,'error',String(e.message||e)).run().catch(()=>{});return response({error:String(e.message||e)},502,safeOrigin(request));}}
 async function driveStart(request,env,user){if(!env.GOOGLE_CLIENT_ID||!env.GOOGLE_REDIRECT_URI||!env.OAUTH_STATE_SECRET)return response({error:'Konfigurasi Google OAuth belum lengkap di Cloudflare.'},503,safeOrigin(request));const nonce=crypto.randomUUID();const payload=b64u(new TextEncoder().encode(JSON.stringify({uid:user.id,n:nonce,exp:Date.now()+600000})));const sig=await hmac(payload,env.OAUTH_STATE_SECRET);await env.DB.prepare('INSERT INTO drive_oauth_states(nonce,user_id,expires_at) VALUES(?,?,?)').bind(nonce,user.id,Math.floor(Date.now()/1000)+600).run();const u=new URL('https://accounts.google.com/o/oauth2/v2/auth');u.search=new URLSearchParams({client_id:env.GOOGLE_CLIENT_ID,redirect_uri:env.GOOGLE_REDIRECT_URI,response_type:'code',scope:'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email',access_type:'offline',prompt:'consent',include_granted_scopes:'true',state:payload+'.'+sig}).toString();return response({url:u.toString()},200,safeOrigin(request));}
-async function driveCallback(request,env){const u=new URL(request.url);const state=u.searchParams.get('state')||'';const [payload,sig]=state.split('.');try{if(!payload||!sig||sig!==await hmac(payload,env.OAUTH_STATE_SECRET))throw new Error('State OAuth tidak valid.');const p=JSON.parse(new TextDecoder().decode(unb64u(payload)));if(p.exp<Date.now())throw new Error('Sesi penghubung Google kedaluwarsa.');const used=await env.DB.prepare('SELECT nonce FROM drive_oauth_states WHERE nonce=? AND user_id=? AND expires_at>?').bind(p.n,p.uid,Math.floor(Date.now()/1000)).first();if(!used)throw new Error('Permintaan OAuth sudah digunakan atau kedaluwarsa.');await env.DB.prepare('DELETE FROM drive_oauth_states WHERE nonce=?').bind(p.n).run();if(u.searchParams.get('error'))throw new Error('Google menolak izin: '+u.searchParams.get('error'));const form=new URLSearchParams({code:u.searchParams.get('code')||'',client_id:env.GOOGLE_CLIENT_ID,client_secret:env.GOOGLE_CLIENT_SECRET,redirect_uri:env.GOOGLE_REDIRECT_URI,grant_type:'authorization_code'});const tr=await fetch('https://oauth2.googleapis.com/token',{method:'POST',headers:{'content-type':'application/x-www-form-urlencoded'},body:form});const tj=await tr.json();if(!tr.ok||!tj.refresh_token)throw new Error('Google tidak mengirim refresh token. Cabut akses aplikasi di akun Google lalu coba hubungkan ulang.');const enc=await sealToken(tj.refresh_token,env.DRIVE_TOKEN_ENCRYPTION_KEY);let email='';try{const me=await fetch('https://www.googleapis.com/oauth2/v2/userinfo',{headers:{Authorization:'Bearer '+tj.access_token}});const mj=await me.json();email=mj.email||'';}catch(_){}const root=await ensureDriveFolder(tj.access_token,'GURU SMART AI',null);const cats=['Data Guru','Data Siswa','Raport Digital','Bank Soal','Buku Pelajaran SIBI','Dokumen Pembelajaran','Nilai Siswa','Backup Database'];const folders={};for(const cat of cats)folders['category__'+cat]=await ensureDriveFolder(tj.access_token,cat,root);await env.DB.prepare('INSERT INTO drive_connections(user_id,refresh_token_enc,connected_email,root_folder_id,folders_json) VALUES(?,?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET refresh_token_enc=excluded.refresh_token_enc,connected_email=excluded.connected_email,root_folder_id=excluded.root_folder_id,folders_json=excluded.folders_json,updated_at=datetime(\'now\')').bind(p.uid,enc,email,root,JSON.stringify(folders)).run();return new Response('<!doctype html><meta charset="utf-8"><title>Google Drive terhubung</title><body style="font:16px Arial;text-align:center;padding:40px"><h2>Google Drive berhasil dihubungkan</h2><p>Anda dapat menutup jendela ini dan kembali ke GURU SMART AI PRO.</p><script>if(window.opener){window.opener.postMessage({type:"GURU_SMART_DRIVE_CONNECTED"},"*");}setTimeout(()=>window.close(),900)</script></body>',{headers:{'content-type':'text/html; charset=utf-8'}});}catch(e){return new Response('<!doctype html><meta charset="utf-8"><title>Google Drive</title><body style="font:16px Arial;text-align:center;padding:40px"><h2>Gagal menghubungkan Google Drive</h2><p>'+String(e.message||e).replace(/[<>&]/g,'')+'</p><p>Tutup jendela ini dan periksa konfigurasi.</p></body>',{status:400,headers:{'content-type':'text/html; charset=utf-8'}});}}
-async function backupDriveFile(request,env,user){try{const form=await request.formData();const file=form.get('file');const bucket=String(form.get('bucket')||'Dokumen Pembelajaran').replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,64);const original=String(form.get('path')||file&&file.name||'file').slice(0,500);if(!file||typeof file.arrayBuffer!=='function')return response({error:'File tidak ditemukan.'},400,safeOrigin(request));if(file.size>15000000)return response({error:'File lebih dari 15 MB; tidak dikirim ke backup otomatis.'},413,safeOrigin(request));const auth=await driveToken(user.id,env);let root=auth.row.root_folder_id;if(!root)root=await ensureDriveFolder(auth.access,'GURU SMART AI',null);let fm={};try{fm=JSON.parse(auth.row.folders_json||'{}')}catch(_){}let folder=await ensureDriveFolder(auth.access,bucket,fm['category__Dokumen Pembelajaran']||root);try{fm=JSON.parse(auth.row.folders_json||'{}')}catch(_){}fm['storage__'+bucket]=folder;await env.DB.prepare('UPDATE drive_connections SET root_folder_id=?,folders_json=?,updated_at=datetime(\'now\') WHERE user_id=?').bind(root,JSON.stringify(fm),user.id).run();const boundary='----gsfile'+crypto.randomUUID().replace(/-/g,'');const name=original.split('/').pop().replace(/[^a-zA-Z0-9._-]/g,'_').slice(-160)||'file';const metadata={name,mimeType:file.type||'application/octet-stream',parents:[folder],description:'GURU SMART AI backup | user='+user.id+' | bucket='+bucket+' | path='+original,appProperties:{gsBucket:bucket,gsPath:original,gsOwner:user.id}};const bytes=new Uint8Array(await file.arrayBuffer());const head='--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+JSON.stringify(metadata)+'\r\n--'+boundary+'\r\nContent-Type: '+(file.type||'application/octet-stream')+'\r\n\r\n';const tail='\r\n--'+boundary+'--';const enc=new TextEncoder();const body=new Uint8Array(enc.encode(head).length+bytes.length+enc.encode(tail).length);let off=0;body.set(enc.encode(head),off);off+=enc.encode(head).length;body.set(bytes,off);off+=bytes.length;body.set(enc.encode(tail),off);const up=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name',{method:'POST',headers:{Authorization:'Bearer '+auth.access,'Content-Type':'multipart/related; boundary='+boundary},body});const j=await up.json();if(!up.ok)throw new Error(j.error&&j.error.message||'Upload file ke Drive gagal');await env.DB.prepare('INSERT INTO drive_backup_log(id,user_id,table_name,file_id,status) VALUES(?,?,?,?,?)').bind(crypto.randomUUID(),user.id,'storage:'+bucket,j.id,'ok').run();return response({ok:true,file_id:j.id},200,safeOrigin(request));}catch(e){return response({error:String(e.message||e)},502,safeOrigin(request));}}
+
+async function driveCallback(request, env) {
+  const u = new URL(request.url);
+  const state = u.searchParams.get("state") || "";
+  const [payload, sig] = state.split(".");
+
+  try {
+    if (!payload || !sig ||
+        sig !== await hmac(payload, env.OAUTH_STATE_SECRET)) {
+      throw new Error("State OAuth tidak valid.");
+    }
+
+    const p = JSON.parse(
+      new TextDecoder().decode(unb64u(payload))
+    );
+
+    if (p.exp < Date.now())
+      throw new Error("Sesi penghubung Google kedaluwarsa.");
+
+    const used = await env.DB.prepare(
+      "SELECT nonce FROM drive_oauth_states WHERE nonce=? AND user_id=? AND expires_at>?"
+    ).bind(p.n, p.uid, Math.floor(Date.now() / 1000)).first();
+
+    if (!used)
+      throw new Error("Permintaan OAuth sudah digunakan atau kedaluwarsa.");
+
+    await env.DB.prepare(
+      "DELETE FROM drive_oauth_states WHERE nonce=?"
+    ).bind(p.n).run();
+
+    if (u.searchParams.get("error"))
+      throw new Error("Google menolak izin: " + u.searchParams.get("error"));
+
+    const form = new URLSearchParams({
+      code: u.searchParams.get("code") || "",
+      client_id: env.GOOGLE_CLIENT_ID,
+      client_secret: env.GOOGLE_CLIENT_SECRET,
+      redirect_uri: env.GOOGLE_REDIRECT_URI,
+      grant_type: "authorization_code"
+    });
+
+    const tr = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: form
+    });
+
+    const tj = await tr.json();
+
+    if (!tr.ok || !tj.access_token) {
+      throw new Error(
+        "Pertukaran token Google gagal: " +
+        (tj.error_description || tj.error || tr.status)
+      );
+    }
+
+    // Ambil refresh token lama jika Google tidak mengirim token baru.
+    const previous = await env.DB.prepare(
+      "SELECT refresh_token_enc FROM drive_connections WHERE user_id=?"
+    ).bind(p.uid).first();
+
+    let encryptedRefresh;
+
+    if (tj.refresh_token) {
+      encryptedRefresh = await sealToken(
+        tj.refresh_token,
+        env.DRIVE_TOKEN_ENCRYPTION_KEY
+      );
+    } else if (previous && previous.refresh_token_enc) {
+      encryptedRefresh = previous.refresh_token_enc;
+    } else {
+      throw new Error(
+        "Google tidak memberikan refresh token dan belum ada token lama. " +
+        "Cabut akses aplikasi Google, lalu hubungkan kembali."
+      );
+    }
+
+    let email = "";
+    try {
+      const me = await fetch(
+        "https://www.googleapis.com/oauth2/v2/userinfo",
+        {
+          headers: {
+            Authorization: "Bearer " + tj.access_token
+          }
+        }
+      );
+      const mj = await me.json();
+      email = mj.email || "";
+    } catch (_) {}
+
+    const root = await ensureDriveFolder(
+      tj.access_token,
+      "GURU SMART AI",
+      null
+    );
+
+    const cats = [
+      "Data Guru",
+      "Data Siswa",
+      "Raport Digital",
+      "Bank Soal",
+      "Buku Pelajaran SIBI",
+      "Dokumen Pembelajaran",
+      "Nilai Siswa",
+      "Backup Database"
+    ];
+
+    const folders = {};
+
+    for (const cat of cats) {
+      folders["category__" + cat] =
+        await ensureDriveFolder(tj.access_token, cat, root);
+    }
+
+    await env.DB.prepare(`
+      INSERT INTO drive_connections
+      (user_id, refresh_token_enc, connected_email,
+       root_folder_id, folders_json)
+      VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT(user_id) DO UPDATE SET
+        refresh_token_enc=excluded.refresh_token_enc,
+        connected_email=excluded.connected_email,
+        root_folder_id=excluded.root_folder_id,
+        folders_json=excluded.folders_json,
+        updated_at=datetime('now')
+    `).bind(
+      p.uid,
+      encryptedRefresh,
+      email,
+      root,
+      JSON.stringify(folders)
+    ).run();
+
+    return new Response(`
+      <!doctype html>
+      <meta charset="utf-8">
+      <title>Google Drive terhubung</title>
+      <body style="font:16px Arial;text-align:center;padding:40px">
+        <h2>Google Drive berhasil dihubungkan</h2>
+        <p>Silakan kembali ke GURU SMART AI PRO.</p>
+        <script>
+          if(window.opener){
+            window.opener.postMessage(
+              {type:"GURU_SMART_DRIVE_CONNECTED"},
+              "*"
+            );
+          }
+          setTimeout(()=>window.close(),900);
+        </script>
+      </body>
+    `, {
+      headers: { "content-type": "text/html; charset=utf-8" }
+    });
+
+  } catch (e) {
+    const msg = String(e.message || e).replace(/[<>&]/g, "");
+
+    return new Response(`
+      <!doctype html>
+      <meta charset="utf-8">
+      <title>Google Drive</title>
+      <body style="font:16px Arial;text-align:center;padding:40px">
+        <h2>Gagal menghubungkan Google Drive</h2>
+        <p>${msg}</p>
+        <p>Tutup jendela ini dan periksa konfigurasi.</p>
+      </body>
+    `, {
+      status: 400,
+      headers: { "content-type": "text/html; charset=utf-8" }
+    });
+  }
+}
+
 /* ---- v4 KILAT-RESTORE ------------------------------------------------------
    Pemulihan Drive dulu mengunduh SETIAP file backup satu per satu (1 subrequest
    per file). Backup dibuat per perubahan data, sehingga jumlah file cepat ratusan
