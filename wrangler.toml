@@ -1,4 +1,4 @@
-name = "bayuprojectone"
+name = "guru-smart-ai-pro/"
 main = "src/index.js"
 compatibility_date = "2026-11-02"
 workers_dev = true
