@@ -2,8 +2,6 @@ name = "guru-smart-ai"
 main = "src/index.js"
 compatibility_date = "2026-11-01"
 
-[vars]
-SUPABASE_URL = "https://urslwiueyqhoykjhxmqq.supabase.co"
 
 [[d1_databases]]
 binding = "DB"
