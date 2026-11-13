@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<meta content="#e8edf8" name="theme-color"/>
+<meta content="GURU SMART AI PRO — platform digital untuk pendidik Indonesia: perangkat ajar, manajemen sekolah, asisten AI guru, dan dokumen cloud dalam satu ruang kerja." name="description"/>
+<link href="assets/logo-mark.png" rel="icon" type="image/png"/>
+<link href="assets/logo-mark.png" rel="apple-touch-icon"/>
+<link as="image" href="assets/hexagon-tile.jpg" rel="preload"/>
+<title>GURU SMART - Sistem Manajemen Sekolah</title>
+<!-- ==================== AKSELERASI LOADING: PRECONNECT CDN (koneksi disiapkan seketika) ==================== -->
+<link href="https://cdn.tailwindcss.com" rel="preconnect"/>
+<link href="https://cdn.jsdelivr.net" rel="preconnect"/>
+<link href="https://cdnjs.cloudflare.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://js.puter.com" rel="preconnect"/>
+<link crossorigin="" href="https://urslwiueyqhoykjhxmqq.supabase.co" rel="preconnect"/>
+<link href="https://z-cdn-media.chatglm.cn" rel="preconnect"/>
+<link href="https://urslwiueyqhoykjhxmqq.supabase.co" rel="dns-prefetch"/>
+<!-- ==================== AKHIR PRECONNECT ==================== -->
+<!-- ==================== KILAT v1: PANaskan CDN di cache (tanpa memblokir render) ==================== -->
+<link as="script" fetchpriority="high" href="https://cdn.tailwindcss.com" rel="preload"/>
+<link as="script" fetchpriority="high" href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" rel="preload"/>
+<!-- ==================== AKHIR PANaskan CDN ==================== -->
+
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" media="print" onload="this.media='all'" rel="stylesheet"/>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/></noscript>
+
+
+<!-- ==================== KILAT v1: style.css DIMUAT NON-BLOCKING (halaman depan tidak menunggu 244KB CSS) ==================== -->
+<!-- Catatan ?v=...: cache-busting — setiap rilis baru NAIKKAN nomor versi agar browser
+     pengguna TIDAK memakai app.js/style.css lama dari cache (penyebab ikon/tombol versi lama masih tampil). -->
+<link as="style" href="./style.css?v=gs20261109d" rel="preload"/>
+<link href="./style.css?v=gs20261109d" media="print" onload="this.media='all'" rel="stylesheet"/>
+<noscript><link href="./style.css?v=gs20261109d" rel="stylesheet"/></noscript>
+<!-- ==================== AKHIR NON-BLOCKING CSS ==================== -->
+
+
+<style id="gsCritical">
+/* ============================================================
+   GURU SMART — CRITICAL CSS (tampil seketika, tanpa menunggu CDN)
+   Beranda: PREMIUM NEUMORPHISM (Soft UI), murni CSS lokal,
+   selaras dengan login neumorphism pada style.css.
+   ============================================================ */
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+.hidden{display:none!important}
+/* PENTING: svg TIDAK boleh diberi max-width:100% — di kolom tabel yang terjepit (kolom Aksi
+   Data Guru/Siswa), lebar SVG ikon kolaps menjadi 0 sehingga tombol hanya tampak warna.
+   Batasi hanya img & video; ikon svg berukuran tetap dari kelas w-*/h-*. */
+img,video{max-width:100%}
+/* Ikon SVG di dalam tombol: ukuran tetap walau CDN Tailwind lambat/gagal (nilai rem identik skala Tailwind, jadi tanpa efek saat CDN normal) */
+button svg.w-3{width:.75rem;height:.75rem}
+button svg.w-3\.5{width:.875rem;height:.875rem}
+button svg.w-4{width:1rem;height:1rem}
+button svg.w-5{width:1.25rem;height:1.25rem}
+button svg.w-6{width:1.5rem;height:1.5rem}
+button svg.w-7{width:1.75rem;height:1.75rem}
+button svg.w-8{width:2rem;height:2rem}
+button svg.w-10{width:2.5rem;height:2.5rem}
+button svg.w-12{width:3rem;height:3rem}
+button{font:inherit}
+.fade-in{animation:gsFadeIn .35s ease-out}
+@keyframes gsFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ---------- Layar status layanan (fallback ringan) ---------- */
+#gsServiceStatus{position:fixed;top:0;left:0;right:0;z-index:100;padding:12px 16px;color:#fff;font-size:14px;font-weight:600}
+
+/* ---------- Tombol Remot Jari (fallback identik style.css) ---------- */
+#gsGestureBtn{position:fixed;right:16px;bottom:16px;z-index:99980;width:56px;height:56px;border-radius:9999px;background:linear-gradient(135deg,#2563eb,#4f46e5);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 25px rgba(37,99,235,.45);cursor:pointer}
+#gsGestureBtn svg{display:block}
+#gsGesturePanel,#gsGestureGuide,#gsHoverBox,#gsGestureCursor{display:none}
+
+/* ============================================================
+   HALAMAN DEPAN PUBLIK — PREMIUM NEUMORPHISM (SOFT UI)
+   Permukaan lembut satu warna, bayangan ganda terang/gelap,
+   elemen timbul (raised) & terukir (inset). Aksen biru eksklusif.
+   ============================================================ */
+#publicHome{
+  --neo-bg-1:#e9eef5;--neo-bg-2:#dfe7f1;--neo-bg-3:#edf2f8;
+  --neo-surface-1:#f5f8fc;--neo-surface-2:#e4ebf5;
+  --neo-ink:#172b4d;--neo-muted:#5e7089;--neo-faint:#8ea0b8;
+  --neo-blue-1:#3478f6;--neo-blue-2:#214fc5;
+  --neo-sh-dark:rgba(148,163,184,.36);
+  --neo-sh-light:rgba(255,255,255,.95);
+  position:relative;min-height:100dvh;display:flex;flex-direction:column;
+  background:#ffffff;
+  color:var(--neo-ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+
+/* ---------- Latar premium: dasar putih bersih + ikon pendidikan ---------- */
+.gs-bg{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.gs-bg i{display:block;position:absolute}
+/* Tekstur heksagon 3D — lapisan dasar di belakang ikon pendidikan (PC & HP).
+   position:fixed agar gambar selalu memenuhi layar tanpa terpotong/stretch saat di-scroll. */
+.gs-bg-hex{position:fixed;inset:0;background:url('assets/hexagon-tile.jpg') center/1672px 941px repeat}
+.gs-bg-dots{inset:0;background-image:radial-gradient(rgba(58,91,155,.13) 1.3px,transparent 1.4px);background-size:24px 24px;-webkit-mask-image:radial-gradient(ellipse 75% 55% at 50% 104%,#000 12%,transparent 66%);mask-image:radial-gradient(ellipse 75% 55% at 50% 104%,#000 12%,transparent 66%)}
+.gs-bg-rings{right:-120px;top:120px;width:520px;height:520px}
+.gs-bg-rings i{border:1.5px dashed rgba(58,91,155,.16);border-radius:50%}
+.gs-bg-rings i:first-child{inset:0;animation:gsSpin 70s linear infinite}
+.gs-bg-rings i+i{inset:70px;border-color:rgba(58,91,155,.11);animation:gsSpin 70s linear infinite reverse}
+@keyframes gsSpin{to{transform:rotate(360deg)}}
+/* Ikon platform pendidikan yang tersebar sebagai motif latar */
+.gs-bg-ico{position:absolute;display:flex;align-items:center;justify-content:center;transform:rotate(var(--r,0deg));animation:gsFloat 9s ease-in-out infinite alternate;will-change:translate}
+.gs-bg-ico svg{width:100%;height:100%;display:block;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.gs-bg-ico.gs-chip{background:linear-gradient(145deg,#ffffff,rgba(235,241,250,.92));border:1px solid rgba(255,255,255,.95);border-radius:26%;box-shadow:9px 9px 22px rgba(58,91,155,.13),-7px -7px 16px rgba(255,255,255,.95),inset 1px 1px 1px rgba(255,255,255,.9)}
+.gs-bg-ico.gs-chip svg{width:52%;height:52%}
+@keyframes gsFloat{from{translate:0 -7px}to{translate:0 7px}}
+#publicHome main,#publicHome>.gs-foot{position:relative;z-index:1}
+
+/* ---------- Header neumorphic mengambang ---------- */
+.gs-nav{position:sticky;top:0;z-index:60;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);background:rgba(255,255,255,.9);border-bottom:1px solid rgba(255,255,255,.9);box-shadow:0 10px 28px -14px rgba(148,163,184,.5)}
+.gs-nav-in{max-width:1150px;margin:0 auto;padding:13px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+.gs-logo{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit}
+.gs-logo-mark{width:48px;height:48px;flex:none;border-radius:16px;background:linear-gradient(145deg,#f8fbff,#e4ebf5);display:flex;align-items:center;justify-content:center;padding:2px;box-shadow:6px 6px 14px rgba(58,91,155,.30),-5px -5px 12px var(--neo-sh-light),inset 1px 1px 1px rgba(255,255,255,.9)}
+.gs-logo-mark img{width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 2px 3px rgba(58,91,155,.18))}
+.gs-logo b{display:block;font-size:17px;font-weight:800;letter-spacing:.2px;color:var(--neo-ink)}
+.gs-logo small{display:block;color:var(--neo-muted);font-size:12px;font-weight:500}
+.gs-navlinks{display:flex;align-items:center;gap:6px}
+.gs-navlinks a{color:#3d5271;text-decoration:none;font-size:14px;font-weight:600;padding:8px 12px;border-radius:12px;transition:background .18s,box-shadow .18s,color .18s,transform .18s}
+.gs-navlinks a:hover{color:#245fd2;background:linear-gradient(145deg,var(--neo-surface-1),var(--neo-surface-2));box-shadow:3px 3px 8px var(--neo-sh-dark),-3px -3px 7px var(--neo-sh-light)}
+.gs-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:13px;padding:10px 18px;font-weight:700;font-size:14px;text-decoration:none;cursor:pointer;border:0;transition:transform .18s,box-shadow .18s,background .18s,color .18s}
+.gs-btn:active{transform:translateY(1px)}
+.gs-btn-ghost{background:linear-gradient(145deg,var(--neo-surface-1),var(--neo-surface-2));border:1px solid rgba(255,255,255,.9);color:#2a4066;box-shadow:5px 5px 12px var(--neo-sh-dark),-4px -4px 10px var(--neo-sh-light)}
+.gs-btn-ghost:hover{transform:translateY(-1px);color:#245fd2;box-shadow:7px 7px 16px var(--neo-sh-dark),-5px -5px 12px var(--neo-sh-light)}
+.gs-btn-ghost:active{transform:translateY(1px);box-shadow:inset 4px 4px 8px rgba(166,180,200,.35),inset -4px -4px 8px var(--neo-sh-light)}
+.gs-btn-grad{background:linear-gradient(135deg,var(--neo-blue-1) 0%,var(--neo-blue-2) 62%,#6a5af9 118%);color:#fff;border:1px solid rgba(255,255,255,.35);box-shadow:6px 6px 14px rgba(58,91,155,.30),-4px -4px 10px var(--neo-sh-light),0 10px 26px -12px rgba(106,90,249,.45),inset 1px 1px 1px rgba(255,255,255,.3)}
+.gs-btn-grad:hover{transform:translateY(-1px);box-shadow:8px 8px 18px rgba(58,91,155,.36),-5px -5px 12px var(--neo-sh-light),inset 1px 1px 1px rgba(255,255,255,.3)}
+.gs-btn-grad:active{transform:translateY(1px);box-shadow:inset 5px 5px 10px rgba(17,52,125,.30),inset -3px -3px 7px rgba(255,255,255,.18)}
+.gs-navlinks a.gs-btn-ghost{color:#2a4066}
+.gs-navlinks a.gs-btn-ghost:hover{color:#245fd2}
+.gs-navlinks a.gs-btn-grad{color:#fff}
+.gs-navlinks a.gs-btn-grad:hover{color:#fff}
+
+/* ---------- Hero ---------- */
+.gs-hero{max-width:1150px;width:100%;margin:0 auto;padding:58px 20px 34px;display:grid;grid-template-columns:1.04fr .96fr;gap:52px;align-items:center}
+.gs-badge{display:inline-flex;align-items:center;gap:9px;background:linear-gradient(145deg,var(--neo-surface-1),var(--neo-surface-2));border:1px solid rgba(255,255,255,.92);color:#245fd2;font-weight:800;font-size:13px;padding:9px 18px;border-radius:999px;box-shadow:5px 5px 12px var(--neo-sh-dark),-4px -4px 10px var(--neo-sh-light)}
+.gs-badge .gs-dot{width:8px;height:8px;flex:none;border-radius:50%;background:linear-gradient(135deg,#22c55e,#06b6d4);box-shadow:0 0 0 4px rgba(34,197,94,.16);animation:gsPulse 2.2s ease-in-out infinite}
+@keyframes gsPulse{0%,100%{box-shadow:0 0 0 4px rgba(34,197,94,.16)}50%{box-shadow:0 0 0 7px rgba(34,197,94,.07)}}
+.gs-hero h1{margin:22px 0 0;font-size:clamp(34px,4.8vw,58px);font-weight:900;line-height:1.08;letter-spacing:-1.2px;color:var(--neo-ink)}
+.gs-grad-text{background:linear-gradient(92deg,var(--neo-blue-1) 0%,var(--neo-blue-2) 55%,#7b5cf5 100%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+.gs-hero .gs-lead{margin:20px 0 0;font-size:17.5px;line-height:1.75;color:var(--neo-muted);max-width:560px}
+.gs-ctas{margin-top:30px;display:flex;flex-wrap:wrap;gap:14px}
+.gs-cta-main{border-radius:16px;padding:16px 30px;font-size:16px;background:linear-gradient(135deg,var(--neo-blue-1) 0%,var(--neo-blue-2) 62%,#6a5af9 118%);color:#fff;font-weight:800;border:1px solid rgba(255,255,255,.35);cursor:pointer;box-shadow:9px 9px 20px rgba(58,91,155,.30),-6px -6px 14px var(--neo-sh-light),0 16px 40px -16px rgba(106,90,249,.5),inset 1px 1px 1px rgba(255,255,255,.3);transition:transform .18s,box-shadow .18s,filter .18s}
+.gs-cta-main:hover{transform:translateY(-2px);filter:brightness(1.05);box-shadow:12px 12px 26px rgba(58,91,155,.36),-7px -7px 16px var(--neo-sh-light),inset 1px 1px 1px rgba(255,255,255,.3)}
+.gs-cta-main:active{transform:translateY(1px);box-shadow:inset 6px 6px 12px rgba(17,52,125,.32),inset -4px -4px 8px rgba(255,255,255,.18)}
+.gs-cta-alt{border-radius:16px;padding:16px 26px;font-size:16px;font-weight:800;background:linear-gradient(145deg,var(--neo-surface-1),var(--neo-surface-2));border:1px solid rgba(255,255,255,.92);color:#2a4066;cursor:pointer;box-shadow:7px 7px 16px var(--neo-sh-dark),-6px -6px 14px var(--neo-sh-light);transition:transform .18s,box-shadow .18s,color .18s}
+.gs-cta-alt:hover{color:#245fd2;transform:translateY(-2px);box-shadow:9px 9px 20px var(--neo-sh-dark),-7px -7px 16px var(--neo-sh-light)}
+.gs-cta-alt:active{transform:translateY(1px);box-shadow:inset 5px 5px 10px rgba(166,180,200,.35),inset -4px -4px 8px var(--neo-sh-light)}
+.gs-note{margin:14px 0 0;font-size:12.5px;color:var(--neo-faint)}
+.gs-chips{margin-top:26px;display:flex;flex-wrap:wrap;gap:11px}
+.gs-chip{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;padding:8px 14px;border-radius:999px;background:linear-gradient(145deg,var(--neo-surface-1),var(--neo-surface-2));border:1px solid rgba(255,255,255,.9);box-shadow:4px 4px 10px var(--neo-sh-dark),-3px -3px 8px var(--neo-sh-light)}
+.gs-chip b{font-weight:800}
+.gs-chip-1{color:#245fd2}
+.gs-chip-2{color:#0f8a5f}
+.gs-chip-3{color:#7e3ff2}
+.gs-chip-4{color:#b45309}
+
+/* ---------- Kartu mockup ruang kerja ---------- */
+.gs-mock-wrap{position:relative}
+.gs-mock-wrap::before{content:"";position:absolute;width:190px;height:190px;right:-46px;top:-52px;border-radius:50%;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.95),rgba(255,255,255,.25) 60%,transparent);filter:blur(14px);z-index:0}
+.gs-mock-wrap::after{content:"";position:absolute;width:230px;height:230px;left:-56px;bottom:-64px;border-radius:50%;background:radial-gradient(circle at 60% 40%,rgba(160,184,222,.5),rgba(160,184,222,.12) 62%,transparent);filter:blur(16px);z-index:0}
+.gs-mock{position:relative;z-index:1;background:linear-gradient(145deg,#f6f9fd,#e3eaf4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.92);border-radius:30px;box-shadow:9px 9px 20px rgba(148,163,184,.18),-7px -7px 16px rgba(255,255,255,.7),0 12px 36px -18px rgba(106,90,249,.14),inset 1px 1px 0 rgba(255,255,255,.9);padding:24px;animation:gsFloat 7s ease-in-out infinite}
+@keyframes gsFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+.gs-mock-top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:15px;border-bottom:1px solid rgba(210,221,238,.9)}
+.gs-mock-top .t{font-size:12px;color:var(--neo-muted);font-weight:600}
+.gs-mock-top .n{font-size:18px;font-weight:800;color:var(--neo-ink);letter-spacing:-.2px}
+.gs-pill{flex:none;font-size:11.5px;font-weight:800;color:#0f8a5f;background:linear-gradient(145deg,var(--neo-surface-1),var(--neo-surface-2));border:1px solid rgba(255,255,255,.9);padding:6px 12px;border-radius:999px;box-shadow:3px 3px 8px var(--neo-sh-dark),-3px -3px 6px var(--neo-sh-light)}
+.gs-tiles{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:17px}
+.gs-tile{background:linear-gradient(145deg,#e6edf6,#eef3f9);border:1px solid rgba(255,255,255,.75);border-radius:20px;padding:16px;box-shadow:inset 5px 5px 12px rgba(166,180,200,.30),inset -5px -5px 12px rgba(255,255,255,.92);transition:box-shadow .22s,transform .22s}
+.gs-tile:hover{transform:translateY(-2px);box-shadow:inset 4px 4px 10px rgba(166,180,200,.26),inset -4px -4px 10px rgba(255,255,255,.9),7px 7px 16px rgba(148,163,184,.26),-6px -6px 14px rgba(255,255,255,.8)}
+.gs-ico{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:21px;box-shadow:4px 4px 9px rgba(166,180,200,.34),-3px -3px 8px rgba(255,255,255,.95),inset 1px 1px 1px rgba(255,255,255,.7)}
+.gs-ico-1{background:linear-gradient(145deg,#dceafc,#d3f1fb)}
+.gs-ico-2{background:linear-gradient(145deg,#d3f3e4,#d7f7f0)}
+.gs-ico-3{background:linear-gradient(145deg,#eae5fd,#fcdff1)}
+.gs-ico-4{background:linear-gradient(145deg,#fdefcd,#ffeed2)}
+.gs-tile b{display:block;margin-top:11px;font-size:14.5px;font-weight:800;color:var(--neo-ink)}
+.gs-tile p{margin:5px 0 0;font-size:12px;line-height:1.55;color:var(--neo-muted)}
+.gs-mock-note{margin-top:17px;border-radius:15px;background:linear-gradient(145deg,#e2ebf7,#edf2f9);border:1px solid rgba(255,255,255,.75);padding:13px 15px;font-size:12.5px;line-height:1.5;color:#245fd2;font-weight:700;box-shadow:inset 3px 3px 8px rgba(166,180,200,.28),inset -3px -3px 8px rgba(255,255,255,.88)}
+
+/* ---------- Pita keunggulan (3 kartu neumorphic) ---------- */
+.gs-band{max-width:1150px;width:100%;margin:0 auto;padding:24px 20px 66px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.gs-prop{border-radius:24px;padding:22px;border:1px solid rgba(255,255,255,.9);background:linear-gradient(145deg,var(--neo-surface-1),var(--neo-surface-2));box-shadow:6px 6px 13px rgba(148,163,184,.16),-5px -5px 11px rgba(255,255,255,.72),inset 1px 1px 0 rgba(255,255,255,.85);transition:transform .2s,box-shadow .2s}
+.gs-prop:hover{transform:translateY(-3px);box-shadow:9px 9px 19px rgba(148,163,184,.22),-7px -7px 15px rgba(255,255,255,.8),inset 1px 1px 0 rgba(255,255,255,.85)}
+.gs-prop .e{width:44px;height:44px;border-radius:14px;background:linear-gradient(145deg,#f6f9fd,#e4ebf5);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:4px 4px 9px rgba(166,180,200,.32),-3px -3px 8px rgba(255,255,255,.95)}
+.gs-prop-1 .e{background:linear-gradient(145deg,#dceafc,#e4ebf5)}
+.gs-prop-2 .e{background:linear-gradient(145deg,#d3f3e4,#e4ebf5)}
+.gs-prop-3 .e{background:linear-gradient(145deg,#eae5fd,#fcdff1)}
+.gs-prop b{display:block;margin-top:13px;font-size:15px;font-weight:800;color:var(--neo-ink)}
+.gs-prop p{margin:5px 0 0;font-size:12.8px;line-height:1.6;color:var(--neo-muted)}
+
+/* ---------- Footer ---------- */
+.gs-foot{margin-top:auto;border-top:1px solid rgba(255,255,255,.85);background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(248,250,253,.95));padding:24px 20px;text-align:center;color:var(--neo-muted);font-size:13.5px;box-shadow:inset 0 8px 16px -10px rgba(148,163,184,.4)}
+.gs-foot p{margin:0}
+.gs-foot .gs-flinks{margin-top:7px}
+.gs-foot a{color:#245fd2;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.gs-foot a:hover{color:var(--neo-blue-1)}
+
+/* ---------- Responsif ---------- */
+@media (max-width:980px){
+  .gs-hero{grid-template-columns:1fr;gap:38px;padding-top:44px}
+  .gs-mock-wrap{max-width:540px;margin:0 auto;width:100%}
+  .gs-band{grid-template-columns:1fr;max-width:540px}
+}
+@media (max-width:640px){
+  .gs-navlinks .gs-hide-sm{display:none}
+  .gs-logo small{display:none}
+  .gs-logo b{font-size:15px;white-space:nowrap}
+  .gs-logo-mark{width:42px;height:42px;border-radius:14px}
+  .gs-btn{padding:9px 14px;font-size:13.5px}
+  .gs-hero{padding:36px 18px 26px}
+  .gs-hero h1{letter-spacing:-.6px}
+  .gs-tiles{grid-template-columns:1fr 1fr;gap:10px}
+  .gs-band{padding:16px 18px 48px}
+  .gs-cta-main,.gs-cta-alt{width:100%}
+  .gs-bg-hex{background-size:836px 470px}
+  .gs-bg-rings{width:340px;height:340px;right:-110px;top:90px}
+  .gs-bg-ico{width:54px!important;height:54px!important}
+  .gs-bg-ico.gs-chip{width:58px!important;height:58px!important}
+  .gs-bg-ico:not(.gs-chip){opacity:.45}
+  .m-hide{display:none!important}
+}
+
+/* ---------- Hormati preferensi gerak minimal ---------- */
+@media (prefers-reduced-motion:reduce){
+  .gs-mock,.gs-badge .gs-dot,.gs-bg-rings i,.gs-bg-ico{animation:none}
+  .fade-in{animation:none}
+}
+
+/* ============================================================
+   FALLBACK LAYAR MASUK (tampil instan, gaya neumorphism —
+   selaras dengan "PREMIUM NEUMORPHISM LOGIN" di style.css)
+   ============================================================ */
+#authScreen{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:22px;background:radial-gradient(circle at 12% 12%,rgba(255,255,255,.95),transparent 34%),radial-gradient(circle at 88% 85%,rgba(160,184,222,.3),transparent 34%),linear-gradient(135deg,#e9eef5 0%,#dfe7f1 52%,#edf2f8 100%);color:#172b4d}
+#authScreen>div:first-child{background:linear-gradient(145deg,#f5f8fc,#e5ebf4);border:1px solid rgba(255,255,255,.9);border-radius:30px;box-shadow:18px 18px 42px rgba(148,163,184,.34),-18px -18px 42px rgba(255,255,255,.96),inset 1px 1px 0 rgba(255,255,255,.85);padding:32px;width:100%;max-width:448px}
+#authScreen img{width:96px;height:96px;padding:7px;border-radius:25px;object-fit:cover;display:block;margin:0 auto 16px;background:linear-gradient(145deg,#e5ebf4,#f7faff);box-shadow:8px 8px 18px rgba(148,163,184,.32),-8px -8px 18px rgba(255,255,255,.95)}
+#authScreen form input{width:100%;padding:12px 18px;border:1px solid rgba(255,255,255,.95);border-radius:15px;background:#eaf0f7;color:#20324d;font:inherit;outline:none;box-shadow:inset 5px 5px 10px rgba(166,180,200,.38),inset -5px -5px 10px rgba(255,255,255,.95)}
+#authScreen form input:focus{border-color:rgba(37,99,235,.45);box-shadow:inset 4px 4px 8px rgba(166,180,200,.32),inset -4px -4px 8px rgba(255,255,255,.95),0 0 0 4px rgba(37,99,235,.10)}
+#authScreen form button[type=submit]{width:100%;border:1px solid rgba(255,255,255,.38);border-radius:15px;padding:13px;color:#fff;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#3478f6,#214fc5);box-shadow:7px 7px 16px rgba(58,91,155,.28),-5px -5px 13px rgba(255,255,255,.82)}
+#authScreen form#registerForm button[type=submit]{background:linear-gradient(135deg,#2fbf7f,#159a63);box-shadow:7px 7px 16px rgba(21,113,86,.26),-5px -5px 13px rgba(255,255,255,.82)}
+</style>
+<!-- ==================== KILAT v1: PEMBUNUH SPLASH — halaman depan tidak boleh tertutup layar "memuat" ==================== -->
+<script>
+(function(){"use strict";
+  function killSplash(){
+    try{
+      var cached=null;
+      try{cached=JSON.parse(localStorage.getItem('gs_currentUser')||'null');}catch(eC){cached=null;}
+      if(cached&&cached.id)return; /* pengguna tercatat: jalur boot lama tetap berjalan */
+      var home=document.getElementById('publicHome');
+      if(!home||home.classList.contains('hidden'))return; /* selain beranda: biarkan perilaku lama */
+      var sp=document.getElementById('__gs_boot');
+      if(!sp)return;
+      sp.remove();
+      var kids=document.documentElement.children,k;
+      for(k=kids.length-1;k>=0;k--){
+        var el=kids[k];
+        if(el&&el.tagName==='STYLE'&&el.textContent&&el.textContent.indexOf('#__gs_boot')>-1)el.remove();
+      }
+    }catch(e){}
+  }
+  try{
+    var mo=new MutationObserver(function(muts){
+      for(var i=0;i<muts.length;i++){
+        var add=muts[i].addedNodes;
+        for(var j=0;j<add.length;j++){
+          var n=add[j];
+          if(n&&n.nodeType===1&&(n.id==='__gs_boot'||(n.tagName==='STYLE'&&n.textContent&&n.textContent.indexOf('#__gs_boot')>-1))){killSplash();return;}
+        }
+      }
+    });
+    mo.observe(document.documentElement,{childList:true});
+  }catch(e){}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',killSplash);
+  else killSplash();
+})();
+</script>
+<!-- ==================== AKHIR PEMBUNUH SPLASH ==================== -->
+<!-- ==================== SAFE STORAGE: cegah "Terjadi kesalahan: ... exceeded the quota" saat kuota localStorage di HP penuh / mode privat ==================== -->
+<script>
+(function(){
+  "use strict";
+  var LS=null;
+  try{ LS=window.localStorage; }catch(e){ LS=null; }
+  if(!LS){
+    /* localStorage tak bisa diakses sama sekali (browser sangat lama / privat ketat):
+       pasang penyimpanan memori agar aplikasi tetap bisa dibuka (sesi hilang saat reload). */
+    try{
+      var mem={};
+      var shim={
+        getItem:function(k){ return Object.prototype.hasOwnProperty.call(mem,String(k))?mem[String(k)]:null; },
+        setItem:function(k,v){ mem[String(k)]=String(v); },
+        removeItem:function(k){ delete mem[String(k)]; },
+        clear:function(){ mem={}; },
+        key:function(i){ var ks=Object.keys(mem); return i>=0&&i<ks.length?ks[i]:null; },
+        get length(){ return Object.keys(mem).length; }
+      };
+      Object.defineProperty(window,'localStorage',{value:shim,configurable:true});
+      LS=shim;
+    }catch(e2){ return; }
+  }
+  var origSet=Storage.prototype.setItem, origGet=Storage.prototype.getItem, origDel=Storage.prototype.removeItem;
+  var _mem={}, _warnToast=false;
+
+  function isQuota(e){
+    if(!e) return false;
+    var n=String(e.name||''), m=String(e.message||'');
+    return e.code===22||e.code===1014||n==='QuotaExceededError'||n==='NS_ERROR_DOM_QUOTA_REACHED'||/quota/i.test(m);
+  }
+
+  /* Kosongkan ruang: buang cache besar yang bisa diunduh ulang dari server.
+     Data penting (sesi gs_currentUser, pengaturan guru, dokumen) TIDAK disentuh. */
+  function freeStorage(){
+    var freed=0, keys=[], i, k, v;
+    try{ for(i=0;i<LS.length;i++){ k=LS.key(i); if(k) keys.push(k); } }catch(e){ return 0; }
+    function drop(list){
+      list.forEach(function(key){
+        try{ v=origGet.call(LS,key)||''; freed+=v.length+key.length; origDel.call(LS,key); }catch(e){}
+      });
+    }
+    var kilat=keys.filter(function(x){return x.indexOf('gs_kilat_')===0;});
+    if(kilat.length){ drop(kilat); return freed; }
+    var refetch=['gsAIImageHistory_v1','gs_sibi_catalog_v1','gs_sc_slots'].filter(function(x){return keys.indexOf(x)>-1;});
+    if(refetch.length){ drop(refetch); return freed; }
+    drop(keys.filter(function(x){return x.indexOf('gsDigitalLogo_')===0;}));
+    return freed;
+  }
+
+  Storage.prototype.setItem=function(key,value){
+    key=String(key);
+    try{ return origSet.call(LS,key,String(value)); }
+    catch(e1){
+      if(!isQuota(e1)) throw e1;
+      try{ freeStorage(); }catch(eF){}
+      try{ return origSet.call(LS,key,String(value)); }
+      catch(e2){
+        if(!isQuota(e2)) throw e2;
+        /* Storage tetap penuh/dinonaktifkan (mis. mode privat): simpan di memori sesi ini saja */
+        _mem[key]=String(value);
+        window.__GS_STORAGE_FULL__=true;
+        console.warn('[SafeStorage] Kuota penyimpanan penuh — "'+key+'" hanya tersimpan di memori sesi ini.');
+        if(!_warnToast){ _warnToast=true;
+          try{ if(typeof showToast==='function') showToast('Penyimpanan perangkat penuh. Data offline mungkin tidak tersimpan — hapus data situs di pengaturan browser bila perlu.','warning'); }catch(eT){}
+        }
+        return undefined;
+      }
+    }
+  };
+  Storage.prototype.getItem=function(key){
+    key=String(key);
+    var v=null;
+    try{ v=origGet.call(LS,key); }catch(e){ v=null; }
+    if(v===null && Object.prototype.hasOwnProperty.call(_mem,key)) return _mem[key];
+    return v;
+  };
+  Storage.prototype.removeItem=function(key){
+    key=String(key);
+    delete _mem[key];
+    try{ return origDel.call(LS,key); }catch(e){ return undefined; }
+  };
+
+  /* Saat boot: bila pemakaian mepet kuota (>3,5MB dari ~5MB), buang cache Kilat
+     (snapshot tabel hingga ~1,2MB per tabel, diambil ulang otomatis dari server).
+     Selain itu hanya buang cache Kilat milik akun lain (bukan akun tersimpan ini). */
+  try{
+    var cu=null; try{ cu=JSON.parse(origGet.call(LS,'gs_currentUser')||'null'); }catch(eP){ cu=null; }
+    var myId=(cu&&cu.id)?String(cu.id):null;
+    var total=0, other=[], i, k, v;
+    for(i=LS.length-1;i>=0;i--){
+      k=LS.key(i); if(!k) continue;
+      try{ v=origGet.call(LS,k)||''; }catch(eG){ v=''; }
+      total+=v.length+k.length;
+      if(myId && k.indexOf('gs_kilat_')===0 && k.indexOf('gs_kilat_'+myId+'_')!==0) other.push(k);
+    }
+    if(total>3670016){
+      for(i=LS.length-1;i>=0;i--){ k=LS.key(i); if(k&&k.indexOf('gs_kilat_')===0){ try{ origDel.call(LS,k); }catch(e){} } }
+      console.info('[SafeStorage] Cache offline (Kilat) dibersihkan agar kuota lega.');
+    } else if(other.length){
+      other.forEach(function(x){ try{ origDel.call(LS,x); }catch(e){} });
+    }
+  }catch(e){}
+})();
+</script>
+</head><body class="bg-white transition-colors duration-300">
+<div id="publicHome">
+<div aria-hidden="true" class="gs-bg"><i class="gs-bg-hex"></i><i class="gs-bg-dots"></i><i class="gs-bg-rings"><i></i><i></i></i><svg xmlns="http://www.w3.org/2000/svg" style="display:none"><symbol id="gi-cap" viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12.2V17c0 1.66 2.69 3 6 3s6-1.34 6-3v-4.8"/><path d="M22 10v6"/></symbol><symbol id="gi-book" viewBox="0 0 24 24"><path d="M2 3.5h6.2A3.8 3.8 0 0 1 12 7.3v13.2a3 3 0 0 0-3-3H2z"/><path d="M22 3.5h-6.2A3.8 3.8 0 0 0 12 7.3v13.2a3 3 0 0 1 3-3H22z"/></symbol><symbol id="gi-pencil" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.6 3.4a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></symbol><symbol id="gi-laptop" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="11.5" rx="1.8"/><path d="M2 19.5h20"/></symbol><symbol id="gi-board" viewBox="0 0 24 24"><path d="M2.5 3.5h19"/><path d="M4 3.5V14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3.5"/><path d="m8 21 4-5 4 5"/></symbol><symbol id="gi-atom" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.7"/><ellipse cx="12" cy="12" rx="9.5" ry="3.8" transform="rotate(48 12 12)"/><ellipse cx="12" cy="12" rx="9.5" ry="3.8" transform="rotate(-48 12 12)"/></symbol><symbol id="gi-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a13.5 13.5 0 0 1 0 18M12 3a13.5 13.5 0 0 0 0 18"/></symbol><symbol id="gi-calc" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8.5 7h7"/><path d="M8.5 12h.01M12 12h.01M15.5 12h.01M8.5 16h.01M12 16h.01M15.5 16h.01"/></symbol><symbol id="gi-bulb" viewBox="0 0 24 24"><path d="M9.5 18h5"/><path d="M10.5 21h3"/><path d="M12 3a6 6 0 0 0-3.9 10.55c.75.65 1.15 1.55 1.15 2.45h5.5c0-.9.4-1.8 1.15-2.45A6 6 0 0 0 12 3z"/></symbol><symbol id="gi-users" viewBox="0 0 24 24"><path d="M15.5 21v-1.8a3.7 3.7 0 0 0-3.7-3.7H6.2a3.7 3.7 0 0 0-3.7 3.7V21"/><circle cx="9" cy="7.5" r="3.6"/><path d="M21.5 21v-1.8a3.7 3.7 0 0 0-2.8-3.58"/><path d="M15.5 4.1a3.6 3.6 0 0 1 0 6.9"/></symbol><symbol id="gi-flask" viewBox="0 0 24 24"><path d="M9.5 2.5v5.6L4.3 18.4a2 2 0 0 0 1.8 3.1h11.8a2 2 0 0 0 1.8-3.1L14.5 8.1V2.5"/><path d="M7.8 2.5h8.4"/><path d="M6.7 14.5h10.6"/></symbol><symbol id="gi-award" viewBox="0 0 24 24"><circle cx="12" cy="8.8" r="5.3"/><path d="M8.6 13.2 7 22l5-2.9L17 22l-1.6-8.8"/></symbol></svg><i class="gs-bg-ico gs-chip" style="right:3.5%;top:4.5%;width:84px;height:84px;color:rgba(58,91,155,.55);--r:6deg;animation-delay:-1s"><svg><use href="#gi-cap"/></svg></i><i class="gs-bg-ico" style="left:3%;top:14%;width:50px;height:50px;color:rgba(58,91,155,.17);--r:-10deg;animation-delay:-3s"><svg><use href="#gi-book"/></svg></i><i class="gs-bg-ico m-hide" style="right:4.5%;top:24%;width:88px;height:88px;color:rgba(124,92,245,.17);--r:8deg;animation-delay:-5s"><svg><use href="#gi-atom"/></svg></i><i class="gs-bg-ico gs-chip" style="left:3.5%;top:31%;width:72px;height:72px;color:rgba(37,99,235,.5);--r:-6deg;animation-delay:-2s"><svg><use href="#gi-pencil"/></svg></i><i class="gs-bg-ico" style="right:3%;top:38%;width:52px;height:52px;color:rgba(14,165,233,.18);--r:12deg;animation-delay:-6s"><svg><use href="#gi-globe"/></svg></i><i class="gs-bg-ico gs-chip m-hide" style="left:4%;top:47%;width:76px;height:76px;color:rgba(58,91,155,.5);--r:5deg;animation-delay:-4s"><svg><use href="#gi-users"/></svg></i><i class="gs-bg-ico m-hide" style="right:4%;top:55%;width:80px;height:80px;color:rgba(16,163,127,.16);--r:-8deg;animation-delay:-7s"><svg><use href="#gi-flask"/></svg></i><i class="gs-bg-ico" style="left:3%;top:62%;width:48px;height:48px;color:rgba(124,92,245,.18);--r:10deg;animation-delay:-2.5s"><svg><use href="#gi-bulb"/></svg></i><i class="gs-bg-ico gs-chip m-hide" style="right:3.5%;top:69%;width:70px;height:70px;color:rgba(37,99,235,.5);--r:-5deg;animation-delay:-5.5s"><svg><use href="#gi-calc"/></svg></i><i class="gs-bg-ico" style="left:4.5%;top:76%;width:54px;height:54px;color:rgba(58,91,155,.16);--r:-12deg;animation-delay:-8s"><svg><use href="#gi-award"/></svg></i><i class="gs-bg-ico m-hide" style="right:3%;top:84%;width:72px;height:72px;color:rgba(14,165,233,.16);--r:9deg;animation-delay:-3.5s"><svg><use href="#gi-laptop"/></svg></i><i class="gs-bg-ico gs-chip" style="left:3%;top:90%;width:74px;height:74px;color:rgba(58,91,155,.5);--r:7deg;animation-delay:-6.5s"><svg><use href="#gi-board"/></svg></i><i class="gs-bg-ico m-hide" style="right:8%;top:96%;width:44px;height:44px;color:rgba(124,92,245,.17);--r:-9deg;animation-delay:-1.5s"><svg><use href="#gi-cap"/></svg></i></div>
+<header class="gs-nav"><div class="gs-nav-in">
+<a href="./" class="gs-logo"><span class="gs-logo-mark"><img alt="Logo GURU SMART AI PRO" src="assets/logo-guru-smart-ai.png"/></span><span><b>GURU SMART AI PRO</b><small>Asisten dan manajemen pendidikan</small></span></a>
+<nav class="gs-navlinks"><a href="./privacy.html" class="gs-hide-sm">Privasi</a><a href="./terms.html" class="gs-hide-sm">Ketentuan</a><a href="./" onclick="openPublicAuth('login');return false;" class="gs-btn gs-btn-ghost">Masuk</a><a href="./" onclick="openPublicAuth('register');return false;" class="gs-btn gs-btn-grad">Daftar</a></nav>
+</div></header>
+<main>
+<section class="gs-hero">
+<div>
+<span class="gs-badge"><span class="gs-dot"></span>Platform digital untuk pendidik Indonesia</span>
+<h1>Satu Platform <span class="gs-grad-text">Mendukung GURU</span> Bekerja Lebih Cerdas 😊 ✨</h1>
+<p class="gs-lead">GURU SMART AI PRO membantu guru dan sekolah mengelola administrasi pendidikan, menyiapkan perangkat pembelajaran, mengolah data, serta menyimpan dokumen dalam satu ruang kerja digital.</p>
+<div class="gs-ctas"><button type="button" onclick="openPublicAuth('login')" class="gs-cta-main">Masuk ke Aplikasi →</button><button type="button" onclick="openPublicAuth('register')" class="gs-cta-alt">Buat Akun</button></div>
+<p class="gs-note">Akses fitur dan data aplikasi memerlukan akun yang terautentikasi.</p>
+<div class="gs-chips">
+<span class="gs-chip gs-chip-1">⚡ <b>Kilat</b>&nbsp;tampil seketika</span>
+<span class="gs-chip gs-chip-2">🔒 <b>Aman</b>&nbsp;data terlindungi</span>
+<span class="gs-chip gs-chip-3">🤖 <b>AI</b>&nbsp;pendamping guru</span>
+<span class="gs-chip gs-chip-4">☁️ <b>Cloud</b>&nbsp;dokumen rapi</span>
+</div>
+</div>
+<div class="gs-mock-wrap">
+<div class="gs-mock">
+<div class="gs-mock-top"><div><p class="t">Ruang kerja digital</p><div class="n">GURU SMART AI PRO</div></div><span class="gs-pill">Untuk pendidikan</span></div>
+<div class="gs-tiles">
+<div class="gs-tile"><div class="gs-ico gs-ico-1">📚</div><b>Perangkat Ajar</b><p>CP, TP, ATP, modul ajar, dan perangkat pembelajaran.</p></div>
+<div class="gs-tile"><div class="gs-ico gs-ico-2">🏫</div><b>Manajemen Sekolah</b><p>Data guru, siswa, kelas, dan administrasi.</p></div>
+<div class="gs-tile"><div class="gs-ico gs-ico-3">🤖</div><b>Asisten AI Guru</b><p>Dukungan ide, materi, dan pekerjaan pembelajaran.</p></div>
+<div class="gs-tile"><div class="gs-ico gs-ico-4">☁️</div><b>Dokumen &amp; Backup</b><p>Pengelolaan dokumen dan integrasi penyimpanan.</p></div>
+</div>
+<div class="gs-mock-note">✨ Dirancang sebagai pendamping aktivitas guru dan pengelolaan sekolah.</div>
+</div>
+</div>
+</section>
+<section class="gs-band">
+<div class="gs-prop gs-prop-1"><div class="e">🔓</div><b>Mudah diakses</b><p>Beranda informasi dapat dibuka tanpa login.</p></div>
+<div class="gs-prop gs-prop-2"><div class="e">🛡️</div><b>Akses terlindungi</b><p>Fitur internal tetap memerlukan autentikasi pengguna.</p></div>
+<div class="gs-prop gs-prop-3"><div class="e">📖</div><b>Informasi transparan</b><p>Baca kebijakan privasi dan ketentuan penggunaan.</p></div>
+</section>
+</main>
+<footer class="gs-foot"><p>© 2026 GURU SMART AI PRO · Powered by @bayuprojectone</p><p class="gs-flinks"><a href="./privacy.html">Kebijakan Privasi</a><span> · </span><a href="./terms.html">Ketentuan Layanan</a></p></footer>
+</div>
+<script>function openPublicAuth(mode){var home=document.getElementById('publicHome'),auth=document.getElementById('authScreen');if(home)home.classList.add('hidden');if(auth)auth.classList.remove('hidden');if(typeof toggleAuth==='function')toggleAuth(mode==='register'?'register':'login');window.scrollTo(0,0);}</script>
+<div class="hidden min-h-[100dvh] flex flex-col items-center justify-center p-4 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700" id="authScreen">
+<div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 w-full max-w-md fade-in">
+<div class="text-center mb-8">
+<img alt="GURU SMART" class="w-32 h-32 rounded-xl mx-auto mb-4 object-cover bg-slate-200" onerror="imgFallback(this)" src="https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe"/>
+<h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">GURU SMART</h1>
+<p class="text-slate-500 dark:text-slate-400 mt-2 text-sm">Sistem Manajemen Sekolah Berbasis Cloud</p>
+</div>
+<form class="space-y-4" id="loginForm">
+<div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label><input class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" id="loginEmail" required="" type="email"/></div>
+<div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Password</label><input class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" id="loginPassword" required="" type="password"/></div>
+<button class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-2.5 rounded-lg transition-colors shadow-lg" type="submit">Masuk</button>
+<p class="text-center text-sm text-slate-500 mt-4">Belum punya akun? <button class="text-blue-600 font-semibold hover:underline" onclick="toggleAuth('register')" type="button">Daftar di sini</button></p>
+</form>
+<form class="space-y-4 hidden" id="registerForm">
+<div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap</label><input class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" id="regName" required="" type="text"/></div>
+<div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label><input class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" id="regEmail" required="" type="email"/></div>
+<div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Password (Min 6 karakter)</label><input class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" id="regPassword" required="" type="password"/></div>
+<button class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-2.5 rounded-lg transition-colors shadow-lg" type="submit">Daftar Sekarang</button>
+<p class="text-center text-sm text-slate-500 mt-4">Sudah punya akun? <button class="text-blue-600 font-semibold hover:underline" onclick="toggleAuth('login')" type="button">Login di sini</button></p>
+</form>
+</div>
+<p class="text-center text-xs text-white/70 mt-6">Powered by @bayuprojectone</p>
+</div>
+<div class="hidden fixed inset-0 flex flex-col overflow-hidden bg-slate-100 dark:bg-slate-900" id="appScreen">
+<div class="flex flex-1 min-h-0 overflow-hidden">
+<aside class="fixed lg:relative z-40 w-64 h-full bg-gradient-to-b from-blue-800 to-indigo-900 dark:from-slate-800 dark:to-slate-900 border-r border-blue-700/50 dark:border-slate-700 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out text-white flex flex-col" id="sidebar">
+<div class="p-4 flex-none flex items-center justify-between border-b border-blue-700/50 dark:border-slate-700">
+<div class="flex items-center space-x-2">
+<img alt="Logo" class="w-10 h-10 rounded-lg object-cover bg-slate-200" onerror="imgFallback(this)" src="https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe"/>
+<div><h1 class="font-bold text-white text-lg leading-tight">GURU SMART</h1></div>
+</div>
+<button class="lg:hidden text-slate-300" onclick="toggleSidebar()"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg></button>
+</div>
+<nav class="sidebar-nav flex-1 overflow-y-auto p-4 space-y-1 text-sm" id="navMenu"></nav>
+<div class="flex-none p-4 border-t border-blue-700/50 dark:border-slate-700 bg-gradient-to-r from-blue-900/50 to-indigo-900/50 dark:from-slate-900/50 dark:to-slate-800/50">
+<div class="flex items-center justify-center gap-2 mb-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+<span class="text-[9px] uppercase tracking-widest text-blue-200 font-medium">Powered By</span>
+</div>
+<p class="text-center text-sm font-extrabold text-white tracking-wide">@Bayu_projectone</p>
+<p class="text-center text-[10px] text-blue-200/70 mt-1">© 2026 GURU SMART<br/>Sistem Manajemen Sekolah</p>
+</div>
+</aside>
+<div class="hidden fixed inset-0 bg-black/50 z-30" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<main class="flex-1 flex flex-col min-h-0 overflow-hidden bg-slate-100 dark:bg-slate-900">
+<header class="h-16 flex-none bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-4 lg:px-6 shadow-sm">
+<div class="flex items-center space-x-4">
+<button class="lg:hidden text-slate-500" onclick="toggleSidebar()"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg></button>
+<h2 class="text-xl font-semibold text-slate-800 dark:text-white" id="pageTitle">Dashboard</h2>
+</div>
+<div class="flex items-center space-x-4">
+<button class="text-slate-500 hover:text-blue-600" onclick="toggleDarkMode()">
+<svg class="w-6 h-6 hidden" fill="none" id="iconSun" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<svg class="w-6 h-6" fill="none" id="iconMoon" stroke="currentColor" viewbox="0 0 24 24"><path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</button>
+<div class="flex items-center space-x-2">
+<img alt="User" class="w-8 h-8 rounded-lg object-cover bg-white ring-2 ring-blue-500" id="userAvatar" onerror="imgFallback(this)" src="https://z-cdn-media.chatglm.cn/files/bb9b3808-a808-4cb9-a51f-6cf375d0361a.png?auth_key=1889879109-38d4dc3128aa43fa91a6f0b011598e63-0-adf9af249c6126e32ea0adcc7bd54bbe" style="background:#ffffff"/>
+<div class="hidden md:block">
+<p class="text-sm font-medium text-slate-800 dark:text-white" id="userName">Admin</p>
+<p class="text-xs text-slate-500 dark:text-slate-400 capitalize" id="userRole">Administrator</p>
+</div>
+<button class="text-red-500 hover:text-red-600" onclick="confirmLogout()" title="Keluar"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg></button>
+</div>
+</div>
+</header>
+<div class="flex-1 min-h-0 overflow-y-auto p-4 lg:p-6 bg-slate-100 dark:bg-slate-900" id="content"></div>
+</main>
+</div>
+</div>
+<div class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" id="modalContainer">
+<div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
+<div class="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-700">
+<h3 class="text-lg font-semibold text-slate-800 dark:text-white" id="modalTitle">Modal Title</h3>
+<button class="text-slate-500 hover:text-red-500 z-50" onclick="closeModal()"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg></button>
+</div>
+<div class="modal-scroll p-6 overflow-y-auto bg-white dark:bg-slate-800" id="modalContent"></div>
+</div>
+</div>
+<div aria-label="Notifikasi aplikasi" aria-live="polite" id="toastStack" role="region"></div>
+<div aria-live="polite" class="hidden fixed top-0 left-0 right-0 z-[100] px-4 py-3 text-sm font-semibold text-white shadow-lg" id="gsServiceStatus" role="status" style="background:#b91c1c"><div class="max-w-5xl mx-auto flex items-start gap-3"><span aria-hidden="true" id="gsServiceStatusIcon">⚠️</span><div class="flex-1"><div id="gsServiceStatusTitle">Gangguan layanan</div><div class="font-normal mt-1" id="gsServiceStatusMessage">Koneksi sedang diperiksa.</div><div class="font-normal text-xs mt-1 opacity-90" id="gsServiceStatusTime"></div></div><button class="shrink-0 rounded border border-white/60 px-3 py-1 hover:bg-white/10" onclick="gsCheckServiceStatus(true)" type="button">Coba lagi</button></div></div>
+<div id="printArea"></div>
+
+
+
+
+
+<!-- Boot dipanggil oleh app.js (window.__gsFastBoot) -->
+
+<!-- ================= GURU SMART AI — GESTURE CONTROL (MediaPipe Hands) ================= -->
+
+<div id="gsGestureBtn" title="Remot Jari — klik untuk menyalakan/mematikan">
+<svg fill="none" height="26" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="26"><path d="M18 11V6a2 2 0 0 0-4 0v5"></path><path d="M14 10V4a2 2 0 0 0-4 0v6"></path><path d="M10 10.5V6a2 2 0 0 0-4 0v8"></path><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"></path></svg>
+</div>
+<div id="gsGesturePanel">
+<div class="gs-ghead">
+<b>🖐️ Remot Jari</b>
+<span id="gsCamMini" title="Remot Jari tetap aktif">🖐️</span>
+<span aria-label="Status kamera" id="gsGestureCam" title="kamera belum aktif"></span><span id="gsCamLabel">Kamera mati</span>
+</div>
+<div class="gs-gvideo-wrap">
+<video id="gsGestureVideo" muted="" playsinline=""></video>
+<canvas id="gsGestureCanvas"></canvas>
+</div>
+<div id="gsGestureStatus">📷 Siap</div>
+<div class="gs-gbtns">
+<button aria-label="Jeda atau lanjutkan kamera" id="gsGesturePause" title="Jeda kamera" type="button">⏸️</button>
+<button id="gsGestureHide" title="Sembunyikan pratinjau kamera — deteksi tetap jalan" type="button">🙈</button>
+<button id="gsGestureHelp" title="Cara pakai &amp; pengaturan" type="button">📖</button>
+<button aria-label="DARURAT: Matikan semua kontrol dan kamera" id="gsGestureStop" title="DARURAT: Matikan semua kontrol dan kamera" type="button"><svg aria-hidden="true" fill="none" height="17" stroke="currentColor" stroke-linecap="round" stroke-width="2.6" viewbox="0 0 24 24" width="17"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" x2="12" y1="2" y2="11"></line></svg></button>
+</div>
+</div>
+<div id="gsHoverBox"></div>
+<div class="gs-gcursor" id="gsGestureCursor">
+<svg class="gs-dwell-svg" viewbox="0 0 40 40"><circle class="gs-dwell-bg" cx="20" cy="20" r="18"></circle><circle cx="20" cy="20" id="gsDwellArc" r="18"></circle></svg>
+</div>
+<div id="gsGestureGuide">
+<div class="gs-guide-card">
+<h2>🖐️ Remot Jari — Panduan Cepat</h2>
+<p class="gs-sub">Kendalikan aplikasi cukup dengan tangan di depan kamera. Gampang banget — ikuti 4 gerakan ini:</p>
+<div class="gs-guide-grid">
+<div class="gs-guide-item"><div class="gi-emoji">☝️</div><div class="gi-title">Tunjuk</div><div class="gi-desc">Gerakkan telunjuk untuk mengarahkan kursor ke tombol</div></div>
+<div class="gs-guide-item"><div class="gi-emoji">⏱️</div><div class="gi-title">Klik Otomatis</div><div class="gi-desc">Tahan telunjuk diam di atas tombol ±1 detik — klik terjadi sendiri</div></div>
+<div class="gs-guide-item"><div class="gi-emoji">✊</div><div class="gi-title">Klik Cepat</div><div class="gi-desc">Kepal tangan untuk klik langsung di titik yang terkunci</div></div>
+<div class="gs-guide-item"><div class="gi-emoji">🖐️</div><div class="gi-title">Scroll</div><div class="gi-desc">Buka 3–5 jari lalu seret naik/turun — halaman &amp; pop-up ikut bergulir</div></div>
+</div>
+<div class="gs-guide-tip">✨ <b>Paling mudah:</b> tunjuk tombol yang mau ditekan, lalu tahan diam sebentar — tombol akan <b>disorot hijau</b> dan klik terjadi otomatis. Kembali ke menu utama: dua jari (✌️) tahan sebentar.<br/><br/>💡 Tips: pastikan pencahayaan cukup dan tangan terlihat jelas di kotak kamera. Unduhan pertama ±12 MB, sesudahnya instan.</div>
+<div class="gs-guide-set">
+<p class="gs-set-title">⚙️ Pengaturan</p>
+<div class="gs-gctrl-row">
+<span class="gs-gctrl-lbl">Mode Mudah</span>
+<div class="gs-gchip" id="gsDwellToggle">Klik Otomatis: AKTIF</div>
+</div>
+<div class="gs-gctrl" style="margin-top:6px">
+<div class="gs-gctrl-row">
+<span class="gs-gctrl-lbl">Sensitivitas</span>
+<div class="gs-gchip" data-amp="1.35">Lembut</div>
+<div class="gs-gchip" data-amp="1.6">Sedang</div>
+<div class="gs-gchip" data-amp="2">Cepat</div>
+</div>
+</div>
+<div style="margin-top:12px;border-top:1px solid #334155;padding-top:10px">
+<p class="gs-set-title">⚙️ Pengaturan Presisi</p>
+<div class="gs-cal-row"><label for="gsAmpRange">Sensitivitas</label><input id="gsAmpRange" max="2.2" min="1.2" step="0.05" type="range" value="1.6"/><output id="gsAmpOut">1,60×</output></div>
+<div class="gs-cal-row"><label for="gsSmoothRange">Kehalusan</label><input id="gsSmoothRange" max="45" min="8" step="1" type="range" value="22"/><output id="gsSmoothOut">22 ms</output></div>
+<div class="gs-cal-actions"><button id="gsTuneReset" type="button">Reset pengaturan</button><button id="gsDiagRefresh" type="button">Perbarui status</button></div>
+<div class="gs-cal-actions" style="margin-top:7px"><button id="gsAutoCalibrate" type="button">🎯 Kalibrasi otomatis</button><button aria-pressed="true" id="gsSafeClickToggle" type="button">🛡️ Klik aman: ON</button></div>
+<p class="gs-guide-tip" id="gsCalStatus" style="margin-top:6px">Kalibrasi otomatis merekam gerakan telunjuk selama 4 detik. Gerakkan telunjuk ke area kerja yang ingin dijangkau.</p>
+</div>
+<div style="margin-top:12px;border-top:1px solid #334155;padding-top:10px">
+<p class="gs-set-title">🩺 Diagnostik Kamera</p>
+<div id="gsDiagBox" style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+<div class="gs-guide-item"><div class="gi-title">Kamera</div><div class="gi-desc" id="gsDiagCam">Belum aktif</div></div>
+<div class="gs-guide-item"><div class="gi-title">Deteksi tangan</div><div class="gi-desc" id="gsDiagHand">Menunggu</div></div>
+<div class="gs-guide-item"><div class="gi-title">FPS kursor</div><div class="gi-desc" id="gsDiagFps">—</div></div>
+<div class="gs-guide-item"><div class="gi-title">Inferensi AI</div><div class="gi-desc" id="gsDiagLatency">—</div></div>
+<div class="gs-guide-item" style="grid-column:1/-1"><div class="gi-title">Mesin &amp; kondisi</div><div class="gi-desc" id="gsDiagEngine">Siap diperiksa</div></div>
+</div>
+<p class="gs-guide-tip" id="gsDiagAdvice" style="margin-top:8px">Aktifkan Remot Jari untuk melihat kondisi kamera dan deteksi secara langsung.</p>
+</div>
+<div style="margin-top:12px;border-top:1px solid #334155;padding-top:10px">
+<p class="gs-set-title">🎯 Kalibrasi Area Layar</p>
+<div class="gs-cal-row"><label for="gsAreaXMin">Kiri</label><input id="gsAreaXMin" max="45" min="0" step="1" type="range" value="0"/><output id="gsAreaXMinOut">0%</output></div>
+<div class="gs-cal-row"><label for="gsAreaXMax">Kanan</label><input id="gsAreaXMax" max="100" min="55" step="1" type="range" value="100"/><output id="gsAreaXMaxOut">100%</output></div>
+<div class="gs-cal-row"><label for="gsAreaYMin">Atas</label><input id="gsAreaYMin" max="45" min="0" step="1" type="range" value="0"/><output id="gsAreaYMinOut">0%</output></div>
+<div class="gs-cal-row"><label for="gsAreaYMax">Bawah</label><input id="gsAreaYMax" max="100" min="55" step="1" type="range" value="100"/><output id="gsAreaYMaxOut">100%</output></div>
+<div class="gs-cal-actions"><button id="gsAreaReset" type="button">Layar penuh</button><button id="gsAreaApply" type="button">Terapkan area</button></div>
+</div>
+<div style="margin-top:12px;border-top:1px solid #334155;padding-top:10px">
+<p class="gs-set-title">⏱️ Waktu Klik Otomatis</p>
+<div class="gs-cal-row"><label for="gsDwellRange">Tahan</label><input id="gsDwellRange" max="2500" min="500" step="100" type="range" value="1100"/><output id="gsDwellOut">1,1 dtk</output></div>
+</div>
+</div>
+<button id="gsGuideClose" type="button">Mengerti, Mulai! 👍</button>
+</div>
+</div>
+
+
+
+<!-- KILAT v1: app.js DEFER — halaman depan tampil seketika tanpa menunggu 1,5MB script -->
+<script defer="" src="./app.js?v=gs20261109i"></script>
+<!-- Modul Google Drive (backup otomatis & manual per akun guru) — defer, setelah app.js -->
+<script defer="" src="./google-drive-client.js?v=gs20261109d"></script>
+<!-- Modul Pemberitahuan & Pengumuman (terpisah agar fitur lama tidak diubah) -->
+<script defer="" src="./announcements.js?v=gs20261113a"></script></body>
+</html>
