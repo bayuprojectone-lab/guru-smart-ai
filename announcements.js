@@ -3,7 +3,7 @@
 (function(){
   "use strict";
   var OWNER = "bayuprojectone@gmail.com";
-  var API = (window.GURU_SMART_D1_API_URL || "https://guru-smart-ai.guru-smart-ai-pro.workers.dev/").replace(/\/+$/,"") + "/api/announcements";
+  var API = (window.GURU_SMART_D1_API_URL || "https://guru-smart-ai.guru-smart-ai-pro.workers.dev").replace(/\/+$/,"") + "/api/announcements";
   var started = false, session = null, canManage = false, items = [];
   function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
   function date(s){try{return new Date(s.replace(" ","T")+"Z").toLocaleString("id-ID",{dateStyle:"medium",timeStyle:"short"});}catch(_){return s||"";}}
