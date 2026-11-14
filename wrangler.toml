@@ -1,0 +1,14 @@
+name = "guru-smart-ai"
+main = "src/index.js"
+compatibility_date = "2026-11-01"
+
+[vars]
+SUPABASE_URL = "https://urslwiueyqhoykjhxmqq.supabase.co"
+# Sesuaikan dengan origin frontend sebenarnya; pisahkan beberapa origin dengan koma.
+ALLOWED_ORIGINS = "https://bayuprojectone-lab.github.io,https://guru-smart-ai.bayuprojectone.workers.dev"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "guru-smart-ai-data-base"
+database_id = "cfc69cfa-b781-4061-b6c0-3c949944edf3"
+migrations_dir = "migrations"
