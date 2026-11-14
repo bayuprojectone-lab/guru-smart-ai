@@ -1,0 +1,11 @@
+{
+  "name": "guru-smart-ai",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build:css": "node scripts/build-tailwind.js"
+  },
+  "devDependencies": {
+    "tailwindcss": "4.1.10"
+  }
+}
