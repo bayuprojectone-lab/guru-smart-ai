@@ -26,7 +26,20 @@
       "@media(max-width:640px){.gs-ann-header-tools{gap:7px;position:static!important;float:none!important;transform:none!important;flex-wrap:wrap;max-width:100%;justify-content:flex-end}#gsAnnFab{position:static!important;inset:auto!important;float:none!important;transform:none!important;order:-1;white-space:nowrap;width:38px;min-width:38px;min-height:38px;padding:0;font-size:0;gap:0;border-radius:12px}#gsAnnFab svg{width:20px;height:20px}#gsAnnFab span:not(.gs-ann-count){display:none}#gsAnnFab .gs-ann-count{font-size:10px;margin-left:0}#gsAnnPanel{padding:17px;border-radius:18px;max-height:92vh}#gsAnnPanel h2{font-size:18px}}";
     document.head.appendChild(st);
   }
+  function isDigitalGuruPage(){
+    try{
+      return (window.location.hash||'').indexOf('#profil=1')===0 ||
+             !!document.querySelector('.td-wrap') ||
+             /Data Digital Guru/i.test(document.title||'');
+    }catch(e){return false;}
+  }
+  function removeAnnouncementUi(){
+    var b=document.getElementById("gsAnnFab"),o=document.getElementById("gsAnnOverlay");
+    if(b)b.remove();
+    if(o)o.remove();
+  }
   function mount(){
+    if(isDigitalGuruPage()){removeAnnouncementUi();return;}
     if(document.getElementById("gsAnnFab"))return;
     styles();
     var b=document.createElement("button");b.id="gsAnnFab";b.type="button";b.setAttribute("aria-label","Buka pemberitahuan dan pengumuman");b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><span>Pengumuman</span>';b.onclick=openPanel;var themeBtn=document.querySelector('header button[onclick*="toggleDarkMode"]')||document.querySelector('button[onclick*="toggleDarkMode"]');var tools=themeBtn&&themeBtn.parentNode;if(!tools){var header=document.querySelector("main header");tools=header&&header.lastElementChild;}if(tools){tools.classList.add("gs-ann-header-tools");tools.insertBefore(b,themeBtn&&themeBtn.parentNode===tools?themeBtn:tools.firstChild);}
@@ -72,8 +85,11 @@
       if(session)mount();
       window.sb.auth.onAuthStateChange(function(_event,s){
         session=s;
-        if(s){mount();if(document.getElementById("gsAnnOverlay")&&document.getElementById("gsAnnOverlay").style.display==="flex")load();}
-        else{var b=document.getElementById("gsAnnFab"),o=document.getElementById("gsAnnOverlay");if(b)b.remove();if(o)o.remove();}
+        if(s){
+          if(isDigitalGuruPage()) removeAnnouncementUi();
+          else {mount();if(document.getElementById("gsAnnOverlay")&&document.getElementById("gsAnnOverlay").style.display==="flex")load();}
+        }
+        else{removeAnnouncementUi();}
       });
     }catch(e){console.warn("[Pengumuman]",e);}
   }
