@@ -10,8 +10,9 @@
   function styles(){
     if(document.getElementById("gsAnnouncementStyles"))return;
     var st=document.createElement("style");st.id="gsAnnouncementStyles";st.textContent=
-      "#gsAnnFab{position:fixed;right:18px;bottom:88px;z-index:99970;border:0;border-radius:999px;padding:13px 17px;background:linear-gradient(135deg,#2563eb,#4f46e5);color:#fff;font:700 14px Inter,Arial;box-shadow:0 8px 24px #1e40af55;cursor:pointer}"+
-      "#gsAnnFab .gs-ann-count{display:inline-flex;min-width:19px;height:19px;align-items:center;justify-content:center;margin-left:6px;border-radius:99px;background:#ef4444;color:#fff;font-size:11px}"+
+      "#gsAnnFab{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:8px;flex:none;min-height:40px;border:1px solid #dbeafe;border-radius:12px;padding:0 12px;background:linear-gradient(180deg,#fff,#eff6ff);color:#1d4ed8;font:700 13px Inter,Arial,sans-serif;box-shadow:0 2px 7px #0f172a0d, inset 0 1px 0 #fff;cursor:pointer;transition:all .18s ease}"+
+      "#gsAnnFab:hover{background:linear-gradient(135deg,#eff6ff,#dbeafe);border-color:#93c5fd;box-shadow:0 5px 14px #2563eb20;transform:translateY(-1px)}#gsAnnFab:focus-visible{outline:3px solid #93c5fd;outline-offset:2px}"+
+      "#gsAnnFab svg{width:18px;height:18px;flex:none}#gsAnnFab .gs-ann-count{display:inline-flex;min-width:18px;height:18px;align-items:center;justify-content:center;margin-left:1px;padding:0 4px;border-radius:99px;background:#dc2626;color:#fff;font-size:10px;font-weight:800}"+
       "#gsAnnOverlay{position:fixed;inset:0;z-index:99990;background:#0f172a88;display:none;align-items:center;justify-content:center;padding:16px}"+
       "#gsAnnPanel{width:min(680px,100%);max-height:88vh;overflow:auto;background:#fff;color:#172033;border-radius:20px;padding:22px;box-shadow:0 25px 80px #0004;font:14px/1.5 Inter,Arial}"+
       "#gsAnnPanel h2{font-size:21px;margin:0 0 6px}#gsAnnPanel .muted{color:#64748b;font-size:12px}"+
@@ -20,13 +21,14 @@
       ".gs-ann-primary{background:#2563eb;color:white}.gs-ann-secondary{background:#e2e8f0;color:#1e293b}.gs-ann-danger{background:#fee2e2;color:#991b1b}"+
       ".gs-ann-item{border:1px solid #e2e8f0;border-radius:13px;padding:14px;margin:12px 0}.gs-ann-item h3{margin:0 0 4px;font-size:16px}.gs-ann-body{white-space:pre-wrap;overflow-wrap:anywhere;margin:10px 0}"+
       ".gs-ann-actions{display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end}"+
-      "@media(max-width:520px){#gsAnnFab{right:12px;bottom:78px;padding:11px 13px}#gsAnnPanel{padding:16px;max-height:92vh}}";
+      "#gsAnnPanel{border:1px solid #e2e8f0}#gsAnnPanel>div:first-child{padding-bottom:15px;border-bottom:1px solid #e2e8f0}#gsAnnPanel h2{font-size:20px;font-weight:800;letter-spacing:-.35px;color:#0f172a}#gsAnnPanel .muted{color:#64748b}#gsAnnPanel input:focus,#gsAnnPanel textarea:focus{outline:3px solid #bfdbfe;border-color:#3b82f6}#gsAnnPanel .gs-ann-item{background:linear-gradient(180deg,#fff,#fbfdff);box-shadow:0 2px 8px #0f172a08}#gsAnnPanel .gs-ann-item h3{font-weight:800;color:#172554}#gsAnnPanel .gs-ann-primary{background:linear-gradient(135deg,#2563eb,#4338ca);box-shadow:0 3px 8px #1d4ed833}"+
+      "@media(max-width:520px){#gsAnnFab{min-height:38px;padding:0 9px;font-size:12px;gap:6px}#gsAnnFab svg{width:17px;height:17px}#gsAnnPanel{padding:16px;max-height:92vh}}";
     document.head.appendChild(st);
   }
   function mount(){
     if(document.getElementById("gsAnnFab"))return;
     styles();
-    var b=document.createElement("button");b.id="gsAnnFab";b.type="button";b.innerHTML="🔔 Pengumuman";b.onclick=openPanel;document.body.appendChild(b);
+    var b=document.createElement("button");b.id="gsAnnFab";b.type="button";b.setAttribute("aria-label","Buka pemberitahuan dan pengumuman");b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><span>Pengumuman</span>';b.onclick=openPanel;var themeBtn=document.querySelector('button[onclick*="toggleDarkMode"]');if(themeBtn&&themeBtn.parentNode)themeBtn.parentNode.insertBefore(b,themeBtn);else document.body.appendChild(b);
     var o=document.createElement("div");o.id="gsAnnOverlay";o.innerHTML='<section id="gsAnnPanel" role="dialog" aria-modal="true" aria-label="Pemberitahuan dan pengumuman"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><h2>🔔 Pemberitahuan &amp; Pengumuman</h2><div class="muted">Informasi resmi GURU SMART AI</div></div><button class="gs-ann-secondary" id="gsAnnClose">Tutup ✕</button></div><div id="gsAnnAdmin"></div><div id="gsAnnList">Memuat pengumuman...</div></section>';
     o.addEventListener("click",function(e){if(e.target===o)closePanel();});document.body.appendChild(o);
     document.getElementById("gsAnnClose").onclick=closePanel;
@@ -57,7 +59,7 @@
   }
   async function load(){
     var list=document.getElementById("gsAnnList");if(list)list.textContent="Memuat pengumuman...";
-    try{var d=await api("GET");items=Array.isArray(d.announcements)?d.announcements:[];canManage=!!d.can_manage;render();var b=document.getElementById("gsAnnFab");if(b)b.innerHTML="🔔 Pengumuman"+(items.length?'<span class="gs-ann-count">'+Math.min(items.length,99)+'</span>':"");}
+    try{var d=await api("GET");items=Array.isArray(d.announcements)?d.announcements:[];canManage=!!d.can_manage;render();var b=document.getElementById("gsAnnFab");if(b){var count=b.querySelector(".gs-ann-count");if(count)count.remove();if(items.length){var badge=document.createElement("span");badge.className="gs-ann-count";badge.textContent=Math.min(items.length,99);b.appendChild(badge);}}}
     catch(e){if(list)list.textContent=e.message;}
   }
   function openPanel(){var o=document.getElementById("gsAnnOverlay");if(o)o.style.display="flex";load();}
