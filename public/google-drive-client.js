@@ -9,7 +9,7 @@
  function toast(msg,type){if(typeof window.showToast==='function')window.showToast(msg,type||'info');else console.log('[GURU SMART DRIVE]',msg)}
  async function session(){if(!window.sb||!sb.auth)return null;var r=await sb.auth.getSession();return r&&r.data&&r.data.session||null;}
  async function api(path,method,body){var s=await session();if(!s)throw new Error('Silakan login terlebih dahulu.');var r=await fetch(API+path,{method:method||'GET',headers:{Authorization:'Bearer '+s.access_token,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});var j=await r.json().catch(function(){return{};});if(!r.ok)throw new Error(j.error||('Worker error '+r.status));return j;}
- function render(){var root=el('gsDriveWidget');if(!root)return;root.innerHTML='<div class="rounded-xl border border-sky-200 dark:border-slate-600 bg-sky-50/70 dark:bg-slate-900/50 p-4"><div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"><div><div class="font-bold text-slate-800 dark:text-white">Penyimpanan Google Drive</div><div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Backup pribadi berdasarkan akun guru yang sedang login</div></div><span id="gsDriveBadge" class="text-xs font-semibold rounded-full px-3 py-1 bg-amber-100 text-amber-800 w-fit">Memeriksa…</span></div><p id="gsDriveStatus" class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-3">Memeriksa koneksi…</p><div class="grid grid-cols-1 sm:grid-cols-2 gap-2"><button id="gsDriveConnect" type="button" class="px-3 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold">Hubungkan akun Google</button><button id="gsDriveBackup" type="button" class="px-3 py-2.5 rounded-lg border border-blue-200 bg-white dark:bg-slate-800 dark:text-white text-blue-700 text-sm font-semibold">Backup sekarang</button><button id="gsDriveRestore" type="button" class="px-3 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold">♻️ Pulihkan Data</button></div><p class="text-xs text-slate-500 dark:text-slate-400 mt-3">Backup otomatis berjalan setelah perubahan data berhasil disimpan dan akan dicoba ulang jika koneksi sedang bermasalah.</p></div>';el('gsDriveConnect').onclick=connect;el('gsDriveBackup').onclick=backupLocal;var rb=el('gsDriveRestore');if(rb)rb.onclick=restoreDrive;updateStatus();}
+ function render(){var root=el('gsDriveWidget');if(!root)return;root.innerHTML='<div class="rounded-xl border border-sky-200 dark:border-slate-600 bg-sky-50/70 dark:bg-slate-900/50 p-4"><div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"><div><div class="font-bold text-slate-800 dark:text-white">Penyimpanan Google Drive</div><div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Backup pribadi berdasarkan akun guru yang sedang login</div></div><span id="gsDriveBadge" class="text-xs font-semibold rounded-full px-3 py-1 bg-amber-100 text-amber-800 w-fit">Memeriksa…</span></div><p id="gsDriveStatus" class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-3">Memeriksa koneksi…</p><div class="grid grid-cols-1 sm:grid-cols-2 gap-2"><button id="gsDriveConnect" type="button" class="px-3 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold">Hubungkan akun Google</button><button id="gsDriveBackup" type="button" class="px-3 py-2.5 rounded-lg border border-blue-200 bg-white dark:bg-slate-800 dark:text-white text-blue-700 text-sm font-semibold">Backup sekarang</button><button id="gsDriveRestore" type="button" class="px-3 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold">♻️ Pulihkan Data</button></div><p class="text-xs text-slate-500 dark:text-slate-400 mt-3">Backup otomatis berjalan setelah perubahan data berhasil disimpan dan akan dicoba ulang jika koneksi sedang bermasalah.</p></div>';el('gsDriveConnect').onclick=connect;el('gsDriveBackup').onclick=backupLocal;el('gsDriveRestore').onclick=restoreDrive;updateStatus();}
  window.GSDriveMount=render;
  async function updateStatus(){try{var r=await api('/api/drive/status');state.connected=!!r.connected;state.email=r.email||'';var s=el('gsDriveStatus');if(s)s.innerHTML=state.connected?' <b style="color:#059669">● Terhubung</b><br>'+escapeHtml(state.email||'Akun Google')+'<br>Backup tersimpan: '+(r.backup_count||0)+'<br>Backup terakhir: '+escapeHtml(r.last_backup||'Belum ada'):'<b style="color:#d97706">● Belum terhubung</b><br>Hubungkan Google Drive pribadi untuk mengaktifkan backup otomatis.';var b=el('gsDriveConnect');if(b)b.textContent=state.connected?'Hubungkan ulang akun Google':'Hubungkan akun Google';var badge=el('gsDriveBadge');if(badge){badge.textContent=state.connected?'● Terhubung':'● Belum terhubung';badge.className='text-xs font-semibold rounded-full px-3 py-1 w-fit '+(state.connected?'bg-emerald-100 text-emerald-800':'bg-amber-100 text-amber-800');}}catch(e){var s=el('gsDriveStatus');if(s)s.textContent=e.message;}}
  function renderButtonLabel(){var b=el('gsDriveToggle');if(b)b.innerHTML='<span style="font-size:19px">☁️</span><span>Google Drive <small style="display:block;font-size:10px;font-weight:500;opacity:.85">'+(state.connected?'Terhubung':'Belum terhubung')+'</small></span>';}
@@ -70,26 +70,30 @@
  async function restoreDrive(){
   if(!state.connected){toast('Hubungkan Google Drive terlebih dahulu.','warning');return;}
   if(window.__gsDriveProgressActive)return;
-  if(!confirm('Pulihkan data dari Google Drive? Data cache lokal pada perangkat ini akan diganti untuk tabel yang tersedia di Drive. Sebaiknya backup lokal terlebih dahulu.'))return;
-  gpShow('Pulihkan Data dari Google Drive');gpSet(5,'Mengambil backup dari Drive…','Mohon tunggu.');
+  var sess=await session();if(!sess)throw new Error('Sesi login tidak ditemukan.');
+  gpShow('Pemulihan Data dari Google Drive');gpSet(8,'Membaca backup Google Drive…','');
   try{
-   var sess=await session();if(!sess)throw new Error('Sesi login tidak ditemukan.');
-   var r=await api('/api/drive/restore','GET');var tables=r&&r.tables;
-   if(!tables||typeof tables!=='object')throw new Error('Data backup tidak ditemukan di Google Drive.');
-   var names=Object.keys(tables).filter(function(t){return Array.isArray(tables[t]);});
-   if(!names.length)throw new Error('Backup Drive kosong atau belum tersedia.');
-   var prefix='gs_kilat_'+sess.user.id+'_',total=0;
-   names.forEach(function(t){total+=tables[t].length;});
-   if(!confirm('Konfirmasi pemulihan '+total+' baris dari '+names.length+' tabel?\n\n'+names.join(', ')+'\n\nCache lokal tabel tersebut akan ditimpa.')){gpHide(true);return;}
-   for(var i=0;i<names.length;i++){
-    var t=names[i],rows=tables[t];
-    gpSet(10+80*(i/Math.max(names.length,1)),'Memulihkan tabel '+(i+1)+'/'+names.length,t+' • '+rows.length+' baris');
-    localStorage.setItem(prefix+t,JSON.stringify({d:rows}));
-   }
-   gpSet(95,'Menyelesaikan…','Data berhasil ditulis ke cache perangkat.');
-   try{if(typeof window.loadData==='function')await window.loadData();}catch(e){}
-   gpFinish(true);toast('Pemulihan selesai: '+total+' baris dari Google Drive. Muat ulang aplikasi bila data belum tampil.','success');
-  }catch(e){gpFinish(false,e.message);toast('Pemulihan gagal: '+e.message,'error');}
+   var result=await api('/api/drive/restore');
+   var tables=result&&result.tables&&typeof result.tables==='object'?result.tables:null;
+   if(!tables)throw new Error('Format hasil restore tidak valid.');
+   var names=Object.keys(tables),total=0;
+   names.forEach(function(n){if(Array.isArray(tables[n]))total+=tables[n].length;});
+   if(total===0){gpFinish(false,'Backup berisi 0 baris');toast('Pemulihan dibatalkan: backup Google Drive tidak berisi data. Cache lokal tidak diubah.','warning');return;}
+   var msg='Pulihkan '+total+' baris dari '+names.length+' tabel? Data cache lokal tabel tersebut akan diganti.';
+   if(!confirm(msg)){gpHide(true);return;}
+   var prefix='gs_kilat_'+sess.user.id+'_',done=0;
+   window.__GS_DRIVE_SYNCING__=true;
+   try{
+    names.forEach(function(name){var rows=tables[name];if(!Array.isArray(rows))return;
+      var key=prefix+name;var old=null;try{old=JSON.parse(localStorage.getItem(key)||'null');}catch(e){}
+      var envelope=(old&&typeof old==='object'&&!Array.isArray(old))?old:{};
+      envelope.d=rows;envelope.updated_at=new Date().toISOString();
+      localStorage.setItem(key,JSON.stringify(envelope));done+=rows.length;
+      gpSet(15+80*(done/Math.max(total,1)),'Menulis data ke cache lokal…',name+' ('+rows.length+' baris)');
+    });
+   }finally{window.__GS_DRIVE_SYNCING__=false;}
+   gpFinish(true);toast('Pemulihan selesai: '+total+' baris dari '+names.length+' tabel dipulihkan. Muat ulang halaman untuk melihat data.','success');
+  }catch(e){window.__GS_DRIVE_SYNCING__=false;gpFinish(false,e.message);toast('Pemulihan gagal: '+e.message,'error');}
  }
  function applyFilters(rows,filters){return (rows||[]).filter(function(row){return (filters||[]).every(function(f){var a=row&&row[f.column],b=f.value;switch(f.op){case'eq':return String(a??'')===String(b??'');case'neq':return String(a??'')!==String(b??'');case'in':return Array.isArray(b)&&b.some(function(x){return String(x)===String(a);});case'is':return b===null?a==null:a===b;case'gt':return a>b;case'gte':return a>=b;case'lt':return a<b;case'lte':return a<=b;case'like':case'ilike':return new RegExp('^'+String(b).replace(/[.*+?^${}()|[\]\\]/g,'\\$&').replace(/%/g,'.*').replace(/_/g,'.')+'$',f.op==='ilike'?'i':'').test(String(a??''));default:return true;}});});}
  function installStorageBackup(){if(!window.sb||!sb.storage||!sb.storage.from||sb.storage.from.__gsDriveWrapped)return false;var original=sb.storage.from.bind(sb.storage);var wrapped=function(bucket){var api=original(bucket);if(!api||!api.upload)return api;var up=api.upload.bind(api);api.upload=function(path,file,options){var p=up(path,file,options);return Promise.resolve(p).then(function(result){if(!result||!result.error){if(state.connected&&file&&typeof file.size==='number'){var form=new FormData();form.append('bucket',bucket);form.append('path',path);form.append('file',file,String(path).split('/').pop()||'file');var sess=session();sess.then(function(s){if(s)fetch(API+'/api/drive/file-backup',{method:'POST',headers:{Authorization:'Bearer '+s.access_token},body:form}).then(function(r){if(!r.ok)console.warn('[GURU DRIVE] Backup file storage gagal:',r.status);}).catch(function(e){console.warn('[GURU DRIVE] Backup file storage:',e.message);});});}}return result;});};return api;};wrapped.__gsDriveWrapped=true;sb.storage.from=wrapped;return true;}
