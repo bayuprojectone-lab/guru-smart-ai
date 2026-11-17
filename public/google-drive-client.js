@@ -66,7 +66,64 @@
  window.addEventListener('message',function(e){if(e.data&&e.data.type==='GURU_SMART_DRIVE_CONNECTED'){updateStatus();toast('Google Drive berhasil dihubungkan.','success');flushQueue();}});window.addEventListener('online',function(){flushQueue();});
  var queueBusy=false;function queueKey(uid){return 'gs_drive_queue_'+uid;}async function flushQueue(){if(queueBusy||!state.connected)return;queueBusy=true;try{var s=await session();if(!s)return;var key=queueKey(s.user.id),q=[];try{q=JSON.parse(localStorage.getItem(key)||'[]');}catch(e){}while(q.length){try{await api('/api/drive/backup','POST',q[0]);q.shift();localStorage.setItem(key,JSON.stringify(q));state.last=new Date().toLocaleString('id-ID');}catch(e){console.warn('[GURU DRIVE] Antrean backup dipertahankan:',e.message);break;}}}finally{queueBusy=false;}}async function sendEvent(table,op,data,filters){if(!state.connected)return;try{var payload={table:table,op:op,data:data,filters:filters||[],timestamp:new Date().toISOString()};var size=JSON.stringify(payload).length;if(size>3500000){console.warn('[GURU DRIVE] Perubahan terlalu besar untuk backup langsung:',table);return;}var s=await session();if(!s)return;var key=queueKey(s.user.id),q=[];try{q=JSON.parse(localStorage.getItem(key)||'[]');}catch(e){}q.push(payload);if(q.length>300)q=q.slice(-300);localStorage.setItem(key,JSON.stringify(q));await flushQueue();}catch(e){console.warn('[GURU DRIVE] Backup tertunda/gagal:',e.message);}}
  function installQueryBackup(){if(!window.sb||!sb.from||sb.from.__gsDriveWrapped)return false;var original=sb.from.bind(sb);var wrapped=function(table){var q=original(table);var st={op:'select',values:null,filters:[]};var proxy=new Proxy(q,{get:function(target,prop){if(prop==='then')return function(resolve,reject){var write=['insert','upsert','update','delete'].includes(st.op);return target.then(function(result){if(write&&!window.__GS_DRIVE_SYNCING__){if(!result||!result.error){if(['insert','upsert'].includes(st.op))sendEvent(table,st.op,st.values,[]);else if(st.op==='update')sendEvent(table,'update',st.values,st.filters);else if(st.op==='delete')sendEvent(table,'delete',null,st.filters);}else if(canRestoreError(result.error)){sendEvent(table,st.op,st.values,st.filters);}}return result;}).catch(function(err){if(write&&!window.__GS_DRIVE_SYNCING__&&canRestoreError(err)){return sendEvent(table,st.op,st.values,st.filters).then(function(){throw err;});}throw err;}).then(resolve,reject);};var v=target[prop];if(typeof v!=='function')return v;return function(){var a=[].slice.call(arguments);if(['insert','upsert','update'].indexOf(String(prop))>=0){st.op=String(prop);st.values=a[0];}else if(prop==='delete')st.op='delete';else if(['eq','neq','gt','gte','lt','lte','is','in','contains','like','ilike'].includes(String(prop))&&a.length>1)st.filters.push({op:String(prop),column:a[0],value:a[1]});else if(prop==='match'&&a[0])Object.keys(a[0]).forEach(function(k){st.filters.push({op:'eq',column:k,value:a[0][k]});});var ret=v.apply(target,a);return ret===target?proxy:ret;};}});return proxy;};wrapped.__gsDriveWrapped=true;sb.from=wrapped;return true;}
- async function backupLocal(){if(!state.connected){toast('Hubungkan Google Drive terlebih dahulu.','warning');return;}if(window.__gsDriveProgressActive)return;gpShow('Backup ke Google Drive');gpSet(3,'Menyiapkan sesi…','');try{var sess=await session();if(!sess)throw new Error('Sesi login tidak ditemukan.');var prefix='gs_kilat_'+sess.user.id+'_';var tables=[];for(var i=0;i<localStorage.length;i++){var key=localStorage.key(i);if(!key||key.indexOf(prefix)!==0)continue;var item=null;try{item=JSON.parse(localStorage.getItem(key));}catch(e){}if(item&&Array.isArray(item.d))tables.push({table:key.slice(prefix.length),rows:item.d});}var total=tables.length;for(var t=0;t<total;t++){gpSet(3+77*(t/Math.max(total,1)),'Mengumpulkan & mengunggah tabel ke Drive…',tables[t].table+' ('+(t+1)+'/'+total+')');await sendEvent(tables[t].table,'snapshot',tables[t].rows,[]);}gpSet(86,'Memastikan antrean terkirim…','');var pending=0;try{pending=JSON.parse(localStorage.getItem(queueKey(sess.user.id))||'[]').length;}catch(e){}gpSet(94,'Memperbarui status…','');updateStatus();gpFinish(true);toast('Backup cache perangkat: '+total+' tabel diproses. '+(pending?pending+' perubahan masih mengantre dan akan dicoba ulang otomatis.':'Antrean sudah terkirim ke Google Drive.'),'success');}catch(e){gpFinish(false);toast('Backup gagal: '+e.message,'error');}}
+ async function backupLocal(){
+  if(!state.connected){toast('Hubungkan Google Drive terlebih dahulu.','warning');return;}
+  if(window.__gsDriveProgressActive)return;
+  /* Backup kini membaca seluruh data LANGSUNG dari Supabase melalui
+     gsBuildBackupObject (pipeline yang sama dengan export JSON), lalu
+     mengunggah tiap tabel sebagai snapshot ke Google Drive. Sebelumnya
+     backup hanya membaca cache localStorage gs_kilat_* yang sering kosong,
+     sehingga Drive tidak menyimpan data tabel apa pun dan restore tidak
+     menemukan apa-apa. Tabel yang melebihi batas ukuran snapshot dipecah
+     menjadi beberapa event upsert (digabung ulang oleh replay saat restore). */
+  if(!window.gsBuildBackupObject||!window.gsBackupTables){toast('Komponen backup aplikasi belum siap. Muat ulang halaman lalu coba lagi.','error');return;}
+  gpShow('Backup ke Google Drive');gpSet(3,'Menyiapkan sesi…','');
+  var sess=null;
+  try{
+   sess=await session();if(!sess)throw new Error('Sesi login tidak ditemukan.');
+   gpSet(6,'Mengumpulkan data dari database…','Membaca seluruh tabel data Anda.');
+   var obj=await window.gsBuildBackupObject(function(p,msg){gpSet(6+Math.round(p*68),'Mengumpulkan data dari database…',msg||'');});
+   var allowed=window.gsBackupTables.slice();
+   var tables=allowed.filter(function(t){return Array.isArray(obj[t])&&obj[t].length>0;});
+   var total=tables.length;
+   if(total===0){gpFinish(false,'Tidak ada data');toast('Tidak ada data tabel di database untuk dibackup. Pastikan data Anda sudah tersimpan di aplikasi.','warning');return;}
+   gpSet(76,'Mengunggah snapshot ke Google Drive…','0 dari '+total+' tabel');
+   var sent=0,sentRows=0,errors=[];
+   var LIMIT=3500000,CHUNK_ROWS=1000;
+   for(var i=0;i<tables.length;i++){
+    var t=tables[i];
+    var rows=obj[t];
+    var size=JSON.stringify(rows).length;
+    if(size<=LIMIT){
+     gpSet(76+Math.round(18*((i+1)/total)),'Mengunggah snapshot ke Google Drive…',t+' ('+(i+1)+'/'+total+') • '+rows.length+' baris');
+     try{await sendEvent(t,'snapshot',rows,[]);sent++;sentRows+=rows.length;}
+     catch(eT){errors.push(t+': '+eT.message);}
+    }else{
+     /* Tabel terlalu besar untuk satu snapshot: kirim snapshot KOSONG
+        (menghapus keadaan lama saat replay), lalu pecah baris menjadi
+        beberapa event upsert yang digabung ulang berdasarkan ID. */
+     try{
+      await sendEvent(t,'snapshot',[],[]);
+      var chunks=Math.ceil(rows.length/CHUNK_ROWS);
+      for(var c=0;c<chunks;c++){
+       gpSet(76+Math.round(18*((i+c/chunks)/total)),'Mengunggah tabel besar ke Google Drive…',t+' • bagian '+(c+1)+'/'+chunks+' dari '+rows.length+' baris');
+       await sendEvent(t,'upsert',rows.slice(c*CHUNK_ROWS,(c+1)*CHUNK_ROWS),[]);
+      }
+      sent++;sentRows+=rows.length;
+     }catch(eT){errors.push(t+': '+eT.message);}
+    }
+   }
+   gpSet(96,'Memastikan antrean terkirim…','');
+   var pending=0;
+   try{pending=JSON.parse(localStorage.getItem(queueKey(sess.user.id))||'[]').length;}catch(e){}
+   gpSet(98,'Memperbarui status…','');updateStatus();
+   gpFinish(true);
+   var msg='Backup ke Google Drive: '+sent+' tabel / '+sentRows+' baris terkirim.';
+   if(errors.length)msg+=' Kendala: '+errors.slice(0,3).join(', ')+(errors.length>3?' (+'+(errors.length-3)+' lainnya).':'');
+   if(pending)msg+=' '+pending+' perubahan masih mengantre dan akan dicoba ulang otomatis.';
+   toast(msg,errors.length||pending?'warning':'success');
+  }catch(e){gpFinish(false);toast('Backup gagal: '+e.message,'error');}
+ }
  async function restoreDrive(){
   if(!state.connected){toast('Hubungkan Google Drive terlebih dahulu.','warning');return;}
   if(window.__gsDriveProgressActive)return;
